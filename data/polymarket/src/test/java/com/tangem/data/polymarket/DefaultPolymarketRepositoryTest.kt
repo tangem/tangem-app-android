@@ -10,6 +10,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
@@ -99,6 +100,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerializationException
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -678,22 +680,72 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(sent.signature).isEqualTo("0xbatchSig")
     }
 
-    @Test
-    fun `GIVEN geoblock true WHEN checkGeoblock THEN returns right true`() = runTest {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN geoblock response WHEN checkGeoblock THEN returns its blocked flag`(isBlocked: Boolean) = runTest {
         // Arrange
-        coEvery { geoApi.getGeoblock() } returns ApiResponse.Success(PolymarketGeoblockResponse(blocked = true))
+        coEvery { geoApi.getGeoblock() } returns ApiResponse.Success(PolymarketGeoblockResponse(blocked = isBlocked))
+        val expected = if (isBlocked) PolymarketGeoblock.BLOCKED else PolymarketGeoblock.ALLOWED
 
         // Act
         val actual = repository.checkGeoblock()
 
         // Assert
-        assertThat(actual).isEqualTo(true.right())
+        assertThat(actual).isEqualTo(expected.right())
     }
 
     @Test
-    fun `GIVEN geo api throws WHEN checkGeoblock THEN returns left no internet`() = runTest {
+    fun `GIVEN geoblock body that does not decode WHEN checkGeoblock THEN returns unrecognized response`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns unknownError(SerializationException("Unexpected JSON token"))
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right())
+    }
+
+    @Test
+    fun `GIVEN geo api unknown error not from decoding WHEN checkGeoblock THEN returns left no internet`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns unknownError(IllegalStateException("boom"))
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertEitherLeft(actual, DataError.NetworkError.NoInternetConnection())
+    }
+
+    @Test
+    fun `GIVEN geo api network error WHEN checkGeoblock THEN returns no response`() = runTest {
         // Arrange
         coEvery { geoApi.getGeoblock() } returns networkError()
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketGeoblock.NO_RESPONSE.right())
+    }
+
+    @Test
+    fun `GIVEN geo api timeout WHEN checkGeoblock THEN returns no response`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns timeoutError()
+
+        // Act
+        val actual = repository.checkGeoblock()
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketGeoblock.NO_RESPONSE.right())
+    }
+
+    @Test
+    fun `GIVEN geo api server error WHEN checkGeoblock THEN returns left no internet`() = runTest {
+        // Arrange
+        coEvery { geoApi.getGeoblock() } returns httpError(Code.INTERNAL_SERVER_ERROR, body = "<html>oops</html>")
 
         // Act
         val actual = repository.checkGeoblock()
@@ -1481,6 +1533,10 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> unknownError(cause: Throwable): ApiResponse<T> =
+        ApiResponse.Error(ApiResponseError.UnknownException(cause)) as ApiResponse<T>
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> httpError(code: Code, body: String?): ApiResponse<T> =

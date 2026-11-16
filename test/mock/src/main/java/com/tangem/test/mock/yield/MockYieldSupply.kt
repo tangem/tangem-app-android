@@ -12,6 +12,7 @@ import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
+import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -221,6 +222,28 @@ object MockYieldSupply {
             ),
             sources = CryptoCurrencyStatus.Sources(networkSource = networkSource, quoteSource = quoteSource),
         ),
+    )
+
+    /** The defaults describe a ready reserve: initialized and active in the module */
+    @Suppress("LongParameterList")
+    fun moduleStatus(
+        networkId: Network.ID = network().id,
+        tokenAddress: String = TOKEN_ADDRESS,
+        isActive: Boolean = true,
+        isInitialized: Boolean = true,
+        isAllowedToSpend: Boolean = true,
+        effectiveProtocolBalance: BigDecimal? = null,
+        effectiveBalance: BigDecimal? = null,
+        source: StatusSource = StatusSource.ACTUAL,
+    ) = YieldModuleStatus(
+        networkId = networkId,
+        tokenAddress = tokenAddress,
+        isActive = isActive,
+        isInitialized = isInitialized,
+        isAllowedToSpend = isAllowedToSpend,
+        effectiveProtocolBalance = effectiveProtocolBalance,
+        effectiveBalance = effectiveBalance,
+        source = source,
     )
 
     fun activeYieldSupplyStatus() = YieldSupplyStatus(

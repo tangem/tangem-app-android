@@ -46,7 +46,7 @@ internal class DefaultCollectiblesActiveTxsFetcherTest {
             val response = NetworkJsonFactory.create().decodeFromString<ActiveTxsResponse>(
                 """
                 {"activeTxs":[
-                  {"txId":"tx-1","status":"pack-opening-error","packOpeningErrorCode":"3999",
+                  {"txId":"tx-1","status":"pack-opening-error","packOpeningErrorCode":"4201",
                    "machine":{"externalId":"pokemon_50","name":"Elite Pack"},"turboModeEnabled":false},
                   {"txId":"tx-2","status":"pack-purchased",
                    "machine":{"externalId":"pokemon_25","name":"Pack","shortName":"PKMN"},"turboModeEnabled":true},

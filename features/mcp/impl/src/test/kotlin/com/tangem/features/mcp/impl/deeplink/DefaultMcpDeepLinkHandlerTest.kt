@@ -61,5 +61,6 @@ internal class DefaultMcpDeepLinkHandlerTest {
         queryParams = queryParams,
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 }

@@ -182,6 +182,7 @@ internal class BuildOwnAccountAddressMapTest {
         customerId = "cust_1",
         productInstanceId = "pi_money",
         error = null,
+        isKycAdditionalInfoRequired = false,
     )
 
     private fun accountStatusList(

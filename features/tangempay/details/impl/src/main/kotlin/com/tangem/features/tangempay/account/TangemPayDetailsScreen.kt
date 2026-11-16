@@ -203,6 +203,16 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
         }
     }
 
+    state.kycAdditionalInfoBanner?.let { banner ->
+        item("kycAdditionalInfoBannerBlock") {
+            SpacerH12()
+            MessageBanner(
+                banner = banner,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+    }
+
     state.bankTransferOnrampBanner?.let { banner ->
         item("bankTransferOnrampBannerBlock") {
             SpacerH12()
@@ -417,21 +427,20 @@ private fun BalanceBlock(
             style = TangemTheme.typography3.caption.medium,
         )
 
-        when (state) {
-            is TangemPayDetailsBalanceBlockState.Loading -> Unit
-            is TangemPayDetailsBalanceBlockState.Content -> {
-                if (state.isInactive) {
-                    TangemBadge(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        text = resourceReference(R.string.tangempay_status_inactive),
-                        variant = TangemBadge.Variant.Outline,
-                        status = TangemBadge.Status.Warning,
-                        size = TangemBadge.Size.X6,
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
-                    )
-                }
-            }
-            is TangemPayDetailsBalanceBlockState.Error -> Unit
+        val isInactive = when (state) {
+            is TangemPayDetailsBalanceBlockState.Loading -> false
+            is TangemPayDetailsBalanceBlockState.Content -> state.isInactive
+            is TangemPayDetailsBalanceBlockState.Error -> state.isInactive
+        }
+        if (isInactive) {
+            TangemBadge(
+                modifier = Modifier.padding(vertical = 4.dp),
+                text = resourceReference(R.string.tangempay_status_inactive),
+                variant = TangemBadge.Variant.Outline,
+                status = TangemBadge.Status.Warning,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
+            )
         }
     }
 }

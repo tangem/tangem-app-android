@@ -13,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.DelayedReadDataStore
@@ -171,7 +172,10 @@ internal class MoneyAccountStatusesStoreTest {
     ) = MoneyAccountStatusesStore(
         runtimeStore = RuntimeSharedStore<WalletIdWithMoneyAccountStatus>(),
         persistenceDataStore = persistenceDataStore,
-        converter = MoneyAccountStatusValueDMConverter(currencyFactory),
+        converter = MoneyAccountStatusValueDMConverter(
+            moneyAccountCurrencyFactory = currencyFactory,
+            tangemPayFeatureToggles = mockk<TangemPayFeatureToggles>(relaxed = true),
+        ),
         userWalletsListRepository = mockk<UserWalletsListRepository> {
             every { this@mockk.userWallets } returns userWallets
         },
@@ -193,6 +197,7 @@ internal class MoneyAccountStatusesStoreTest {
             customerId = CUSTOMER_ID,
             productInstanceId = PRODUCT_INSTANCE_ID,
             error = null,
+            isKycAdditionalInfoRequired = false,
         ),
     )
 

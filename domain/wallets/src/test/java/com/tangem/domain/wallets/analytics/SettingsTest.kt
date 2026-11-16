@@ -1,6 +1,7 @@
 package com.tangem.domain.wallets.analytics
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -17,6 +18,16 @@ internal class SettingsTest {
 
         // Assert
         assertThat(event.id to event.params).isEqualTo("[Settings] Button - Connections" to emptyMap<String, String>())
+    }
+
+    @Test
+    fun `GIVEN wallets type WHEN ButtonAddHardwareWallet built THEN id and params match the spec`() {
+        // Act
+        val event = Settings.ButtonAddHardwareWallet(walletsType = AnalyticsParam.WalletsType.Multiple)
+
+        // Assert
+        assertThat(event.id).isEqualTo("[Settings] Button - Add Hardware Wallet")
+        assertThat(event.params).isEqualTo(mapOf("Wallets" to "Multiple"))
     }
 
     @ParameterizedTest

@@ -10,11 +10,15 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.status.utils.MainExpandedAccountsHolder
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountJoinError
+import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
@@ -24,12 +28,15 @@ import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class JointAccountJoinModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val joinJointAccountUseCase: JoinJointAccountUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val selectWalletUseCase: SelectWalletUseCase,
+    private val expandedAccountsHolder: MainExpandedAccountsHolder,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -62,17 +69,25 @@ internal class JointAccountJoinModel @Inject constructor(
             memberName = memberName,
         ).fold(
             ifLeft = ::onJoinError,
-            ifRight = { account ->
-                analyticsEventHandler.send(
-                    JointAccountAnalyticsEvent.AccountJoined(
-                        membersCount = account.membersCount,
-                        threshold = account.threshold,
-                    ),
-                )
-                showAccountAdded()
-                JoinResultAction.OpenMembers(userWalletId = walletId, cryptoAccountId = account.cryptoAccountId)
-            },
+            ifRight = { account -> onJoined(walletId = walletId, account = account) },
         )
+    }
+
+    private suspend fun onJoined(walletId: UserWalletId, account: JointAccount): JoinResultAction {
+        analyticsEventHandler.send(
+            JointAccountAnalyticsEvent.AccountJoined(
+                membersCount = account.membersCount,
+                threshold = account.threshold,
+            ),
+        )
+        selectWalletUseCase(walletId).onLeft { error ->
+            TangemLogger.e("Failed to select the wallet of the joined joint account: $error")
+        }
+        AccountId.forJointAccount(userWalletId = walletId, value = account.cryptoAccountId)
+            .onRight(expandedAccountsHolder::expandAccount)
+            .onLeft { error -> TangemLogger.e("Failed to expand the joined joint account: $error") }
+        showAccountAdded()
+        return JoinResultAction.OpenMain(userWalletId = walletId)
     }
 
     private suspend fun isJointLimitReached(walletId: UserWalletId): Boolean {
@@ -112,7 +127,6 @@ internal class JointAccountJoinModel @Inject constructor(
         )
     }
 
-    /** Shown over the members screen the flow opens next */
     private fun showAccountAdded() {
         uiMessageSender.send(
             SnackbarMessage(

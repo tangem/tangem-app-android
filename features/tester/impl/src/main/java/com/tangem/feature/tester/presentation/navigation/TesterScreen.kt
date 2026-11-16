@@ -20,4 +20,5 @@ internal enum class TesterScreen {
     BACKEND_AUTH_STATUS,
     SELL_REDIRECT_GENERATOR,
     SOCIAL_LOGIN,
+    EARN_FLOW,
 }

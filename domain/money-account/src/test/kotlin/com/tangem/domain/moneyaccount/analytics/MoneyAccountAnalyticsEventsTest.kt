@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.AccountState
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.AddFundsMethod
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.BalanceBand
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
@@ -33,6 +34,7 @@ internal class MoneyAccountAnalyticsEventsTest {
                     accountState = AccountState.ACTIVE,
                     balanceBand = BalanceBand.FROM_100_TO_1K,
                     currency = "USD",
+                    additionalVerificationNotice = null,
                 ),
                 expectedId = "[Cash Account] Account Screen Opened",
                 expectedParams = mapOf(
@@ -47,9 +49,26 @@ internal class MoneyAccountAnalyticsEventsTest {
                     accountState = AccountState.CLOSED,
                     balanceBand = null,
                     currency = null,
+                    additionalVerificationNotice = null,
                 ),
                 expectedId = "[Cash Account] Account Screen Opened",
                 expectedParams = mapOf("account_state" to "closed", "yield_enabled" to "no"),
+            ),
+            EventModel(
+                event = MoneyAccountAnalyticsEvents.AccountScreenOpened(
+                    accountState = AccountState.ACTIVE,
+                    balanceBand = BalanceBand.FROM_100_TO_1K,
+                    currency = "USD",
+                    additionalVerificationNotice = NoticeState.SHOWN,
+                ),
+                expectedId = "[Cash Account] Account Screen Opened",
+                expectedParams = mapOf(
+                    "account_state" to "active",
+                    "balance_band" to "100-1k",
+                    "yield_enabled" to "no",
+                    "currency" to "USD",
+                    "additional_verification_notice" to "shown",
+                ),
             ),
             EventModel(
                 event = MoneyAccountAnalyticsEvents.AddFundsClicked(),

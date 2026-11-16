@@ -26,6 +26,7 @@ import com.tangem.features.feed.rwa.categories.ui.CategorySelectorContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.StateFlow
 
 @Stable
 internal class CategorySelectorComponent @AssistedInject constructor(
@@ -65,6 +66,9 @@ internal class CategorySelectorComponent @AssistedInject constructor(
     }
 
     interface ModelCallback {
+        /** The selection the tab's list is filtered by; it may change while the selector is open. */
+        val appliedSelection: StateFlow<CategorySelection>
+
         fun onCategorySelect(selection: CategorySelection)
     }
 

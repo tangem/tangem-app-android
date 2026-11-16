@@ -7,7 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.impl.ui.toIncentiveBadge
+import com.tangem.features.earn.impl.ui.toIncentiveUM
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnHorizonItemUM
@@ -30,18 +30,19 @@ internal class EarnCalculatorConverter @Inject constructor() {
         input: CalculatorInput,
         appCurrency: AppCurrency,
         incentiveRate: EarnProductRate?,
+        onIncentiveClick: () -> Unit,
         onInitialStep: (Int) -> Unit,
         onTopUpStep: (Int) -> Unit,
         onHorizonSelect: (EarnHorizon) -> Unit,
     ): EarnCalculatorUM = EarnCalculatorUM(
-        incentive = incentiveRate.toIncentiveBadge(),
+        incentive = incentiveRate.toIncentiveUM(onClick = onIncentiveClick),
         total = stringReference(result.total.format { fiat(appCurrency.code, appCurrency.symbol) }),
         earned = stringReference(
             StringsSigns.PLUS + result.earned.format { fiat(appCurrency.code, appCurrency.symbol) },
         ),
         earnedLabel = EarnCalculatorTexts.earnedIn,
         horizon = horizonSelect(selected = input.horizon, onSelect = onHorizonSelect),
-        bars = bars(result = result, input = input).toImmutableList(),
+        bars = bars(result = result).toImmutableList(),
         axisLabels = axisLabels(input.horizon).toImmutableList(),
         initialBalance = stepper(
             label = EarnCalculatorTexts.initialBalance,
@@ -70,37 +71,18 @@ internal class EarnCalculatorConverter @Inject constructor() {
         }.toImmutableList(),
     )
 
-    private fun bars(result: EarnProjectionResult, input: CalculatorInput): List<EarnProjectionBarUM> {
+    private fun bars(result: EarnProjectionResult): List<EarnProjectionBarUM> {
         val points = result.points.sampled()
-        val tallest = points.maxOf { point -> input.initialFiat + point.capital + input.monthlyTopUpFiat }
+        val tallest = points.maxOf { point -> point.income }
 
-        val bars = points.map { point ->
-            EarnProjectionBarUM(
-                initial = input.initialFiat.visibleShareOf(tallest),
-                total = point.capital.visibleShareOf(tallest),
-                topUp = input.monthlyTopUpFiat.visibleShareOf(tallest),
-            )
-        }
-        val tallestStack = bars.maxOf { it.initial + it.total + it.topUp }
-
-        return if (tallestStack > 1f) {
-            bars.map { bar ->
-                EarnProjectionBarUM(
-                    initial = bar.initial / tallestStack,
-                    total = bar.total / tallestStack,
-                    topUp = bar.topUp / tallestStack,
-                )
-            }
-        } else {
-            bars
-        }
+        return points.map { point -> EarnProjectionBarUM(earned = point.income.visibleShareOf(tallest)) }
     }
 
-    /** A non-empty layer never gets thinner than [MIN_LAYER_SHARE], otherwise a small amount is not drawn at all. */
+    /** A non-empty bar never gets shorter than [MIN_BAR_SHARE], otherwise a small amount is not drawn at all. */
     private fun BigDecimal.visibleShareOf(max: BigDecimal): Float {
         val share = shareOf(max)
 
-        return if (share > 0f) maxOf(share, MIN_LAYER_SHARE) else 0f
+        return if (share > 0f) maxOf(share, MIN_BAR_SHARE) else 0f
     }
 
     private fun axisLabels(horizon: EarnHorizon): List<TextReference> = (1..AXIS_LABELS_COUNT).map { step ->
@@ -145,7 +127,7 @@ internal class EarnCalculatorConverter @Inject constructor() {
 
     private companion object {
         const val MAX_BARS = 24
-        const val MIN_LAYER_SHARE = 0.05f
+        const val MIN_BAR_SHARE = 0.05f
         const val AXIS_LABELS_COUNT = 3
         const val MONTHS_IN_YEAR = 12
     }

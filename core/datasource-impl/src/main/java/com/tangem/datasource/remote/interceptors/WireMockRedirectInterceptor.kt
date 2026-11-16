@@ -98,6 +98,7 @@ class WireMockRedirectInterceptor : Interceptor {
             // Second Ethereum RPC host: the SDK only trusts a resolved yield module address when two
             // providers on *different* hosts return it, so the mocks serve this one alongside /ethereum.
             "eth.nownodes.io",
+            "rpc.monad.xyz",
             // Swap ratings: real survey responses are keyed by the mocked tx id and outlive the run.
             "eu-api.surveysparrow.com",
             "polymarket.com",

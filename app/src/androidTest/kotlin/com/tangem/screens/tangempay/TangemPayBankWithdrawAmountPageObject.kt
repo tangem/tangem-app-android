@@ -47,7 +47,7 @@ class TangemPayBankWithdrawAmountPageObject(semanticsProvider: SemanticsNodeInte
     }
 
     val routeSheetTitle: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangempay_withdraw_bank_select_route))
+        hasText(getResourceString(CoreResR.string.tangempay_withdraw_bank_choose_transfer_method))
         useUnmergedTree = true
     }
 

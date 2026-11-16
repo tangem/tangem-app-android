@@ -997,6 +997,49 @@ internal class TxHistoryInfoFieldConverterOnChainTest {
     }
 
     @Test
+    fun `GIVEN lending withdrawal sent by the wallet WHEN convert THEN incoming row from Lending on Aave`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = BigDecimal.ONE),
+            isOutgoing = true,
+        )
+
+        // Act
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isTrue()
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.FROM,
+                name = resRef(R.string.transaction_history_lending_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN lending deposit WHEN convert THEN outgoing row to Lending on Aave`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Lending.Deposit, isOutgoing = true)
+
+        // Act
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS_SIGN)).isTrue()
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.TO,
+                name = resRef(R.string.transaction_history_lending_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN YieldSupply Send not withdraw and incoming WHEN convert THEN received title`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),

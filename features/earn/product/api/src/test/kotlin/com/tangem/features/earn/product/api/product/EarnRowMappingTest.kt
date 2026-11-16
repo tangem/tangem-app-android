@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.ui.EarnRowUM
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 internal class EarnRowMappingTest {
 
@@ -152,6 +153,49 @@ internal class EarnRowMappingTest {
 
         // Assert
         assertThat(actual.onValueClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN row with amount value WHEN toUM THEN the screen's amount text is the value`() {
+        // Arrange
+        val row = createRow(value = EarnValue.Amount(BigDecimal("1.482")))
+
+        // Act
+        val actual = row.toUM(onInfoClick = {}, amountText = { amount -> stringReference("ETH ${amount.toPlainString()}") })
+
+        // Assert
+        assertThat(actual.value).isEqualTo(stringReference("ETH 1.482"))
+        assertThat(actual.onValueClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN row with amount value WHEN toUM without an amount text THEN the plain number is the value`() {
+        // Arrange
+        val row = createRow(value = EarnValue.Amount(BigDecimal("1.482")))
+
+        // Act
+        val actual = row.toUM(onInfoClick = {})
+
+        // Assert
+        assertThat(actual.value).isEqualTo(stringReference("1.482"))
+    }
+
+    @Test
+    fun `GIVEN rows with text and link values WHEN toUM THEN the amount text is not asked`() {
+        // Arrange
+        val rows = listOf(
+            createRow(value = EarnValue.Text(stringReference("Low"))),
+            createRow(value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com")),
+        )
+        val asked = mutableListOf<BigDecimal>()
+
+        // Act
+        rows.forEach { row ->
+            row.toUM(onInfoClick = {}, onLinkClick = {}, amountText = { amount -> asked.add(amount).let { stringReference("") } })
+        }
+
+        // Assert
+        assertThat(asked).isEmpty()
     }
 
     @Test

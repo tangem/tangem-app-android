@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.dismiss
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.message.DialogMessage
@@ -194,7 +195,7 @@ internal class PlacePredictionAmountFundingTest : PlacePredictionModelTestBase()
         @Test
         fun `GIVEN the region is restricted WHEN the screen opens THEN add funds is not offered`() = runTest {
             // Arrange
-            coEvery { checkGeoblockUseCase() } returns true.right()
+            coEvery { checkGeoblockUseCase() } returns PolymarketGeoblock.BLOCKED.right()
 
             // Act
             val model = createAmountModel(testScope = this)

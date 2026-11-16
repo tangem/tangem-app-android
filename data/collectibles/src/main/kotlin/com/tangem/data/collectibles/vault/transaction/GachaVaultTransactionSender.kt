@@ -39,4 +39,19 @@ internal interface GachaVaultTransactionSender {
         memo: String,
         signer: suspend (message: ByteArray) -> Result<ByteArray>,
     ): Either<CollectiblesAccountError, String>
+
+    /**
+     * Moves USDC out of the vault with `withdraw_token`, signed by the owner. Not idempotent: never call again
+     * while the outcome is unknown.
+     *
+     * @param mint the token to withdraw
+     * @param amount base units of the token
+     * @return the transaction signature
+     */
+    suspend fun withdraw(
+        userWallet: UserWallet,
+        mint: String,
+        recipient: String,
+        amount: Long,
+    ): Either<CollectiblesAccountError, String>
 }

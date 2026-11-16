@@ -45,13 +45,13 @@ import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -150,19 +150,22 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
                 .padding(bottom = footerHeight),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            val transfer = state.transfer
-            if (transfer != null) {
-                AmountCard(amount = transfer.amount)
-                BankRouteRow(
-                    rail = transfer.route.rail,
-                    title = transfer.route.title,
-                    eta = transfer.route.eta,
-                    fee = transfer.route.fee,
-                    onClick = transfer.route.onClick,
-                )
-            }
-            if (state.recipientCards.isNotEmpty()) {
-                RecipientInfo(cards = state.recipientCards)
+            ProvideTangemShimmer {
+                val transfer = state.transfer
+                if (transfer != null) {
+                    AmountCard(amount = transfer.amount)
+                    BankRouteRow(
+                        rail = transfer.route.rail,
+                        title = transfer.route.title,
+                        eta = transfer.route.eta,
+                        fee = transfer.route.fee,
+                        onClick = transfer.route.onClick,
+                    )
+                }
+                if (state.recipientCards.isNotEmpty()) {
+                    RecipientInfo(cards = state.recipientCards)
+                }
+                transfer?.conversion?.let { conversion -> BankWithdrawConversion(conversion = conversion) }
             }
         }
     }
@@ -210,12 +213,7 @@ private fun AmountCard(amount: TangemPayBankWithdrawPreviewUM.AmountCardUM) {
 
 @Composable
 private fun RecipientInfo(cards: ImmutableList<TangemPayBankWithdrawPreviewUM.RecipientCardUM>) {
-    Text(
-        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
-        text = stringResourceSafe(R.string.tangempay_withdraw_bank_recipient_info),
-        style = TangemTheme.typography3.caption.medium,
-        color = TangemTheme.colors3.text.secondary,
-    )
+    BankWithdrawSectionTitle(text = resourceReference(R.string.tangempay_withdraw_bank_recipient_info))
     cards.fastForEach { card -> DetailCard(card = card) }
 }
 
@@ -292,6 +290,9 @@ private class PreviewProvider : PreviewParameterProvider<TangemPayBankWithdrawPr
         TangemPayBankWithdrawPreviewData.summarySavedRecipient,
         TangemPayBankWithdrawPreviewData.summaryHotWallet,
         TangemPayBankWithdrawPreviewData.summaryMoneyAccount,
+        TangemPayBankWithdrawPreviewData.summarySpeiQuoted,
+        TangemPayBankWithdrawPreviewData.summarySpeiQuoteLoading,
+        TangemPayBankWithdrawPreviewData.summarySpeiUntimed,
         TangemPayBankWithdrawPreviewData.sending,
         TangemPayBankWithdrawPreviewData.failedGeneral,
         TangemPayBankWithdrawPreviewData.failedUnavailable,

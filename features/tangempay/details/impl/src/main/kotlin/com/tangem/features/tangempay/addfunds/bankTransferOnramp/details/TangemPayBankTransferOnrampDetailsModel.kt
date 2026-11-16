@@ -8,18 +8,15 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayRouteFeeUMConverter
-import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.formatFiatAmount
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.FeeSource
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
-import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -52,7 +49,6 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
             TangemPayBankTransferOnrampDetailsScreenUM(
                 tabs = persistentListOf(),
                 requisites = persistentListOf(),
-                referenceWarning = null,
                 fees = TangemPayOnrampFeesUM.Loading,
                 minimumDeposit = null,
                 dailyDepositLimit = null,
@@ -95,8 +91,6 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         val selected = copy(
             tabs = createTabs(selectedIndex = index),
             requisites = requisitesConverter.convert(credentials),
-            referenceWarning = resourceReference(R.string.tangempay_bank_transfer_details_reference_warning)
-                .takeIf { credentials.isSpei && !credentials.transferMessage.isNullOrBlank() },
         )
         return when (params.feeSource) {
             is FeeSource.Catalogue -> selected.copy(
@@ -104,9 +98,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
             )
             FeeSource.Route -> selected.copy(
                 fees = TangemPayRouteFeeUMConverter.convert(credentials),
-                minimumDeposit = credentials.amountLimits?.let { limits ->
-                    stringReference(limits.min.formatFiatAmount(currencyCode = limits.currency))
-                },
+                minimumDeposit = TangemPayMinimumDepositUMConverter.convert(credentials),
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
@@ -50,6 +51,10 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
+import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketSessionKeyMessagesFactory
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -58,7 +63,10 @@ import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.core.getEmittedValues
+import io.mockk.Runs
 import io.mockk.clearMocks
+import io.mockk.just
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -70,6 +78,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -88,6 +97,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import java.math.BigDecimal
@@ -139,6 +149,15 @@ internal class PolymarketMainModelTest {
     }
 
 
+    private val fastTradingBanner = MutableStateFlow<PolymarketFastTradingBanner?>(value = null)
+    private val fastTradingRechecks = slot<Flow<Unit>>()
+    private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
+        every { observe(any(), capture(fastTradingRechecks)) } returns fastTradingBanner
+        coEvery { refresh(any()) } just Runs
+        coEvery { dismiss(any(), any()) } just Runs
+        every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
+    }
+
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
     )
@@ -162,7 +181,7 @@ internal class PolymarketMainModelTest {
 
     @BeforeEach
     fun allowTradingByDefault() {
-        coEvery { checkGeoblock() } returns false.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.ALLOWED.right()
         clearMocks(balancePoller)
         every { balancePoller.subscribe(any()) } returns emptyFlow()
         clearMocks(fundingWindow)
@@ -170,6 +189,7 @@ internal class PolymarketMainModelTest {
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
         clearMocks(walletLinkGate)
         coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns true
+        fastTradingBanner.value = null
     }
 
     init {
@@ -780,10 +800,287 @@ internal class PolymarketMainModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("startedBanners")
+    fun `GIVEN an actionable banner WHEN action clicked THEN its operation starts without navigation`(
+        banner: PolymarketFastTradingBanner,
+    ) = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = banner
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastTradingBanner!!.onActionClick()
+
+        // Assert
+        verify(exactly = 1) { fastTradingBannerSource.start(USER_WALLET_ID, banner) }
+        verify(exactly = 0) { router.push(any(), any()) }
+        verify(exactly = 0) { messageSender.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN another operation runs WHEN banner action clicked THEN the busy toast is shown`() = runTest {
+        // Arrange
+        every { fastTradingBannerSource.start(USER_WALLET_ID, any()) } returns PolymarketSessionKeyOperationStart.Busy
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = PolymarketFastTradingBanner.Extend(daysLeft = 3)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastTradingBanner!!.onActionClick()
+
+        // Assert
+        verify(exactly = 1) {
+            messageSender.send(PolymarketSessionKeyMessagesFactory.create(PolymarketSessionKeyOperationStart.Busy)!!)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unknown signers banner WHEN action clicked THEN fast trading settings open for the wallet`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            fastTradingBanner.value = PolymarketFastTradingBanner.UnknownSigners
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.fastTradingBanner!!.onActionClick()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(PolymarketRoute.FastTradingSettings(userWalletId = USER_WALLET_ID), any())
+            }
+            model.onDestroy()
+        }
+
+    @ParameterizedTest
+    @MethodSource("startedBanners")
+    fun `GIVEN a dismissible banner WHEN closed THEN its dismissal is stored`(banner: PolymarketFastTradingBanner) =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            fastTradingBanner.value = banner
+            advanceUntilIdle()
+
+            // Act
+            when (val state = model.uiState.value.fastTradingBanner) {
+                is PolymarketFastTradingBannerUM.Activate -> state.onCloseClick()
+                is PolymarketFastTradingBannerUM.Reactivate -> state.onCloseClick()
+                is PolymarketFastTradingBannerUM.Extend -> state.onCloseClick()
+                is PolymarketFastTradingBannerUM.UnknownSigners,
+                null,
+                -> error("Banner $banner has no close button")
+            }
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { fastTradingBannerSource.dismiss(USER_WALLET_ID, banner) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN extend banner WHEN shown THEN days left reach the UI`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+
+        // Act
+        fastTradingBanner.value = PolymarketFastTradingBanner.Extend(daysLeft = 7)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((model.uiState.value.fastTradingBanner as PolymarketFastTradingBannerUM.Extend).daysLeft)
+            .isEqualTo(7)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN shown banner WHEN source emits none THEN banner is removed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+        advanceUntilIdle()
+
+        // Act
+        fastTradingBanner.value = null
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.fastTradingBanner).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN resumed THEN a recheck is emitted`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val emissions = getEmittedValues(fastTradingRechecks.captured)
+        val before = emissions.size
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(emissions.size).isEqualTo(before + 1)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN pulled to refresh THEN a recheck is emitted`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val emissions = getEmittedValues(fastTradingRechecks.captured)
+        val before = emissions.size
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(emissions.size).isEqualTo(before + 1)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN pulled to refresh THEN fast trading banner source is refreshed for the wallet`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerSource.refresh(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN resumed THEN fast trading banner source is refreshed for the wallet`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerSource.refresh(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet link check pending WHEN resumed THEN fast trading banner source is neither observed nor refreshed`() = runTest {
+        // Arrange
+        val linkCheck = CompletableDeferred<Boolean>()
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } coAnswers { linkCheck.await() }
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
+        linkCheck.complete(true)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet link check pending WHEN pulled to refresh THEN fast trading banner source is not refreshed`() = runTest {
+        // Arrange
+        val linkCheck = CompletableDeferred<Boolean>()
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } coAnswers { linkCheck.await() }
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
+        linkCheck.complete(true)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model observing banner WHEN paused THEN the fast trading banner is no longer observed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        model.onPause()
+        runCurrent()
+
+        // Assert
+        assertThat(fastTradingBanner.subscriptionCount.value).isEqualTo(0)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a paused model WHEN resumed THEN the fast trading banner is observed again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onResume()
+        runCurrent()
+        model.onPause()
+        runCurrent()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(fastTradingBanner.subscriptionCount.value).isEqualTo(1)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet is linked WHEN the screen opens THEN the fast trading banner is observed after the check`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            walletLinkGate.ensureLinked(USER_WALLET_ID)
+            fastTradingBannerSource.observe(USER_WALLET_ID, any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the wallet is not linked WHEN the screen opens THEN the fast trading banner is not observed`() = runTest {
+        // Arrange
+        coEvery { walletLinkGate.ensureLinked(USER_WALLET_ID) } returns false
+        every { router.popTo(PolymarketRoute.Main(userWalletId = USER_WALLET_ID), any()) } answers { secondArg<(Boolean) -> Unit>()(true) }
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+    }
+
     @Test
     fun `GIVEN a blocked region WHEN the screen opens THEN the banner is shown AND add funds is dimmed`() = runTest {
         // Arrange
-        coEvery { checkGeoblock() } returns true.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
         statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
 
         // Act
@@ -801,7 +1098,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a blocked region WHEN add funds clicked THEN the restriction is explained AND nothing opens`() = runTest {
         // Arrange
-        coEvery { checkGeoblock() } returns true.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
         statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
         val model = createModel(testScope = this)
         val slot = FakeSlotHost(model.fundingSheetNavigation)
@@ -854,7 +1151,7 @@ internal class PolymarketMainModelTest {
             statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
             val model = createModel(testScope = this)
             advanceUntilIdle()
-            coEvery { checkGeoblock() } returns true.right()
+            coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
 
             // Act
             model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
@@ -1225,7 +1522,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a blocked region WHEN outcome clicked THEN the restriction is explained AND no order opens`() = runTest {
         // Arrange
-        coEvery { checkGeoblock() } returns true.right()
+        coEvery { checkGeoblock() } returns PolymarketGeoblock.BLOCKED.right()
         coEvery { getCategoriesUseCase(any()) } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -2110,6 +2407,7 @@ internal class PolymarketMainModelTest {
                 featureToggles = featureToggles,
                 collateralCurrencyFactory = mockk(relaxed = true),
             ),
+            fastTradingBannerSource = fastTradingBannerSource,
             polymarketFeatureToggles = featureToggles,
             walletLinkGate = walletLinkGate,
         ).also { model = it }
@@ -2217,6 +2515,14 @@ internal class PolymarketMainModelTest {
     }
 
     private companion object {
+
+        @JvmStatic
+        fun startedBanners() = listOf(
+            PolymarketFastTradingBanner.Activate,
+            PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+            PolymarketFastTradingBanner.Extend(daysLeft = 12),
+        )
+
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
         const val STATUS_FETCH_MS = 1_000L
         const val REQUISITES_ADDRESS = "0xrequisites00000000000000000000000000002"

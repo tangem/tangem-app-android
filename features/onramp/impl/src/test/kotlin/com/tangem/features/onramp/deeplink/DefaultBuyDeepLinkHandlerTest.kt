@@ -80,5 +80,6 @@ internal class DefaultBuyDeepLinkHandlerTest {
         queryParams = emptyMap(),
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 }

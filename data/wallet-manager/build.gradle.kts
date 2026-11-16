@@ -44,6 +44,7 @@ dependencies {
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.walletManager)
+    implementation(projects.domain.yieldSupply)
     implementation(projects.domain.wallets)
     // endregion
 

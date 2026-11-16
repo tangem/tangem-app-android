@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -14,6 +15,7 @@ import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.bankOfframpQuote
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
@@ -24,18 +26,24 @@ import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTa
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.personalFormValues
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
+import com.tangem.features.tangempay.withdraw.bank.preview.model.LockedQuote
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewState
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.ConversionUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.DetailRowUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.FeeRowUM
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RateLockUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RecipientCardUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Summary
+import com.tangem.features.tangempay.withdraw.bank.speiDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
+import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -223,6 +231,31 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
                 ),
                 onClick = null,
             ),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN saved SPEI recipient with a bank name WHEN create THEN only the CLABE and name cards`() {
+        // Arrange
+        val recipient = bankAccount(id = "acc-1").let { account ->
+            account.copy(
+                details = account.details.copy(
+                    currency = "MXN",
+                    rail = BankRail.SPEI,
+                    bankName = "BBVA Mexico",
+                    accountNumber = "002010077777777771",
+                    routingNumber = null,
+                ),
+            )
+        }
+
+        // Act
+        val actual = factory.create(draft = savedDraft().copy(recipient = recipient), state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.recipientCards.map { card -> card.rows.map(DetailRowUM::label) }).containsExactly(
+            listOf(BankWithdrawFormField.Clabe.label),
+            listOf(BankWithdrawFormField.FirstName.label, BankWithdrawFormField.LastName.label),
         ).inOrder()
     }
 
@@ -580,6 +613,144 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual.isColdWallet).isFalse()
     }
 
+    @Test
+    fun `GIVEN money account SPEI draft without a quote yet WHEN create THEN quote values shimmer and Pay waits`() {
+        // Act
+        val actual = moneyAccountFactory().create(draft = speiDraft(), state = PreviewState()) as Summary
+
+        // Assert
+        val transfer = requireNotNull(actual.transfer)
+        assertThat(transfer.route.eta).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_eta_within_minutes))
+        assertThat(transfer.route.fee).isNull()
+        assertThat(transfer.conversion).isEqualTo(
+            ConversionUM(
+                rate = null,
+                recipientGets = null,
+                rateLock = RateLockUM.Loading,
+                fees = speiFees(railFee = null),
+                total = null,
+            ),
+        )
+        assertThat(actual.isSendEnabled).isFalse()
+        assertThat(actual.sendText).isEqualTo(
+            resourceReference(R.string.money_account_send_pay_button, wrappedList("$500.03")),
+        )
+    }
+
+    @Test
+    fun `GIVEN money account SPEI draft and a locked quote WHEN create THEN quote terms shown and Pay enabled`() {
+        // Arrange
+        val state = PreviewState(quote = LockedQuote(quote = speiQuote(), secondsLeft = 868))
+
+        // Act
+        val actual = moneyAccountFactory().create(draft = speiDraft(), state = state) as Summary
+
+        // Assert
+        val transfer = requireNotNull(actual.transfer)
+        assertThat(transfer.route.fee).isEqualTo("$5.48")
+        assertThat(transfer.conversion).isEqualTo(
+            ConversionUM(
+                rate = "1 USD = 18.7 MXN",
+                recipientGets = "MX$9,247.15",
+                rateLock = RateLockUM.Countdown(
+                    text = resourceReference(R.string.money_account_send_rate_lock, wrappedList("14:28")),
+                ),
+                fees = speiFees(railFee = "$5.45"),
+                total = "$5.48",
+            ),
+        )
+        assertThat(transfer.sendingSummary).isEqualTo(
+            resourceReference(R.string.money_account_send_fees_footer, wrappedList(stringReference("SPEI"))),
+        )
+        assertThat(actual.isSendEnabled).isTrue()
+        assertThat(actual.sendText).isEqualTo(
+            resourceReference(R.string.money_account_send_pay_button, wrappedList("$500.03")),
+        )
+    }
+
+    @Test
+    fun `GIVEN quote without a fee amount WHEN create THEN the estimated fee and total are marked approximate`() {
+        // Arrange
+        val state = PreviewState(quote = LockedQuote(quote = speiQuote().copy(feeAmount = null), secondsLeft = 5))
+
+        // Act
+        val actual = moneyAccountFactory().create(draft = speiDraft(), state = state) as Summary
+
+        // Assert
+        val transfer = requireNotNull(actual.transfer)
+        val conversion = requireNotNull(transfer.conversion)
+        assertThat(transfer.route.fee).isEqualTo("~$5.53")
+        assertThat(conversion.fees).isEqualTo(speiFees(railFee = "~$5.50"))
+        assertThat(conversion.total).isEqualTo("~$5.53")
+        assertThat(conversion.rateLock).isEqualTo(
+            RateLockUM.Countdown(text = resourceReference(R.string.money_account_send_rate_lock, wrappedList("00:05"))),
+        )
+    }
+
+    @Test
+    fun `GIVEN quote the device clock cannot time WHEN create THEN its terms are shown without a rate lock`() {
+        // Arrange
+        val state = PreviewState(quote = LockedQuote(quote = speiQuote(), secondsLeft = null))
+
+        // Act
+        val actual = moneyAccountFactory().create(draft = speiDraft(), state = state) as Summary
+
+        // Assert
+        val conversion = requireNotNull(actual.transfer?.conversion)
+        assertThat(conversion.rate).isEqualTo("1 USD = 18.7 MXN")
+        assertThat(conversion.rateLock).isEqualTo(RateLockUM.Hidden)
+        assertThat(actual.isSendEnabled).isTrue()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNoConversionModels")
+    fun `GIVEN transfer that does not convert WHEN create THEN no conversion block and Pay does not wait`(
+        model: NoConversionModel,
+    ) {
+        // Arrange
+        val accountFactory = TangemPayBankWithdrawPreviewUMFactory(sourceAccount = model.account, callbacks = callbacks)
+
+        // Act
+        val actual = accountFactory.create(draft = model.draft, state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.transfer?.conversion).isNull()
+        assertThat(actual.isSendEnabled).isTrue()
+    }
+
+    private fun provideNoConversionModels() = listOf(
+        NoConversionModel(account = MONEY_ACCOUNT, draft = savedDraft()),
+        NoConversionModel(account = BankWithdrawSourceAccount.Payment(userWalletId), draft = speiDraft()),
+    )
+
+    internal data class NoConversionModel(val account: BankWithdrawSourceAccount, val draft: BankWithdrawDraft)
+
+    private fun moneyAccountFactory() = TangemPayBankWithdrawPreviewUMFactory(
+        sourceAccount = MONEY_ACCOUNT,
+        callbacks = callbacks,
+    )
+
+    private fun speiFees(railFee: String?) = persistentListOf(
+        FeeRowUM(
+            label = combinedReference(stringReference("SPEI"), stringReference(" $0.50 + 1%")),
+            value = railFee,
+        ),
+        FeeRowUM(
+            label = resourceReference(R.string.money_account_send_fees_network, wrappedList("Polygon")),
+            value = "~$0.03",
+        ),
+    )
+
+    private fun speiDraft() = savedDraft().copy(
+        destination = speiDestination(),
+        networkFee = BigDecimal("0.03"),
+    )
+
+    private fun speiQuote() = bankOfframpQuote(
+        feeAmount = BigDecimal("5.45"),
+        expiresAt = DateTime.parse("2026-11-10T10:15:00Z"),
+    )
+
     private fun savedDraft() = BankWithdrawDraft(
         entry = BankWithdrawEntry.Saved("acc-1"),
         recipient = bankAccount(id = "acc-1"),
@@ -604,4 +775,8 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         source = bankWithdrawSource(),
         destination = offrampDestination(),
     )
+
+    private companion object {
+        val MONEY_ACCOUNT = BankWithdrawSourceAccount.Money(UserWalletId("011"), productInstanceId = "instance-1")
+    }
 }

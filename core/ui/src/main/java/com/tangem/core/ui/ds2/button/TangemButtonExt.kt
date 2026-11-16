@@ -1,6 +1,5 @@
 package com.tangem.core.ui.ds2.button
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
@@ -9,7 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
@@ -76,11 +77,14 @@ fun TangemButton.GroupEntry(
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=12845-873)
  *
  * Behavior notes:
- * - The overlay grows linearly over 1.5 s while the pointer stays down; on completion a confirm
- *   haptic plays, [onConfirm] is invoked once and the overlay resets.
+ * - Touch-down plays a 200 ms press pulse over the whole button; there is no Material ripple.
+ * - The overlay then grows linearly over 2 s while the pointer stays down, with haptic ticks that
+ *   speed up as it fills. On completion a confirm haptic plays, [onConfirm] is invoked once and the
+ *   overlay fades out in 50 ms.
  * - Releasing early — or a parent scroll taking the pointer — plays a reject haptic, retracts the
- *   overlay and confirms nothing. A plain tap therefore does nothing.
- * - There is no press ripple: the hold overlay is the press feedback.
+ *   overlay (240 ms, ease out), shakes the button sideways by 8dp and crossfades the label to [hint]
+ *   for about a second, the width following the text. A plain tap therefore confirms nothing but
+ *   explains what to do. Icon-only buttons shake without the hint.
  * - While [isLoading] is `true` or [isEnabled] is `false` the hold is ignored, and a hold in
  *   progress is cancelled if either flips mid-gesture. Callers usually set [isLoading] from
  *   [onConfirm] to show the action running.
@@ -99,6 +103,7 @@ fun TangemButton.GroupEntry(
  * @param iconEnd Optional trailing icon.
  * @param text Optional label. `null` switches the button to icon-only mode.
  * @param loadingText Optional message shown next to the loader while [isLoading] is `true`.
+ * @param hint Text shown in place of [text] after an early release. Defaults to "Tap and hold".
  * @param contentDescription Accessibility label announced by TalkBack; overrides the label text.
  * @param interactionSource Interaction source for focus state; a focused button draws the focus ring.
  * @param onConfirm Invoked once each time a hold completes, or when an accessibility service
@@ -116,16 +121,17 @@ fun TangemButton.HoldToConfirm(
     iconEnd: TangemIconUM? = null,
     text: TextReference? = null,
     loadingText: TextReference? = null,
+    hint: TextReference = resourceReference(R.string.common_tap_and_hold_hint),
     contentDescription: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     onConfirm: () -> Unit,
 ) {
-    val progress = remember { Animatable(0f) }
+    val holdState = rememberHoldToConfirmState()
     val isHoldable = isEnabled && !isLoading
 
     TangemButtonContainer(
         modifier = modifier.then(
-            rememberHoldToConfirmGesture(isEnabled = isHoldable, progress = progress, onConfirm = onConfirm),
+            rememberHoldToConfirmGesture(isEnabled = isHoldable, state = holdState, onConfirm = onConfirm),
         ),
         variant = variant.toVariant(),
         size = size,
@@ -139,8 +145,9 @@ fun TangemButton.HoldToConfirm(
         contentDescription = contentDescription,
         interactionSource = interactionSource,
         hold = HoldToConfirmSpec(
-            progress = { progress.value },
+            state = holdState,
             overlayColor = variant.holdOverlayColor(),
+            hint = hint,
             isActionEnabled = isHoldable,
             onConfirm = onConfirm,
         ),

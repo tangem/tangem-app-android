@@ -143,6 +143,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                         outcome = outcome,
                         marketingConsent = marketingConsent,
                         minStageDisplay = minStageDisplay,
+                        host = host,
                     )
                 },
             )
@@ -160,6 +161,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         fun onConsent(consent: SocialLoginConsentUM?)
 
         fun onFinished()
+
+        fun onWalletOpening() {}
     }
 
     private fun consentPrompt(
@@ -208,6 +211,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         outcome: SocialLoginOutcome,
         marketingConsent: MarketingConsent?,
         minStageDisplay: Job?,
+        host: Host,
     ) {
         // Before the selection: the wallet is saved either way, and a retry would come back as a restore.
         val creationType = when (outcome) {
@@ -241,6 +245,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 isIconTinted = false,
             ),
         )
+        host.onWalletOpening()
         router.replaceAll(AppRoute.Wallet)
     }
 

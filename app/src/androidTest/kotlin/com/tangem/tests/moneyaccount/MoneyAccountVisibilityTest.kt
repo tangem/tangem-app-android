@@ -8,7 +8,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.getWcUri
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
@@ -42,10 +41,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountVisibilityTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val firstAccountName = "Account 1"
     private val secondAccountName = "Account 2"

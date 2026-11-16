@@ -27,7 +27,6 @@ internal class MoneyAccountBankDetailsAnalytics @Inject constructor(
         RequisiteField.CLABE,
         -> "account_number"
         RequisiteField.ROUTING_NUMBER -> "routing_number"
-        RequisiteField.REFERENCE -> "reference"
         RequisiteField.BENEFICIARY_NAME -> "beneficiary"
         RequisiteField.BENEFICIARY_ADDRESS -> "beneficiary_address"
         RequisiteField.BANK_NAME -> "bank_name"

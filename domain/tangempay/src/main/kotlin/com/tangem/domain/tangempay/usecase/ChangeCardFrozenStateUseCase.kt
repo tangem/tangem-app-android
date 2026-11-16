@@ -1,21 +1,70 @@
 package com.tangem.domain.tangempay.usecase
 
 import arrow.core.Either
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import com.tangem.core.error.UniversalError
+import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.OrderDetails
+import com.tangem.domain.tangempay.model.TangemPayOrderInfo
+import com.tangem.domain.tangempay.order.OrderLaunch
+import com.tangem.domain.tangempay.order.awaitTerminal
+import com.tangem.domain.tangempay.order.isCompleted
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.usecase.order.StartOrderUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.async
 
 class ChangeCardFrozenStateUseCase(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val startOrderUseCase: StartOrderUseCase,
+    @RemoveWithToggle(toggleName = "AND_15342_ORDER_FRAMEWORK_ENABLED")
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        card: TangemPayCard,
+        isFreezing: Boolean,
+    ): Either<UniversalError, Unit> {
+        return if (tangemPayFeatureToggles.isOrderFrameworkEnabled) {
+            changeViaOrderFramework(userWalletId = userWalletId, card = card, isFreezing = isFreezing)
+        } else {
+            changeViaLegacyPolling(userWalletId = userWalletId, cardId = card.id, isFreezing = isFreezing)
+        }
+    }
+
+    private suspend fun changeViaOrderFramework(
+        userWalletId: UserWalletId,
+        card: TangemPayCard,
+        isFreezing: Boolean,
+    ): Either<UniversalError, Unit> = either {
+        val orderInfo = freezeCard(userWalletId = userWalletId, cardId = card.id, isFreezing = isFreezing)
+        val runningOrder = startOrderUseCase(
+            userWalletId = userWalletId,
+            launch = OrderLaunch.Track(
+                orderId = orderInfo.orderId,
+                details = if (isFreezing) {
+                    OrderDetails.CardFreeze(productInstanceId = card.productInstanceId)
+                } else {
+                    OrderDetails.CardUnfreeze(productInstanceId = card.productInstanceId)
+                },
+            ),
+        ).bind()
+
+        if (!runningOrder.awaitTerminal().isCompleted) {
+            raise(TangemPayApiError.Unspecified)
+        }
+    }
+
+    @RemoveWithToggle(toggleName = "AND_15342_ORDER_FRAMEWORK_ENABLED")
+    private suspend fun changeViaLegacyPolling(
         userWalletId: UserWalletId,
         cardId: String,
         isFreezing: Boolean,
@@ -25,14 +74,10 @@ class ChangeCardFrozenStateUseCase(
         return either {
             cardDetailsRepository.setCardFrozenState(cardId, TangemPayCardFrozenState.Pending)
 
-            val order = if (isFreezing) {
-                cardDetailsRepository.freezeCard(userWalletId, cardId).bind()
-            } else {
-                cardDetailsRepository.unfreezeCard(userWalletId, cardId).bind()
-            }
+            val orderInfo = freezeCard(userWalletId = userWalletId, cardId = cardId, isFreezing = isFreezing)
 
             val isCompleted = appCoroutineScope.async {
-                val isCompleted = startTangemPayOrderPollingUseCase(order, userWalletId)
+                val isCompleted = startTangemPayOrderPollingUseCase(orderInfo, userWalletId)
                 cardDetailsRepository.setCardFrozenState(cardId, if (isCompleted) successState else failState)
                 isCompleted
             }.await()
@@ -40,6 +85,18 @@ class ChangeCardFrozenStateUseCase(
             if (!isCompleted) raise(TangemPayApiError.Unspecified)
         }.onLeft {
             cardDetailsRepository.setCardFrozenState(cardId, failState)
+        }
+    }
+
+    private suspend fun Raise<UniversalError>.freezeCard(
+        userWalletId: UserWalletId,
+        cardId: String,
+        isFreezing: Boolean,
+    ): TangemPayOrderInfo {
+        return if (isFreezing) {
+            cardDetailsRepository.freezeCard(userWalletId, cardId).bind()
+        } else {
+            cardDetailsRepository.unfreezeCard(userWalletId, cardId).bind()
         }
     }
 }

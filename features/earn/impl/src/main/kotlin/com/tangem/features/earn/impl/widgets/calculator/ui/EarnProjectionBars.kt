@@ -32,9 +32,7 @@ internal fun EarnProjectionBars(
     axisLabels: ImmutableList<TextReference>,
     modifier: Modifier = Modifier,
 ) {
-    val initialColor = TangemTheme.colors3.icon.tertiary
-    val totalColor = TangemTheme.colors3.icon.brand
-    val topUpColor = totalColor.copy(alpha = TOP_UP_ALPHA)
+    val barColor = TangemTheme.colors3.icon.brand
 
     Column(modifier = modifier.fillMaxWidth()) {
         Canvas(
@@ -47,24 +45,16 @@ internal fun EarnProjectionBars(
             val barWidth = minOf(size.width / (bars.size * 2 - 1), MAX_BAR_WIDTH.toPx())
             val gap = if (bars.size > 1) (size.width - barWidth * bars.size) / (bars.size - 1) else 0f
             val cornerRadius = CornerRadius(barWidth / 2)
-            val layerGap = LAYER_GAP.toPx()
-            val layersHeight = size.height - layerGap * (LAYERS_COUNT - 1)
 
             bars.forEachIndexed { index, bar ->
-                var bottom = size.height
-                val layers = listOf(bar.initial to initialColor, bar.total to totalColor, bar.topUp to topUpColor)
-
-                layers.forEach { (share, color) ->
-                    val layerHeight = share * layersHeight
-                    if (layerHeight > 0f) {
-                        drawRoundRect(
-                            color = color,
-                            topLeft = Offset(x = index * (barWidth + gap), y = bottom - layerHeight),
-                            size = Size(width = barWidth, height = layerHeight),
-                            cornerRadius = cornerRadius,
-                        )
-                        bottom -= layerHeight + layerGap
-                    }
+                val barHeight = bar.earned * size.height
+                if (barHeight > 0f) {
+                    drawRoundRect(
+                        color = barColor,
+                        topLeft = Offset(x = index * (barWidth + gap), y = size.height - barHeight),
+                        size = Size(width = barWidth, height = barHeight),
+                        cornerRadius = cornerRadius,
+                    )
                 }
             }
         }
@@ -86,11 +76,8 @@ internal fun EarnProjectionBars(
     }
 }
 
-private const val TOP_UP_ALPHA = 0.3f
-private const val LAYERS_COUNT = 3
 private val CHART_HEIGHT = 120.dp
 private val MAX_BAR_WIDTH = 6.dp
-private val LAYER_GAP = 2.dp
 
 @Preview(name = "Light")
 @Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -100,7 +87,7 @@ private fun EarnProjectionBarsPreview() {
         EarnProjectionBars(
             bars = List(PREVIEW_BARS) { index ->
                 val step = (index + 1).toFloat() / PREVIEW_BARS
-                EarnProjectionBarUM(initial = 0.1f, total = 0.8f * step, topUp = 0.1f)
+                EarnProjectionBarUM(earned = maxOf(step * step, PREVIEW_MIN_SHARE))
             }.toImmutableList(),
             axisLabels = listOf(stringReference("1Y"), stringReference("2Y"), stringReference("3Y")).toImmutableList(),
             modifier = Modifier
@@ -111,3 +98,4 @@ private fun EarnProjectionBarsPreview() {
 }
 
 private const val PREVIEW_BARS = 24
+private const val PREVIEW_MIN_SHARE = 0.05f

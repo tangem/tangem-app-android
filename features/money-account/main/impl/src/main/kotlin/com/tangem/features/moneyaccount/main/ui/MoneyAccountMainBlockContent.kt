@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -54,6 +55,7 @@ internal fun MoneyAccountMainBlockContent(
             subtitle = state.subtitle,
             balance = state.balance,
             isBalanceHidden = isBalanceHidden,
+            isActionRequired = state.isActionRequired,
             modifier = modifier,
             onClick = state.onClick,
         )
@@ -68,48 +70,58 @@ private fun MoneyAccountRow(
     modifier: Modifier = Modifier,
     balance: MoneyAccountMainUM.BalanceUM? = null,
     isBalanceHidden: Boolean = false,
+    isActionRequired: Boolean = false,
     subtitleColor: Color = TangemTheme.colors3.text.secondary,
 ) {
-    TangemRow(
-        modifier = modifier
-            .moneyAccountCard()
-            .testTag(MoneyAccountTestTags.MAIN_ROW),
-        contentLead = TangemRowContentLead.Start,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
-        onClick = onClick,
-        startSlot = { MoneyAccountIcon() },
-        titleSlot = {
-            TangemRowText(
-                text = resourceReference(R.string.money_account_main_name),
-                role = TangemRowTextRole.Title,
+    Box(modifier = modifier) {
+        TangemRow(
+            modifier = Modifier
+                .moneyAccountCard(isActionRequired = isActionRequired)
+                .testTag(MoneyAccountTestTags.MAIN_ROW),
+            contentLead = TangemRowContentLead.Start,
+            verticalAlignment = TangemRowVerticalAlignment.Center,
+            onClick = onClick,
+            startSlot = { MoneyAccountIcon() },
+            titleSlot = {
+                TangemRowText(
+                    text = resourceReference(R.string.money_account_main_name),
+                    role = TangemRowTextRole.Title,
+                )
+            },
+            subtitleSlot = if (!subtitle.isNullOrEmpty()) {
+                {
+                    Text(
+                        text = subtitle.resolveReference(),
+                        color = if (isActionRequired) TangemTheme.colors3.text.status.warning else subtitleColor,
+                        style = TangemTheme.typography3.caption.medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            } else {
+                null
+            },
+            valueSlot = balance?.let {
+                {
+                    MoneyAccountFiatAmount(
+                        text = balance.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
+                        isBalanceFlickering = balance.isFlickering,
+                        isBalanceFromCache = balance.isFromCache,
+                    )
+                }
+            },
+            subvalueSlot = balance?.let {
+                { TangemRowText(text = balance.currency, role = TangemRowTextRole.Subvalue) }
+            },
+        )
+        if (isActionRequired) {
+            TangemGlowRing(
+                modifier = Modifier.matchParentSize(),
+                variant = TangemGlowRing.Variant.Warning,
+                cornerRadius = 24.dp,
             )
-        },
-        subtitleSlot = if (!subtitle.isNullOrEmpty()) {
-            {
-                Text(
-                    text = subtitle.resolveReference(),
-                    color = subtitleColor,
-                    style = TangemTheme.typography3.caption.medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        } else {
-            null
-        },
-        valueSlot = balance?.let {
-            {
-                MoneyAccountFiatAmount(
-                    text = balance.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
-                    isBalanceFlickering = balance.isFlickering,
-                    isBalanceFromCache = balance.isFromCache,
-                )
-            }
-        },
-        subvalueSlot = balance?.let {
-            { TangemRowText(text = balance.currency, role = TangemRowTextRole.Subvalue) }
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -176,9 +188,11 @@ private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, i
 }
 
 @Composable
-private fun Modifier.moneyAccountCard(): Modifier = this
+private fun Modifier.moneyAccountCard(isActionRequired: Boolean = false): Modifier = this
     .clip(RoundedCornerShape(24.dp))
-    .background(TangemTheme.colors3.bg.secondary)
+    .background(
+        if (isActionRequired) TangemTheme.colors3.bg.status.warningSubtle else TangemTheme.colors3.bg.secondary,
+    )
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -208,11 +222,19 @@ private class MoneyAccountMainBlockContentPreviewParameterProvider :
             MoneyAccountMainUM.Content(
                 subtitle = TextReference.Str("Polygon network"),
                 balance = previewBalance.copy(isFlickering = true, isFromCache = true),
+                isActionRequired = false,
                 onClick = {},
             ),
             MoneyAccountMainUM.Content(
                 subtitle = TextReference.EMPTY,
                 balance = null,
+                isActionRequired = false,
+                onClick = {},
+            ),
+            MoneyAccountMainUM.Content(
+                subtitle = resourceReference(R.string.tangempay_action_required_title),
+                balance = previewBalance,
+                isActionRequired = true,
                 onClick = {},
             ),
         ),

@@ -13,6 +13,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -24,6 +25,7 @@ internal class EarnTypeFilterModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private var selectedFilter: EarnFilterType? = null
+    private val appliedType = MutableStateFlow(EarnFilterType.ALL)
 
     @BeforeEach
     fun reset() {
@@ -31,17 +33,33 @@ internal class EarnTypeFilterModelTest {
         selectedFilter = null
     }
 
-    private fun createModel(selected: EarnFilterType = EarnFilterType.ALL) = EarnTypeFilterModel(
-        dispatchers = TestingCoroutineDispatcherProvider(),
-        analyticsEventHandler = analyticsEventHandler,
-        paramsContainer = MutableParamsContainer(
-            EarnTypeFilterComponent.Params(
-                selectedFilter = selected,
-                onFilterSelected = { selectedFilter = it },
-                onDismiss = {},
+    private fun createModel(selected: EarnFilterType = EarnFilterType.ALL): EarnTypeFilterModel {
+        appliedType.value = selected
+        return EarnTypeFilterModel(
+            dispatchers = TestingCoroutineDispatcherProvider(),
+            analyticsEventHandler = analyticsEventHandler,
+            paramsContainer = MutableParamsContainer(
+                EarnTypeFilterComponent.Params(
+                    selectedFilter = appliedType,
+                    onFilterSelected = { selectedFilter = it },
+                    onDismiss = {},
+                ),
             ),
-        ),
-    )
+        )
+    }
+
+    @Test
+    fun `GIVEN an open sheet WHEN the applied type changes THEN the tick follows it`() {
+        // Arrange
+        val underTest = createModel(selected = EarnFilterType.STAKING)
+
+        // Act
+        appliedType.value = EarnFilterType.YIELD
+
+        // Assert
+        assertThat(underTest.state.value.selectedOption).isEqualTo(EarnFilterTypeUM.YieldMode)
+        assertThat(selectedFilter).isNull()
+    }
 
     @ParameterizedTest
     @ProvideTestModels

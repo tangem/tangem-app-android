@@ -5,6 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.analytics.FilterTypeAnalytic
@@ -14,7 +15,9 @@ import com.tangem.features.feed.earn.ui.state.EarnFilterByTypeBottomSheetContent
 import com.tangem.features.feed.earn.ui.state.EarnFilterTypeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 @Stable
@@ -27,12 +30,18 @@ internal class EarnTypeFilterModel @Inject constructor(
 
     private val params = paramsContainer.require<EarnTypeFilterComponent.Params>()
 
-    private val _state = MutableStateFlow(configureInitialState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<EarnFilterByTypeBottomSheetContentUM>
+        field = MutableStateFlow(configureState(selected = params.selectedFilter.value))
 
-    private fun configureInitialState(): EarnFilterByTypeBottomSheetContentUM {
+    init {
+        params.selectedFilter
+            .onEach { selected -> state.value = configureState(selected = selected) }
+            .launchIn(modelScope)
+    }
+
+    private fun configureState(selected: EarnFilterType): EarnFilterByTypeBottomSheetContentUM {
         return EarnFilterByTypeBottomSheetContentUM(
-            selectedOption = EarnFilterTypeConverter().convert(params.selectedFilter),
+            selectedOption = EarnFilterTypeConverter().convert(selected),
             onOptionClick = ::handleOnOptionClick,
         )
     }

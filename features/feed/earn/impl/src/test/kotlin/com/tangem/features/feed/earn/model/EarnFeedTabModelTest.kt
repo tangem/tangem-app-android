@@ -4,10 +4,12 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.earn.model.*
 import com.tangem.domain.earn.usecase.*
+import com.tangem.domain.models.earn.EarnNetwork
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnTopToken
@@ -15,6 +17,7 @@ import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.*
+import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.state.EarnStateController
 import com.tangem.features.feed.earn.ui.state.EarnBestOpportunitiesUM
@@ -23,6 +26,7 @@ import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.features.feed.v2.FeedEntryRequest
+import com.tangem.features.feed.v2.FeedFilterSheet
 import com.tangem.pagination.*
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -332,6 +336,197 @@ internal class EarnFeedTabModelTest {
         assertThat(pendingFilter.value).isNotNull()
     }
 
+    @Test
+    fun `GIVEN a type sheet deeplink WHEN the host handled the entry THEN the type sheet opens on that type`() =
+        runTest {
+            // Arrange
+            val stored = createEarnFilter(network = specificNetwork, type = EarnFilterType.ALL)
+            feedEntryController.pendingEntry.value = FeedEntryRequest()
+            pendingFilter.value = FeedEntryFilter(
+                tabId = FeedTabId.Earn,
+                earnType = PreselectedEarnType.Staking,
+                sheet = FeedFilterSheet.Type,
+            )
+            val underTest = createModel(testScope = this)
+            val sheets = underTest.bottomSheetNavigation.trackSlot()
+            filterFlow.emit(stored)
+            advanceUntilIdle()
+            assertThat(sheets).isEmpty()
+
+            // Act
+            feedEntryController.consumeEntry()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { setEarnFilterUseCase(stored.copy(earnFilterType = EarnFilterType.STAKING)) }
+            val sheet = sheets.single() as EarnBottomSheetRoute.TypeFilter
+            assertThat(sheet.params.selectedFilter.value).isEqualTo(EarnFilterType.STAKING)
+        }
+
+    @Test
+    fun `GIVEN an open type sheet WHEN another type sheet deeplink lands THEN the same sheet moves its tick`() =
+        runTest {
+            // Arrange
+            val stored = createEarnFilter(type = EarnFilterType.ALL)
+            val underTest = createModel(testScope = this)
+            val sheets = underTest.bottomSheetNavigation.trackSlot()
+            filterFlow.emit(stored)
+            pendingFilter.value = FeedEntryFilter(
+                tabId = FeedTabId.Earn,
+                earnType = PreselectedEarnType.Staking,
+                sheet = FeedFilterSheet.Type,
+            )
+            advanceUntilIdle()
+            val opened = sheets.single() as EarnBottomSheetRoute.TypeFilter
+
+            // Act
+            pendingFilter.value = FeedEntryFilter(
+                tabId = FeedTabId.Earn,
+                earnType = PreselectedEarnType.Yield,
+                sheet = FeedFilterSheet.Type,
+            )
+            advanceUntilIdle()
+
+            // Assert - a rebuilt config would make the slot close the sheet and open a new one
+            assertThat(sheets.last()).isSameInstanceAs(opened)
+            assertThat(opened.params.selectedFilter.value).isEqualTo(EarnFilterType.YIELD)
+            coVerify(exactly = 1) { setEarnFilterUseCase(stored.copy(earnFilterType = EarnFilterType.YIELD)) }
+        }
+
+    @Test
+    fun `GIVEN a type sheet deeplink without a type WHEN it lands THEN the sheet opens on the stored type`() =
+        runTest {
+            // Arrange
+            val underTest = createModel(testScope = this)
+            val sheets = underTest.bottomSheetNavigation.trackSlot()
+            filterFlow.emit(createEarnFilter(type = EarnFilterType.YIELD))
+            advanceUntilIdle()
+
+            // Act
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, sheet = FeedFilterSheet.Type)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { setEarnFilterUseCase(any()) }
+            val sheet = sheets.single() as EarnBottomSheetRoute.TypeFilter
+            assertThat(sheet.params.selectedFilter.value).isEqualTo(EarnFilterType.YIELD)
+        }
+
+    @Test
+    fun `GIVEN a type sheet deeplink WHEN networks beat the store echo THEN the tick keeps its type`() = runTest {
+        // Arrange
+        val underTest = createModel(testScope = this)
+        val sheets = underTest.bottomSheetNavigation.trackSlot()
+        filterFlow.emit(createEarnFilter(type = EarnFilterType.ALL))
+        pendingFilter.value = FeedEntryFilter(
+            tabId = FeedTabId.Earn,
+            earnType = PreselectedEarnType.Staking,
+            sheet = FeedFilterSheet.Type,
+        )
+        advanceUntilIdle()
+        val sheet = sheets.single() as EarnBottomSheetRoute.TypeFilter
+
+        // Act
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sheet.params.selectedFilter.value).isEqualTo(EarnFilterType.STAKING)
+    }
+
+    @Test
+    fun `GIVEN a network sheet deeplink WHEN the networks load THEN the network sheet opens with them`() = runTest {
+        // Arrange
+        val underTest = createModel(testScope = this)
+        val sheets = underTest.bottomSheetNavigation.trackSlot()
+        filterFlow.emit(createEarnFilter())
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, sheet = FeedFilterSheet.Network)
+        advanceUntilIdle()
+        assertThat(sheets).isEmpty()
+
+        // Act
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        val sheet = sheets.single() as EarnBottomSheetRoute.NetworkFilter
+        assertThat(sheet.params.networks).isEqualTo(loadedNetworks.getOrNull())
+    }
+
+    @Test
+    fun `GIVEN a network sheet awaiting networks WHEN a type sheet deeplink lands THEN it opens without waiting`() =
+        runTest {
+            // Arrange
+            val stored = createEarnFilter(type = EarnFilterType.ALL)
+            val underTest = createModel(testScope = this)
+            val sheets = underTest.bottomSheetNavigation.trackSlot()
+            filterFlow.emit(stored)
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, sheet = FeedFilterSheet.Network)
+            advanceUntilIdle()
+
+            // Act
+            pendingFilter.value = FeedEntryFilter(
+                tabId = FeedTabId.Earn,
+                earnType = PreselectedEarnType.Yield,
+                sheet = FeedFilterSheet.Type,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { setEarnFilterUseCase(stored.copy(earnFilterType = EarnFilterType.YIELD)) }
+            assertThat(sheets.single()).isInstanceOf(EarnBottomSheetRoute.TypeFilter::class.java)
+
+            // Act - the superseded network sheet must not replace it once the networks arrive
+            networksFlow.value = loadedNetworks
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sheets.single()).isInstanceOf(EarnBottomSheetRoute.TypeFilter::class.java)
+        }
+
+    @Test
+    fun `GIVEN a network sheet awaiting networks WHEN a newer request lands THEN no sheet opens`() = runTest {
+        // Arrange
+        val underTest = createModel(testScope = this)
+        val sheets = underTest.bottomSheetNavigation.trackSlot()
+        filterFlow.emit(createEarnFilter())
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, sheet = FeedFilterSheet.Network)
+        advanceUntilIdle()
+
+        // Act
+        feedEntryController.request(FeedEntryRequest(isForYou = true))
+        feedEntryController.consumeEntry()
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sheets).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a network sheet deeplink WHEN no networks are available THEN no sheet opens`() = runTest {
+        // Arrange
+        val underTest = createModel(testScope = this)
+        val sheets = underTest.bottomSheetNavigation.trackSlot()
+        filterFlow.emit(createEarnFilter())
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, sheet = FeedFilterSheet.Network)
+
+        // Act
+        networksFlow.value = emptyList<EarnNetwork>().right()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sheets).isEmpty()
+        assertThat(pendingFilter.value).isNull()
+    }
+
+    /** Mirrors what a real `childSlot` would track, since bare `SlotNavigation` only relays events */
+    private fun SlotNavigation<EarnBottomSheetRoute>.trackSlot(): List<EarnBottomSheetRoute> {
+        val tracked = mutableListOf<EarnBottomSheetRoute>()
+        subscribe { event -> event.transformer(tracked.lastOrNull())?.let(tracked::add) }
+        return tracked
+    }
+
     private fun createModel(testScope: TestScope): EarnFeedTabModel {
         coEvery { fetchEarnNetworksUseCase() } returns Unit.right()
         coEvery { fetchTopEarnTokensUseCase(any()) } returns Unit.right()
@@ -392,7 +587,13 @@ internal class EarnFeedTabModelTest {
 
         override val pendingEntry = MutableStateFlow<FeedEntryRequest?>(null)
 
-        override fun request(request: FeedEntryRequest) = Unit
+        /** Every filter published before a later [request] is superseded by it. */
+        private var isSuperseded = false
+
+        override fun request(request: FeedEntryRequest) {
+            isSuperseded = true
+            pendingEntry.value = request
+        }
 
         override fun consumeEntry() {
             pendingEntry.value = null
@@ -401,6 +602,8 @@ internal class EarnFeedTabModelTest {
         override fun consumeFilter() {
             pendingFilter.value = null
         }
+
+        override fun isLatest(filter: FeedEntryFilter): Boolean = !isSuperseded
     }
 
     private fun paginating(currencyId: String): BatchListState<Int, List<EarnTokenWithCurrency>> = BatchListState(

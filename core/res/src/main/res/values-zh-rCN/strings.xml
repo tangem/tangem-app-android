@@ -2495,11 +2495,11 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">无法重命名卡片</string>
   <string name="tangem_pay_card_frozen">卡片已冻结</string>
   <string name="tangem_pay_card_payment">卡片支付</string>
-  <string name="tangem_pay_close_card_disabled_last_card">您无法关闭最后一张卡片</string>
-  <string name="tangem_pay_close_card_popup_description">它将从付款账户中消失</string>
-  <string name="tangem_pay_close_card_popup_primary_button_title">关闭卡片</string>
+  <string name="tangem_pay_close_card_disabled_last_card">您无法注销最后一张卡片</string>
+  <string name="tangem_pay_close_card_popup_description">它将从应用中消失</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">注销卡片</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">返回</string>
-  <string name="tangem_pay_close_card_popup_title">关闭您的卡片？</string>
+  <string name="tangem_pay_close_card_popup_title">注销您的卡片？</string>
   <string name="tangem_pay_deposit">存款</string>
   <string name="tangem_pay_dispute">争议</string>
   <string name="tangem_pay_explore_transaction">探索交易</string>
@@ -2621,7 +2621,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">卡片已添加到 Google 钱包</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">取消 %1$s，切换到 %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">支付套餐月费并开始使用新卡片</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">在 %1$s 前为您的账户充值</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">请为您的账户充值 %1$s</string>
   <string name="tangempay_card_details_card_number">卡号</string>
   <string name="tangempay_card_details_change_pin">PIN码</string>
   <string name="tangempay_card_details_change_pin_success_description">该卡已完全准备好用于支付。</string>
@@ -2661,7 +2661,7 @@
   <string name="tangempay_card_details_rename_card_placeholder">卡片名称</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
   <string name="tangempay_card_details_show_details">显示详情</string>
-  <string name="tangempay_card_details_system_downgrade_subtitle">如果余额持续为负，您的 %1$s 卡片将于 %2$s 关闭</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">如果余额持续为负，您的 %1$s 卡片将于 %2$s 被注销</string>
   <string name="tangempay_card_details_system_downgrade_title">请尽快为您的账户充值</string>
   <string name="tangempay_card_details_title">卡片详情</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试</string>
@@ -2676,7 +2676,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">从 %s设定一个限额</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
   <string name="tangempay_card_page_activating_banner_title">正在激活您的实体卡</string>
-  <string name="tangempay_card_page_closing_banner_description">最多可能需要 5 分钟</string>
+  <string name="tangempay_card_page_closing_banner_description">通常需要最多 5 分钟</string>
   <string name="tangempay_card_page_closing_banner_title">正在注销您的卡片</string>
   <string name="tangempay_card_page_daily_limit_change">改变</string>
   <string name="tangempay_card_page_daily_limit_current_limit">当前限额</string>
@@ -2918,7 +2918,7 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">将USDC存入支付账户以支付发行费用</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">无法支付费用</string>
   <string name="tangempay_reissue_card_title">要重新发行您的卡片吗？</string>
-  <string name="tangempay_reissue_plastic_description">您当前的实体卡将立即被关闭。您将收到一张带有新卡片信息的实体卡。</string>
+  <string name="tangempay_reissue_plastic_description">您当前的实体卡将立即被注销。您将收到一张带有新卡片信息的实体卡。</string>
   <string name="tangempay_reissue_plastic_title">要更换实体卡吗？</string>
   <string name="tangempay_remove_account">删除账户</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay 将从主屏幕中移除，即使重新安装该应用，它也不会再次出现。</string>
@@ -2937,7 +2937,7 @@
   <string name="tangempay_select_plan_compare">比较套餐</string>
   <string name="tangempay_select_plan_confirm_downgrade_title">您的 %1$s 套餐和 %2$s 卡片将持续有效至 %3$s</string>
   <string name="tangempay_select_plan_confirm_point_cancel_till">您可在 %1$s 前取消此次切换</string>
-  <string name="tangempay_select_plan_confirm_point_cards_closed">您的 %1$s 卡片将被关闭</string>
+  <string name="tangempay_select_plan_confirm_point_cards_closed">您的 %1$s 卡片将被注销</string>
   <string name="tangempay_select_plan_confirm_point_monthly_fee">将从您的账户扣除月费 %1$s</string>
   <string name="tangempay_select_plan_confirm_point_move_on_date">我们将于 %1$s 为您切换到 %2$s 套餐</string>
   <string name="tangempay_select_plan_confirm_point_no_fee">不收取任何费用</string>

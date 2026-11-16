@@ -2380,11 +2380,11 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">無法重新命名卡片</string>
   <string name="tangem_pay_card_frozen">卡片已凍結</string>
   <string name="tangem_pay_card_payment">信用卡支付</string>
-  <string name="tangem_pay_close_card_disabled_last_card">您無法關閉最後一張卡片</string>
+  <string name="tangem_pay_close_card_disabled_last_card">您無法註銷最後一張卡片</string>
   <string name="tangem_pay_close_card_popup_description">它將從應用程式中消失</string>
-  <string name="tangem_pay_close_card_popup_primary_button_title">關閉卡片</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">註銷卡片</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">返回</string>
-  <string name="tangem_pay_close_card_popup_title">關閉您的卡片？</string>
+  <string name="tangem_pay_close_card_popup_title">註銷您的卡片？</string>
   <string name="tangem_pay_deposit">充值</string>
   <string name="tangem_pay_dispute">爭議</string>
   <string name="tangem_pay_explore_transaction">探索交易</string>
@@ -2513,7 +2513,7 @@
   <string name="tangempay_card_details_added_to_google_wallet_text">卡片已新增至 Google 錢包</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">取消 %1$s，切換至 %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">支付方案月費並開始使用新卡片</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">在 %1$s 前為您的帳戶儲值</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">請為您的帳戶儲值 %1$s</string>
   <string name="tangempay_card_details_card_number">卡號</string>
   <string name="tangempay_card_details_change_pin">修改 PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">卡片已完全准备好进行支付。</string>
@@ -2553,7 +2553,7 @@
   <string name="tangempay_card_details_rename_card_placeholder">卡片名稱</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
   <string name="tangempay_card_details_show_details">顯示詳情</string>
-  <string name="tangempay_card_details_system_downgrade_subtitle">如果餘額持續為負，您的 %1$s 卡片將於 %2$s 關閉</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">如果餘額持續為負，您的 %1$s 卡片將於 %2$s 被註銷</string>
   <string name="tangempay_card_details_system_downgrade_title">請盡快為您的帳戶儲值</string>
   <string name="tangempay_card_details_title">卡片详情</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">請稍後再試</string>
@@ -2568,7 +2568,7 @@
   <string name="tangempay_card_limit_setup_amount_subtitle">從 %s 設定限額</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
   <string name="tangempay_card_page_activating_banner_title">正在啟用您的實體卡</string>
-  <string name="tangempay_card_page_closing_banner_description">最多可能需要 5 分鐘</string>
+  <string name="tangempay_card_page_closing_banner_description">通常需要最多 5 分鐘</string>
   <string name="tangempay_card_page_closing_banner_title">正在註銷您的卡片</string>
   <string name="tangempay_card_page_daily_limit_change">變更</string>
   <string name="tangempay_card_page_daily_limit_current_limit">目前限額</string>
@@ -2686,7 +2686,7 @@
   <string name="tangempay_issue_card_notification_description">通常需要最多15分钟</string>
   <string name="tangempay_issue_card_notification_title">設置您的 Tangem 卡</string>
   <string name="tangempay_issuing_new_digital_card_title">正在發行新的數位卡</string>
-  <string name="tangempay_issuing_your_card">正在发行您的卡片</string>
+  <string name="tangempay_issuing_your_card">正在發行您的卡片</string>
   <string name="tangempay_issuing_your_card_description">卡片通常會在 5 分鐘內自動發行。如需人工審核的特殊情況，可能需要最長 48 小時。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">確認取消</string>
@@ -2701,7 +2701,7 @@
   <string name="tangempay_kyc_rejected">已拒絕</string>
   <string name="tangempay_kyc_rejected_button_text">隱藏狀態</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我們無法驗證</string>
-  <string name="tangempay_kyc_rejected_description_span">您的身份</string>
+  <string name="tangempay_kyc_rejected_description_span">您的個人資料</string>
   <string name="tangempay_main_select_plan">選擇方案</string>
   <string name="tangempay_maximum_cards_issued_description">註銷一張卡片即可新增卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升級方案以取得更多卡片</string>
@@ -2812,7 +2812,7 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">將 USDC 存入支付帳戶以支付發行費用</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">無法支付費用</string>
   <string name="tangempay_reissue_card_title">要重新發行您的卡片嗎？</string>
-  <string name="tangempay_reissue_plastic_description">您目前的實體卡將立即被關閉。您將收到一張帶有新卡片資料的實體卡。</string>
+  <string name="tangempay_reissue_plastic_description">您目前的實體卡將立即被註銷。您將收到一張帶有新卡片資料的實體卡。</string>
   <string name="tangempay_reissue_plastic_title">要更換實體卡嗎？</string>
   <string name="tangempay_remove_account">移除帳戶</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay 將從主畫面移除，即使重新安裝應用程式，也不會再次出現。</string>
@@ -2831,7 +2831,7 @@
   <string name="tangempay_select_plan_compare">比較方案</string>
   <string name="tangempay_select_plan_confirm_downgrade_title">您的 %1$s 方案和 %2$s 卡片將持續有效至 %3$s</string>
   <string name="tangempay_select_plan_confirm_point_cancel_till">您可在 %1$s 前取消此次切換</string>
-  <string name="tangempay_select_plan_confirm_point_cards_closed">您的 %1$s 卡片將被關閉</string>
+  <string name="tangempay_select_plan_confirm_point_cards_closed">您的 %1$s 卡片將被註銷</string>
   <string name="tangempay_select_plan_confirm_point_monthly_fee">將從您的帳戶扣除月費 %1$s</string>
   <string name="tangempay_select_plan_confirm_point_move_on_date">我們將於 %1$s 為您切換到 %2$s 方案</string>
   <string name="tangempay_select_plan_confirm_point_no_fee">不收取任何費用</string>

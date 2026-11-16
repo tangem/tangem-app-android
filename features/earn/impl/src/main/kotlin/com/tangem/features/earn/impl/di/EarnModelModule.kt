@@ -2,6 +2,8 @@ package com.tangem.features.earn.impl.di
 
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.earn.impl.banner.model.EarnBannerModel
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetModel
+import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.picker.model.EarnPickerModel
 import com.tangem.features.earn.impl.sheet.model.EarnYieldSheetModel
 import com.tangem.features.earn.impl.widgets.calculator.model.EarnCalculatorModel
@@ -20,6 +22,16 @@ internal interface EarnModelModule {
     @IntoMap
     @ClassKey(EarnCalculatorModel::class)
     fun bindEarnCalculatorModel(model: EarnCalculatorModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnGetTokenSheetModel::class)
+    fun bindEarnGetTokenSheetModel(model: EarnGetTokenSheetModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnInfoModel::class)
+    fun bindEarnInfoModel(model: EarnInfoModel): Model
 
     @Binds
     @IntoMap

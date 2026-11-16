@@ -7,12 +7,16 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterWithNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -183,6 +187,84 @@ internal class TransactionDataToTxHistoryItemConverterTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LendingCall {
+
+        private val eth = currencyFactory.createCoin(Blockchain.Ethereum)
+        private val converter = createConverter(currency = eth)
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: LendingModel) {
+            // Arrange
+            val callData = if (model.isUpgradeWrapped) upgradeWrapped(model.callData) else model.callData
+            val transaction = transaction(
+                amount = Amount(value = model.value, blockchain = Blockchain.Ethereum),
+                fee = Fee.Common(amount = CALL_FEE),
+                extras = EthereumTransactionExtras(callData = callData),
+            ).apply { status = TransactionStatus.Unconfirmed }
+
+            // Act
+            val actual = converter.convert(transaction)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                TxInfo.Single(
+                    txHash = TX_HASH,
+                    timestampInMillis = transaction.date!!.timeInMillis,
+                    isOutgoing = true,
+                    destinationType = TxInfo.DestinationType.Single(TxInfo.AddressType.User(RECIPIENT_ADDRESS)),
+                    sourceType = TxInfo.SourceType.Single(OWN_ADDRESS),
+                    interactionAddressType = TxInfo.InteractionAddressType.User(RECIPIENT_ADDRESS),
+                    status = TxInfo.TransactionStatus.Unconfirmed,
+                    type = model.expectedType,
+                    amount = model.expectedAmount,
+                    fee = CALL_FEE.toDomain(),
+                ),
+            )
+        }
+
+        private fun provideTestModels() = listOf(false, true).flatMap { isUpgradeWrapped ->
+            listOf(
+                LendingModel(
+                    callData = EthereumYieldSupplyEnterWithNativeCallData,
+                    value = HALF,
+                    isUpgradeWrapped = isUpgradeWrapped,
+                    expectedType = TxInfo.TransactionType.Lending.Deposit,
+                    expectedAmount = HALF,
+                ),
+                LendingModel(
+                    callData = EthereumYieldSupplyWithdrawNativeCallData(
+                        Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum),
+                    ),
+                    value = BigDecimal.ZERO,
+                    isUpgradeWrapped = isUpgradeWrapped,
+                    expectedType = TxInfo.TransactionType.Lending.Withdraw(
+                        isEntire = false,
+                        requestedAmount = BigDecimal.ONE,
+                    ),
+                    expectedAmount = BigDecimal.ONE,
+                ),
+                LendingModel(
+                    callData = EthereumYieldSupplyExitNativeCallData,
+                    value = BigDecimal.ZERO,
+                    isUpgradeWrapped = isUpgradeWrapped,
+                    expectedType = TxInfo.TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null),
+                    expectedAmount = BigDecimal.ZERO,
+                ),
+            )
+        }
+    }
+
+    internal data class LendingModel(
+        val callData: SmartContractCallData,
+        val value: BigDecimal,
+        val isUpgradeWrapped: Boolean,
+        val expectedType: TxInfo.TransactionType,
+        val expectedAmount: BigDecimal,
+    )
+
     internal data class FallbackModel(
         val transaction: TransactionData.Uncompiled,
         val currency: CryptoCurrency?,
@@ -244,5 +326,7 @@ internal class TransactionDataToTxHistoryItemConverterTest {
         const val FOREIGN_ADDRESS = "0x4444444444444444444444444444444444444444"
         const val TX_HASH = "0xhash"
         const val MERKL_CLAIM_CALL_DATA = "0xb4701e3e0001"
+        val HALF: BigDecimal = BigDecimal("0.5")
+        val CALL_FEE = Amount(value = BigDecimal("0.001"), blockchain = Blockchain.Ethereum)
     }
 }

@@ -20,19 +20,22 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.impl.R
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_arrow_top_right_16
+import com.tangem.core.ui.res.generated.icons.ic_arrow_top_right_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.earn.api.ui.EarnRowUM
 
+/** The label takes the width the value leaves, so it is not cut; the design splits a link row in halves. */
 @Composable
 internal fun EarnDetailRow(state: EarnRowUM, modifier: Modifier = Modifier, divider: Boolean = false) {
     TangemRow(
         modifier = modifier,
         divider = divider,
+        contentLead = if (state.onValueClick == null) TangemRowContentLead.Start else TangemRowContentLead.Equal,
         titleSlot = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -72,15 +75,15 @@ private fun Value(state: EarnRowUM) {
             modifier = Modifier
                 .clip(CircleShape)
                 .clickable(role = Role.Button, onClick = onValueClick),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TangemRowText(text = state.value, role = TangemRowTextRole.Value)
             Icon(
-                imageVector = Icons.ic_arrow_top_right_16,
+                imageVector = Icons.ic_arrow_top_right_20,
                 contentDescription = null,
-                tint = TangemTheme.colors3.icon.primary,
-                modifier = Modifier.size(16.dp),
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -91,7 +94,7 @@ private fun InfoButton(description: String, onClick: () -> Unit) {
     Icon(
         imageVector = Icons.ic_info_20,
         contentDescription = description,
-        tint = TangemTheme.colors3.icon.tertiary,
+        tint = TangemTheme.colors3.icon.secondary,
         modifier = Modifier
             .clip(CircleShape)
             .clickable(role = Role.Button, onClick = onClick)

@@ -691,6 +691,7 @@ class PromoDeeplinkHandlerTest {
         queryParams = queryParams,
         scope = this,
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 
     private fun runActivationErrorCase(

@@ -1,13 +1,13 @@
 package com.tangem.features.earn.impl.widgets.calculator.ui.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class EarnCalculatorUM(
-    val incentive: TangemBadgeUM?,
+    val incentive: EarnIncentiveUM?,
     val total: TextReference,
     val earned: TextReference,
     val earnedLabel: TextReference,
@@ -31,15 +31,9 @@ internal data class EarnHorizonItemUM(
     val onClick: () -> Unit,
 )
 
-/**
- * Layers from bottom to top as shares of the tallest bar: the initial balance, the total balance of the month and
- * the monthly top-up. The layers sit one above the other, so the tallest bar is exactly 1.
- */
 @Immutable
 internal data class EarnProjectionBarUM(
-    val initial: Float,
-    val total: Float,
-    val topUp: Float,
+    val earned: Float,
 )
 
 @Immutable

@@ -6,6 +6,7 @@ import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpClientResponse
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult
+import com.tangem.data.mcp.api.models.response.McpIntentHistoryResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -85,4 +86,20 @@ internal interface McpApi {
     @GET("api/authentication/v1/mcp/client")
     @RequiresSessionAuth
     suspend fun getClient(@Query("client_id") clientId: String): ApiResponse<McpClientResponse>
+
+    /**
+     * Returns the intents agents raised for the wallet, newest first, from the Notification Service.
+     *
+     * The service only has the card of an intent: its id, source, status and session. The details are asked of the
+     * service that owns the intent.
+     *
+     * @param walletId the 64-character hexadecimal wallet id matching the token's wallet claim.
+     */
+    @GET("api/notifications/v1/intent-history")
+    @RequiresSessionAuth
+    suspend fun getIntentHistory(
+        @Query("walletId") walletId: String,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int,
+    ): ApiResponse<McpIntentHistoryResponse>
 }

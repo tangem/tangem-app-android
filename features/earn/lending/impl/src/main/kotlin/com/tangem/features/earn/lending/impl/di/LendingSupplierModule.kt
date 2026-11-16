@@ -1,6 +1,8 @@
 package com.tangem.features.earn.lending.impl.di
 
 import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
+import com.tangem.domain.models.currency.balance.BalanceContributionProvider
+import com.tangem.features.earn.lending.impl.provider.aave.AaveContributionProvider
 import com.tangem.features.earn.lending.impl.supplier.DefaultLendingFetcher
 import com.tangem.features.earn.lending.impl.supplier.LendingBalanceFetcher
 import com.tangem.features.earn.lending.impl.supplier.DefaultLendingProducer
@@ -28,6 +30,10 @@ internal interface LendingSupplierBindsModule {
     @Binds
     @IntoSet
     fun bindBalanceFetcher(impl: LendingBalanceFetcher): BalanceContributionFetcher
+
+    @Binds
+    @IntoSet
+    fun bindContributionProvider(impl: AaveContributionProvider): BalanceContributionProvider
 }
 
 @Module

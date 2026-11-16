@@ -14,7 +14,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isTangemPayCompatible
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.isPredictionAccountSupported
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -41,7 +40,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     override val flowProducerTools: FlowProducerTools,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {
@@ -61,7 +59,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
             val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
             accountList
                 .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
-                .addAccountIf(userWallet.isMoneyAccountSupported()) { Account.Money(walletId) }
+                .addAccountIf(userWallet.isTangemPayCompatible) { Account.Money(walletId) }
                 .addAccountIf(userWallet.isPredictionSupported(isPredictionOnboarded)) {
                     Account.Prediction(walletId)
                 }
@@ -71,12 +69,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
 
     private fun predictionOnboardedFlow(walletId: UserWalletId): Flow<Boolean> {
         return polymarketOnboardedStore.isOnboarded(walletId)
-    }
-
-    private fun UserWallet.isMoneyAccountSupported(): Boolean {
-        if (!moneyAccountsFeatureToggles.isMoneyAccountsEnabled) return false
-
-        return isTangemPayCompatible
     }
 
     private fun UserWallet.isPredictionSupported(isOnboarded: Boolean): Boolean {

@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -30,12 +32,19 @@ internal class PolymarketOnboardingComponent(
         params = PolymarketOnboardingParams(userWalletId = userWalletId),
     )
 
+    init {
+        lifecycle.doOnResume { model.setHeroVideoRunning(isRunning = true) }
+        lifecycle.doOnPause { model.setHeroVideoRunning(isRunning = false) }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val heroVideo by model.heroVideoState.collectAsStateWithLifecycle()
 
         PolymarketOnboardingScreen(
             state = state,
+            heroVideo = heroVideo.surface,
             onCloseClick = model::onCloseClick,
             modifier = modifier,
         )

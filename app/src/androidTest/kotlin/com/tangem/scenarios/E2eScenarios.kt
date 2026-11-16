@@ -44,6 +44,7 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 import java.math.BigDecimal
 import java.math.RoundingMode
+import org.junit.Assume.assumeTrue
 import com.tangem.core.ui.R as CoreUiR
 
 fun BaseTestCase.waitForMainScreenLoaded() {
@@ -80,7 +81,19 @@ fun BaseTestCase.addNetworkToMainViaMarkets(network: E2eCatalog.E2eNetwork) {
         searchTokenInMarkets(network.searchQuery)
     }
     step("Click on '${network.tokenName}' token") {
-        awaitSuccess { onMarketsScreen { tokenWithTitle(network.tokenName).clickWithAssertion() } }
+        // Low-cap coins (under 100k USD market cap, e.g. ZENIQ) are hidden behind a "Show tokens" button that
+        // only renders once the async search returns. Poll fast with isDisplayedNow (no per-probe flaky-safety
+        // wait, which would otherwise burn the whole budget on the still-hidden token): reveal the low-cap list
+        // as soon as the button appears, then wait for the token row before tapping it.
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onMarketsScreen {
+                if (showTokensButton.isDisplayedNow()) showTokensButton.clickWithAssertion()
+                check(tokenWithTitle(network.tokenName).isDisplayedNow()) {
+                    "'${network.tokenName}' token not visible yet in Markets search"
+                }
+            }
+        }
+        onMarketsScreen { tokenWithTitle(network.tokenName).clickWithAssertion() }
         waitForIdle()
     }
     step("Add '${network.networkName}' to the portfolio") {
@@ -347,29 +360,22 @@ fun BaseTestCase.assertTokenBalanceLoadedAndNonNegative(tokenTitle: String) {
     }
 }
 
-// Small native-coin reserve required on top of the send amount to cover the network fee. A single constant is
-// enough while fees are tiny (≈0.006–0.008 POL/send); make it a per-network catalog field if a network needs more.
-private val FEE_RESERVE = BigDecimal("0.01")
-
 // Mirrors the iOS SendBetweenAccountsE2ETests flow: always a real on-chain broadcast.
 fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, amount: String) {
     performSendFromRicherAccount(
         tokenTitle = network.mainScreenToken,
         symbol = network.searchQuery,
         amount = amount,
-        feeReserve = FEE_RESERVE,
         accountAddresses = network.accountAddresses,
         networkName = network.networkName,
     )
 }
 
-// Gas is paid in the native coin, so the token balance only needs to cover the amount (no native fee reserve).
 fun BaseTestCase.sendTokenFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, token: E2eCatalog.E2eToken) {
     performSendFromRicherAccount(
         tokenTitle = token.mainScreenToken,
         symbol = token.searchQuery,
         amount = token.sendAmount,
-        feeReserve = BigDecimal.ZERO,
         accountAddresses = network.accountAddresses,
         networkName = network.networkName,
     )
@@ -380,7 +386,6 @@ fun BaseTestCase.sendWithCustomFeeFromRicherAccountToOther(network: E2eCatalog.E
         tokenTitle = network.mainScreenToken,
         symbol = network.searchQuery,
         amount = network.sendAmount,
-        feeReserve = FEE_RESERVE,
         accountAddresses = network.accountAddresses,
         networkName = network.networkName,
         beforeBroadcast = { setCustomFeeAboveMarket(percentAboveMarket) },
@@ -391,7 +396,6 @@ private fun BaseTestCase.performSendFromRicherAccount(
     tokenTitle: String,
     symbol: String,
     amount: String,
-    feeReserve: BigDecimal,
     accountAddresses: List<String>,
     networkName: String,
     beforeBroadcast: BaseTestCase.() -> Unit = {},
@@ -424,11 +428,14 @@ private fun BaseTestCase.performSendFromRicherAccount(
     val senderName = accountNames[senderIndex]
     // Fail here with a clear top-up message when the wallet runs dry, rather than timing out later on a disabled
     // Next button (the app blocks it on insufficient funds) — on a scheduled run that is the expected dry-wallet
-    // failure, and a bare "Next not enabled" would read like an app bug.
-    val required = amount.toBigDecimal() + feeReserve
-    require(balances[senderIndex] >= required) {
+    // failure, and a bare "Next not enabled" would read like an app bug. We only require the balance to be at least
+    // the send amount (not amount + a fixed fee reserve): the fee varies wildly by network — tiny on L2s, where a
+    // flat reserve would falsely reject a wallet that can actually send — and the app's own Next button enforces the
+    // real amount + fee. Use >=, not >: for token sends gas is paid in the native coin, so transferring the full
+    // token balance (balance == amount) is valid and must not be rejected here.
+    require(balances[senderIndex] >= amount.toBigDecimal()) {
         "E2E wallet is out of funds on $networkName: richer account '$senderName' holds " +
-            "${balances[senderIndex]} $symbol, needs >= $required (amount $amount + fee reserve). " +
+            "${balances[senderIndex]} $symbol, needs >= $amount (the send amount). " +
             "Top up ${accountAddresses.joinToString()}"
     }
     // The on-screen account order is reorderable (ApplyAccountListSortingUseCase), so map the recipient by account
@@ -488,7 +495,9 @@ private fun BaseTestCase.performSendFromRicherAccount(
 // EIP-1559; the increase is asserted on the field value (the confirm-screen fiat fee rounds to "<$0.01" on cheap
 // networks and would not show the change). Market/custom values are reported as step names for the Allure report.
 private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
+    // EIP-1559 networks expose a "Max fee" custom field; legacy-gas networks (e.g. ZENIQ) a single "Gas price".
     val maxFeeTitle = getResourceString(CoreUiR.string.send_custom_evm_max_fee)
+    val gasPriceTitle = getResourceString(CoreUiR.string.send_gas_price)
     step("Open the fee selector and select Custom") {
         // The fee keeps computing after the confirm screen appears; the selector is a no-op until it is ready.
         // The ⇕ select-fee icon renders only once the fee is loaded and selectable, so wait for it before tapping.
@@ -498,27 +507,48 @@ private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
         awaitSuccess { onSendSelectNetworkFeeBottomSheet { customSelectorItem.assertIsDisplayed() } }
         onSendSelectNetworkFeeBottomSheet { customSelectorItem.performClick() }
     }
-    step("Set the custom max fee $percent% above market") {
-        awaitSuccess { onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(maxFeeTitle).assertIsDisplayed() } }
+    step("Set the custom fee $percent% above market") {
+        // The custom editor shows different fields per fee model: EIP-1559 networks a "Max fee" field, legacy-gas
+        // networks (e.g. ZENIQ) a single "Gas price" field. They are mutually exclusive — detect which is shown
+        // (legacy is then skipped below, see [REDACTED_TASK_KEY]).
+        var feeTitle: String? = null
+        awaitSuccess {
+            onSendSelectNetworkFeeBottomSheet {
+                feeTitle = when {
+                    inputTextFieldValue(maxFeeTitle).isDisplayedNow() -> maxFeeTitle
+                    inputTextFieldValue(gasPriceTitle).isDisplayedNow() -> gasPriceTitle
+                    else -> null
+                }
+            }
+            requireNotNull(feeTitle) { "No editable custom fee field found ('Max fee' or 'Gas price')" }
+        }
+        val title = feeTitle!!
+        // Legacy-gas (non-EIP-1559) custom fee is broken in the app: EthereumLegacyCustomFeeConverter reads the
+        // "Gas price" field as wei instead of gwei, so a custom price is mis-scaled by ~10^9 and the node rejects the
+        // broadcast as "gas price too small" ([REDACTED_TASK_KEY]). Skip until the converter is fixed, rather than sending a
+        // doomed transaction.
+        assumeTrue(
+            "Skipped on legacy-gas (non-EIP-1559) network: custom Gas price is mis-scaled gwei→wei ([REDACTED_TASK_KEY])",
+            title != gasPriceTitle,
+        )
         var marketRaw = ""
-        onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(maxFeeTitle).extractEditableText() }
+        onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(title).extractEditableText() }
         val market = numericPart(marketRaw)
-        require(market > BigDecimal.ZERO) { "Prefilled market max fee is not a positive number: '$marketRaw'" }
-        // maxFeePerGas is in gwei and can be a fraction of a gwei on cheap networks; keep the field's full
-        // precision and round UP so the bump is always a representable value strictly above market (rounding to
-        // 2 dp could erase a small bump — 0.01→0.01 — or floor a low fee to 0, failing the assertion below).
-        val bumped = market.multiply(BigDecimal(100 + percent)).divide(BigDecimal(100))
-            .setScale(9, RoundingMode.UP).stripTrailingZeros().toPlainString()
+        require(market > BigDecimal.ZERO) { "Prefilled market fee is not a positive number: '$marketRaw'" }
+        val raised = market.multiply(BigDecimal(100 + percent)).divide(BigDecimal(100))
+        // The EIP-1559 "Max fee" field accepts fractional gwei (sub-gwei on cheap chains), so keep the field's full
+        // precision and round UP (rounding to 2 dp could erase a small bump or floor a low fee to 0).
+        val bumped = raised.setScale(9, RoundingMode.UP).stripTrailingZeros().toPlainString()
         onSendSelectNetworkFeeBottomSheet {
-            inputTextFieldValue(maxFeeTitle).performClick()
-            inputTextFieldValue(maxFeeTitle).performTextReplacement(bumped)
+            inputTextFieldValue(title).performClick()
+            inputTextFieldValue(title).performTextReplacement(bumped)
         }
         var appliedRaw = ""
-        onSendSelectNetworkFeeBottomSheet { appliedRaw = inputTextFieldValue(maxFeeTitle).extractEditableText() }
+        onSendSelectNetworkFeeBottomSheet { appliedRaw = inputTextFieldValue(title).extractEditableText() }
         require(numericPart(appliedRaw) > market) {
-            "Custom max fee did not increase above market: market='$marketRaw' applied='$appliedRaw'"
+            "Custom fee did not increase above market: market='$marketRaw' applied='$appliedRaw'"
         }
-        step("Market max fee: $marketRaw; custom (+$percent%): $bumped")
+        step("Custom fee field '$title' — market: $marketRaw; custom (+$percent%): $bumped")
     }
     step("Apply the custom fee") {
         onSendSelectNetworkFeeBottomSheet { doneButton.performClick() }

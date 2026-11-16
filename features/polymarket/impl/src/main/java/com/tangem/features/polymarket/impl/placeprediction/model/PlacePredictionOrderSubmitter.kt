@@ -6,6 +6,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -171,8 +172,10 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     }
 
     private fun onSessionKeyLost(onKeyLost: () -> Unit): PlaceResultUM? {
+        logger.i("The session key could not sign an order confirmed for it, the owner has to confirm it")
         onKeyLost()
-        showPlaceFailure(reason = "The session key could not sign an order confirmed for it")
+        returnToIdle()
+        messageSender.send(SnackbarMessage(resourceReference(R.string.prediction_session_key_toast_order_fallback)))
         return null
     }
 

@@ -23,7 +23,7 @@ import com.tangem.common.ui.onboarding.OnboardingBenefitCard
 import com.tangem.common.ui.onboarding.OnboardingFaqItem
 import com.tangem.common.ui.onboarding.OnboardingHeadline
 import com.tangem.common.ui.onboarding.OnboardingHero
-import com.tangem.core.ui.R as UiR
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -39,6 +39,7 @@ import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24
  */
 @Composable
 internal fun PolymarketReconnectContent(
+    video: VideoSurfaceState?,
     scrollState: ScrollState,
     contentPadding: PaddingValues,
     trailingSpace: Dp,
@@ -57,7 +58,7 @@ internal fun PolymarketReconnectContent(
     ) {
         // No top padding: the hero is full-bleed and scrolls under the status bar and the top navigation.
         OnboardingHero(
-            imageResId = UiR.drawable.img_prediction_welcome_hero,
+            media = { PolymarketOnboardingHeroMedia(video = video) },
             tintStartY = HERO_TINT_START_Y,
             tintEndY = HERO_TINT_END_Y,
         ) {

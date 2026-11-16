@@ -5,18 +5,16 @@ import arrow.core.raise.either
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
 class GetTangemPayProductsAvailabilityForCustomerUseCase(
     private val checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId): Either<TangemPayApiError, Set<TangemPayProduct>> {
         val results = coroutineScope {
-            supportedProducts()
+            TangemPayProduct.entries
                 .map { product ->
                     async {
                         product to checkTangemPayEligibilityForCustomerUseCase(
@@ -31,14 +29,6 @@ class GetTangemPayProductsAvailabilityForCustomerUseCase(
             results
                 .filter { (_, eligibility) -> eligibility.bind().isAvailable }
                 .mapTo(mutableSetOf()) { (product, _) -> product }
-        }
-    }
-
-    private fun supportedProducts(): List<TangemPayProduct> {
-        return if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
-            TangemPayProduct.entries
-        } else {
-            TangemPayProduct.entries - TangemPayProduct.BANKING_ACCOUNT
         }
     }
 }

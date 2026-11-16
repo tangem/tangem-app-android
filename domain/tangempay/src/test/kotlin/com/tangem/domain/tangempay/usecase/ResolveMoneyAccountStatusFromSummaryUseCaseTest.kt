@@ -7,7 +7,13 @@ import com.tangem.domain.tangempay.model.CustomerSummary
 import com.tangem.domain.tangempay.model.CustomerSummary.MoneyAccount
 import com.tangem.domain.tangempay.model.CustomerSummary.CustomerStatus
 import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.domain.tangempay.model.CustomerSummary.KycStatus as SummaryKycStatus
@@ -15,7 +21,15 @@ import com.tangem.domain.tangempay.model.CustomerSummary.KycStatus as SummaryKyc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
 
-    private val useCase = ResolveMoneyAccountStatusFromSummaryUseCase()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+
+    private val useCase = ResolveMoneyAccountStatusFromSummaryUseCase(tangemPayFeatureToggles = tangemPayFeatureToggles)
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(tangemPayFeatureToggles)
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
+    }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -25,6 +39,23 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN toggle off AND active customer with kyc in progress WHEN invoke THEN empty`() {
+        // Arrange
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
+        val summary = summary(
+            customerStatus = CustomerStatus.ACTIVE,
+            kycStatus = SummaryKycStatus.IN_PROGRESS,
+            banking = MoneyAccount.Activation.Status.PROCESSING,
+        )
+
+        // Act
+        val actual = useCase(summary)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountStatusValue.Empty)
     }
 
     private fun provideTestModels() = listOf(
@@ -170,6 +201,33 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
                 banking = MoneyAccount.Activation.Status.DEACTIVATED,
             ),
             expected = null,
+        ),
+        ResolveModel(
+            name = "cdd: completed money account requires full fetch",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                banking = MoneyAccount.Activation.Status.COMPLETED,
+            ),
+            expected = null,
+        ),
+        ResolveModel(
+            name = "cdd: money issuing",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                banking = MoneyAccount.Activation.Status.PROCESSING,
+            ),
+            expected = MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                customerId = CUSTOMER_ID,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
+            ),
+        ),
+        ResolveModel(
+            name = "cdd: money not started",
+            summary = summary(customerStatus = CustomerStatus.ACTIVE, kycStatus = SummaryKycStatus.IN_PROGRESS),
+            expected = MoneyAccountStatusValue.Empty,
         ),
     )
 

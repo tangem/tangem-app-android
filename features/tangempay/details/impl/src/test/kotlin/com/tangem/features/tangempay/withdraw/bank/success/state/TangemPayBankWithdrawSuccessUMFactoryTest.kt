@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -81,6 +82,31 @@ internal class TangemPayBankWithdrawSuccessUMFactoryTest {
                 onCloseClick = onCloseClick,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN saved SPEI recipient with a bank name WHEN built THEN only recipient and CLABE rows`() {
+        // Arrange
+        val recipient = bankAccount(id = "acc-1")
+        val speiRecipient = recipient.copy(
+            details = recipient.details.copy(
+                currency = "MXN",
+                rail = BankRail.SPEI,
+                bankName = "BBVA Mexico",
+                accountNumber = "002010077777777771",
+                routingNumber = null,
+            ),
+        )
+        val draft = savedDraft().copy(recipient = speiRecipient, destination = offrampDestination(rail = BankRail.SPEI))
+
+        // Act
+        val actual = create(draft)
+
+        // Assert
+        assertThat(actual.rows).containsExactly(
+            RowUM(resourceReference(R.string.send_recipient), "Andrei Melnikov"),
+            RowUM(resourceReference(R.string.virtual_account_requisites_clabe), "002010077777777771"),
+        ).inOrder()
     }
 
     @Test

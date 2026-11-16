@@ -5,6 +5,7 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
+import com.tangem.domain.mcp.models.McpIntentHistoryPage
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -81,4 +82,15 @@ interface McpRepository {
      * once. A session that fails to be revoked stays, and comes back with the reloaded list.
      */
     suspend fun revokeAllSessions()
+
+    /**
+     * Reads one page of the intents agents raised for [walletId], newest first; [page] starts at 1.
+     *
+     * The service lists intents of every agent connected to the wallet and cannot filter them by session.
+     */
+    suspend fun getIntentHistory(
+        walletId: UserWalletId,
+        page: Int,
+        limit: Int,
+    ): Either<Throwable, McpIntentHistoryPage>
 }

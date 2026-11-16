@@ -30,6 +30,13 @@ import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
+/**
+ * Whether the coin leaves the wallet. Differs from [TxInfo.isOutgoing] — "the wallet sent it" — for a Lending
+ * withdrawal: the owner sends the call, and the call pays the coin back.
+ */
+internal val TxInfo.isOutgoingFunds: Boolean
+    get() = isOutgoing && type !is TxInfo.TransactionType.Lending.Withdraw
+
 // region Status helpers
 
 /** Maps the domain [TxInfo.TransactionStatus] to the UI [Status] bucket that drives row title/icon/amount colors. */

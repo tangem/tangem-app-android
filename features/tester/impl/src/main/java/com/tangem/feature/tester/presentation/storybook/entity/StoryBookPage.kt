@@ -17,6 +17,7 @@ import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.pagination.TangemPagination
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
@@ -126,6 +127,13 @@ internal data object DsComponentsListStory : StoryBookPage
 internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,
     val onSizeChange: (TangemLoaderSize) -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemPaginationStory(
+    val background: TangemPagination.Background,
+    val pageCount: Int,
+    val onBackgroundChange: (TangemPagination.Background) -> Unit,
+    val onPageCountChange: (Int) -> Unit,
 ) : DsStoryBookPage
 
 internal data class TangemDraggableStory(

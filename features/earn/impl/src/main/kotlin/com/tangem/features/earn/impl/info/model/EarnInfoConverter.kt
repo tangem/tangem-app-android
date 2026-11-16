@@ -2,10 +2,13 @@ package com.tangem.features.earn.impl.info.model
 
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.earn.impl.guardedBy
 import com.tangem.features.earn.impl.info.EarnInfoActions
@@ -43,6 +46,7 @@ internal class EarnInfoConverter @Inject constructor(
         product: EarnProduct,
         status: CryptoCurrencyStatus,
         appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
         ready: EarnProductState.Ready,
         callbacks: Callbacks,
         locale: Locale = Locale.getDefault(),
@@ -59,16 +63,17 @@ internal class EarnInfoConverter @Inject constructor(
         return EarnInfoUM(
             title = product.title,
             subtitle = stringReference(status.currency.network.name),
-            balanceFiat = stringReference(getFiatString(position.cryptoAmount, rate, appCurrency)),
-            balanceCrypto = stringReference(position.cryptoAmount.format { crypto(status.currency) }),
+            balanceFiat = stringReference(
+                getFiatString(position.cryptoAmount, rate, appCurrency).orMaskWithStars(isBalanceHidden),
+            ),
+            balanceCrypto = cryptoText(position.cryptoAmount, status.currency, isBalanceHidden),
             earned = position.earned?.let { earned ->
-                EarnInfoTexts.earnedChip(getFiatString(earned, rate, appCurrency))
+                EarnInfoTexts.earnedChip(getFiatString(earned, rate, appCurrency).orMaskWithStars(isBalanceHidden))
             },
             rewards = position.rewards?.let { rewards ->
                 rewardsBanner(
                     rewards = rewards,
-                    rate = rate,
-                    appCurrency = appCurrency,
+                    amount = getFiatString(rewards.amount, rate, appCurrency).orMaskWithStars(isBalanceHidden),
                     isStale = isStale,
                     callbacks = callbacks,
                 )
@@ -80,14 +85,22 @@ internal class EarnInfoConverter @Inject constructor(
                 provider = product.provider.title,
                 providerIcon = product.provider.icon,
                 description = position.description,
-                rows = position.rows.map { it.toUM(callbacks.onInfoClick, callbacks.onLinkClick) }.toImmutableList(),
+                rows = position.rows.map { row ->
+                    row.toUM(callbacks.onInfoClick, callbacks.onLinkClick) { amount ->
+                        cryptoText(amount, status.currency, isBalanceHidden)
+                    }
+                }.toImmutableList(),
                 // The informer modal cannot be built without entries
                 onHowItWorksClick = ready.howItWorks
                     ?.takeIf { it.entries.isNotEmpty() }
                     ?.let { { callbacks.onHowItWorksClick(it) } },
             ),
             benefits = ready.benefits.map { it.toBenefitUM() }.toImmutableList(),
-            details = ready.details.map { it.toUM(callbacks.onInfoClick, callbacks.onLinkClick) }.toImmutableList(),
+            details = ready.details.map { row ->
+                row.toUM(callbacks.onInfoClick, callbacks.onLinkClick) { amount ->
+                    cryptoText(amount, status.currency, isBalanceHidden = false)
+                }
+            }.toImmutableList(),
             secondary = ready.secondary.map { item ->
                 button(item = item, type = TangemButtonType.Secondary, isStale = isStale, callbacks = callbacks)
             }.toImmutableList(),
@@ -109,22 +122,17 @@ internal class EarnInfoConverter @Inject constructor(
             onBlocked = callbacks.onBlocked,
         )
 
-    private fun rewardsBanner(
-        rewards: EarnRewards,
-        rate: BigDecimal?,
-        appCurrency: AppCurrency,
-        isStale: Boolean,
-        callbacks: Callbacks,
-    ) = EarnInfoUM.RewardsUM(
-        title = EarnInfoTexts.rewardsTitle(getFiatString(rewards.amount, rate, appCurrency)),
-        description = EarnInfoTexts.rewardsDescription,
-        claim = button(
-            item = EarnActionItem(rewards.claimAction),
-            type = TangemButtonType.Primary,
-            isStale = isStale,
-            callbacks = callbacks,
-        ),
-    )
+    private fun rewardsBanner(rewards: EarnRewards, amount: String, isStale: Boolean, callbacks: Callbacks) =
+        EarnInfoUM.RewardsUM(
+            title = EarnInfoTexts.rewardsTitle(amount),
+            description = EarnInfoTexts.rewardsDescription,
+            claim = button(
+                item = EarnActionItem(rewards.claimAction),
+                type = TangemButtonType.Primary,
+                isStale = isStale,
+                callbacks = callbacks,
+            ),
+        )
 
     private fun tabs(ready: EarnProductState.Ready): ImmutableList<EarnInfoTab> = EarnInfoTab.entries.filter { tab ->
         when (tab) {
@@ -135,6 +143,10 @@ internal class EarnInfoConverter @Inject constructor(
     }.toImmutableList()
 
     private fun EarnTextBlock.toBenefitUM() = EarnBenefitUM(icon = icon, title = title, description = description)
+
+    /** The one place an amount of the position turns into text, so the header and the rows cannot differ. */
+    private fun cryptoText(amount: BigDecimal, currency: CryptoCurrency, isBalanceHidden: Boolean): TextReference =
+        stringReference(amount.format { crypto(currency) }.orMaskWithStars(isBalanceHidden))
 
     private fun EarnFreshness.formatAsOf(locale: Locale, zoneId: ZoneId): String =
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)

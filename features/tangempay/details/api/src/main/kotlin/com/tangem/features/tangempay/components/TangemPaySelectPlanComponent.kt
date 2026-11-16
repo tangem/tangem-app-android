@@ -13,7 +13,6 @@ interface TangemPaySelectPlanComponent : ComposableContentComponent {
     )
 
     sealed interface Mode {
-        data object TiersOnboarding : Mode
         data object ChangePlan : Mode
         data class CreateOnboardingOrder(val availableProducts: Set<TangemPayProduct>) : Mode
     }

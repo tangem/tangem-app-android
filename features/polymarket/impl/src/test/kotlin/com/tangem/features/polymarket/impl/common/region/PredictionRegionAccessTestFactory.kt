@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.common.region
 
 import arrow.core.right
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -15,7 +16,8 @@ internal fun createPredictionRegionAccess(isBlocked: Boolean? = null): Predictio
     )
 
     if (isBlocked != null) {
-        coEvery { checkGeoblock() } returns isBlocked.right()
+        val geoblock = if (isBlocked) PolymarketGeoblock.BLOCKED else PolymarketGeoblock.ALLOWED
+        coEvery { checkGeoblock() } returns geoblock.right()
         runBlocking { access.refresh() }
     }
 
