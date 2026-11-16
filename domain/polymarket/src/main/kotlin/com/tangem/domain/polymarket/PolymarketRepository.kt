@@ -112,6 +112,17 @@ interface PolymarketRepository {
     suspend fun getPrice(assetId: String, side: PredictionOrderSide): Either<PredictionPriceError, BigDecimal>
 
     /**
+     * Batch book-side prices, deduplicated and split to the CLOB request limit.
+     * Every requested asset is present in a successful result; null means a missing quote or an empty book.
+     * A rejected batch does not identify which market failed, so HTTP failures never imply all markets closed.
+     * A malformed price or a failed request fails the whole snapshot; no partial result is returned.
+     */
+    suspend fun getPrices(
+        assetIds: List<String>,
+        side: PredictionOrderSide,
+    ): Either<PredictionPriceError, Map<String, BigDecimal?>>
+
+    /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
      * This is the endpoint the onboarding flow polls to observe progress.
      */
