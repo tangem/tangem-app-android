@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.marketing.models.MarketingBanner
 import kotlinx.coroutines.flow.Flow
 
 interface MarketingBannerComponent : ComposableContentComponent {
@@ -23,6 +24,19 @@ interface MarketingBannerComponent : ComposableContentComponent {
      */
     @Composable
     fun hasLinkedBanner(providerId: String): Boolean = false
+
+    /**
+     * Slots of the onramp Recommended block taken over by the banners shown right now (a PSEUDO_PROVIDER banner
+     * with `replacesSlot`). The host hides the offers standing in these slots. Empty for every other banner type.
+     */
+    @Composable
+    fun replacedSlots(): Set<MarketingBanner.RecommendedSlot> = emptySet()
+
+    /** Renders CTA banners assigned to [slot], or the unassigned CTA rows when [slot] is null. */
+    @Composable
+    fun CtaContent(slot: MarketingBanner.RecommendedSlot?, modifier: Modifier) {
+        // Standalone and linked components have no CTA rows.
+    }
 
     sealed interface Params {
 
