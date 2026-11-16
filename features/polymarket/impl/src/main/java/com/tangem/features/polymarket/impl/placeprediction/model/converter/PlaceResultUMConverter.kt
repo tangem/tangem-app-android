@@ -63,6 +63,7 @@ internal object PlaceResultUMConverter {
                             collateralAmount = amount,
                             shares = filledShares,
                             fee = quote.fees.total,
+                            total = totalOf(side = side, collateral = amount, fee = quote.fees.total),
                         ),
                     )
                 }
@@ -117,6 +118,7 @@ internal object PlaceResultUMConverter {
                 collateralAmount = executedAmount,
                 shares = filledShares,
                 fee = quote.fees.total,
+                total = totalOf(side = quote.side, collateral = executedAmount, fee = quote.fees.total),
             )
         } else {
             PlaceResultUM.PartiallyFilled(
@@ -144,12 +146,14 @@ internal object PlaceResultUMConverter {
         val filledRatio = fillRatio(filledCollateral = filledCollateral, filledShares = filledShares, quote = quote)
             ?: return null
         val filledFee = quote.fees.total.multiply(filledRatio, MathContext.DECIMAL64)
-        return when (side) {
-            PredictionOrderSide.BUY -> (filledCollateral + filledFee).setScale(FIAT_SCALE, RoundingMode.UP)
-            PredictionOrderSide.SELL -> (filledCollateral - filledFee)
-                .setScale(FIAT_SCALE, RoundingMode.DOWN)
-                .coerceAtLeast(BigDecimal.ZERO.setScale(FIAT_SCALE))
-        }
+        return totalOf(side = side, collateral = filledCollateral, fee = filledFee)
+    }
+
+    private fun totalOf(side: PredictionOrderSide, collateral: BigDecimal, fee: BigDecimal): BigDecimal = when (side) {
+        PredictionOrderSide.BUY -> (collateral + fee).setScale(FIAT_SCALE, RoundingMode.UP)
+        PredictionOrderSide.SELL -> (collateral - fee)
+            .setScale(FIAT_SCALE, RoundingMode.DOWN)
+            .coerceAtLeast(BigDecimal.ZERO.setScale(FIAT_SCALE))
     }
 
     private fun fillRatio(filledCollateral: BigDecimal, filledShares: BigDecimal, quote: PredictionOrderQuote) = when {

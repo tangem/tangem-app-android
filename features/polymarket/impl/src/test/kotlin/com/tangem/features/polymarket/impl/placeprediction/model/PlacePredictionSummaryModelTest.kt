@@ -489,6 +489,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                         collateralAmount = BigDecimal("11.60"),
                         shares = BigDecimal("23.2"),
                         fee = BigDecimal("0.4"),
+                        total = BigDecimal("12.00"),
                     ),
                 )
                 verify { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }

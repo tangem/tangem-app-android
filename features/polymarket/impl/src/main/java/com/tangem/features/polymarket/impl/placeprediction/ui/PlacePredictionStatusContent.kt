@@ -196,17 +196,22 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: Pred
 
 @Composable
 private fun SaleCostRow(result: PlaceResultUM) {
-    val (titleRes, amount) = when (result) {
-        is PlaceResultUM.Filled -> R.string.prediction_place_fee to result.fee
-        is PlaceResultUM.PartiallyFilled -> R.string.prediction_fee_sheet_total to result.total
+    val rows = when (result) {
+        is PlaceResultUM.Filled -> listOf(
+            R.string.prediction_place_fee to result.fee,
+            R.string.prediction_fee_sheet_total to result.total,
+        )
+        is PlaceResultUM.PartiallyFilled -> listOf(R.string.prediction_fee_sheet_total to result.total)
         is PlaceResultUM.NotFilled,
         is PlaceResultUM.Submitted,
         is PlaceResultUM.StillProcessing,
         -> return
     }
-    amount ?: return
 
-    PredictionUsdValueRow(value = amount.formatPolymarketMoney(), isLoading = false, titleRes = titleRes)
+    rows.forEach { (titleRes, amount) ->
+        amount ?: return@forEach
+        PredictionUsdValueRow(value = amount.formatPolymarketMoney(), isLoading = false, titleRes = titleRes)
+    }
 }
 
 @Composable

@@ -138,11 +138,17 @@ internal class PlaceResultUMConverterTest {
     @EnumSource(PredictionOrderSide::class)
     fun `GIVEN a full fill WHEN converted THEN the actual exchanged amount is shown`(side: PredictionOrderSide) {
         val amount = BigDecimal("70.25")
+        val total = when (side) {
+            PredictionOrderSide.BUY -> BigDecimal("71.65")
+            PredictionOrderSide.SELL -> BigDecimal("68.85")
+        }
 
         val actual = convert(result = result(side = side, collateral = amount), side = side)
 
         assertThat(actual).isEqualTo(
-            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = amount)),
+            PlaceOutcome.Reportable(
+                result = filled(shares = QUOTED_SHARES).copy(collateralAmount = amount, total = total),
+            ),
         )
     }
 
@@ -178,7 +184,12 @@ internal class PlaceResultUMConverterTest {
 
         // Assert
         assertThat(actual).isEqualTo(
-            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = BigDecimal.ZERO)),
+            PlaceOutcome.Reportable(
+                result = filled(shares = QUOTED_SHARES).copy(
+                    collateralAmount = BigDecimal.ZERO,
+                    total = BigDecimal("0.00"),
+                ),
+            ),
         )
     }
 
@@ -256,7 +267,7 @@ internal class PlaceResultUMConverterTest {
         ConvertModel(
             side = PredictionOrderSide.SELL,
             result = result(side = PredictionOrderSide.SELL),
-            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES)),
+            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES).copy(total = SOLD_TOTAL)),
         ),
         ConvertModel(
             side = PredictionOrderSide.SELL,
@@ -293,7 +304,7 @@ internal class PlaceResultUMConverterTest {
         ConvertModel(
             side = PredictionOrderSide.SELL,
             result = result(side = PredictionOrderSide.SELL, shares = QUOTED_SHARES + BigDecimal.ONE),
-            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES + BigDecimal.ONE)),
+            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES + BigDecimal.ONE).copy(total = SOLD_TOTAL)),
         ),
     )
 
@@ -330,6 +341,7 @@ internal class PlaceResultUMConverterTest {
                     collateralAmount = BigDecimal("73.50"),
                     shares = ORDERED_SHARES,
                     fee = QUOTED_FEE,
+                    total = BigDecimal("74.90"),
                 ),
             ),
         ),
@@ -342,6 +354,7 @@ internal class PlaceResultUMConverterTest {
                     collateralAmount = BigDecimal("74.24"),
                     shares = ORDERED_SHARES + BigDecimal.ONE,
                     fee = QUOTED_FEE,
+                    total = BigDecimal("75.64"),
                 ),
             ),
         ),
@@ -423,6 +436,7 @@ internal class PlaceResultUMConverterTest {
         val QUOTED_SHARES: BigDecimal = BigDecimal("97.959184")
         val QUOTED_FEE: BigDecimal = BigDecimal("1.40")
         val QUOTED_TOTAL: BigDecimal = BigDecimal("73.40")
+        val SOLD_TOTAL: BigDecimal = BigDecimal("70.60")
         val QUOTE = PredictionOrderQuote(
             status = PredictionQuoteStatus.FULL,
             side = PredictionOrderSide.BUY,
@@ -454,6 +468,7 @@ internal class PlaceResultUMConverterTest {
             collateralAmount = QUOTED_AMOUNT,
             shares = shares,
             fee = QUOTED_FEE,
+            total = QUOTED_TOTAL,
         )
 
         const val ORDER_ID = "0x6b2e"

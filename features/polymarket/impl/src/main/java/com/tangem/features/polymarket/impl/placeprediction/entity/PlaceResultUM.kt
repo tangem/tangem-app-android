@@ -13,6 +13,7 @@ internal sealed interface PlaceResultUM {
         val collateralAmount: BigDecimal,
         val shares: BigDecimal?,
         val fee: BigDecimal? = null,
+        val total: BigDecimal? = null,
     ) : PlaceResultUM
 
     data class PartiallyFilled(

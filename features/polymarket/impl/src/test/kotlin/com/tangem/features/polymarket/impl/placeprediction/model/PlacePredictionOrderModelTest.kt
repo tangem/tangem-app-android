@@ -1111,6 +1111,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                         collateralAmount = BigDecimal("11.01"),
                         shares = HELD,
                         fee = BigDecimal("0.4"),
+                        total = BigDecimal("10.61"),
                     ),
                     market = model.uiState.value.market,
                     side = PredictionOrderSide.SELL,
