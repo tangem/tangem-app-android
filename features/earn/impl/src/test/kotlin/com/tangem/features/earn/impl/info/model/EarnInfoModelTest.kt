@@ -45,6 +45,7 @@ import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
+import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnApyHistory
@@ -454,11 +455,11 @@ internal class EarnInfoModelTest {
         private fun provideTestModels() = listOf(EarnPositionState.None, EarnPositionState.Unknown)
 
         @Test
-        fun `GIVEN Known then Unknown WHEN state changes THEN exactly one replaceCurrent`() = runTest {
+        fun `GIVEN Known then Unknown WHEN state changes THEN exactly one redirect`() = runTest {
             // Arrange
             val model = createModel()
             advanceUntilIdle()
-            verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
 
             // Act
             product.stateFlow.value = product.readyState().copy(position = EarnPositionState.Unknown)
@@ -508,7 +509,7 @@ internal class EarnInfoModelTest {
                 // Assert
                 verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
                 verify(exactly = 1) { router.pop(any()) }
-                verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+                verify(exactly = 0) { router.navigate(any(), any()) }
                 assertThat(model.uiState.value).isNull()
                 model.onDestroy()
             }
@@ -1011,7 +1012,7 @@ internal class EarnInfoModelTest {
                 verify(exactly = 1) {
                     TangemLogger.e("Earn info: refresh of ${product.id.value} failed", any(), any())
                 }
-                verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+                verify(exactly = 0) { router.navigate(any(), any()) }
                 verify(exactly = 0) { router.pop(any()) }
                 assertThat(reloads).isEmpty()
                 model.onDestroy()
@@ -1113,11 +1114,16 @@ internal class EarnInfoModelTest {
         blogUrlBuilder = blogUrlBuilder,
     )
 
+    /** Info redirects from under a flow pushed on top of it, so the flow must stay on top. */
     private fun verifyRedirectedOnce() {
-        val route = slot<Route>()
-        verify(exactly = 1) { router.replaceCurrent(capture(route), any()) }
-        assertThat(route.captured).isEqualTo(EarnPickerRoute(preselected = product.id, shouldRedirectToActive = false))
+        val transformer = slot<(List<Route>) -> List<Route>>()
+        verify(exactly = 1) { router.navigate(capture(transformer), any()) }
+        val stack = listOf(EarnInfoRoute(product.id), FlowOnTop)
+        val expected = listOf(EarnPickerRoute(preselected = product.id, shouldRedirectToActive = false), FlowOnTop)
+        assertThat(transformer.captured(stack)).isEqualTo(expected)
     }
+
+    private object FlowOnTop : Route
 
     private fun knownState(): EarnProductState.Ready =
         fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
