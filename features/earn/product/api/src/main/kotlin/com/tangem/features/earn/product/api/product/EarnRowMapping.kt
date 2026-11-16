@@ -12,6 +12,7 @@ import java.math.BigDecimal
 fun EarnRow.toUM(
     onInfoClick: (EarnTextBlock) -> Unit,
     onLinkClick: ((String) -> Unit)? = null,
+    yearlyFiatEarningsText: (BigDecimal) -> TextReference = { amount -> stringReference(amount.toPlainString()) },
     amountText: (BigDecimal) -> TextReference = { amount -> stringReference(amount.toPlainString()) },
 ): EarnRowUM = EarnRowUM(
     label = label,
@@ -19,6 +20,7 @@ fun EarnRow.toUM(
         is EarnValue.Text -> rowValue.text
         is EarnValue.Link -> rowValue.text
         is EarnValue.Amount -> amountText(rowValue.value)
+        is EarnValue.YearlyFiatEarnings -> yearlyFiatEarningsText(rowValue.value)
     },
     onInfoClick = info?.let { block -> { onInfoClick(block) } },
     onValueClick = value.linkClick(onLinkClick),

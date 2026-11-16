@@ -19,20 +19,25 @@ import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.features.earn.api.ui.EarnRowUM
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnIconsUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnLegalUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
 import com.tangem.features.earn.product.api.session.EarnFlowAction
@@ -164,7 +169,7 @@ internal class EarnFlowConverter @Inject constructor() {
         amountCrypto = plan?.expectedAmount
             ?.let { stringReference(it.format { crypto(status.currency, ignoreSymbolPosition = true) }) }
             ?: TextReference.EMPTY,
-        rows = plan?.rows.orEmpty().map { it.toUM(callbacks.onInfoClick) }.toImmutableList(),
+        rows = confirmRows(plan?.rows.orEmpty(), appCurrency, callbacks.onInfoClick),
         notice = plan?.notice ?: action.notice,
         notifications = notifications,
         legal = product.legal?.let { legal ->
@@ -231,6 +236,36 @@ internal class EarnFlowConverter @Inject constructor() {
         return combinedReference(fiat, stringReference(SUBTITLE_SEPARATOR), date)
     }
 
+    /** Earnings are shown in the app currency only, so their row waits for it */
+    private fun confirmRows(
+        rows: List<EarnRow>,
+        appCurrency: AppCurrency?,
+        onInfoClick: (EarnTextBlock) -> Unit,
+    ): ImmutableList<EarnRowUM> {
+        val earningsText = appCurrency?.let { currency ->
+            { earnings: BigDecimal -> yearlyEarningsText(earnings, currency) }
+        }
+        return rows.mapNotNull { row ->
+            when {
+                row.value !is EarnValue.YearlyFiatEarnings -> row.toUM(onInfoClick)
+                earningsText != null -> row.toUM(onInfoClick, yearlyFiatEarningsText = earningsText)
+                else -> null
+            }
+        }.toImmutableList()
+    }
+
+    /** "~$12 per year": earnings below one unit of the currency keep the cents, larger ones are whole units */
+    private fun yearlyEarningsText(earnings: BigDecimal, appCurrency: AppCurrency): TextReference {
+        val decimals = if (earnings < BigDecimal.ONE) CENTS else 0
+        val formatted = earnings.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol).anyDecimals(decimals)
+        }
+        return combinedReference(
+            stringReference(StringsSigns.TILDE_SIGN),
+            resourceReference(R.string.for_you_earn_per_year, wrappedList(formatted)),
+        )
+    }
+
     private fun percents(callbacks: EarnAmountCallbacks): ImmutableList<PredefinedPercentButtonUM> =
         PERCENTS.map { percent ->
             PredefinedPercentButtonUM(
@@ -291,6 +326,7 @@ internal class EarnFlowConverter @Inject constructor() {
     private companion object {
         val PERCENTS = listOf(25, 50, 75, 100)
         const val SUBTITLE_SEPARATOR = " ${StringsSigns.MIDDLE_DOT} "
+        const val CENTS = 2
     }
 }
 

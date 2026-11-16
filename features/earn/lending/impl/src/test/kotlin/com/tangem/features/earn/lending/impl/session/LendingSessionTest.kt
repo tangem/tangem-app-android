@@ -34,6 +34,8 @@ import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.lending.impl.analytics.LendingAnalyticsSender
 import com.tangem.features.earn.lending.impl.provider.FakeLendingProvider
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
@@ -79,6 +81,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -87,6 +90,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Locale
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -264,6 +268,19 @@ internal class LendingSessionTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Prepare {
 
+        private var previousLocale: Locale = Locale.getDefault()
+
+        @BeforeEach
+        fun pinLocale() {
+            previousLocale = Locale.getDefault()
+            Locale.setDefault(Locale.US)
+        }
+
+        @AfterEach
+        fun restoreLocale() {
+            Locale.setDefault(previousLocale)
+        }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN deposit transactions WHEN prepare THEN plan carries the estimated ones`(model: PrepareModel) =
@@ -285,6 +302,47 @@ internal class LendingSessionTest {
                 estimated = listOf(estimatedPreparation, estimatedDeposit),
             ),
         )
+
+        @Test
+        fun `GIVEN known rates WHEN prepare deposit THEN plan carries the rate, fee and earnings rows`() = runTest {
+            // Arrange
+            arrangeState(assetState(rate = BigDecimal("0.05"), fiatRate = BigDecimal("2000")))
+            arrangeDeposit(built = listOf(rawDeposit))
+
+            // Act
+            val actual = session.prepare(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), selection(TOTAL_GAS))
+
+            // Assert
+            val expectedRows = listOf(
+                EarnRow(
+                    label = resourceReference(R.string.yield_module_earn_sheet_current_apy_title),
+                    value = EarnValue.Text(stringReference("5%")),
+                ),
+                EarnRow(
+                    label = resourceReference(R.string.earn_product_details_performance_fee),
+                    value = EarnValue.Text(stringReference("0%")),
+                ),
+                // 1.5 ETH × $2000 × 5% with no performance fee
+                EarnRow(
+                    label = resourceReference(R.string.lending_projected_earnings),
+                    value = EarnValue.YearlyFiatEarnings(BigDecimal("150.00")),
+                ),
+            )
+            assertThat(actual).isEqualTo(depositPlan(txs = listOf(estimatedDeposit), rows = expectedRows).right())
+        }
+
+        @Test
+        fun `GIVEN known rates WHEN prepare withdraw THEN plan has no rows`() = runTest {
+            // Arrange
+            arrangeState(assetState(rate = BigDecimal("0.05"), fiatRate = BigDecimal("2000")))
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+
+            // Act
+            val actual = session.prepare(Withdraw(), EarnAmount.Exact(WITHDRAW_AMOUNT), selection(WITHDRAW_GAS))
+
+            // Assert
+            assertThat(actual).isEqualTo(withdrawPlan().right())
+        }
 
         @Test
         fun `GIVEN provider contract needs an upgrade WHEN prepare THEN plan is marked as with upgrade`() = runTest {
@@ -1141,6 +1199,7 @@ internal class LendingSessionTest {
             transactions = transactions,
             getUserWalletUseCase = getUserWalletUseCase,
             lendingProvider = lendingProvider,
+            depositRows = LendingDepositRows(lendingProvider = lendingProvider),
         ),
         sender = LendingTxSender(
             getUserWalletUseCase = getUserWalletUseCase,
@@ -1226,13 +1285,15 @@ internal class LendingSessionTest {
         position: BigDecimal? = POSITION,
         maxWithdraw: BigDecimal? = MAX_WITHDRAW,
         providerState: LendingProviderState? = TestProviderState(PLAN_KEY),
+        rate: BigDecimal? = null,
+        fiatRate: BigDecimal? = null,
     ) = LendingAssetState(
         asset = asset,
         address = address,
         balance = balance,
-        fiatRate = null,
+        fiatRate = fiatRate,
         market = LendingMarket(
-            rate = null,
+            rate = rate?.let { EarnProductRate(fraction = it, type = EarnRateType.APY) },
             isOpen = isOpen,
             deposit = LendingDepositGate.Open,
             position = position?.let(::LendingPosition),
@@ -1251,11 +1312,12 @@ internal class LendingSessionTest {
         planKey: String = PLAN_KEY,
         isWithUpgrade: Boolean = false,
         feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+        rows: List<EarnRow> = emptyList(),
     ) = LendingPlan(
         fee = fee,
         feeType = feeType,
         expectedAmount = DEPOSIT_AMOUNT,
-        rows = emptyList(),
+        rows = rows,
         withdrawMode = null,
         action = Deposit(),
         operation = LendingPlannedOperation.Deposit,
