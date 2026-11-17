@@ -132,43 +132,6 @@ internal class MoneyAccountStatusValueTest {
     }
 
     @Test
-    fun `GIVEN balance with yield status WHEN cryptoCurrencyStatus THEN token status carries it`() {
-        // Arrange
-        val account = activeWith(balanceOf(fiatRate = null).copy(yieldSupplyStatus = YIELD_SUPPLY_STATUS))
-            .copy(source = StatusSource.CACHE)
-
-        // Act
-        val actual = account.cryptoCurrencyStatus
-
-        // Assert
-        val expected = CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = CryptoCurrencyStatus.NoQuote(
-                amount = BigDecimal("100"),
-                yieldSupplyStatus = YIELD_SUPPLY_STATUS,
-                hasCurrentNetworkTransactions = false,
-                pendingTransactions = emptySet(),
-                networkAddress = DEPOSIT_NETWORK_ADDRESS,
-                sources = CACHE_SOURCES,
-            ),
-        )
-        Truth.assertThat(actual).isEqualTo(expected)
-    }
-
-    @Test
-    fun `GIVEN balance with yield status WHEN statusOf another currency THEN yield status absent`() {
-        // Arrange
-        val coin = mockk<CryptoCurrency.Coin>(relaxed = true)
-        val account = activeWith(balanceOf(fiatRate = null).copy(yieldSupplyStatus = YIELD_SUPPLY_STATUS))
-
-        // Act
-        val actual = account.statusOf(currency = coin, amount = BigDecimal.ONE, fiatRate = null)
-
-        // Assert
-        Truth.assertThat(actual?.value?.yieldSupplyStatus).isNull()
-    }
-
-    @Test
     fun `GIVEN balance with contributions WHEN cryptoCurrencyStatus THEN token status carries them and their sources`() {
         // Arrange
         val contribution = YieldSupplyContribution(status = YIELD_SUPPLY_STATUS, source = StatusSource.ONLY_CACHE)
