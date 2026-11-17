@@ -138,7 +138,6 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
-    /** Marketing banners carry no testTag — match by text. */
     fun marketingBannerText(text: String): KNode = child {
         hasText(text)
         useUnmergedTree = true
