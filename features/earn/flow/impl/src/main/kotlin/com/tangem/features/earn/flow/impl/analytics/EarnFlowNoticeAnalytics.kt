@@ -9,11 +9,16 @@ internal class EarnFlowNoticeAnalytics(
     private val category: String,
 ) {
 
-    private val shown = mutableMapOf<EarnFlowScreen, Set<EarnFlowNotice>>()
+    private var screen: EarnFlowScreen? = null
+    private var shown: Set<EarnFlowNotice> = emptySet()
 
-    fun update(screen: EarnFlowScreen, notices: Set<EarnFlowNotice>) {
-        val previous = shown.put(screen, notices).orEmpty()
-        (notices - previous).forEach { notice ->
+    fun update(screen: EarnFlowScreen, notices: Set<EarnFlowNotice>, isFeeInFlight: Boolean = false) {
+        val previous = if (screen == this.screen) shown else emptySet()
+        // A fee reload empties the fee cards for a moment, which is not the fee notice going away
+        val current = if (isFeeInFlight) notices.withFeeNoticeOf(previous) else notices
+        this.screen = screen
+        shown = current
+        (current - previous).forEach { notice ->
             analyticsEventHandler.send(
                 when (notice) {
                     EarnFlowNotice.InsufficientBalance ->
@@ -24,4 +29,11 @@ internal class EarnFlowNoticeAnalytics(
             )
         }
     }
+
+    private fun Set<EarnFlowNotice>.withFeeNoticeOf(previous: Set<EarnFlowNotice>): Set<EarnFlowNotice> =
+        if (EarnFlowNotice.InsufficientFee in previous) {
+            this + EarnFlowNotice.InsufficientFee
+        } else {
+            this - EarnFlowNotice.InsufficientFee
+        }
 }

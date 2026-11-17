@@ -364,16 +364,23 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun subscribeOnNotices(type: EarnTxType) {
         combine(state, amount, confirm) { current, amountUM, confirmUM ->
+            val isFeeInFlight = current.fee is FeeSelectorUM.Loading
             when (current.step) {
-                EarnFlowStep.Amount ->
-                    type.amountScreen() to noticesOf(current, amountUM?.notifications, checksAmount = true)
-                EarnFlowStep.Confirm ->
-                    EarnFlowScreen.Confirm to noticesOf(current, confirmUM?.notifications, checksAmount = false)
+                EarnFlowStep.Amount -> NoticeFrame(
+                    screen = type.amountScreen(),
+                    notices = noticesOf(current, amountUM?.notifications, checksAmount = true),
+                    isFeeInFlight = isFeeInFlight,
+                )
+                EarnFlowStep.Confirm -> NoticeFrame(
+                    screen = EarnFlowScreen.Confirm,
+                    notices = noticesOf(current, confirmUM?.notifications, checksAmount = false),
+                    isFeeInFlight = isFeeInFlight,
+                )
                 EarnFlowStep.Result -> null
             }
         }
             .filterNotNull()
-            .onEach { (screen, notices) -> noticeAnalytics.update(screen, notices) }
+            .onEach { frame -> noticeAnalytics.update(frame.screen, frame.notices, frame.isFeeInFlight) }
             .launchIn(modelScope)
     }
 
@@ -708,3 +715,9 @@ internal class EarnFlowModel @Inject constructor(
         rowInfo.value = null
     }
 }
+
+private data class NoticeFrame(
+    val screen: EarnFlowScreen,
+    val notices: Set<EarnFlowNotice>,
+    val isFeeInFlight: Boolean,
+)

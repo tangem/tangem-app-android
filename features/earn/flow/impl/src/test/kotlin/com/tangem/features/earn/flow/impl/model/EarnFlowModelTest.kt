@@ -2304,6 +2304,112 @@ internal class EarnFlowModelTest {
             }
 
         @Test
+        fun `GIVEN deposit fee shortage WHEN the fee reloads through Loading THEN InsufficientFee(Deposit) is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN withdraw fee shortage WHEN the fee reloads through Loading THEN InsufficientFee(Withdraw) is sent once`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+                } returns testStatus(amount = BigDecimal("0.0001")).right()
+                val flow = createModel(action = Withdraw())
+                advanceUntilIdle()
+                flow.onAmountValueChange("0.5")
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Withdraw),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN fee shortage on Confirm WHEN the fee reloads through Loading THEN InsufficientFee(Confirm) is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createConfirmedModel(amount = TEST_BALANCE.toPlainString())
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Confirm),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN fee shortage WHEN the fee reloads through Loading and the shortage is gone THEN InsufficientFee is sent again later`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 2) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                flow.onDestroy()
+            }
+
+        @Test
         fun `GIVEN an action that is neither deposit nor withdraw WHEN the amount and fee exceed the balance THEN no notice is sent`() =
             runTest {
                 // Arrange
