@@ -561,6 +561,7 @@ internal class DefaultUserWalletsListRepository(
 
         hotWalletsToDelete.forEach { wallet ->
             hotWalletRepository.setAccessCodeSkipped(wallet.walletId, false) // In case the wallet is added again
+            hotWalletRepository.setBalanceThresholdReached(wallet.walletId, isReached = false)
             tangemHotSdk.delete(wallet.hotWalletId)
         }
     }

@@ -166,6 +166,23 @@ internal class DefaultUserWalletsListRepositoryTest {
     }
 
     @Test
+    fun `GIVEN hot wallet WHEN delete it THEN its upgrade balance threshold flag is cleared`() = runTest {
+        // Arrange
+        val hotWallet = hotWallet(index = 0)
+        repository.userWallets.value = listOf(walletA, hotWallet)
+        repository.selectedUserWallet.value = walletA
+
+        // Act
+        val result = repository.delete(listOf(hotWallet.walletId))
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) {
+            hotWalletRepository.setBalanceThresholdReached(hotWallet.walletId, isReached = false)
+        }
+    }
+
+    @Test
     fun `GIVEN single wallet WHEN delete fails THEN context not erased`() = runTest {
         // Arrange
         repository.userWallets.value = listOf(walletA)

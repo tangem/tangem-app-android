@@ -54,5 +54,9 @@
     {
         "name": "TWI_1898_NPS_SURVEY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1821_PERMANENT_UPGRADE_BANNER_ENABLED",
+        "version": "undefined"
     }
 ]
