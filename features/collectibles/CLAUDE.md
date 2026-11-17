@@ -34,7 +34,7 @@ features/collectibles/
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
     packopenfailed/ — "Failed to open pack": the terminal status screen that replaces the confirm order
-    inventory/      — The user's cards, Buyback / Collection tabs. Mock data; search is not wired yet
+    inventory/      — The user's cards, Buyback / Collection tabs and search over both. Mock data
 ```
 
 `packopening/` in detail:

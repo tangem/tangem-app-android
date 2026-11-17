@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * cards from then on. The buyback tab always has cards, shuffled on each refresh so the grid's item animations
  * are visible.
  */
-// TODO([REDACTED_TASK_KEY]): replace with GetCInventoryUseCase(listType) and RefreshCInventoryUseCase
+// TODO([REDACTED_TASK_KEY]): replace with GetCInventoryUseCase(listType), SearchCInventoryUseCase and RefreshCInventoryUseCase
 internal class CollectiblesInventoryMockSource @Inject constructor() {
 
     data class Card(
@@ -37,6 +37,17 @@ internal class CollectiblesInventoryMockSource @Inject constructor() {
 
     fun observe(tab: CollectiblesInventoryTab): Flow<Either<Throwable, List<Card>>> {
         return cardsByTab.filterNotNull().map { cards -> cards.getValue(tab) }.distinctUntilChanged()
+    }
+
+    /** Filters the cards already loaded into the tabs; a tab that is still loading or failed adds nothing. */
+    fun search(query: String): Flow<List<Card>> {
+        return cardsByTab
+            .map { cards ->
+                CollectiblesInventoryTab.entries
+                    .flatMap { tab -> cards?.get(tab)?.getOrNull().orEmpty() }
+                    .filter { card -> card.title.contains(query, ignoreCase = true) }
+            }
+            .distinctUntilChanged()
     }
 
     suspend fun refresh() {

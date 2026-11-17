@@ -39,6 +39,14 @@ internal class CollectiblesInventoryContentConverter(
         ) ?: ContentUM.Loading
     }
 
+    fun convertSearch(cards: List<CollectiblesInventoryMockSource.Card>): ContentUM {
+        return if (cards.isEmpty()) {
+            ContentUM.Empty(message = resourceReference(R.string.collectibles_main_search_empty))
+        } else {
+            ContentUM.Items(items = cards.map(::convertCard).toImmutableList())
+        }
+    }
+
     private fun convertEmptyMessage(tab: CollectiblesInventoryTab) = when (tab) {
         CollectiblesInventoryTab.Buyback -> resourceReference(R.string.collectibles_inventory_buyback_empty)
         CollectiblesInventoryTab.Collection -> resourceReference(R.string.collectibles_inventory_collection_empty)

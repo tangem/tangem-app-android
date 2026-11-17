@@ -76,6 +76,24 @@ internal object CollectiblesInventoryPreviewData {
         ),
     )
 
+    val searchDefault = collection.copy(
+        contentKey = "search",
+        search = collection.search.copy(isActive = true, onCloseClick = {}),
+        isSearchMode = true,
+    )
+
+    val searchResults = searchDefault.copy(
+        content = ContentUM.Items(
+            items = persistentListOf(hoursCard, collectionCard.copy(id = "collection_0"), collectionCard),
+        ),
+        search = searchDefault.search.copy(query = "Muk"),
+    )
+
+    val searchNoResults = searchDefault.copy(
+        content = ContentUM.Empty(message = resourceReference(R.string.collectibles_main_search_empty)),
+        search = searchDefault.search.copy(query = "Charizard"),
+    )
+
     private fun createCard(id: String, timeLeft: TextReference?) = ItemUM.Card(
         id = id,
         imageUrl = "",
@@ -113,5 +131,6 @@ internal object CollectiblesInventoryPreviewData {
             isActive = false,
             onActiveChange = {},
         ),
+        isSearchMode = false,
     )
 }
