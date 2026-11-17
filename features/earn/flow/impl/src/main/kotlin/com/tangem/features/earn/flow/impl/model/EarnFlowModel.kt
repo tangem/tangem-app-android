@@ -192,18 +192,8 @@ internal class EarnFlowModel @Inject constructor(
             }
 
             val current = state.value
-            // The fee was estimated for the amount before it moved: the estimate for the new one prepares the plan
-            if (!isSameAmount(current.enteredAmount, enteredBefore)) {
-                state.update { it.copy(isPreparing = false) }
-                reloadFee()
-                return@launch
-            }
-            if (current.step != EarnFlowStep.Confirm || current.signing.isExecuting) return@launch
-            if (current.isAmountInvalid) {
-                state.update { it.copy(isPreparing = false) }
-            } else {
-                prepare()
-            }
+            if (!isSameAmount(current.enteredAmount, enteredBefore)) refreshFeeEstimate()
+            if (current.step == EarnFlowStep.Confirm && !current.signing.isExecuting) prepare()
         }
     }
 
@@ -259,7 +249,6 @@ internal class EarnFlowModel @Inject constructor(
     fun onConfirmClick() {
         val current = state.value
         if (current.signing.isExecuting || current.isPreparing || feeJob?.isActive == true) return
-        // A fee that moved the amount out of its limits leaves nothing to prepare: the amount step fixes it
         if (current.isAmountInvalid) return
         val plan = current.plan?.takeIf { current.isPlanCurrent } ?: return prepare()
 
@@ -343,13 +332,21 @@ internal class EarnFlowModel @Inject constructor(
             val updated = transform(current)
             if (amountSource != null) amountInput.withInitial(updated) else updated
         }
-        if (!isSameAmount(state.value.enteredAmount, enteredBefore)) reloadFee()
+        if (!isSameAmount(state.value.enteredAmount, enteredBefore)) refreshFeeEstimate()
     }
 
     private fun updateAmount(amountState: AmountState) {
         prepareJob?.cancel()
         state.update { it.copy(amountState = amountState, isPreparing = false) }
         reloadFee()
+    }
+
+    /**
+     * The fee moved the amount, and the estimate follows it. Without the loading state the selector keeps the picked
+     * speed, custom fee and nonce; the amount already fits with the selected fee, so nothing waits for the estimate.
+     */
+    private fun refreshFeeEstimate() {
+        modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
     }
 
     private fun reloadFee() {
@@ -375,8 +372,13 @@ internal class EarnFlowModel @Inject constructor(
         return if (isEntirePosition) EarnAmount.Entire else EarnAmount.Exact(amount)
     }
 
+    /** A fee that moved the amount out of its limits leaves nothing to prepare: the amount step fixes it */
     private fun prepare(onPrepared: () -> Unit = {}) {
         val current = state.value
+        if (current.isAmountInvalid) {
+            state.update { it.copy(isPreparing = false) }
+            return
+        }
         val selection = current.feeSelection ?: return
         val amount = if (amountSource != null) current.toSessionAmount(current.sendingAmount ?: return) else null
 

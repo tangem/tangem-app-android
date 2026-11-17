@@ -588,6 +588,7 @@ internal class EarnFlowModelTest {
 
             // Assert
             coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate(any()) }
+            coVerify(exactly = 0) { feeSelectorReloadTrigger.triggerLoadingState() }
             model.onDestroy()
         }
 
@@ -750,7 +751,7 @@ internal class EarnFlowModelTest {
             }
 
         @Test
-        fun `GIVEN Max deposited with fee A WHEN fee B on confirm THEN capped amount is prepared with its new fee`() =
+        fun `GIVEN Max deposited with fee A WHEN fee B on confirm THEN capped amount is prepared with fee B`() =
             runTest {
                 // Arrange
                 val model = createModel(action = Deposit())
@@ -762,8 +763,6 @@ internal class EarnFlowModelTest {
                 advanceUntilIdle()
 
                 // Act
-                model.onFeeResult(testFeeContent("0.001"))
-                advanceUntilIdle()
                 model.onFeeResult(testFeeContent("0.001"))
                 advanceUntilIdle()
 
