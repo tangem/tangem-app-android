@@ -2606,11 +2606,12 @@ internal class EarnFlowModelTest {
             }
 
         @Test
-        fun `GIVEN Max selected WHEN the fee reloads through Loading as Normal THEN fee speed Normal is sent`() =
+        fun `GIVEN Max picked WHEN the fee reloads through Loading as the default Normal THEN no fee speed is sent for it`() =
             runTest {
                 // Arrange
                 val flow = createModel(action = Deposit())
                 advanceUntilIdle()
+                flow.onFeeResult(choosableFeeContent(isFast = false))
                 flow.onFeeResult(choosableFeeContent(isFast = true))
                 advanceUntilIdle()
 
@@ -2620,7 +2621,7 @@ internal class EarnFlowModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                verify(exactly = 1) {
+                verify(exactly = 0) {
                     analyticsEventHandler.send(
                         EarnFlowAnalyticsEvent.FeeSpeed(
                             category = "ETH Lending",
@@ -2629,8 +2630,56 @@ internal class EarnFlowModelTest {
                         ),
                     )
                 }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
                 flow.onDestroy()
             }
+
+        @Test
+        fun `GIVEN Max reset to Normal by a reload WHEN the user picks Max again THEN fee speed Max is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                flow.onFeeResult(choosableFeeContent(isFast = false))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.FeeSpeed(
+                            category = "ETH Lending",
+                            feeType = AnalyticsParam.FeeType.Max,
+                            screen = EarnFlowScreen.Deposit,
+                        ),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Normal then a fee error WHEN the fee loads as Max THEN no fee speed is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            flow.onFeeResult(FeeSelectorUM.Error(GetFeeError.UnknownError))
+            advanceUntilIdle()
+
+            // Act
+            flow.onFeeResult(choosableFeeContent(isFast = true))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
 
         @Test
         fun `GIVEN a fee with a disabled primary button WHEN its type differs THEN no fee speed is sent`() = runTest {

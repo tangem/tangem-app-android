@@ -149,7 +149,7 @@ internal class EarnFlowModel @Inject constructor(
 
     private val amountInput = EarnAmountInput(clickIntents = this)
 
-    /** The last fee type the selector offered with an enabled button: a reload through `Loading` keeps it. */
+    // A load after Loading or Error resets the selector to its default fee: only a loaded-to-loaded change is a pick
     private var lastFeeType: AnalyticsParam.FeeType? = null
 
     private val noticeAnalytics = EarnFlowNoticeAnalytics(
@@ -211,6 +211,7 @@ internal class EarnFlowModel @Inject constructor(
     fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
         rememberFeeTokenPick(feeSelectorUM)
         feeJob?.cancel()
+        val isPreviousFeeLoaded = state.value.fee is FeeSelectorUM.Content
         // A new fee on the confirmation outdates the plan at once, before the suspend calls below re-prepare it.
         state.update { current ->
             val isConfirming = current.step == EarnFlowStep.Confirm && !current.signing.isExecuting
@@ -219,7 +220,7 @@ internal class EarnFlowModel @Inject constructor(
                 isPreparing = prepareJob?.isActive == true || isConfirming && feeSelectorUM.isPrimaryButtonEnabled,
             )
         }
-        sendFeeSpeedIfChanged()
+        sendFeeSpeedIfPicked(isPreviousFeeLoaded)
         val selection = state.value.feeSelection ?: return
 
         feeJob = modelScope.launch {
@@ -670,11 +671,11 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
-    private fun sendFeeSpeedIfChanged() {
+    private fun sendFeeSpeedIfPicked(isPreviousFeeLoaded: Boolean) {
         val feeType = state.value.feeSelection?.feeType ?: return
         val previous = lastFeeType
         lastFeeType = feeType
-        if (previous != null && previous != feeType) {
+        if (isPreviousFeeLoaded && previous != null && previous != feeType) {
             sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.FeeSpeed(category, feeType, currentScreen(type)) }
         }
     }
