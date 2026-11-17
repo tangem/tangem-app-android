@@ -44,9 +44,12 @@ internal class PolymarketSoccerComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val chart by model.chartState.collectAsStateWithLifecycle()
         val rules by rulesSlot.subscribeAsState()
         PolymarketSoccerScreen(
             state = state,
+            chart = chart,
+            onChartPeriodChange = model::onChartPeriodChange,
             onBack = model::onBack,
             onRetry = model::onRetry,
             onOutcomeClick = model::onOutcomeClick,

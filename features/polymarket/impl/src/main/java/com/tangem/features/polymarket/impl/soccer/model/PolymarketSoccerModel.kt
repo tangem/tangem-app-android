@@ -14,6 +14,9 @@ import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
+import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
+import com.tangem.features.polymarket.impl.details.model.chart.PolymarketEventChartController
+import com.tangem.utils.time.CurrentTimeProvider
 import com.tangem.domain.polymarket.usecase.GetPredictionPricesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketSoccerEventUseCase
@@ -48,6 +51,8 @@ internal class PolymarketSoccerModel @Inject constructor(
     getPrices: GetPredictionPricesUseCase,
     observeQuotes: ObservePolymarketLiveQuotesUseCase,
     observeSports: ObservePolymarketSportsStateUseCase,
+    getHistory: GetPolymarketPriceHistoryUseCase,
+    currentTimeProvider: CurrentTimeProvider,
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
@@ -65,6 +70,7 @@ internal class PolymarketSoccerModel @Inject constructor(
     private var resnapshotRevision = 0L
     private var isStaleReported = false
     private var isDescriptionExpanded = false
+    private var isChartResumed = false
 
     private val staleReporter = PolymarketStaleDataReporter(::showStaleMessage)
     private val prices = PolymarketSoccerPrices(
@@ -75,6 +81,14 @@ internal class PolymarketSoccerModel @Inject constructor(
         onStale = staleReporter::report,
         onQuoteRecovery = ::load,
     )
+
+    private val chart = PolymarketEventChartController(
+        scope = modelScope,
+        getHistory = getHistory,
+        currentTimeProvider = currentTimeProvider,
+        isEnabled = toggles.isPolymarketPhaseTwoEnabled,
+    )
+    val chartState = chart.state
 
     val rulesNavigation = SlotNavigation<PolymarketSoccerCardUM.Rules>()
 
@@ -87,6 +101,7 @@ internal class PolymarketSoccerModel @Inject constructor(
                 observeSports.observeSoccer(sportsEvents.filterNotNull(), isResumed).collect(::updateSports)
             }
         }
+        modelScope.launch { prices.liveQuotes.collect { updateChart() } }
         modelScope.launch {
             prices.state.collect { update ->
                 val content = uiState.value as? PolymarketSoccerUM.Content ?: return@collect
@@ -105,9 +120,13 @@ internal class PolymarketSoccerModel @Inject constructor(
         isResumed.value = false
         loadingJob.cancel()
         prices.onPause()
+        chart.onPause()
+        isChartResumed = false
     }
 
     fun onRetry() = load()
+
+    fun onChartPeriodChange(id: String) = chart.selectPeriod(id)
 
     fun onBack() = router.pop()
 
@@ -154,6 +173,7 @@ internal class PolymarketSoccerModel @Inject constructor(
                 val result = withContext(dispatchers.default) { getEvent(params.userWalletId, params.eventId) }
                 result.fold(
                     ifLeft = { error ->
+                        chart.onRefreshFailed()
                         TangemLogger.e("Soccer details: load of ${params.eventId} failed: $error")
                         if (event == null) {
                             uiState.value = PolymarketSoccerUM.Error
@@ -169,6 +189,11 @@ internal class PolymarketSoccerModel @Inject constructor(
                         sportsEvents.value = loaded
                         prices.update(loaded.withGamePhase())
                         prices.onResume()
+                        updateChart(isRestUpdate = true)
+                        if (!isChartResumed) {
+                            isChartResumed = true
+                            chart.onResume()
+                        }
                         showContent()
                     },
                 )
@@ -205,11 +230,22 @@ internal class PolymarketSoccerModel @Inject constructor(
         if (game?.isStale == true) staleReporter.report()
         val shouldRefresh = state.resnapshotRevision > resnapshotRevision || hasJustEnded && loaded.isEnded != true
         resnapshotRevision = state.resnapshotRevision
+        updateChart()
         if (shouldRefresh) load()
     }
 
     private fun PolymarketSoccerEvent.withGamePhase(): PolymarketSoccerEvent =
         sportsGame?.takeIf { it.gameId == gameId }?.let { copy(isLive = it.isLive) } ?: this
+
+    private fun updateChart(isRestUpdate: Boolean = false) {
+        val loaded = event ?: return
+        val game = sportsGame?.takeIf { it.gameId == loaded.gameId }
+        chart.updateSoccer(
+            event = loaded.copy(isLive = game?.isLive ?: loaded.isLive, isEnded = game?.isEnded ?: loaded.isEnded),
+            quotes = prices.liveQuotes.value,
+            isRestUpdate = isRestUpdate,
+        )
+    }
 
     private fun showStaleMessage() {
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))

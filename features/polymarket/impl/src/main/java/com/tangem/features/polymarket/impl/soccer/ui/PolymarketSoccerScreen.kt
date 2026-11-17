@@ -21,6 +21,8 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketSportsHeader
+import com.tangem.features.polymarket.impl.details.model.chart.PolymarketEventChartSession
+import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsChart
 import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsScaffold
 import com.tangem.features.polymarket.impl.details.ui.EVENT_DETAILS_HEADER_KEY
 import com.tangem.features.polymarket.impl.details.ui.EventDetailsErrorState
@@ -34,6 +36,8 @@ import com.tangem.features.polymarket.impl.soccer.ui.state.PolymarketSoccerUM
 @Composable
 internal fun PolymarketSoccerScreen(
     state: PolymarketSoccerUM,
+    chart: PolymarketEventChartSession.Snapshot?,
+    onChartPeriodChange: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
     onOutcomeClick: (PolymarketSoccerCardUM.Target) -> Unit,
@@ -71,6 +75,9 @@ internal fun PolymarketSoccerScreen(
                         modifier = Modifier.padding(16.dp),
                         showTeamNames = false,
                     )
+                }
+                if (chart != null) {
+                    item(key = "chart") { PolymarketEventDetailsChart(chart, onChartPeriodChange) }
                 }
                 item(key = "tabs") {
                     TangemTabNavigation(
