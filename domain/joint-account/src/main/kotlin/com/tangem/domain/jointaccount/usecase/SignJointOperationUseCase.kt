@@ -183,7 +183,9 @@ class SignJointOperationUseCase(
 
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse { raise(error) }
 
-        val jointAccount = supplier.find(accountId = account.accountId) ?: raise(error)
+        val jointAccount = repository.getStoredJointAccounts(userWalletId = userWalletId)
+            .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
+            ?: raise(error)
         val operation = jointAccount.inFlightOperations[prepared.chainId]
             ?.takeIf { it.operationId == prepared.operationId }
             ?: return null

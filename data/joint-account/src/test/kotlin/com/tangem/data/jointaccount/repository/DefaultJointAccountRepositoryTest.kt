@@ -18,6 +18,7 @@ import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.createJointAccountInvitePreview
 import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.data.jointaccount.createSafeTx
+import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
@@ -65,6 +66,7 @@ internal class DefaultJointAccountRepositoryTest {
 
     private val jointAccountApi: JointAccountApi = mockk()
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk()
+    private val store: JointAccountsStore = mockk()
 
     private val repository = DefaultJointAccountRepository(
         jointAccountApi = jointAccountApi,
@@ -73,13 +75,30 @@ internal class DefaultJointAccountRepositoryTest {
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
         operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter()),
+        store = store,
         dispatchers = TestingCoroutineDispatcherProvider(),
         moshi = Moshi.Builder().build(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountApi, walletAccountsFetcher)
+        clearMocks(jointAccountApi, walletAccountsFetcher, store)
+    }
+
+    @Test
+    fun `GIVEN accounts stored by a fetch WHEN getStoredJointAccounts THEN they come from the store as is`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val stored = listOf(mockk<JointAccount>())
+        coEvery { store.getSyncOrNull(userWalletId = userWalletId) } returnsMany listOf(stored, null)
+
+        // Act
+        val actual = repository.getStoredJointAccounts(userWalletId = userWalletId)
+        val actualWithoutCache = repository.getStoredJointAccounts(userWalletId = userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(stored)
+        assertThat(actualWithoutCache).isEmpty()
     }
 
     @ParameterizedTest

@@ -328,8 +328,8 @@ internal class SignJointOperationUseCaseTest {
         fun submit(model: LostAnswerModel) = runTest {
             // Arrange
             coEvery { repository.signOperation(any(), any(), any(), any()) } returns lostAnswer.left()
-            coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
-                flowOf(listOf(jointAccount(inFlightOperations = model.refreshedSlot)))
+            coEvery { repository.getStoredJointAccounts(MockAccounts.userWalletId) } returns
+                listOf(jointAccount(inFlightOperations = model.refreshedSlot))
 
             // Act
             val actual = useCase.submit(prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe))
