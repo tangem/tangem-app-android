@@ -6,7 +6,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -100,7 +99,6 @@ sealed class MoneyAccountStatusValue {
                     fiatRate = fiatRate,
                     depositAddress = accountBalance.depositAddress,
                     source = source,
-                    yieldSupplyStatus = accountBalance.yieldSupplyStatus.takeIf { currency.id == cryptoCurrency.id },
                     contributions = accountBalance.contributions.takeIf { currency.id == cryptoCurrency.id }.orEmpty(),
                 ),
             )
@@ -148,7 +146,6 @@ sealed class MoneyAccountStatusValue {
         @SerialName("deposit_address") val depositAddress: String,
         @SerialName("currency_code") val currencyCode: String,
         @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
-        @SerialName("yield_supply_status") val yieldSupplyStatus: YieldSupplyStatus? = null,
         @Transient val contributions: List<BalanceContribution> = emptyList(),
     )
 }
