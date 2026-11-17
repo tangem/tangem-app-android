@@ -2,8 +2,6 @@ package com.tangem.core.decompose.navigation
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.pushNew
-import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.tangem.core.decompose.utils.stack
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -17,6 +15,8 @@ import kotlin.reflect.safeCast
 /**
  * Router of the root stack. Every operation is logged and runs on the main thread; a navigation failure is logged and
  * reported as `onComplete(false)` instead of being thrown.
+ * A stack with a duplicate or no route is never handed to Decompose: its event relay fails permanently on the first
+ * throw, so every later navigation (even reading the stack) would crash.
  */
 internal class DefaultRouter(
     private val navigationProvider: AppNavigationProvider,
@@ -32,7 +32,7 @@ internal class DefaultRouter(
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Push $route")
         navigateSafely(withDefaultCompletion(onComplete) { "Unable to push $route" }) { complete ->
-            pushNew(route, complete)
+            pushOrPopTo(route, complete)
         }
     }
 
@@ -40,7 +40,12 @@ internal class DefaultRouter(
         logger.i("Replace a current route with $route")
         val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to replace a current route with $route" }
 
-        navigateSafely(onCompleteOrReport) { complete -> this.replaceCurrent(route, { complete(true) }) }
+        navigateSafely(onCompleteOrReport) { complete ->
+            navigateValidated(
+                transformer = { stack -> stack.dropLast(1) + route },
+                onComplete = { newStack, _ -> complete(newStack.lastOrNull() == route) },
+            )
+        }
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
@@ -48,7 +53,7 @@ internal class DefaultRouter(
         logger.i("Replace all routes with ${newRoutes.ifEmpty { "<empty>" }}")
 
         navigateSafely(withDefaultCompletion(onComplete) { "Unable to replace routes with $newRoutes" }) { complete ->
-            navigate(
+            navigateValidated(
                 transformer = { newRoutes },
                 onComplete = { newStack, _ -> complete(newStack == newRoutes) },
             )
@@ -93,9 +98,15 @@ internal class DefaultRouter(
 
     override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         navigateSafely(withDefaultCompletion(onComplete) { "Unable to rebuild the stack" }) { complete ->
-            navigate(
-                transformer = { stack -> transformer(stack).also { logger.i("Rebuild the stack to $it") } },
-                onComplete = { _, _ -> complete(true) },
+            var rebuiltStack: List<Route>? = null
+            navigateValidated(
+                transformer = { stack ->
+                    transformer(stack).also { newStack ->
+                        rebuiltStack = newStack
+                        logger.i("Rebuild the stack to $newStack")
+                    }
+                },
+                onComplete = { newStack, _ -> complete(newStack == rebuiltStack) },
             )
         }
     }
@@ -119,6 +130,31 @@ internal class DefaultRouter(
                 onComplete = { newStack, _ -> complete(newStack.lastOrNull()?.let { !predicate(it) } == true) },
             )
         }
+    }
+
+    private fun StackNavigation<Route>.pushOrPopTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+        navigateValidated(
+            transformer = { stack -> if (route in stack) stack.dropLastWhile { it != route } else stack + route },
+            onComplete = { newStack, oldStack -> onComplete(newStack != oldStack && newStack.lastOrNull() == route) },
+        )
+    }
+
+    private fun StackNavigation<Route>.navigateValidated(
+        transformer: (stack: List<Route>) -> List<Route>,
+        onComplete: (newStack: List<Route>, oldStack: List<Route>) -> Unit,
+    ) {
+        navigate(
+            transformer = { stack ->
+                val newStack = transformer(stack)
+                if (newStack.isNotEmpty() && newStack.toSet().size == newStack.size) {
+                    newStack
+                } else {
+                    logger.e("Rejected invalid stack $newStack, keeping $stack")
+                    stack
+                }
+            },
+            onComplete = onComplete,
+        )
     }
 
     /**

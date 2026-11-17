@@ -26,8 +26,12 @@ internal class DefaultRouterTest {
     private val navigationProvider: AppNavigationProvider = mockk()
     private val navigationFailureHandler: NavigationFailureHandler = mockk(relaxed = true)
 
-    /** Stack the mocked [navigation] holds; every navigate call applies its transformer to it. */
+    /**
+     * Stack the mocked [navigation] holds; every navigate call applies its transformer. Like Decompose, it throws on
+     * an invalid result and fails every later call after a throw.
+     */
     private var stack: List<Route> = emptyList()
+    private var hasFailed = false
 
     private val results = mutableListOf<Boolean>()
     private val onComplete: (Boolean) -> Unit = { results += it }
@@ -54,13 +58,19 @@ internal class DefaultRouterTest {
         logs.clear()
         TangemLogger.setLogWriters(listOf(logWriter))
         stack = listOf(RouteA)
+        hasFailed = false
 
         every { navigationProvider.getOrCreate() } returns navigation
         every { navigation.navigate(any(), any()) } answers {
             val transformer = firstArg<(List<Route>) -> List<Route>>()
             val callback = secondArg<(List<Route>, List<Route>) -> Unit>()
             val oldStack = stack
-            stack = transformer(oldStack)
+            check(!hasFailed) { "Can't process the event due to a previous failure" }
+            val newStack = transformer(oldStack)
+            hasFailed = newStack.isEmpty() || newStack.toSet().size != newStack.size
+            check(newStack.isNotEmpty()) { "Configuration stack must not be empty" }
+            check(newStack.toSet().size == newStack.size) { "Configurations must be unique: $newStack" }
+            stack = newStack
             callback(stack, oldStack)
         }
     }
@@ -327,7 +337,7 @@ internal class DefaultRouterTest {
 
         // Act
         router.push(RouteC)
-        router.replaceCurrent(RouteB)
+        router.replaceCurrent(Details(id = 1))
         router.popTo(RouteA)
         router.replaceAll(RouteA, RouteB)
         router.pop()
@@ -338,7 +348,7 @@ internal class DefaultRouterTest {
         // Assert
         assertThat(logs).containsExactly(
             "Info Router Push RouteC",
-            "Info Router Replace a current route with RouteB",
+            "Info Router Replace a current route with ${Details(id = 1)}",
             "Info Router Pop to RouteA",
             "Info Router Replace all routes with [RouteA, RouteB]",
             "Info Router Pop route",
@@ -421,6 +431,89 @@ internal class DefaultRouterTest {
 
         // Assert
         verify(exactly = 1) { navigationFailureHandler.onNavigationFailed("Unable to push RouteB") }
+    }
+
+    @Test
+    fun `GIVEN route below top WHEN push THEN stack pops back to it and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, RouteB, RouteC)
+
+        // Act
+        router.push(RouteB, onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, RouteB).inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN details below swap WHEN push the same details THEN router keeps navigating`() = runTest {
+        // Arrange
+        val details = Details(id = 1)
+        stack = listOf(RouteA, details, RouteB)
+
+        // Act
+        router.push(details, onComplete)
+        val isDetailsInStack = router.contains(details)
+        router.push(RouteC, onComplete)
+
+        // Assert
+        assertThat(isDetailsInStack).isTrue()
+        assertThat(stack).containsExactly(RouteA, details, RouteC).inOrder()
+        assertThat(results).containsExactly(true, true).inOrder()
+    }
+
+    @Test
+    fun `GIVEN cycle of pushes WHEN push repeats routes THEN stack never holds a route twice`() {
+        // Act
+        listOf(RouteB, RouteC, RouteB, RouteC, RouteA).forEach { route -> router.push(route, onComplete) }
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA)
+        assertThat(results).containsExactly(true, true, true, true, true).inOrder()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class InvalidStack {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN operation building invalid stack WHEN called THEN stack is kept and completion fails`(
+            model: InvalidStackModel,
+        ) {
+            // Arrange
+            stack = listOf(RouteA, RouteB, RouteC)
+
+            // Act
+            model.act(router, onComplete)
+
+            // Assert
+            assertThat(stack).containsExactly(RouteA, RouteB, RouteC).inOrder()
+            assertThat(results).containsExactly(false)
+        }
+
+        private fun provideTestModels() = listOf(
+            InvalidStackModel(name = "replaceCurrent with route below top") { router, onComplete ->
+                router.replaceCurrent(RouteA, onComplete)
+            },
+            InvalidStackModel(name = "replaceAll with duplicates") { router, onComplete ->
+                router.replaceAll(RouteA, RouteA, onComplete = onComplete)
+            },
+            InvalidStackModel(name = "replaceAll with no routes") { router, onComplete ->
+                router.replaceAll(onComplete = onComplete)
+            },
+            InvalidStackModel(name = "navigate to duplicates") { router, onComplete ->
+                router.navigate(transformer = { it + RouteA }, onComplete = onComplete)
+            },
+        )
+    }
+
+    class InvalidStackModel(
+        private val name: String,
+        val act: (router: Router, onComplete: (Boolean) -> Unit) -> Unit,
+    ) {
+        override fun toString(): String = name
     }
 
     private data object RouteA : Route
