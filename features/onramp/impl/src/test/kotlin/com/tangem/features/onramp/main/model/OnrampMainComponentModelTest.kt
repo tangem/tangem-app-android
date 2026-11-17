@@ -649,7 +649,7 @@ internal class OnrampMainComponentModelTest {
                 cached = result
                 result
             }
-            coEvery { repository.getCountryByIp(userWallet, true) } coAnswers { requireNotNull(cached) }
+            coEvery { repository.getCachedCountryByIp() } coAnswers { cached }
             every { getOnrampCountryUseCase() } returns flowOf(supported.right())
             val model = createModel(
                 scheduler, quotesFlow = emptyFlow(),
@@ -873,7 +873,7 @@ internal class OnrampMainComponentModelTest {
             val restricted = onrampCountry("USD").copy(name = "IP region", isOnrampAvailable = false)
             val repository: OnrampRepository = mockk()
             coEvery { repository.getCountryByIp(userWallet) } throws IllegalStateException("Offline")
-            coEvery { repository.getCountryByIp(userWallet, fromCache = true) } returns restricted
+            coEvery { repository.getCachedCountryByIp() } returns restricted
             every { getOnrampCountryUseCase() } returns flowOf(onrampCountry("EUR").right())
             val opened = mutableListOf<OnrampProviderWithQuote.Data>()
 
