@@ -73,9 +73,6 @@ class BuyCampaignBannersTest : BaseTestCase() {
             step("Write amount equal to the threshold '$thresholdAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextReplacement(thresholdAmount) }
             }
-            step("Assert offers are still loading") {
-                onBuyTokenDetailsScreen { offerTokenAmount.assertDoesNotExist() }
-            }
             step("Assert 'OTC partner' banner is displayed while offers are loading") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     onBuyTokenDetailsScreen { marketingBannerText(otcBannerTitle).assertIsDisplayed() }
@@ -83,6 +80,9 @@ class BuyCampaignBannersTest : BaseTestCase() {
             }
             step("Assert 'Waitlist' banner is displayed while offers are loading") {
                 onBuyTokenDetailsScreen { marketingBannerText(waitlistBannerTitle).assertIsDisplayed() }
+            }
+            step("Assert offers are still loading after the banners were checked") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertDoesNotExist() }
             }
             step("Assert offer is displayed after loading") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenDetailsScreen { offerTokenAmount.assertIsDisplayed() } }
