@@ -14,11 +14,14 @@ internal class AaveMarkets @Inject constructor(
 ) {
 
     /** The reserve market from the yield backend; null until the backend lists it */
-    fun observe(asset: LendingAsset): Flow<YieldMarketToken?> {
-        val key = asset.reserveToken.yieldSupplyKey()
-        return yieldSupplyRepository.getMarketsFlow()
-            .map { markets -> markets.firstOrNull { it.yieldSupplyKey == key } }
-    }
+    fun observe(asset: LendingAsset): Flow<YieldMarketToken?> = observeAll().map { it.findFor(asset) }
+
+    fun observeAll(): Flow<List<YieldMarketToken>> = yieldSupplyRepository.getMarketsFlow()
 
     suspend fun current(asset: LendingAsset): YieldMarketToken? = observe(asset).first()
+}
+
+internal fun List<YieldMarketToken>.findFor(asset: LendingAsset): YieldMarketToken? {
+    val key = asset.reserveToken.yieldSupplyKey()
+    return firstOrNull { it.yieldSupplyKey == key }
 }

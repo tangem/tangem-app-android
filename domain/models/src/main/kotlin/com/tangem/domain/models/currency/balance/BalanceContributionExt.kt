@@ -26,3 +26,9 @@ fun CryptoCurrencyStatus.Value.totalContributionsDeltaOrNull(): BigDecimal? {
 inline fun <reified T : BalanceContribution> CryptoCurrencyStatus.Value.contributionOrNull(): T? {
     return contributions.filterIsInstance<T>().firstOrNull()
 }
+
+fun CryptoCurrencyStatus.Value.accruingContributions(): List<AccruingBalanceContribution> {
+    return contributions
+        .filterIsInstance<AccruingBalanceContribution>()
+        .filter { it.accrualRate.signum() > 0 && it.totalDeltaCryptoAmount().signum() > 0 }
+}

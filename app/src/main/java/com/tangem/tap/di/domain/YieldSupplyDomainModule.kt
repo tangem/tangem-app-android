@@ -237,6 +237,12 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetAccruingBalanceUseCase(dispatcherProvider: CoroutineDispatcherProvider): GetAccruingBalanceUseCase {
+        return GetAccruingBalanceUseCase(dispatcherProvider = dispatcherProvider)
+    }
+
+    @Provides
+    @Singleton
     fun provideYieldSupplyEnterStatusUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
     ): YieldSupplyEnterStatusUseCase {
