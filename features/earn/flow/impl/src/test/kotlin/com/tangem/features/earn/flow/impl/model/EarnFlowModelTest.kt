@@ -94,6 +94,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -571,6 +572,38 @@ internal class EarnFlowModelTest {
             model.onDestroy()
         }
 
+        @ParameterizedTest
+        @MethodSource("providePositionAmountModels")
+        fun `GIVEN amount from position WHEN submit THEN prepare and fee get the whole position only for the max`(
+            model: PositionAmountModel,
+        ) = runTest {
+            // Arrange
+            coEvery { session.loadFee(action = any(), amount = any()) } returns GetFeeError.UnknownError.left()
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Act
+            if (model.entered == null) flow.onMaxValueClick() else flow.onAmountValueChange(model.entered)
+            flow.loadFee()
+            flow.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            flow.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { session.loadFee(action = Withdraw(), amount = model.expected) }
+            coVerify(exactly = 1) {
+                session.prepare(action = Withdraw(), amount = model.expected, fee = testFeeSelection("0.00033"))
+            }
+            flow.onDestroy()
+        }
+
+        private fun providePositionAmountModels() = listOf(
+            PositionAmountModel(entered = null, expected = EarnAmount.Entire),
+            PositionAmountModel(entered = TEST_BALANCE.toPlainString(), expected = EarnAmount.Entire),
+            PositionAmountModel(entered = "0.5", expected = EarnAmount.Exact(BigDecimal("0.5"))),
+        )
+
         @Test
         fun `GIVEN amount from position WHEN fee arrives THEN subtraction use case is not asked`() = runTest {
             // Arrange
@@ -612,7 +645,9 @@ internal class EarnFlowModelTest {
 
             // Assert
             assertThat(warningsBeforeTopUp).hasSize(1)
-            assertThat(model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>())
+            assertThat(
+                model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>(),
+            )
                 .isEmpty()
             model.onDestroy()
         }
@@ -923,7 +958,8 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN sent and result not ready WHEN confirm shown THEN it keeps the sent plan rows and amount`() = runTest {
+        fun `GIVEN sent and result not ready WHEN confirm shown THEN it keeps the sent plan rows and amount`() =
+            runTest {
             // Arrange
             val row = EarnRow(label = stringReference("Current APY"), value = EarnValue.Text(stringReference("5.5%")))
             val plan = TestPlan(rows = listOf(row))
@@ -1427,6 +1463,8 @@ internal class EarnFlowModelTest {
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
+
+    data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
 }
 
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"

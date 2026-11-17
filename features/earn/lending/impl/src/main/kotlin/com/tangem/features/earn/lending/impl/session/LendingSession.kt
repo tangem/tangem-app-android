@@ -162,7 +162,7 @@ internal class LendingSession @AssistedInject constructor(
             userWalletId = params.userWalletId,
             state = state,
             action = plan.action,
-            amount = plan.amount,
+            amount = plan.rebuildAmount(state),
             fee = EarnFeeSelection(fee = plan.fee, extended = null, feeType = plan.feeType),
         ).bind()
         val isRebuilt = newPlan.planKey != plan.planKey ||
@@ -265,6 +265,15 @@ internal class LendingSession @AssistedInject constructor(
     private fun LendingAssetState.maxAmount(operation: LendingOperation): BigDecimal? = when (operation) {
         LendingOperation.Deposit -> balance
         LendingOperation.Withdraw -> market.maxWithdraw
+    }
+
+    /**
+     * An entire withdrawal is rebuilt for the fresh position: interest grows it after preparation, and the planned
+     * amount would fall short of it and turn the exit into a partial withdrawal that leaves dust behind
+     */
+    private fun LendingPlan.rebuildAmount(state: LendingAssetState): BigDecimal {
+        val isEntire = (operation as? LendingPlannedOperation.Withdraw)?.isEntire == true
+        return if (isEntire) state.maxAmount(LendingOperation.Withdraw) ?: amount else amount
     }
 
     /** The flow passes exact amounts; without one the whole source is meant */
