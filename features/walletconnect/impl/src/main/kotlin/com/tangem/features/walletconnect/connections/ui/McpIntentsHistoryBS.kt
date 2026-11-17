@@ -50,8 +50,6 @@ import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * Intents history of one MCP agent.
- *
  * [Show in Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=25303-383848&m=dev)
  * [Loading in Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=32418-418763&m=dev)
  */

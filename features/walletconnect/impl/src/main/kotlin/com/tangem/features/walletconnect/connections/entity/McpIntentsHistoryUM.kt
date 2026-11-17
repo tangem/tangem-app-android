@@ -4,7 +4,6 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
-/** The intents one MCP agent raised, grouped by the day they came. */
 internal data class McpIntentsHistoryUM(
     val agentName: String,
     val content: Content,
