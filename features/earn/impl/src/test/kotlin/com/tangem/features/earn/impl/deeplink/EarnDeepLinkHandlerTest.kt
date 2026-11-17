@@ -131,7 +131,7 @@ internal class EarnDeepLinkHandlerTest {
         // Arrange
         val secondAccountEth = eth.copy(name = "Ethereum #1")
         coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns
-            accountList(main = listOf(eth), second = listOf(secondAccountEth))
+            accountList(main = listOf(eth), second = listOf(secondAccountEth), isSecondListedFirst = true)
 
         // Act
         handle(params = ethParams())
@@ -245,17 +245,24 @@ internal class EarnDeepLinkHandlerTest {
             NETWORK_ID_KEY to eth.network.rawId,
         )
 
-        fun accountList(main: List<CryptoCurrency>, second: List<CryptoCurrency> = emptyList()): AccountList {
+        fun accountList(
+            main: List<CryptoCurrency>,
+            second: List<CryptoCurrency> = emptyList(),
+            isSecondListedFirst: Boolean = false,
+        ): AccountList {
+            val mainAccount = Account.Personal.createMainAccount(userWalletId = WALLET_ID, cryptoCurrencies = main)
+            val secondAccount = MockAccounts.createAccount(
+                derivationIndex = 1,
+                cryptoCurrencies = second,
+                userWalletId = WALLET_ID,
+            )
             return AccountList(
                 userWalletId = WALLET_ID,
-                accounts = listOf(
-                    Account.Personal.createMainAccount(userWalletId = WALLET_ID, cryptoCurrencies = main),
-                    MockAccounts.createAccount(
-                        derivationIndex = 1,
-                        cryptoCurrencies = second,
-                        userWalletId = WALLET_ID,
-                    ),
-                ),
+                accounts = if (isSecondListedFirst) {
+                    listOf(secondAccount, mainAccount)
+                } else {
+                    listOf(mainAccount, secondAccount)
+                },
                 totalAccounts = 2,
                 totalArchivedAccounts = 0,
                 totalJointAccounts = 0,
