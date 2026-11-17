@@ -3,6 +3,7 @@ package com.tangem.domain.yield.supply.usecase
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -32,11 +33,15 @@ internal class YieldSupplyGetMaxFeeUseCaseTest {
     private val yieldSupplyRepository: YieldSupplyRepository = mockk()
     private val quotesRepository: QuotesRepository = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk {
+        coEvery { getStatuses(any(), any()) } returns emptyList()
+    }
 
     private val useCase = YieldSupplyGetMaxFeeUseCase(
         yieldSupplyRepository = yieldSupplyRepository,
         quotesRepository = quotesRepository,
         singleAccountListSupplier = singleAccountListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
     )
 
     private val userWalletId = UserWalletId("abcdef012345")
@@ -181,18 +186,19 @@ internal class YieldSupplyGetMaxFeeUseCaseTest {
     }
 
     @Test
-    fun `GIVEN account status list missing WHEN invoke THEN returns error`() = runTest {
-        // Arrange
-        val token = createToken(rawNetworkId = NETWORK_ID, decimals = 6)
-        val cryptoStatus = createTokenStatus(token = token, fiatRate = BigDecimal("1.00"))
-        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId) } returns null
+    fun `GIVEN account status list missing AND no coin outside the portfolio WHEN invoke THEN returns error`() =
+        runTest {
+            // Arrange
+            val token = createToken(rawNetworkId = NETWORK_ID, decimals = 6)
+            val cryptoStatus = createTokenStatus(token = token, fiatRate = BigDecimal("1.00"))
+            coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId) } returns null
 
-        // Act
-        val result = useCase(userWalletId, cryptoStatus)
+            // Act
+            val result = useCase(userWalletId, cryptoStatus)
 
-        // Assert
-        assertLeftStartingWith(result, "Account status list is missing")
-    }
+            // Assert
+            assertLeftStartingWith(result, "Unable to find coin for network ID")
+        }
 
     @Test
     fun `GIVEN native coin not found in account list WHEN invoke THEN returns error`() = runTest {

@@ -1,6 +1,7 @@
 package com.tangem.domain.account.status.di
 
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
@@ -218,10 +219,12 @@ internal object AccountStatusUseCaseModule {
     fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
         currenciesRepository: CurrenciesRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
         return GetFeePaidCryptoCurrencyStatusSyncUseCase(
             currenciesRepository = currenciesRepository,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         )
     }
 
