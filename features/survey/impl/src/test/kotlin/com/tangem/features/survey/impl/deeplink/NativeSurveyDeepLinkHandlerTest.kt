@@ -3,8 +3,8 @@ package com.tangem.features.survey.impl.deeplink
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.features.survey.impl.nativesurvey.opener.NativeSurveyOpener
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
