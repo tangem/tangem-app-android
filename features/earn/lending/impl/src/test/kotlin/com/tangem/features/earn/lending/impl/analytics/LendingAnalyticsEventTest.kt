@@ -6,6 +6,7 @@ import com.tangem.features.earn.lending.impl.session.LendingOperation
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LendingAnalyticsEventTest {
@@ -25,6 +26,23 @@ internal class LendingAnalyticsEventTest {
         val expectedParams: Map<String, String>,
     ) {
         override fun toString(): String = name
+    }
+
+    @ParameterizedTest
+    @EnumSource(LendingOperation::class)
+    fun `GIVEN operation with upgrade WHEN SignCancelled THEN id and params match the PRD`(
+        operation: LendingOperation,
+    ) {
+        // Arrange
+        val event = LendingAnalyticsEvent.SignCancelled(operation = operation, isWithUpgrade = true)
+        val expectedType = when (operation) {
+            LendingOperation.Deposit -> "Deposit"
+            LendingOperation.Withdraw -> "Withdraw"
+        }
+
+        // Assert
+        assertThat(event.id).isEqualTo("[ETH Lending] Error - Sign Cancelled")
+        assertThat(event.params).isEqualTo(mapOf("Transaction Type" to expectedType, "With Upgrade" to "true"))
     }
 
     private fun provideTestModels() = listOf(
