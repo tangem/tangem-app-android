@@ -19,6 +19,8 @@ import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.navigation.EarnRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
@@ -49,11 +51,15 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success
 
-    override val title: TextReference = LendingTexts.title(lendingProvider.info)
+    override val title: TextReference = LendingTexts.title
 
     override val provider: EarnProvider = lendingProvider.info
 
     override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "Earn", product = "Lending")
+
+    override val legal: EarnLegal = lendingProvider.legal
+
+    override val howItWorks: EarnHowItWorks = lendingHowItWorks(lendingProvider.performanceFee)
 
     /** The registry feeds the overview headline even with Earn off, so a switched-off product must stay silent */
     private val isOffered: Boolean
@@ -67,11 +73,7 @@ internal class LendingEarnProduct @Inject constructor(
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> {
         if (!isOffered) return flowOf(EarnProductState.Unavailable)
         return lendingSupplier(params.userWalletId).map { snapshot ->
-            val state = snapshot.assets[params.currency.id]
-            val minDeposit = state?.let {
-                lendingProvider.minDeposit(params.userWalletId, it.asset).getOrNull()
-            }
-            stateMapper.map(state, minDeposit)
+            stateMapper.map(snapshot.assets[params.currency.id])
         }
     }
 

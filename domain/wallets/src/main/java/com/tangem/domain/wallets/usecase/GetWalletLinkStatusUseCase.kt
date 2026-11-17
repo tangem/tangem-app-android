@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import javax.inject.Inject
 
 class GetWalletLinkStatusUseCase @Inject constructor(
@@ -23,6 +24,14 @@ class GetWalletLinkStatusUseCase @Inject constructor(
     operator fun invoke(userWalletId: UserWalletId): Flow<Boolean> = userWalletsListRepository.userWallets
         .map { userWallets -> userWallets?.firstOrNull { it.walletId == userWalletId } }
         .distinctUntilChanged()
-        .flatMapLatest { userWallet -> if (userWallet == null) flowOf(true) else invoke(userWallet) }
+        .flatMapLatest { userWallet ->
+            if (userWallet == null) {
+                flowOf(
+                    true,
+                )
+            } else {
+                invoke(userWallet).onCompletion { cause -> if (cause == null) emit(true) }
+            }
+        }
         .distinctUntilChanged()
 }

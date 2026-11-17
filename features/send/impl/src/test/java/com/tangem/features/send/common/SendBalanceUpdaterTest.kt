@@ -1,7 +1,7 @@
 package com.tangem.features.send.common
 
 import arrow.core.right
-import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
 import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 internal class SendBalanceUpdaterTest {
 
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase = mockk()
-    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk(relaxed = true)
+    private val nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher = mockk(relaxed = true)
     private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase = mockk(relaxed = true)
     private val balanceContributionsRefresher: BalanceContributionsRefresher = mockk(relaxed = true)
 
@@ -47,7 +47,7 @@ internal class SendBalanceUpdaterTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { nonPortfolioCurrenciesProvider.refresh(userWalletId, sentNetwork) }
+        coVerify(exactly = 1) { nonPortfolioCurrenciesFetcher.fetch(userWalletId, sentNetwork) }
     }
 
     @Test
@@ -74,7 +74,7 @@ internal class SendBalanceUpdaterTest {
         getTxHistoryItemsCountUseCase = getTxHistoryItemsCountUseCase,
         txHistoryContentUpdateEmitter = mockk(relaxed = true),
         refreshAllNFTUseCase = mockk(relaxed = true),
-        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+        nonPortfolioCurrenciesFetcher = nonPortfolioCurrenciesFetcher,
         balanceContributionsRefresher = balanceContributionsRefresher,
         coroutineScope = TestAppCoroutineScope(testScope = testScope),
         userWallet = userWallet,

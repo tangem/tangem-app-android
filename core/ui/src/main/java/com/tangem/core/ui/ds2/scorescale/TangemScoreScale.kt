@@ -45,7 +45,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 score scale: a round button per score from 0 to 10, laid out in centered rows.
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=30565-154053)
  *
@@ -64,6 +64,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param modifier Modifier applied to the scale; it fills the available width to center its rows.
  * @param isEnabled When `false`, the scale is dimmed and taps are ignored.
  */
+@Suppress("MagicNumber")
 @Composable
 fun TangemScoreScale(
     selectedScore: Int?,
@@ -74,7 +75,7 @@ fun TangemScoreScale(
     Layout(
         modifier = modifier.selectableGroup(),
         content = {
-            SCORES.forEach { score ->
+            for (score in 0..10) {
                 ScoreButton(
                     score = score,
                     isSelected = score == selectedScore,
@@ -84,15 +85,16 @@ fun TangemScoreScale(
             }
         },
     ) { measurables, constraints ->
-        val buttonSize = BUTTON_SIZE.roundToPx()
-        val minGap = MIN_GAP.roundToPx()
-        val preferredGap = PREFERRED_GAP.roundToPx()
+        val buttonSize = 48.dp.roundToPx()
+        val minGap = 4.dp.roundToPx()
+        val preferredGap = 12.dp.roundToPx()
+        val widestRow = 6
         val width = if (constraints.hasBoundedWidth) {
             constraints.maxWidth
         } else {
-            MAX_BUTTONS_IN_ROW * buttonSize + (MAX_BUTTONS_IN_ROW - 1) * preferredGap
+            widestRow * buttonSize + (widestRow - 1) * preferredGap
         }
-        val maxButtonsInRow = ((width + minGap) / (buttonSize + minGap)).coerceIn(1, MAX_BUTTONS_IN_ROW)
+        val maxButtonsInRow = ((width + minGap) / (buttonSize + minGap)).coerceIn(1, widestRow)
         val rowCount = (measurables.size + maxButtonsInRow - 1) / maxButtonsInRow
         val buttonsInRow = (measurables.size + rowCount - 1) / rowCount
         val gap = if (buttonsInRow > 1) {
@@ -100,7 +102,7 @@ fun TangemScoreScale(
         } else {
             0
         }
-        val rowGap = ROW_GAP.roundToPx()
+        val rowGap = 16.dp.roundToPx()
         val rows = measurables.map { it.measure(Constraints.fixed(buttonSize, buttonSize)) }.chunked(buttonsInRow)
 
         layout(width = width, height = rows.size * buttonSize + (rows.size - 1) * rowGap) {
@@ -118,7 +120,7 @@ fun TangemScoreScale(
 /** Public API surface of [TangemScoreScale]. */
 object TangemScoreScale {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 }
 
 @Suppress("MagicNumber")
@@ -177,25 +179,19 @@ private fun ScoreButton(score: Int, isSelected: Boolean, onClick: (() -> Unit)?,
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun cappedFontScaleDensity(): Density {
     val density = LocalDensity.current
+    val maxFontScale = 1.3f
     return remember(density.density, density.fontScale) {
-        if (density.fontScale <= MAX_FONT_SCALE) {
+        if (density.fontScale <= maxFontScale) {
             density
         } else {
-            Density(density = density.density, fontScale = MAX_FONT_SCALE)
+            Density(density = density.density, fontScale = maxFontScale)
         }
     }
 }
-
-private val SCORES = 0..10
-private const val MAX_BUTTONS_IN_ROW = 6
-private const val MAX_FONT_SCALE = 1.3f
-private val BUTTON_SIZE = 48.dp
-private val PREFERRED_GAP = 12.dp
-private val MIN_GAP = 4.dp
-private val ROW_GAP = 16.dp
 
 @Preview(name = "Light", showBackground = true)
 @Preview(name = "Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true)

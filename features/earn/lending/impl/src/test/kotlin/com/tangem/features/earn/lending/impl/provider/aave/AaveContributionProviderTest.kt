@@ -141,14 +141,10 @@ internal class AaveContributionProviderTest {
         val contribution = LendingContribution(amount = BigDecimal("1.5"), source = StatusSource.ACTUAL)
 
         // Act
-        val deltas = Triple(
-            contribution.kind,
-            contribution.totalDeltaCryptoAmount(),
-            contribution.spendableDeltaCryptoAmount(),
-        )
+        val deltas = contribution.totalDeltaCryptoAmount() to contribution.spendableDeltaCryptoAmount()
 
         // Assert
-        assertThat(deltas).isEqualTo(Triple("lending", BigDecimal("1.5"), BigDecimal.ZERO))
+        assertThat(deltas).isEqualTo(BigDecimal("1.5") to BigDecimal.ZERO)
     }
 
     private fun wethStatus(balance: String?, source: StatusSource = StatusSource.ACTUAL): YieldModuleStatus =

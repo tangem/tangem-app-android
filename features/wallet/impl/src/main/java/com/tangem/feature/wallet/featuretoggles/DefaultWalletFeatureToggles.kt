@@ -17,4 +17,7 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
 
     override val isRedesignedTokenRowsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED)
+
+    override val isTangemPayGroupEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1525_TANGEM_PAY_GROUP_ENABLED)
 }

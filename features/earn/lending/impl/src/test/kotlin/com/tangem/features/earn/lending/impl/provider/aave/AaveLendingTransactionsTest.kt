@@ -24,6 +24,7 @@ import com.tangem.domain.yield.supply.models.YieldModuleAddresses
 import com.tangem.domain.yield.supply.models.YieldModulePreparation
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase.SimulationPolicy
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingProviderState
 import com.tangem.features.earn.lending.impl.provider.LendingTxError
@@ -355,13 +356,16 @@ internal class AaveLendingTransactionsTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Estimate {
 
-        @Test
-        fun `GIVEN transactions WHEN estimate THEN delegates to the yield estimate`() = runTest {
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN preparation WHEN estimate THEN a revert is fatal and only a deploy has no static fallback`(
+            model: EstimatePolicyModel,
+        ) = runTest {
             // Arrange
-            val txs = listOf(prepTx(), enterTx(enter))
+            val txs = listOf(prepTx(model.preparation), enterTx(enter))
             val expected = Either.Right(txs.map { it.copy(fee = ethFee(GAS_PREPARATION)) })
             coEvery {
-                estimateFee(userWallet = userWallet, cryptoCurrency = eth, transactionDataList = txs)
+                estimateFee(userWallet = userWallet, cryptoCurrency = eth, transactionDataList = txs, policy = any())
             } returns expected
 
             // Act
@@ -369,7 +373,21 @@ internal class AaveLendingTransactionsTest {
 
             // Assert
             assertThat(actual).isEqualTo(expected)
+            coVerify(exactly = 1) {
+                estimateFee(
+                    userWallet = userWallet,
+                    cryptoCurrency = eth,
+                    transactionDataList = txs,
+                    policy = SimulationPolicy(isRevertFatal = true, isStaticFallbackAllowed = model.isFallbackAllowed),
+                )
+            }
         }
+
+        private fun provideTestModels() = listOf(
+            EstimatePolicyModel(name = "deploy", preparation = deploy, isFallbackAllowed = false),
+            EstimatePolicyModel(name = "init", preparation = initToken, isFallbackAllowed = true),
+            EstimatePolicyModel(name = "reactivate", preparation = reactivate, isFallbackAllowed = true),
+        )
     }
 
     @Nested
@@ -443,7 +461,7 @@ internal class AaveLendingTransactionsTest {
                 feeRepository.calculateFee(userWallet = any(), cryptoCurrency = any(), transactionData = any())
             }
             coVerify(exactly = 0) {
-                estimateFee(userWallet = any(), cryptoCurrency = any(), transactionDataList = any())
+                estimateFee(userWallet = any(), cryptoCurrency = any(), transactionDataList = any(), policy = any())
             }
         }
 
@@ -495,7 +513,7 @@ internal class AaveLendingTransactionsTest {
             result: Either<GetFeeError, List<TransactionData.Uncompiled>>,
         ) {
             coEvery {
-                estimateFee(userWallet = userWallet, cryptoCurrency = eth, transactionDataList = txs)
+                estimateFee(userWallet = userWallet, cryptoCurrency = eth, transactionDataList = txs, policy = any())
             } returns result
         }
     }
@@ -612,6 +630,14 @@ internal class AaveLendingTransactionsTest {
         override fun toString(): String = name
     }
 
+    data class EstimatePolicyModel(
+        val name: String,
+        val preparation: SmartContractCallData,
+        val isFallbackAllowed: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
     data class WithdrawModel(val name: String, val amount: BigDecimal, val expectedAmount: BigDecimal?) {
         override fun toString(): String = name
     }
@@ -630,7 +656,9 @@ internal class AaveLendingTransactionsTest {
         val GAS_WITHDRAW: BigInteger = BigInteger.valueOf(150_000)
 
         val enter = CallDataFactory.getEnterWithNativeCallData()
-        val initToken = CallDataFactory.getInitTokenCallData(WETH, coin())
+        val initToken = CallDataFactory.getNativeInitTokenCallData(WETH, Blockchain.Ethereum)
+        val deploy = CallDataFactory.getNativeDeployCallData(OWNER, WETH, Blockchain.Ethereum)
+        val reactivate = CallDataFactory.getNativeReactivateTokenCallData(WETH, Blockchain.Ethereum)
         // The upgrade call data has no equals, so a kept upgrade is compared by the same instance
         val wrappedEnter = wrapped(enter)
         val upToDate = YieldModuleVersionStatus.UpToDate

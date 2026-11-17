@@ -15,6 +15,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
     override fun convert(value: PolymarketEventDto): PolymarketEvent {
         return PolymarketEvent(
             id = value.eventId,
+            eventType = value.eventType,
             slug = value.slug,
             title = value.title,
             description = value.description,

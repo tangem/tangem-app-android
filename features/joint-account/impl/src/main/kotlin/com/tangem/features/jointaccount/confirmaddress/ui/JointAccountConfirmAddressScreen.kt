@@ -24,6 +24,7 @@ import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -77,7 +78,11 @@ internal fun JointAccountConfirmAddressScreen(state: JointAccountConfirmAddressU
                 color = TangemTheme.colors3.text.secondary,
             )
             Spacer(Modifier.height(24.dp))
-            AddressCard(address = state.address, onShareClick = state.onShareClick)
+            val shareMessage = state.shareMessage?.resolveReference()
+            AddressCard(
+                address = state.address,
+                onShareClick = { shareMessage?.let(state.onShareClick) },
+            )
             Spacer(Modifier.height(24.dp))
             InfoItem(
                 icon = Icons.ic_users_20,
@@ -195,6 +200,7 @@ private fun JointAccountConfirmAddressScreen_Preview() {
         JointAccountConfirmAddressScreen(
             state = JointAccountConfirmAddressUM(
                 address = "0xBef7B368aac4e6752A9cE0xBef7B36A9cEVef7B2336",
+                shareMessage = null,
                 buttonIcon = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_tangem_24),
                 isConfirming = false,
                 onShareClick = {},

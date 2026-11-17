@@ -5,7 +5,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
@@ -59,37 +58,6 @@ internal class MoneyAccountStatusValueDMConverterTest {
     }
 
     @Test
-    fun `GIVEN balance with yield status WHEN cached and restored THEN yield status kept`() {
-        // Arrange
-        val active = MoneyAccountStatusValue.Account.Active(
-            source = StatusSource.ACTUAL,
-            cryptoCurrency = cryptoCurrency,
-            balance = MoneyAccountStatusValue.Balance(
-                cryptoAmount = BigDecimal.TEN,
-                depositAddress = "0xdeposit",
-                currencyCode = "USD",
-                fiatRate = BigDecimal.ONE,
-                yieldSupplyStatus = YieldSupplyStatus(
-                    isActive = true,
-                    isInitialized = true,
-                    isAllowedToSpend = false,
-                    effectiveProtocolBalance = BigDecimal("7"),
-                ),
-            ),
-            customerId = "customer-1",
-            productInstanceId = "instance-1",
-            error = null,
-            isKycAdditionalInfoRequired = false,
-        )
-
-        // Act
-        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
-
-        // Assert
-        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE))
-    }
-
-    @Test
     fun `GIVEN active account cached without product instance WHEN restored THEN status unavailable`() {
         // Arrange
         val cached = MoneyAccountStatusValueDM.ActiveAccount(customerId = "customer-1", balance = null)
@@ -116,6 +84,23 @@ internal class MoneyAccountStatusValueDMConverterTest {
         // Assert
         assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
         assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN not started onboarding WHEN cached and restored THEN empty from cache`() {
+        // Arrange
+        val notStarted = MoneyAccountStatusValue.Onboarding.NotStarted(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(notStarted)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Empty)
+        assertThat(restored).isEqualTo(MoneyAccountStatusValue.Empty)
     }
 
     @ParameterizedTest

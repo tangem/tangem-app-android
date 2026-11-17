@@ -15,6 +15,10 @@ dependencies {
     implementation(projects.features.earn.api)
     implementation(projects.features.earn.product.api)
 
+    /** Common */
+    implementation(projects.common)
+    implementation(projects.common.ui)
+
     /** Core */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
@@ -24,7 +28,6 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.account)
-    implementation(projects.domain.account.status)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)

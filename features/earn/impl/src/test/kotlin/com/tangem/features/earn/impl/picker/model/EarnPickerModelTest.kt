@@ -55,6 +55,7 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnProductCardUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
+import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnBlock
@@ -430,7 +431,7 @@ internal class EarnPickerModelTest {
         }
 
         @Test
-        fun `GIVEN ETH balance below the minimum WHEN model created THEN Add funds with the hint`() = runTest {
+        fun `GIVEN ETH balance below the minimum WHEN model created THEN Add funds`() = runTest {
             // Arrange
             stubBalance(BigDecimal.ZERO)
             val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))), preselected = lending.id)
@@ -440,7 +441,6 @@ internal class EarnPickerModelTest {
 
             // Assert
             assertThat(model.uiState.value.cta.text).isEqualTo(EarnPickerTexts.addFunds)
-            assertThat(model.uiState.value.ctaHint).isNotNull()
             model.onDestroy()
         }
 
@@ -527,7 +527,7 @@ internal class EarnPickerModelTest {
             val lendingSummary = summary(lending, position = active, rate = "0.05")
             val stakingSummary = summary(staking, position = active, rate = "0.06")
             val frames = MutableStateFlow(frame(lendingSummary, stakingSummary))
-            val route = slot<Route>()
+            val transformer = slot<(List<Route>) -> List<Route>>()
             val model = createModel(
                 frames = frames,
                 products = listOf(lending, staking),
@@ -540,8 +540,9 @@ internal class EarnPickerModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { router.replaceCurrent(capture(route), any()) }
-            assertThat(route.captured).isEqualTo(EarnInfoRoute(staking.id))
+            verify(exactly = 1) { router.navigate(capture(transformer), any()) }
+            val stack = listOf(EarnPickerRoute(preselected = null, shouldRedirectToActive = true), FlowOnTop)
+            assertThat(transformer.captured(stack)).containsExactly(EarnInfoRoute(staking.id), FlowOnTop).inOrder()
             model.onDestroy()
         }
 
@@ -558,7 +559,7 @@ internal class EarnPickerModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { router.replaceCurrent(any(), any()) }
+            verify(exactly = 1) { router.navigate(any(), any()) }
             assertThat(model.uiState.value.content).isEqualTo(ContentUM.Loading)
             model.onDestroy()
         }
@@ -595,7 +596,7 @@ internal class EarnPickerModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
             assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
             model.onDestroy()
         }
@@ -615,7 +616,7 @@ internal class EarnPickerModelTest {
             // Assert
             assertThat(whileWaiting).isEqualTo(ContentUM.Loading)
             assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
-            verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
             model.onDestroy()
         }
 
@@ -629,7 +630,7 @@ internal class EarnPickerModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
             assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
             model.onDestroy()
         }
@@ -1261,4 +1262,6 @@ internal class EarnPickerModelTest {
             isFailed = false,
         )
     }
+
+    private object FlowOnTop : Route
 }

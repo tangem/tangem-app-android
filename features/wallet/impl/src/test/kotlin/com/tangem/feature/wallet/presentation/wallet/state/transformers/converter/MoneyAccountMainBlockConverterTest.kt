@@ -57,6 +57,21 @@ internal class MoneyAccountMainBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN not started onboarding WHEN details clicked THEN activation opened`() {
+        // Arrange
+        val status = moneyAccount(
+            MoneyAccountStatusValue.Onboarding.NotStarted(source = StatusSource.ACTUAL, customerId = "customer"),
+        )
+
+        // Act
+        val result = converter.convert(status) as MoneyAccountMainUM.NotStarted
+        result.onDetailsClick()
+
+        // Assert
+        verify(exactly = 1) { moneyAccountIntents.onMoneyAccountNotStartedClicked(userWalletId = USER_WALLET_ID) }
+    }
+
+    @Test
     fun `GIVEN active account with kyc additional info WHEN convert THEN content with action required subtitle`() {
         // Act
         val result = converter.convert(moneyAccount(activeValue(isKycAdditionalInfoRequired = true)))

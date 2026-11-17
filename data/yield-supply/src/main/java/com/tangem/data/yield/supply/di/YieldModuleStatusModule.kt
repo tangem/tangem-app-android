@@ -11,7 +11,10 @@ import com.tangem.datasource.utils.create
 import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.models.currency.balance.BalanceContributionProvider
+import com.tangem.domain.models.yield.supply.YieldSupplyBalanceFetcher
+import com.tangem.domain.models.yield.supply.YieldSupplyBalanceProvider
 import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import com.tangem.domain.yield.supply.status.YieldModuleStatusContributionFetcher
 import com.tangem.domain.yield.supply.status.YieldModuleStatusContributionProvider
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
@@ -59,11 +62,10 @@ internal object YieldModuleStatusModule {
     }
 
     @Provides
-    @IntoSet
-    fun provideYieldModuleStatusContributionFetcher(
+    fun provideYieldSupplyBalanceFetcher(
         yieldModuleStatusFetcher: YieldModuleStatusFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
-    ): BalanceContributionFetcher {
+    ): YieldSupplyBalanceFetcher {
         return YieldModuleStatusContributionFetcher(
             yieldModuleStatusFetcher = yieldModuleStatusFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
@@ -72,14 +74,27 @@ internal object YieldModuleStatusModule {
 
     @Provides
     @IntoSet
-    fun provideYieldModuleStatusContributionProvider(
+    fun provideYieldSupplyBalanceFetcherIntoSet(fetcher: YieldSupplyBalanceFetcher): BalanceContributionFetcher {
+        return fetcher
+    }
+
+    @Provides
+    fun provideYieldSupplyBalanceProvider(
         yieldModuleStatusSupplier: YieldModuleStatusSupplier,
         tokensFeatureToggles: TokensFeatureToggles,
-    ): BalanceContributionProvider {
+        wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
+    ): YieldSupplyBalanceProvider {
         return YieldModuleStatusContributionProvider(
             yieldModuleStatusSupplier = yieldModuleStatusSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
+            wrappedNativeFactory = wrappedNativeFactory,
         )
+    }
+
+    @Provides
+    @IntoSet
+    fun provideYieldSupplyBalanceProviderIntoSet(provider: YieldSupplyBalanceProvider): BalanceContributionProvider {
+        return provider
     }
 
     @Provides

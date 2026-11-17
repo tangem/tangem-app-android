@@ -55,6 +55,7 @@ data class PolymarketSessionKeyOperationOutcome(
 data class PolymarketSessionKeyOperationState(
     val running: PolymarketSessionKeyOperation?,
     val finished: PolymarketSessionKeyOperationOutcome?,
+    val lastOutcome: PolymarketSessionKeyOperationOutcome? = null,
 ) {
 
     companion object {

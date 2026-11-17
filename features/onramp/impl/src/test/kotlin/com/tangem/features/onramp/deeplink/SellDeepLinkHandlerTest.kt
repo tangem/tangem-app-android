@@ -4,9 +4,9 @@ import android.net.Uri
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import io.mockk.clearMocks
@@ -19,17 +19,16 @@ import org.junit.jupiter.api.Test
 
 internal class SellDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
 
     private val handler = SellDeepLinkHandler(
-        router = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, getSelectedWalletSyncUseCase)
+        clearMocks(router, getSelectedWalletSyncUseCase)
     }
 
     @Test
@@ -42,7 +41,7 @@ internal class SellDeepLinkHandlerTest {
         handler.handle(createRequest())
 
         // Assert
-        verify(exactly = 1) { appRouter.push(AppRoute.SellCrypto(userWallet.walletId), any()) }
+        verify(exactly = 1) { router.push(AppRoute.SellCrypto(userWallet.walletId), any()) }
     }
 
     @Test
@@ -54,7 +53,7 @@ internal class SellDeepLinkHandlerTest {
         handler.handle(createRequest())
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     private fun createRequest() = DeepLinkRequest(
@@ -62,6 +61,6 @@ internal class SellDeepLinkHandlerTest {
         queryParams = emptyMap(),
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
-        router = mockk(),
+        router = router,
     )
 }

@@ -2,11 +2,9 @@ package com.tangem.features.jointaccount.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
-import com.tangem.common.routing.utils.pushIfAbsent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.utils.logging.TangemLogger
@@ -18,7 +16,6 @@ private const val PATH_SEGMENT_JOIN = "join"
 private const val EXPECTED_PATH_SEGMENTS_COUNT = 3
 
 internal class JointAccountInviteDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : DeepLinkHandler {
@@ -27,10 +24,11 @@ internal class JointAccountInviteDeepLinkHandler @Inject constructor(
         get() = jointAccountFeatureToggles.isJointAccountEnabled
 
     override fun handle(request: DeepLinkRequest) {
+        val router = request.router
         val deeplinkUri = request.uri
         if (!jointAccountFeatureToggles.isJointAccountEnabled) {
             TangemLogger.e("Joint account feature is disabled, ignoring deeplink")
-            appRouter.popTo(AppRoute.Wallet)
+            router.popTo(AppRoute.Wallet)
             return
         }
 
@@ -42,14 +40,16 @@ internal class JointAccountInviteDeepLinkHandler @Inject constructor(
                     |- Received URI: $deeplinkUri
                 """.trimIndent(),
             )
-            appRouter.popTo(AppRoute.Wallet)
+            router.popTo(AppRoute.Wallet)
             return
         }
 
         request.scope.launch {
             val route = AppRoute.JointAccountJoin(inviteId = inviteId)
-            if (route !in appRouter.stack) analyticsEventHandler.send(JointAccountAnalyticsEvent.InviteLinkOpened())
-            appRouter.pushIfAbsent(route)
+            if (router.contains(route)) return@launch
+
+            analyticsEventHandler.send(JointAccountAnalyticsEvent.InviteLinkOpened())
+            router.push(route)
         }
     }
 

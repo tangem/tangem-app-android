@@ -162,7 +162,6 @@ internal fun EarnPickerContent(
         )
         Footer(
             cta = state.cta,
-            hint = state.ctaHint,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onSizeChanged { footerHeightPx = it.height },
@@ -454,7 +453,7 @@ private fun UnavailableBody(onRetryClick: () -> Unit) {
 }
 
 @Composable
-private fun Footer(cta: TangemButtonUM, hint: TextReference?, modifier: Modifier = Modifier) {
+private fun Footer(cta: TangemButtonUM, modifier: Modifier = Modifier) {
     val pageColor = TangemTheme.colors3.bg.primary
 
     Column(
@@ -464,16 +463,7 @@ private fun Footer(cta: TangemButtonUM, hint: TextReference?, modifier: Modifier
             .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        hint?.let { hintText ->
-            Text(
-                text = hintText.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
-                textAlign = TextAlign.Center,
-            )
-        }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             size = TangemButton.Size.X12,

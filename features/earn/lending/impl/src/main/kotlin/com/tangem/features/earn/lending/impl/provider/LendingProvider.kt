@@ -1,12 +1,12 @@
 package com.tangem.features.earn.lending.impl.provider
 
 import arrow.core.Either
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProvider
 import kotlinx.coroutines.flow.Flow
@@ -20,10 +20,9 @@ internal interface LendingProvider {
 
     val info: EarnProvider
 
-    /** What the provider is, in a few words that follow its name: "an on-chain lending protocol" */
-    val about: TextReference
-
     val websiteUrl: String
+
+    val legal: EarnLegal
 
     /** Chart periods: the depth of the provider's rate history defines them */
     val apyPeriods: List<EarnPeriod>
@@ -43,8 +42,6 @@ internal interface LendingProvider {
 
     /** Re-reads only the user's position, cheap enough to run with every balance update */
     suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit>
-
-    suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal>
 
     /** An empty history means "no data"; a backend or network failure goes to `Left` */
     suspend fun apyHistory(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory>

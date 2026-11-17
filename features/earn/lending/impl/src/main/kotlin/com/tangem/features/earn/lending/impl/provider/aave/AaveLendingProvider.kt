@@ -24,6 +24,7 @@ import com.tangem.features.earn.lending.impl.provider.LendingMarket
 import com.tangem.features.earn.lending.impl.provider.LendingPosition
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.utils.logging.TangemLogger
@@ -49,7 +50,6 @@ internal class AaveLendingProvider @Inject constructor(
     private val assetResolver: AaveAssetResolver,
     private val markets: AaveMarkets,
     private val moduleReader: AaveModuleReader,
-    private val minDepositProvider: AaveMinDepositProvider,
     private val apyHistoryLoader: AaveApyHistoryLoader,
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val networkStatusSupplier: SingleNetworkStatusSupplier,
@@ -59,10 +59,12 @@ internal class AaveLendingProvider @Inject constructor(
 
     override val info = EarnProvider(title = stringReference("Aave"), icon = ImageReference.Res(R.drawable.img_aave_22))
 
-    // Temporary plain text: replace with a localized string resource.
-    override val about = stringReference("an on-chain self-custodial lending protocol")
-
     override val websiteUrl: String = "https://aave.com"
+
+    override val legal = EarnLegal(
+        termsOfUseUrl = "https://aave.com/terms-of-service",
+        privacyPolicyUrl = "https://aave.com/privacy-policy",
+    )
 
     override val apyPeriods: List<EarnPeriod> = AaveApyPeriods.All
 
@@ -116,9 +118,6 @@ internal class AaveLendingProvider @Inject constructor(
     override suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> =
         fetchStatus(userWalletId, asset)
 
-    override suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal> =
-        minDepositProvider.get(userWalletId, asset)
-
     override suspend fun apyHistory(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory> =
         apyHistoryLoader.load(asset, period)
 
@@ -145,7 +144,8 @@ internal class AaveLendingProvider @Inject constructor(
 
         return LendingMarket(
             rate = market?.effectiveApy?.percentToApy(),
-            isOpen = isSupported && market?.isActive == true,
+            // The market's isActive is the Yield Mode switch of WETH, which the backend keeps off while Lending owns it
+            isOpen = isSupported,
             deposit = read?.let { status.depositGate(it.toState()) } ?: chain.unreadGate(),
             position = position?.let(::LendingPosition),
             maxWithdraw = if (position != null && liquidity != null) position.min(liquidity) else position,

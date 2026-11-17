@@ -1,12 +1,12 @@
 package com.tangem.features.tangempay.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -24,7 +24,6 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 internal class DefaultTangemPayMainDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
@@ -34,38 +33,41 @@ internal class DefaultTangemPayMainDeepLinkHandler @Inject constructor(
 
     override fun handle(request: DeepLinkRequest) {
         val scope = request.scope
+        val router = request.router
         val payload = request.queryParams
         val walletId = payload[CUSTOMER_WALLET_ID_KEY]
 
         scope.launch {
             val userWalletId = walletId?.let(UserWalletId::fromHexOrNull) ?: run {
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
             val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
             if (userWallet == null || userWallet.isLocked) {
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
             if (selectWalletUseCase(userWalletId).getOrNull() == null) {
-                appRouter.popTo(AppRoute.Wallet)
+                router.popTo(AppRoute.Wallet)
                 return@launch
             }
 
             val pushAction = buildPushAction(payload)
 
-            appRouter.popTo(
+            router.popTo(
                 route = AppRoute.Wallet,
                 onComplete = {
                     walletDeepLinkActionTrigger.selectWallet(userWalletId)
                     when (pushAction) {
                         is TangemPayPushAction.CardReady -> navigateToTangemPayDetails(
                             scope = scope,
+                            router = router,
                             walletId = userWalletId,
                             initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
                         )
                         is TangemPayPushAction.TopUp -> navigateToTangemPayDetails(
                             scope = scope,
+                            router = router,
                             walletId = userWalletId,
                             initialRoute = TangemPayDetailsInitialRoute.ADD_FUNDS,
                         )
@@ -108,6 +110,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @Inject constructor(
 
     private fun navigateToTangemPayDetails(
         scope: CoroutineScope,
+        router: Router,
         walletId: UserWalletId,
         initialRoute: TangemPayDetailsInitialRoute,
     ) {
@@ -116,7 +119,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @Inject constructor(
             val paymentAccountStatus = paymentAccountSupplier.invoke(userWalletId = walletId)
                 .firstOrNull()
                 ?: return@launch
-            appRouter.push(
+            router.push(
                 route = AppRoute.TangemPayDetails(
                     status = paymentAccountStatus,
                     initialRoute = initialRoute,

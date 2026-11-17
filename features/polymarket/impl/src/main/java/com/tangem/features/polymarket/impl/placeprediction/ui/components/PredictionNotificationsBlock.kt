@@ -14,12 +14,14 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_24
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun PredictionNotificationsBlock(
     notifications: ImmutableList<PredictionNotificationUM>,
+    side: PredictionOrderSide,
     onRetryClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
@@ -29,7 +31,7 @@ internal fun PredictionNotificationsBlock(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
         notifications.forEach { notification ->
             TangemMessageBanner(
-                title = notification.title(),
+                title = notification.title(side = side),
                 description = notification.description(),
                 variant = notification.variant(),
                 showGlowRing = notification !is PredictionNotificationUM.AwaitingFunds,
@@ -51,12 +53,21 @@ internal fun PredictionNotificationsBlock(
 private fun PredictionNotificationUM.isRetryable(): Boolean =
     this is PredictionNotificationUM.QuoteFailed || this is PredictionNotificationUM.PositionUnavailable
 
-private fun PredictionNotificationUM.title(): TextReference = when (this) {
+internal fun PredictionNotificationUM.title(side: PredictionOrderSide): TextReference = when (this) {
     PredictionNotificationUM.AwaitingFunds ->
         resourceReference(R.string.prediction_place_notification_awaiting_funds_title)
-    PredictionNotificationUM.PartialFill -> resourceReference(R.string.prediction_place_notification_partial_title)
-    PredictionNotificationUM.NoLiquidity ->
-        resourceReference(R.string.prediction_place_notification_no_liquidity_title)
+    PredictionNotificationUM.PartialFill -> resourceReference(
+        when (side) {
+            PredictionOrderSide.BUY -> R.string.prediction_place_notification_partial_title
+            PredictionOrderSide.SELL -> R.string.prediction_close_notification_partial_title
+        },
+    )
+    PredictionNotificationUM.NoLiquidity -> resourceReference(
+        when (side) {
+            PredictionOrderSide.BUY -> R.string.prediction_place_notification_no_liquidity_title
+            PredictionOrderSide.SELL -> R.string.prediction_close_notification_no_liquidity_title
+        },
+    )
     PredictionNotificationUM.BelowMinOrder ->
         resourceReference(R.string.prediction_place_notification_min_order_title)
     PredictionNotificationUM.MarketClosed ->

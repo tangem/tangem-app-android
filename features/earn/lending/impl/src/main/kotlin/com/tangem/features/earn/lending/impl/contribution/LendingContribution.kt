@@ -10,12 +10,5 @@ internal data class LendingContribution(
     override val source: StatusSource,
 ) : BalanceContribution {
 
-    override val kind: String get() = CONTRIBUTION_KIND
-
     override fun totalDeltaCryptoAmount(): BigDecimal = amount
-
-    companion object {
-
-        const val CONTRIBUTION_KIND = "lending"
-    }
 }

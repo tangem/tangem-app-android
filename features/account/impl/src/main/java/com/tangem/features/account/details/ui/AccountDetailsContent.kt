@@ -322,7 +322,7 @@ private fun AccountRow(state: AccountDetailsUM) {
             subtitle = state.accountSubtitle,
             icon = state.accountIcon,
             modifier = Modifier.weight(1f),
-            isReverse = true,
+            isReverse = !state.isNameAboveSubtitle,
         )
 
         if (onEditClick != null) {
@@ -375,6 +375,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
                 title = resourceReference(R.string.common_joint_account),
                 onAccountEditClick = null,
                 accountSubtitle = stringReference("5 members"),
+                isNameAboveSubtitle = true,
                 requiredApprovals = AccountDetailsUM.RequiredApprovalsUM(
                     value = stringReference("Any 2 of 5"),
                     onInfoClick = {},
@@ -397,6 +398,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
                 onAccountEditClick = null,
                 isManageTokensAvailable = false,
                 accountSubtitle = stringReference("5 members"),
+                isNameAboveSubtitle = true,
                 requiredApprovals = AccountDetailsUM.RequiredApprovalsUM(
                     value = stringReference("Any 2 of 5"),
                     onInfoClick = {},

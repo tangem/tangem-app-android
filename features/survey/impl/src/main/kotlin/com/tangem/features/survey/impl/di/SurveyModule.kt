@@ -1,8 +1,8 @@
 package com.tangem.features.survey.impl.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.features.survey.NativeSurveyComponent
 import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.survey.SurveyFeatureToggles

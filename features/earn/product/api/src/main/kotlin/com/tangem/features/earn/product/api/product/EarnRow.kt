@@ -22,6 +22,9 @@ sealed interface EarnValue {
      * product never turns money into a [Text].
      */
     data class Amount(val value: BigDecimal) : EarnValue
+
+    /** Earnings over a year, already in the app currency: money as well, so the screen formats it like [Amount] */
+    data class YearlyFiatEarnings(val value: BigDecimal) : EarnValue
 }
 
 /** @property icon the icon of a benefit line; the explanation sheet of a row ignores it */

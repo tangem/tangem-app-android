@@ -78,7 +78,6 @@ internal class PooledStakingMapperStateTest {
                     description = "You earn from securing the network, not from lending.",
                 ),
             ),
-            howItWorks = null,
             details = listOf(
                 row("Risk", "Low"),
                 row("Validator", "P2P"),

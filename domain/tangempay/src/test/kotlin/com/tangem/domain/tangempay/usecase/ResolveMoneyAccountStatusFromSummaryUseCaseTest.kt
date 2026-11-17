@@ -107,6 +107,45 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
             expected = MoneyAccountStatusValue.Empty,
         ),
         ResolveModel(
+            name = "not started while payment failed",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+            ),
+            expected = MoneyAccountStatusValue.Empty,
+        ),
+        ResolveModel(
+            name = "not started while payment unavailable",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.UNAVAILABLE,
+            ),
+            expected = MoneyAccountStatusValue.Empty,
+        ),
+        ResolveModel(
+            name = "not started while payment completed",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.COMPLETED,
+            ),
+            expected = MoneyAccountStatusValue.Onboarding.NotStarted(
+                source = StatusSource.ACTUAL,
+                customerId = CUSTOMER_ID,
+            ),
+        ),
+        ResolveModel(
+            name = "closed with not started account",
+            summary = summary(
+                customerStatus = CustomerStatus.FORMER,
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.COMPLETED,
+            ),
+            expected = MoneyAccountStatusValue.Empty,
+        ),
+        ResolveModel(
             name = "unavailable",
             summary = summary(
                 kycStatus = SummaryKycStatus.APPROVED,

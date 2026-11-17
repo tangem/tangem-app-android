@@ -6,6 +6,7 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -46,7 +47,9 @@ import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
@@ -76,6 +79,8 @@ import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -89,6 +94,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -110,6 +116,7 @@ internal class EarnFlowModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
+    private val blogUrlBuilder: TangemBlogUrlBuilder = mockk()
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
@@ -144,6 +151,7 @@ internal class EarnFlowModelTest {
             sendFeedbackEmailUseCase,
             urlOpener,
             shareManager,
+            blogUrlBuilder,
             getExplorerTransactionUrlUseCase,
             getUserWalletUseCase,
             getAccountCurrencyStatusUseCase,
@@ -151,6 +159,7 @@ internal class EarnFlowModelTest {
         )
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns TEST_LEARN_MORE_URL
         every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Hot> { every { name } returns "Wallet" }.right()
         mockkObject(CryptoCurrencyStatusOperations)
         with(CryptoCurrencyStatusOperations) {
@@ -563,6 +572,38 @@ internal class EarnFlowModelTest {
             model.onDestroy()
         }
 
+        @ParameterizedTest
+        @MethodSource("providePositionAmountModels")
+        fun `GIVEN amount from position WHEN submit THEN prepare and fee get the whole position only for the max`(
+            model: PositionAmountModel,
+        ) = runTest {
+            // Arrange
+            coEvery { session.loadFee(action = any(), amount = any()) } returns GetFeeError.UnknownError.left()
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Act
+            if (model.entered == null) flow.onMaxValueClick() else flow.onAmountValueChange(model.entered)
+            flow.loadFee()
+            flow.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            flow.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { session.loadFee(action = Withdraw(), amount = model.expected) }
+            coVerify(exactly = 1) {
+                session.prepare(action = Withdraw(), amount = model.expected, fee = testFeeSelection("0.00033"))
+            }
+            flow.onDestroy()
+        }
+
+        private fun providePositionAmountModels() = listOf(
+            PositionAmountModel(entered = null, expected = EarnAmount.Entire),
+            PositionAmountModel(entered = TEST_BALANCE.toPlainString(), expected = EarnAmount.Entire),
+            PositionAmountModel(entered = "0.5", expected = EarnAmount.Exact(BigDecimal("0.5"))),
+        )
+
         @Test
         fun `GIVEN amount from position WHEN fee arrives THEN subtraction use case is not asked`() = runTest {
             // Arrange
@@ -578,6 +619,36 @@ internal class EarnFlowModelTest {
             coVerify(exactly = 0) {
                 isAmountSubtractAvailableUseCase.invoke(userWalletId = any(), currency = any(), maybeGaslessFee = any())
             }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee coin topped up WHEN account list updates THEN withdrawal fee warning disappears`() = runTest {
+            // Arrange
+            val accountStatusLists = MutableSharedFlow<AccountStatusList>(replay = 1)
+            every { singleAccountStatusListSupplier.invoke(testUserWalletId) } returns accountStatusLists
+            coEvery {
+                getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returnsMany listOf(testStatus(amount = BigDecimal("0.0001")).right(), testStatus().right())
+            accountStatusLists.emit(accountStatusList)
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+            model.onAmountValueChange("0.5")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            val warningsBeforeTopUp = model.amount.value?.notifications.orEmpty()
+                .filterIsInstance<NotificationUM.Error.ExceedsBalance>()
+
+            // Act
+            accountStatusLists.emit(accountStatusList)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(warningsBeforeTopUp).hasSize(1)
+            assertThat(
+                model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>(),
+            )
+                .isEmpty()
             model.onDestroy()
         }
     }
@@ -887,6 +958,31 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN sent and result not ready WHEN confirm shown THEN it keeps the sent plan rows and amount`() =
+            runTest {
+            // Arrange
+            val row = EarnRow(label = stringReference("Current APY"), value = EarnValue.Text(stringReference("5.5%")))
+            val plan = TestPlan(rows = listOf(row))
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns plan.right()
+            coEvery { session.verify(plan = any()) } returns EarnVerification.Verified(TestVerifiedPlan(plan))
+            every { session.execute(plan = any()) } returns flow {
+                emit(EarnSigningStep.Sent(txRef))
+                awaitCancellation()
+            }
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.plan).isNull()
+            assertThat(model.confirm.value?.rows?.map { it.label }).containsExactly(row.label)
+            assertThat(model.confirm.value?.amountCrypto).isNotEqualTo(TextReference.EMPTY)
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN Failed after Sent WHEN confirm again THEN sent plan is not verified twice`() = runTest {
             // Arrange
             every { session.execute(plan = any()) } returns flowOf(
@@ -1127,6 +1223,18 @@ internal class EarnFlowModelTest {
 
             // Assert
             assertThat(model.confirm.value?.primary?.tangemIconUM).isNotNull()
+            assertThat(model.confirm.value?.isHoldToConfirm).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN mobile wallet WHEN confirm shown THEN the action is held to confirm without the logo`() = runTest {
+            // Act
+            val model = createConfirmedModel()
+
+            // Assert
+            assertThat(model.confirm.value?.isHoldToConfirm).isTrue()
+            assertThat(model.confirm.value?.primary?.tangemIconUM).isNull()
             model.onDestroy()
         }
 
@@ -1288,7 +1396,7 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN sheet shown WHEN learn more pressed THEN its link opens`() = runTest {
+        fun `GIVEN sheet shown WHEN learn more pressed THEN the link of its post is built and opened`() = runTest {
             // Arrange
             val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
             advanceUntilIdle()
@@ -1296,6 +1404,7 @@ internal class EarnFlowModelTest {
 
             // Act
             model.howItWorks.value?.onLearnMoreClick?.invoke()
+            advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) { urlOpener.openUrl(TEST_LEARN_MORE_URL) }
@@ -1349,17 +1458,20 @@ internal class EarnFlowModelTest {
             urlOpener = urlOpener,
             shareManager = shareManager,
             getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+            blogUrlBuilder = blogUrlBuilder,
         ),
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
+
+    data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
 }
 
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
-private const val TEST_LEARN_MORE_URL = "https://aave.com"
+private const val TEST_LEARN_MORE_URL = "https://tangem.com/blog/yield-mode"
 
 private val testHowItWorks = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(EarnTextBlock(title = stringReference("Supply"), description = stringReference("Lend"))),
-    learnMoreUrl = TEST_LEARN_MORE_URL,
+    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
 )

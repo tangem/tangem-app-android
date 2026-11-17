@@ -19,6 +19,7 @@ import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
+import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnProjectionBarUM
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjectionResult
@@ -192,6 +193,81 @@ internal class EarnCalculatorConverterTest {
     }
 
     @Nested
+    inner class BarTexts {
+
+        @Test
+        fun `GIVEN default input WHEN convert THEN the last bar shows the header total and earned`() {
+            // Act
+            val actual = convert().bars.last()
+
+            // Assert
+            val expected = EarnProjectionBarUM(
+                height = 1f,
+                balance = stringReference("$22,124.34"),
+                earned = stringReference("+$1,624.34"),
+            )
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN 120 points WHEN convert THEN the first bar shows month 5`() {
+            // Arrange
+            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
+            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val month5 = result.points[4]
+
+            // Act
+            val actual = convert(input = input, result = result).bars.first()
+
+            // Assert
+            val usd = AppCurrency.Default
+            assertThat(actual.balance).isEqualTo(stringReference(month5.capital.format { fiat(usd.code, usd.symbol) }))
+            assertThat(actual.earned)
+                .isEqualTo(stringReference("+" + month5.income.format { fiat(usd.code, usd.symbol) }))
+        }
+
+        @Test
+        fun `GIVEN second currency WHEN convert THEN bar texts use its symbol`() {
+            // Arrange
+            val euro = AppCurrency.Default.copy(code = "EUR", symbol = "€")
+
+            // Act
+            val actual = convert(appCurrency = euro).bars.last()
+
+            // Assert
+            assertThat((actual.balance as TextReference.Str).value).contains("€")
+            assertThat((actual.earned as TextReference.Str).value).contains("€")
+        }
+    }
+
+    @Nested
+    inner class BarSelection {
+
+        @Test
+        fun `GIVEN any input WHEN convert THEN nothing is selected`() {
+            // Act
+            val actual = convert()
+
+            // Assert
+            assertThat(actual.selectedBar).isNull()
+        }
+
+        @Test
+        fun `GIVEN callback WHEN onBarSelected is invoked THEN the callback receives the index`() {
+            // Arrange
+            val selected = mutableListOf<Int?>()
+            val actual = convert(onBarSelected = { selected += it })
+
+            // Act
+            actual.onBarSelected(5)
+            actual.onBarSelected(null)
+
+            // Assert
+            assertThat(selected).containsExactly(5, null).inOrder()
+        }
+    }
+
+    @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Bars {
 
@@ -225,7 +301,7 @@ internal class EarnCalculatorConverterTest {
             assertThat(checked.size).isAtLeast(12)
             checked.forEach { (index, bar) ->
                 val point = result.points[5 * (index + 1) - 1]
-                assertThat(bar.earned).isWithin(TOLERANCE).of(point.income.share(of = largest))
+                assertThat(bar.height).isWithin(TOLERANCE).of(point.income.share(of = largest))
             }
         }
 
@@ -236,7 +312,7 @@ internal class EarnCalculatorConverterTest {
             val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
 
             // Act
-            val actual = convert(input = input, result = result).bars.map { it.earned }
+            val actual = convert(input = input, result = result).bars.map { it.height }
 
             // Assert
             assertThat(actual).isInOrder()
@@ -253,7 +329,7 @@ internal class EarnCalculatorConverterTest {
             val actual = convert(input = input, result = result).bars
 
             // Assert
-            assertThat(actual.map { it.earned }.min()).isAtLeast(MIN_VISIBLE_SHARE)
+            assertThat(actual.map { it.height }.min()).isAtLeast(MIN_VISIBLE_SHARE)
         }
 
         @Test
@@ -266,7 +342,7 @@ internal class EarnCalculatorConverterTest {
             val actual = convert(input = input, result = result).bars
 
             // Assert
-            assertThat(actual.map { it.earned }.toSet()).containsExactly(0f)
+            assertThat(actual.map { it.height }.toSet()).containsExactly(0f)
         }
 
         @Test
@@ -279,7 +355,7 @@ internal class EarnCalculatorConverterTest {
 
             // Assert
             assertThat(actual.bars).hasSize(24)
-            assertThat(actual.bars.map { it.earned }.toSet()).containsExactly(0f)
+            assertThat(actual.bars.map { it.height }.toSet()).containsExactly(0f)
             assertThat(actual.total).isEqualTo(stringReference("$0.00"))
         }
 
@@ -455,6 +531,7 @@ internal class EarnCalculatorConverterTest {
         onInitialStep: (Int) -> Unit = {},
         onTopUpStep: (Int) -> Unit = {},
         onHorizonSelect: (EarnHorizon) -> Unit = {},
+        onBarSelected: (Int?) -> Unit = {},
     ): EarnCalculatorUM = converter.convert(
         result = result,
         input = input,
@@ -464,6 +541,7 @@ internal class EarnCalculatorConverterTest {
         onInitialStep = onInitialStep,
         onTopUpStep = onTopUpStep,
         onHorizonSelect = onHorizonSelect,
+        onBarSelected = onBarSelected,
     )
 
     private companion object {

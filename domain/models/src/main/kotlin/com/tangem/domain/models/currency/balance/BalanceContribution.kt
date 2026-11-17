@@ -21,15 +21,6 @@ import java.math.BigDecimal
 interface BalanceContribution {
 
     /**
-     * Discriminator of the contribution type, e.g. `"staking"`.
-     *
-     * Declared as a plain [String] on purpose: the constant belongs to the module that owns the balance type,
-     * so a new type can be introduced without editing this module. An enum here would recreate exactly the
-     * coupling this contract removes.
-     */
-    val kind: String
-
-    /**
      * Freshness of this contribution; folded generically into
      * [com.tangem.domain.models.currency.CryptoCurrencyStatus.Sources.total].
      */

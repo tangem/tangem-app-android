@@ -331,18 +331,16 @@ internal class EarnPickerConverterTest {
             assertThat(actual.barTitle).isEqualTo(lending.title)
             assertThat(actual.readyContent().description).isEqualTo(ready.description)
             assertThat(actual.cta.text).isEqualTo(ready.primary.label)
-            assertThat(actual.ctaHint).isNull()
             assertThat(calls).containsExactly(Call.Action(lending, ready.primary.action), Call.Close).inOrder()
         }
 
         @Test
-        fun `GIVEN balance below the minimum WHEN cta clicked THEN intents get onAddFundsClick and the hint is shown`() {
+        fun `GIVEN balance below the minimum WHEN cta clicked THEN intents get onAddFundsClick`() {
             // Act
             val actual = convert(ethBalance = BigDecimal.ZERO)
             actual.cta.onClick()
 
             // Assert
-            assertThat(actual.ctaHint).isEqualTo(EarnPickerTexts.minDepositHint(ready.limits.minDeposit))
             assertThat(calls).containsExactly(Call.AddFunds)
         }
 
@@ -378,7 +376,6 @@ internal class EarnPickerConverterTest {
             assertThat(actual.content).isEqualTo(ContentUM.Loading)
             assertThat(actual.cta.text).isEqualTo(EarnPickerTexts.startEarning)
             assertThat(actual.cta.isEnabled).isFalse()
-            assertThat(actual.ctaHint).isNull()
             assertThat(calls).containsExactly(Call.Close)
         }
 

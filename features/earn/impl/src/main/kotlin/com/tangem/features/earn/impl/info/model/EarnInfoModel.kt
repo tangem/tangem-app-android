@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.info.model
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -19,15 +20,18 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.impl.InnerEarnNavigator
 import com.tangem.features.earn.impl.info.EarnInfoChartConfig
 import com.tangem.features.earn.impl.info.EarnInfoComponent
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
+import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
+import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
@@ -36,6 +40,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -75,6 +80,7 @@ internal class EarnInfoModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+    private val blogUrlBuilder: TangemBlogUrlBuilder,
 ) : Model(), EarnApyChartComponent.ModelCallback, EarnCalculatorSheetComponent.ModelCallback {
 
     private val params: EarnInfoComponent.Params = paramsContainer.require()
@@ -112,6 +118,9 @@ internal class EarnInfoModel @Inject constructor(
     val chartNavigation: SlotNavigation<EarnInfoChartConfig> = SlotNavigation()
 
     val calculatorSheetNavigation: SlotNavigation<EarnCalculatorSheetConfig> = SlotNavigation()
+
+    val howItWorks: StateFlow<EarnHowItWorksUM?>
+        field = MutableStateFlow(null)
 
     val pullToRefresh: StateFlow<PullToRefreshConfig>
         field = MutableStateFlow(PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }))
@@ -293,7 +302,10 @@ internal class EarnInfoModel @Inject constructor(
 
     private fun redirectToPicker() {
         if (isRedirected.compareAndSet(false, true)) {
-            router.replaceCurrent(EarnPickerRoute(preselected = params.productId, shouldRedirectToActive = false))
+            router.redirect(
+                current = EarnInfoRoute(params.productId),
+                replacement = EarnPickerRoute(preselected = params.productId, shouldRedirectToActive = false),
+            )
         }
     }
 
@@ -310,15 +322,16 @@ internal class EarnInfoModel @Inject constructor(
         )
     }
 
-    private fun onHowItWorksClick(howItWorks: EarnHowItWorks) {
-        uiMessageSender.send(
-            modalMessage {
-                title = howItWorks.title
-                informer {
-                    howItWorks.entries.forEach { item(title = it.title, description = it.description) }
-                }
-            },
-        )
+    fun onHowItWorksDismiss() {
+        howItWorks.value = null
+    }
+
+    private fun onHowItWorksClick(content: EarnHowItWorks) {
+        howItWorks.value = content.toUM(onLearnMoreClick = ::openBlogPost)
+    }
+
+    private fun openBlogPost(post: TangemBlogUrlBuilder.Post) {
+        modelScope.launch { urlOpener.openUrl(blogUrlBuilder.build(post)) }
     }
 
     private fun onClose() {

@@ -16,6 +16,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.ui.EarnHowItWorksModal
 import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.info.ui.EarnInfoContent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
@@ -94,6 +95,9 @@ internal class EarnInfoComponent @AssistedInject constructor(
 
             calculatorSheet?.BottomSheet()
         }
+
+        val howItWorks by model.howItWorks.collectAsStateWithLifecycle()
+        howItWorks?.let { um -> EarnHowItWorksModal(state = um, onDismiss = model::onHowItWorksDismiss) }
     }
 
     data class Params(

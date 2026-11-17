@@ -25,8 +25,6 @@ data class YieldSupplyContribution(
     val spendableDelta: BigDecimal = BigDecimal.ZERO,
 ) : BalanceContribution {
 
-    override val kind: String get() = CONTRIBUTION_KIND
-
     /**
      * Always zero: supplied funds are spendable, so they reach the total through `amount` — either inside the network
      * amount or folded into it from [spendableDeltaCryptoAmount] — never on top of it.
@@ -38,10 +36,4 @@ data class YieldSupplyContribution(
      * spendable. Zero when it is not active.
      */
     override fun spendableDeltaCryptoAmount(): BigDecimal = if (status.isActive) spendableDelta else BigDecimal.ZERO
-
-    companion object {
-
-        /** [BalanceContribution.kind] of every yield-supply contribution. Owned here, not by the base contract. */
-        const val CONTRIBUTION_KIND = "yield_supply"
-    }
 }

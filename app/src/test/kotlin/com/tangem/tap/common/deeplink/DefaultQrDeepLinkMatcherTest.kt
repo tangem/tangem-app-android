@@ -2,9 +2,9 @@ package com.tangem.tap.common.deeplink
 
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk

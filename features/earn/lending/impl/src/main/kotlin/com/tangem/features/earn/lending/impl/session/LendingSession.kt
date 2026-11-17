@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
@@ -56,6 +57,7 @@ internal class LendingSession @AssistedInject constructor(
     private val sender: LendingTxSender,
     private val transactionRepository: YieldSupplyTransactionRepository,
     private val analyticsSender: LendingAnalyticsSender,
+    private val accountNames: LendingAccountNames,
 ) : EarnSession {
 
     override suspend fun loadFee(action: EarnFlowAction, amount: EarnAmount?): Either<GetFeeError, TransactionFee> =
@@ -93,7 +95,7 @@ internal class LendingSession @AssistedInject constructor(
         val operation = ensureNotNull(action.toLendingOperation()) { EarnSessionError.Failed() }
         val state = ensureNotNull(currentState()) { EarnSessionError.Failed() }
         val value = ensureNotNull(amount.resolve(state, operation)) { EarnSessionError.Failed() }
-        if (operation == LendingOperation.Deposit) ensureAboveMinDeposit(state = state, amount = value)
+        ensure(value.signum() > 0) { EarnSessionError.Failed() }
         planFactory.plan(
             userWalletId = params.userWalletId,
             state = state,
@@ -160,7 +162,7 @@ internal class LendingSession @AssistedInject constructor(
             userWalletId = params.userWalletId,
             state = state,
             action = plan.action,
-            amount = plan.amount,
+            amount = plan.rebuildAmount(state),
             fee = EarnFeeSelection(fee = plan.fee, extended = null, feeType = plan.feeType),
         ).bind()
         val isRebuilt = newPlan.planKey != plan.planKey ||
@@ -173,7 +175,7 @@ internal class LendingSession @AssistedInject constructor(
         }
         if (canRunOutOfGas) {
             // The flow keeps a custom fee across its reload, so a plan rebuilt for it would come back here again
-            ensure(!plan.isFeeBelowEstimate) { EarnSessionError.Rejected(LendingTexts.gasLimitTooLow) }
+            ensure(!plan.isFeeBelowEstimate) { gasLimitError(operation, required = newPlan.totalGasLimit) }
             return@either EarnVerification.Changed(newPlan)
         }
 
@@ -181,6 +183,12 @@ internal class LendingSession @AssistedInject constructor(
             .mapLeft { EarnSessionError.Failed() }
             .bind()
         EarnVerification.Verified(LendingVerifiedPlan(plan))
+    }
+
+    /** The text speaks of a deposit and names the limit it needs: a withdrawal has no such text and just fails */
+    private fun gasLimitError(operation: LendingOperation, required: BigInteger): EarnSessionError = when (operation) {
+        LendingOperation.Deposit -> EarnSessionError.Rejected(LendingTexts.gasLimitTooLow(required))
+        LendingOperation.Withdraw -> EarnSessionError.Failed()
     }
 
     private fun Raise<EarnSessionError>.ensureAffordable(
@@ -203,12 +211,6 @@ internal class LendingSession @AssistedInject constructor(
                 ensure(feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
         }
-    }
-
-    /** A minimum the provider could not compute does not block the deposit, the same as on the product screen */
-    private suspend fun Raise<EarnSessionError>.ensureAboveMinDeposit(state: LendingAssetState, amount: BigDecimal) {
-        val minDeposit = lendingProvider.minDeposit(params.userWalletId, state.asset).getOrNull() ?: return
-        ensure(amount >= minDeposit) { EarnSessionError.BelowMinimum(minDeposit) }
     }
 
     /** The plan's result follows the last transaction: the deposit or withdrawal, not the preparation */
@@ -241,7 +243,11 @@ internal class LendingSession @AssistedInject constructor(
         analyticsSender.onSent(plan = plan, operation = operation, currency = params.currency)
         refreshProvider()
         val result = when (operation) {
-            LendingOperation.Deposit -> lendingDepositResult(plan.amount, params.currency, lendingProvider.info.title)
+            LendingOperation.Deposit -> lendingDepositResult(
+                amount = plan.amount,
+                currency = params.currency,
+                accountName = accountNames.nameOf(params.userWalletId, params.currency.id),
+            )
             LendingOperation.Withdraw -> lendingWithdrawResult(plan.amount, params.currency, plan.fee)
         }
         emit(EarnSigningStep.Done(ref, result))
@@ -259,6 +265,15 @@ internal class LendingSession @AssistedInject constructor(
     private fun LendingAssetState.maxAmount(operation: LendingOperation): BigDecimal? = when (operation) {
         LendingOperation.Deposit -> balance
         LendingOperation.Withdraw -> market.maxWithdraw
+    }
+
+    /**
+     * An entire withdrawal is rebuilt for the fresh position: interest grows it after preparation, and the planned
+     * amount would fall short of it and turn the exit into a partial withdrawal that leaves dust behind
+     */
+    private fun LendingPlan.rebuildAmount(state: LendingAssetState): BigDecimal {
+        val isEntire = (operation as? LendingPlannedOperation.Withdraw)?.isEntire == true
+        return if (isEntire) state.maxAmount(LendingOperation.Withdraw) ?: amount else amount
     }
 
     /** The flow passes exact amounts; without one the whole source is meant */

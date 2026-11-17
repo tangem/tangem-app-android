@@ -3,8 +3,8 @@ package com.tangem.features.onramp.deeplink
 import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
@@ -22,10 +22,10 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultBuyDeepLinkHandlerTest {
 
-    private val router: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
 
-    private val handler = DefaultBuyDeepLinkHandler(router, getSelectedWalletSyncUseCase)
+    private val handler = DefaultBuyDeepLinkHandler(getSelectedWalletSyncUseCase)
 
     @BeforeEach
     fun setUp() {
@@ -80,6 +80,6 @@ internal class DefaultBuyDeepLinkHandlerTest {
         queryParams = emptyMap(),
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
-        router = mockk(),
+        router = router,
     )
 }

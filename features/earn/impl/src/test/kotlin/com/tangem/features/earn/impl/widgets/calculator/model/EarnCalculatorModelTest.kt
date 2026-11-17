@@ -190,6 +190,129 @@ internal class EarnCalculatorModelTest {
     }
 
     @Test
+    fun `GIVEN 3Y bars WHEN onBarSelected 5 THEN selectedBar is 5`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isEqualTo(5)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar selected WHEN onBarSelected null THEN selectedBar is null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = null)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 24 bars WHEN onBarSelected 24 THEN selectedBar stays null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = 24)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 23 selected on 3Y WHEN horizon becomes Months6 THEN selectedBar is null and onBarSelected 23 is ignored`() =
+        runTest {
+            // Arrange
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+            advanceUntilIdle()
+            model.onBarSelected(index = 23)
+            advanceUntilIdle()
+
+            // Act
+            model.onHorizonSelect(EarnHorizon.Months6)
+            advanceUntilIdle()
+            val afterHorizonChange = requireNotNull(model.uiState.value)
+            model.onBarSelected(index = 23)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(afterHorizonChange.bars).hasSize(6)
+            assertThat(afterHorizonChange.selectedBar).isNull()
+            assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN bar selected WHEN onInitialStep 1 THEN selectedBar is null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        model.onInitialStep(direction = 1)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 5 selected WHEN projection re-emits an equal projection THEN selectedBar stays 5`() = runTest {
+        // Arrange
+        val projection = MutableStateFlow<EarnProjection?>(projectionOf("0.0468"))
+        val model = createModel(projection = projection)
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        projection.value = projectionOf("0.0468")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isEqualTo(5)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 5 selected WHEN projection emits another rate THEN selectedBar is null`() = runTest {
+        // Arrange
+        val projection = MutableStateFlow<EarnProjection?>(projectionOf("0.0468"))
+        val model = createModel(projection = projection)
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        projection.value = projectionOf("0.032")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN incentive rate WHEN model created THEN uiState has the badge`() = runTest {
         // Arrange
         val model = createModel(

@@ -250,7 +250,7 @@ internal class PolymarketSearchModelTest {
         model.uiState.value.onQueryChange("uzb")
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = listOf(createEvent(id = "event-1")))),
+            data = listOf(Batch(key = 0, data = listOf(createEvent(id = "event-1").copy(eventType = "soccer")))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -261,7 +261,7 @@ internal class PolymarketSearchModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId),
+                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId, eventType = "soccer"),
                 any(),
             )
         }

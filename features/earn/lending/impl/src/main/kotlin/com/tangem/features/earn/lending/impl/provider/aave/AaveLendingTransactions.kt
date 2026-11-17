@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
+import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -22,11 +23,13 @@ import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.domain.yield.supply.models.YieldModulePreparation
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase.SimulationPolicy
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingProviderState
 import com.tangem.features.earn.lending.impl.provider.LendingTransactions
 import com.tangem.features.earn.lending.impl.provider.LendingTxError
 import com.tangem.features.earn.lending.impl.provider.LendingTxExpectation
+import com.tangem.features.earn.lending.impl.provider.callData
 import com.tangem.utils.coroutines.runSuspendCatching
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -113,7 +116,21 @@ internal class AaveLendingTransactions @Inject constructor(
         userWallet: UserWallet,
         asset: LendingAsset,
         txs: List<TransactionData.Uncompiled>,
-    ): Either<GetFeeError, List<TransactionData.Uncompiled>> = estimateFee(userWallet, asset.currency, txs)
+    ): Either<GetFeeError, List<TransactionData.Uncompiled>> = estimateFee(
+        userWallet = userWallet,
+        cryptoCurrency = asset.currency,
+        transactionDataList = txs,
+        policy = simulationPolicyOf(txs),
+    )
+
+    /**
+     * A reverting simulation means the deposit would fail on chain, so it is never sent. Without a simulation only a
+     * deploy has no fallback: the static estimate prices the deposit with a constant, too far from a fresh module
+     */
+    private fun simulationPolicyOf(txs: List<TransactionData.Uncompiled>) = SimulationPolicy(
+        isRevertFatal = true,
+        isStaticFallbackAllowed = txs.firstOrNull()?.callData !is EthereumYieldSupplyDeployCallData,
+    )
 
     override suspend fun feeLevels(
         userWallet: UserWallet,

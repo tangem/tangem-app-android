@@ -259,6 +259,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
                 YieldModuleStatusContributionProvider(
                     yieldModuleStatusSupplier = yieldModuleStatusSupplier,
                     tokensFeatureToggles = tokensFeatureToggles,
+                    wrappedNativeFactory = mockk { every { create(any()) } returns null },
                 ),
             ),
             tokensFeatureToggles = tokensFeatureToggles,

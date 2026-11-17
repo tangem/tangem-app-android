@@ -1,5 +1,8 @@
 package com.tangem.domain.polymarket.signing
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+
 object PolymarketRelayerDeadline {
 
     const val WINDOW_SECONDS = 600L
@@ -20,5 +23,10 @@ object PolymarketRelayerDeadline {
     fun isExpired(deadline: String, nowMillis: Long = System.currentTimeMillis()): Boolean {
         val deadlineSeconds = deadline.toLongOrNull() ?: return true
         return deadlineSeconds <= nowMillis / MILLIS_IN_SECOND
+    }
+
+    fun timeLeft(deadline: String, nowMillis: Long): Duration {
+        val deadlineSeconds = deadline.toLongOrNull() ?: return Duration.ZERO
+        return (deadlineSeconds * MILLIS_IN_SECOND - nowMillis).milliseconds
     }
 }

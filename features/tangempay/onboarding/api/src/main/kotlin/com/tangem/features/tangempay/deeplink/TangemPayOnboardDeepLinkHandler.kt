@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.deeplink
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
 
 interface TangemPayOnboardDeepLinkHandler : DeepLinkHandler {
 
