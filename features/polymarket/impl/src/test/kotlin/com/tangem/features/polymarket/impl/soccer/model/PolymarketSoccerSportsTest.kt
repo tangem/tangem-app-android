@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.soccer.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
@@ -72,6 +73,36 @@ internal class PolymarketSoccerSportsTest {
         runCurrent()
         assertThat(scores.subscriptionCount.value).isEqualTo(1)
         verify { repository.observeLiveScores(setOf("001")) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN soccer layout WHEN ordinary REST reverses teams THEN score stays aligned with soccer buttons`(
+        reversed: Boolean,
+    ) = runTest {
+        // Arrange
+        val event = soccerEvent(emptyList()).copy(gameId = "1", dataFetchedAt = Instant.ofEpochSecond(10))
+        val rest = MutableStateFlow(event)
+        val updates = MutableSharedFlow<PolymarketEvent>()
+        every { repository.observeConnectionState() } returns connections
+        every { repository.observeLiveScores(any()) } returns emptyFlow()
+        val useCase = ObservePolymarketSportsStateUseCase(
+            repository, createTestingCoroutineDispatcherProvider(), testScheduler.timeSource,
+        )
+        val values = mutableListOf<PolymarketSportsState>()
+        backgroundScope.launch { useCase.observeSoccer(rest, MutableStateFlow(true), updates).toList(values) }
+        runCurrent()
+
+        // Act
+        updates.emit(event.mainEvent().copy(
+            teams = if (reversed) event.teams.reversed() else event.teams,
+            score = if (reversed) "1-3" else "3-1", dataFetchedAt = Instant.ofEpochSecond(20),
+        ))
+        runCurrent()
+
+        // Assert
+        val header = event.sportsUM(values.last().events.getValue(event.id))
+        assertThat(header).isEqualTo(event.sportsUM(null).copy(homeScore = "3", awayScore = "1"))
     }
 
     @ParameterizedTest

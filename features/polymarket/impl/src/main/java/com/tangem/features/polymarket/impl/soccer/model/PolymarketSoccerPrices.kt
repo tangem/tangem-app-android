@@ -52,16 +52,17 @@ internal class PolymarketSoccerPrices(
         val wasAwaitingFinalSnapshot = isAwaitingFinalSnapshot
         if (hasReopened) isAwaitingFinalSnapshot = false
         val previous = plan
-        if (previous?.eventId != event.id) isAwaitingFinalSnapshot = false
+        val hasChangedEvent = previous?.eventId != event.id
+        if (hasChangedEvent) {
+            isAwaitingFinalSnapshot = false
+            batch = emptyMap()
+            finalPrices = null
+        }
         if (isAwaitingFinalSnapshot && event.isEnded != true) return
         isAwaitingFinalSnapshot = false
         val next = planFor(event)
         rest = event.buttonPrices()
-        if (previous?.eventId != next.eventId || !isResumed) {
-            batch = emptyMap()
-            quotes = emptyMap()
-        }
-        if (previous?.eventId != next.eventId) finalPrices = null
+        if (hasChangedEvent || !isResumed) quotes = emptyMap()
         batch = batch.filterKeys { it in next.polled }
         quotes = quotes.filterKeys { it in next.streamed }
         if (next.isEnded && finalPrices == null) finalPrices = rest

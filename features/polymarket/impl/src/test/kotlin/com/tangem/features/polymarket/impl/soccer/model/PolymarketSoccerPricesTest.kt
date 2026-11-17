@@ -246,6 +246,32 @@ internal class PolymarketSoccerPricesTest {
         verify(exactly = 0) { observeQuotes(any()) }
     }
 
+    @Test
+    fun `GIVEN fresh batch before pause WHEN resumed batch fails THEN retain last batch instead of entry snapshot`() = runTest {
+        // Arrange
+        val event = soccerEvent(listOf(soccerPickerCard())).copy(isLive = false)
+        coEvery { getPrices(any(), any()) } returnsMany listOf(
+            mapOf("p2-left" to BigDecimal("0.61")).right(), PredictionPriceError.Network.left(),
+        )
+        val controller = controller()
+        controller.update(event)
+        controller.onResume()
+        runCurrent()
+
+        // Act
+        controller.onPause()
+        controller.update(event)
+        val beforeFirstBatch = controller.state.value
+        controller.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(beforeFirstBatch).containsEntry("p2-left", BigDecimal("0.61"))
+        assertThat(controller.state.value).containsEntry("p2-left", BigDecimal("0.61"))
+        verify(exactly = 1) { stale() }
+        controller.onPause()
+    }
+
     private fun TestScope.controller(enabled: Boolean = true) = PolymarketSoccerPrices(
         backgroundScope, getPrices, observeQuotes, enabled, stale, recovery,
     )

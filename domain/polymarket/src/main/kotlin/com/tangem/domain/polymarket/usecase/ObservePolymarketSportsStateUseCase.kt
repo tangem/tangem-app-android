@@ -39,8 +39,17 @@ class ObservePolymarketSportsStateUseCase(
         isResumed: Flow<Boolean> = flowOf(true),
     ): Flow<PolymarketSportsState> = observe(events.map { it.map(PolymarketSportsEvent::from) }, isResumed)
 
-    fun observeSoccer(event: Flow<PolymarketSoccerEvent>, isResumed: Flow<Boolean>): Flow<PolymarketSportsState> =
-        observe(event.map { listOf(PolymarketSportsEvent.from(it)) }, isResumed)
+    fun observeSoccer(
+        event: Flow<PolymarketSoccerEvent>,
+        isResumed: Flow<Boolean>,
+        updates: Flow<PolymarketEvent> = emptyFlow(),
+    ): Flow<PolymarketSportsState> = observe(
+        merge(
+            event.map { listOf(PolymarketSportsEvent.from(it)) },
+            updates.map { listOf(PolymarketSportsEvent.from(it)) },
+        ),
+        isResumed,
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observe(
