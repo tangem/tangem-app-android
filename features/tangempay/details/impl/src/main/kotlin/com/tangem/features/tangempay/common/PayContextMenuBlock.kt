@@ -106,9 +106,7 @@ private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () 
             modifier = Modifier
                 .size(20.dp)
                 .testTag(TangemPayTestTags.CONTEXT_MENU_ITEM_ICON)
-                .semantics {
-                    (item.icon as? TangemIconUM.Icon)?.iconRes?.let { set(ContextMenuItemIconResKey, it) }
-                },
+                .semantics { item.iconRes?.let { set(ContextMenuItemIconResKey, it) } },
             tangemIconUM = item.icon,
         )
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

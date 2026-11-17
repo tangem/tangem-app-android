@@ -46,10 +46,6 @@ sealed interface TangemIconUM {
         val tint: ColorReference2?,
     ) : TangemIconUM {
 
-        @get:DrawableRes
-        val iconRes: Int?
-            get() = icon.fold(ifLeft = { it }, ifRight = { null })
-
         constructor(
             @DrawableRes iconRes: Int,
             tintReference: ColorReference2 = ColorReference2 { TangemTheme.colors3.icon.primary },
