@@ -26,6 +26,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
+import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -93,6 +94,12 @@ internal class EarnGetTokenSheetModel @Inject constructor(
         }
         if (uiState.value == null) {
             analyticsEventHandler.send(ManageFundsAnalyticsEvent.MethodScreenOpened(AnalyticsParam.ScreensSources.Earn))
+            analyticsEventHandler.send(
+                EarnPickerAnalyticsEvent.GetAssetSheetOpened(
+                    token = request.cryptoCurrency.symbol,
+                    source = request.source,
+                ),
+            )
         }
         uiState.value = EarnGetTokenSheetConverter.convert(
             currency = request.cryptoCurrency,
@@ -138,6 +145,9 @@ internal class EarnGetTokenSheetModel @Inject constructor(
             EarnGetTokenAction.Buy -> ManageFundsAnalyticsEvent.ButtonBuy()
         }
         analyticsEventHandler.send(event)
+        analyticsEventHandler.send(
+            EarnPickerAnalyticsEvent.GetAssetMethod(token = request.cryptoCurrency.symbol, method = action),
+        )
         open()
     }
 

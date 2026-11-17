@@ -32,6 +32,8 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.features.earn.impl.R
+import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
+import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -43,6 +45,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -75,7 +78,7 @@ internal class EarnGetTokenSheetModelTest {
     private val userWallet: UserWallet = mockk()
     private val status: CryptoCurrencyStatus = mockk()
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
-    private val request = EarnGetTokenSheetRequest(USER_WALLET_ID, currency)
+    private val request = EarnGetTokenSheetRequest(USER_WALLET_ID, currency, EarnAddFundsSource.YieldPicker)
     private val receiveConfig: TokenReceiveConfig = mockk()
 
     private var dismissals = 0
@@ -452,6 +455,168 @@ internal class EarnGetTokenSheetModelTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetAssetEvents {
+
+        @Test
+        fun `GIVEN data arrives twice WHEN collected THEN GetAssetSheetOpened is sent once`() = runTest {
+            // Arrange
+            val actions = MutableStateFlow(allActions())
+            every { actionsUseCase(any(), any(), any()) } returns flow {
+                actions.collect { emit(TokenActionsState(USER_WALLET_ID, status, it)) }
+            }
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            actions.value = allActions(swap = ScenarioUnavailabilityReason.NotExchangeable("Ethereum"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnPickerAnalyticsEvent.GetAssetSheetOpened(
+                        token = currency.symbol,
+                        source = EarnAddFundsSource.YieldPicker,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a request from the Info screen WHEN the sheet is shown THEN GetAssetSheetOpened carries its source`() =
+            runTest {
+                // Arrange
+                val infoRequest = EarnGetTokenSheetRequest(USER_WALLET_ID, currency, EarnAddFundsSource.InfoScreen)
+                val model = createModel(sheetRequest = infoRequest)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnPickerAnalyticsEvent.GetAssetSheetOpened(
+                            token = currency.symbol,
+                            source = EarnAddFundsSource.InfoScreen,
+                        ),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN no status for the currency WHEN the model is created THEN GetAssetSheetOpened is not sent`() =
+            runTest {
+                // Arrange
+                stubStatus(found = false)
+                val model = createModel()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) {
+                    analyticsEventHandler.send(match { it is EarnPickerAnalyticsEvent.GetAssetSheetOpened })
+                }
+                model.onDestroy()
+            }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an available row WHEN clicked THEN its GetAssetMethod is sent`(model: ButtonModel) = runTest {
+            // Arrange
+            val sheetModel = createModel()
+            advanceUntilIdle()
+
+            // Act
+            requireNotNull(sheetModel.uiState.value).rows[model.rowIndex].onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(model.expected) }
+            sheetModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Buy is available WHEN clicked THEN GetAssetMethod Buy is sent before the navigation`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            requireNotNull(model.uiState.value).rows[2].onClick()
+
+            // Assert
+            verifyOrder {
+                analyticsEventHandler.send(
+                    EarnPickerAnalyticsEvent.GetAssetMethod(token = currency.symbol, method = EarnGetTokenAction.Buy),
+                )
+                router.push(any(), any())
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a blocked action WHEN clicked THEN no GetAssetMethod is sent`() = runTest {
+            // Arrange
+            stubActions(allActions(swap = ScenarioUnavailabilityReason.NotExchangeable("Ethereum")))
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            requireNotNull(model.uiState.value).rows[1].onClick()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(match { it is EarnPickerAnalyticsEvent.GetAssetMethod }) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the backup warning does not let the user proceed WHEN Buy is clicked THEN no GetAssetMethod is sent`() =
+            runTest {
+                // Arrange
+                stubBackupPasses(passes = false)
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                requireNotNull(model.uiState.value).rows[2].onClick()
+
+                // Assert
+                verify(exactly = 0) {
+                    analyticsEventHandler.send(match { it is EarnPickerAnalyticsEvent.GetAssetMethod })
+                }
+                model.onDestroy()
+            }
+
+        private fun provideTestModels() = listOf(
+            ButtonModel(
+                rowIndex = 0,
+                expected = EarnPickerAnalyticsEvent.GetAssetMethod(
+                    token = currency.symbol,
+                    method = EarnGetTokenAction.Deposit,
+                ),
+            ),
+            ButtonModel(
+                rowIndex = 1,
+                expected = EarnPickerAnalyticsEvent.GetAssetMethod(
+                    token = currency.symbol,
+                    method = EarnGetTokenAction.Swap,
+                ),
+            ),
+            ButtonModel(
+                rowIndex = 2,
+                expected = EarnPickerAnalyticsEvent.GetAssetMethod(
+                    token = currency.symbol,
+                    method = EarnGetTokenAction.Buy,
+                ),
+            ),
+        )
+    }
+
+    @Nested
     inner class Loading {
 
         @Test
@@ -473,9 +638,9 @@ internal class EarnGetTokenSheetModelTest {
 
     data class ButtonModel(val rowIndex: Int, val expected: AnalyticsEvent)
 
-    private fun TestScope.createModel() = EarnGetTokenSheetModel(
+    private fun TestScope.createModel(sheetRequest: EarnGetTokenSheetRequest = request) = EarnGetTokenSheetModel(
         paramsContainer = MutableParamsContainer(
-            EarnGetTokenSheetComponent.Params(request = request, onDismiss = { dismissals++ }),
+            EarnGetTokenSheetComponent.Params(request = sheetRequest, onDismiss = { dismissals++ }),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),
         singleAccountStatusListSupplier = accountStatusListSupplier,
