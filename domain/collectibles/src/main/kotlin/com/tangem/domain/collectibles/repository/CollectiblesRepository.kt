@@ -60,4 +60,9 @@ interface CollectiblesRepository {
     ): CollectibleBuybackStatus
 
     suspend fun getBuybackStatus(userWalletId: UserWalletId, buybackId: String): CollectibleBuybackStatus
+
+    /**
+     * @param skipCache asks the backend even when a verdict is known; a failed request keeps the known one
+     */
+    suspend fun isRegionBlocked(userWalletId: UserWalletId, skipCache: Boolean = false): Boolean
 }
