@@ -312,6 +312,17 @@
   <string name="collectibles_confirm_order_total">Total</string>
   <string name="collectibles_entrance_card_subtitle">Open packs of graded collectible cards</string>
   <string name="collectibles_entrance_card_title">Explore collections</string>
+  <string name="collectibles_inventory_buyback_description">Sell back within 72 hours for an instant USDC credit. After that, cards move to your collection</string>
+  <string name="collectibles_inventory_buyback_empty">You have no cards eligible for buyback. Open packs to see them here</string>
+  <string name="collectibles_inventory_buyback_tab">Buyback</string>
+  <string name="collectibles_inventory_collection_empty">You have no cards at the moment. Open packs to see them here</string>
+  <string name="collectibles_inventory_collection_tab">Collection</string>
+  <string name="collectibles_inventory_load_error">Failed to load cards list.\nTap to reload</string>
+  <string name="collectibles_inventory_timer_expired">Expired</string>
+  <string name="collectibles_inventory_timer_hours">%1$dh %2$dm</string>
+  <string name="collectibles_inventory_timer_minutes">%dm</string>
+  <string name="collectibles_inventory_timer_under_minute">&lt;1min</string>
+  <string name="collectibles_inventory_title">Inventory</string>
   <string name="collectibles_low_inventory_enable_turbo_mode">Enable Turbo Mode</string>
   <string name="collectibles_low_inventory_explore_packs">Explore packs</string>
   <string name="collectibles_low_inventory_subtitle">This pack has a low inventory of common cards. You can still use this pack by enabling Turbo Mode, or you can select another pack.</string>
@@ -1476,6 +1487,7 @@
   <string name="joint_account_send_pending_network_title">Pending transaction on %1$s network</string>
   <string name="joint_account_send_sends_automatically">Sends automatically once collected</string>
   <string name="joint_account_send_sends_automatically_setup_fee">Sends automatically once collected. First send includes a one-time setup fee</string>
+  <string name="joint_account_send_setup_fee_included">Including a %s fee to set up your joint account, you’ll only pay it once.</string>
   <string name="joint_account_send_setup_fee_note">First transaction in %1$s. The fee includes a one-time %2$s to set up the joint account on-chain</string>
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
   <plurals name="joint_account_send_signatures_required_banner">
@@ -1544,6 +1556,7 @@
   <string name="lending_deposited_subtitle">Your %1$s in %2$s is now earning in Aave</string>
   <string name="lending_deposited_title">Deposited %s</string>
   <string name="lending_error_custom_nonce">A custom nonce can\'t be used for this deposit. Remove it in the custom fee or choose another fee speed.</string>
+  <string name="lending_error_deposits_paused">Deposits are paused by the provider.</string>
   <string name="lending_error_gas_limit_too_low">The gas limit is too low for this deposit. Set it to at least %s in the custom fee or choose another fee speed.</string>
   <string name="lending_error_previous_transaction_processing">Your previous Aave transaction is still processing. Try again once it is confirmed.</string>
   <string name="lending_how_it_works_choose_amount_text">Pick how much ETH to lend. The rest stays in your wallet, untouched.</string>
@@ -1872,9 +1885,12 @@
   <string name="native_survey_comment_placeholder">Type something</string>
   <string name="native_survey_done_description">It helps us make Tangem better.</string>
   <string name="native_survey_done_title">Thanks for your feedback</string>
+  <string name="native_survey_invite_description">We’d love to hear what you think.</string>
+  <string name="native_survey_invite_title">How’s your Tangem experience?</string>
   <string name="native_survey_nps_scale_hint">0 is not at all likely, 10 is extremely likely</string>
   <string name="native_survey_optional">Optional</string>
   <string name="native_survey_send_feedback">Send feedback</string>
+  <string name="native_survey_share_feedback">Share feedback</string>
   <string name="news_all_news">All news</string>
   <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">

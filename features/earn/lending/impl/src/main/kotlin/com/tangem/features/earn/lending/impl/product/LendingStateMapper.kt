@@ -4,7 +4,6 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
@@ -165,9 +164,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         val PENDING_BLOCK = EarnBlock(
             reason = resourceReference(R.string.lending_error_previous_transaction_processing),
         )
-
-        // Temporary plain text, no Lokalise key: neither the PRD nor the iOS app has this state.
-        val CLOSED_BLOCK = EarnBlock(reason = stringReference("Deposits are paused by the provider."))
+        val CLOSED_BLOCK = EarnBlock(reason = resourceReference(R.string.lending_error_deposits_paused))
         private val RETRY_BLOCK = EarnBlock(
             reason = resourceReference(R.string.common_unable_to_load),
             action = EarnBlockAction.Retry,

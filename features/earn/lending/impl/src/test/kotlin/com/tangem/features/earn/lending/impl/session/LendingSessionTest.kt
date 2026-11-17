@@ -548,7 +548,7 @@ internal class LendingSessionTest {
             val actual = session.verify(depositPlan())
 
             // Assert
-            val reason = stringReference("Deposits are paused by the provider.")
+            val reason = resourceReference(R.string.lending_error_deposits_paused)
             assertThat(actual).isEqualTo(EarnVerification.Rejected(EarnSessionError.Rejected(reason)))
         }
 
