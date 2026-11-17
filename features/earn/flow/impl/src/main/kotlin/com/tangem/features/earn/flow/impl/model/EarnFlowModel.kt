@@ -10,6 +10,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -26,8 +27,12 @@ import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
+import com.tangem.features.earn.flow.impl.analytics.EarnDisplayCurrency
+import com.tangem.features.earn.flow.impl.analytics.EarnErrorPopupAction
 import com.tangem.features.earn.flow.impl.analytics.EarnFlowAnalyticsEvent
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowScreen
 import com.tangem.features.earn.flow.impl.analytics.EarnTxType
+import com.tangem.features.earn.flow.impl.analytics.amountScreen
 import com.tangem.features.earn.flow.impl.analytics.isLiquidityCapped
 import com.tangem.features.earn.flow.impl.analytics.toResultDestination
 import com.tangem.features.earn.flow.impl.analytics.toTxType
@@ -139,6 +144,9 @@ internal class EarnFlowModel @Inject constructor(
 
     private val amountInput = EarnAmountInput(clickIntents = this)
 
+    /** The last fee type the selector offered with an enabled button: a reload through `Loading` keeps it. */
+    private var lastFeeType: AnalyticsParam.FeeType? = null
+
     private var feeJob: Job? = null
     private var prepareJob: Job? = null
     private var executeJob: Job? = null
@@ -200,6 +208,7 @@ internal class EarnFlowModel @Inject constructor(
                 isPreparing = prepareJob?.isActive == true || isConfirming && feeSelectorUM.isPrimaryButtonEnabled,
             )
         }
+        sendFeeSpeedIfChanged()
         val selection = state.value.feeSelection ?: return
 
         feeJob = modelScope.launch {
@@ -224,13 +233,20 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
-        if (deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) return
-        amountInput.max(state.value)?.let(::updateAmount)
+        if (!deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) {
+            val amountState = amountInput.max(state.value) ?: return
+            updateAmount(amountState)
+        }
+        sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.Max(category, currentScreen(type)) }
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
         val amountState = amountInput.currency(state.value, isFiat) ?: return
         state.update { it.copy(amountState = amountState) }
+        val currency = if (isFiat) EarnDisplayCurrency.Fiat else EarnDisplayCurrency.Crypto
+        sendFlowEvent { category, type ->
+            EarnFlowAnalyticsEvent.CurrencyToggle(category, currency, currentScreen(type))
+        }
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -242,8 +258,11 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onPercentClick(percent: Int) {
-        if (deferShareUntilFee(percent)) return
-        amountInput.percent(state.value, percent)?.let(::updateAmount)
+        if (!deferShareUntilFee(percent)) {
+            val amountState = amountInput.percent(state.value, percent) ?: return
+            updateAmount(amountState)
+        }
+        sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.Percent(category, percent, currentScreen(type)) }
     }
 
     private fun isSameAmount(first: BigDecimal?, second: BigDecimal?): Boolean =
@@ -527,15 +546,19 @@ internal class EarnFlowModel @Inject constructor(
         if (error is SendTransactionError.UserCancelledError) return
 
         TangemLogger.e("Earn flow: ${action.id} failed: $error")
-        support.transactionErrorDialog(
+        val dialog = support.transactionErrorDialog(
             error = error,
             product = params.product,
             state = state::value,
             scope = modelScope,
             onClose = { finish(EarnFlowExit.Done) },
-            onSupportClick = {},
-            onCancel = {},
-        )?.let(messageSender::send)
+            onSupportClick = { sendErrorPopupButton(EarnErrorPopupAction.Support) },
+            onCancel = { sendErrorPopupButton(EarnErrorPopupAction.Close) },
+        ) ?: return
+        sendFlowEvent { category, type ->
+            EarnFlowAnalyticsEvent.ErrorPopup(category, type, error.getAnalyticsDescription())
+        }
+        messageSender.send(dialog)
     }
 
     /** The stack is not saved, while this model outlives the activity: a recreated stack starts from the kept step. */
@@ -601,6 +624,22 @@ internal class EarnFlowModel @Inject constructor(
             )
         }
     }
+
+    private fun sendFeeSpeedIfChanged() {
+        val feeType = state.value.feeSelection?.feeType ?: return
+        val previous = lastFeeType
+        lastFeeType = feeType
+        if (previous != null && previous != feeType) {
+            sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.FeeSpeed(category, feeType, currentScreen(type)) }
+        }
+    }
+
+    private fun sendErrorPopupButton(action: EarnErrorPopupAction) {
+        sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.ErrorPopupButton(category, type, action) }
+    }
+
+    private fun currentScreen(type: EarnTxType): EarnFlowScreen =
+        if (state.value.step == EarnFlowStep.Confirm) EarnFlowScreen.Confirm else type.amountScreen()
 
     private fun sendFlowEvent(event: (category: String, type: EarnTxType) -> EarnFlowAnalyticsEvent) {
         val type = txType ?: return
