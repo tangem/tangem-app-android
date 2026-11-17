@@ -83,6 +83,7 @@ internal sealed interface TangemPayBankWithdrawAmountUM {
         data class Tokens(val items: ImmutableList<TokenItemUM>, override val onDismiss: () -> Unit) : SheetUM
 
         data class Routes(
+            val title: TextReference,
             val items: ImmutableList<RouteItemUM>,
             val networkFeeNote: TextReference?,
             override val onDismiss: () -> Unit,

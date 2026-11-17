@@ -31,6 +31,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -131,6 +132,27 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         assertThat(actual.route.fee).isEqualTo(model.expectedFees.first())
         assertThat(sheet.items.map { it.fee }).containsExactlyElementsIn(model.expectedFees).inOrder()
         assertThat(sheet.networkFeeNote).isEqualTo(model.expectedNote)
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN route sheet WHEN create THEN the transfer method title only with MXN`(isMxnEnabled: Boolean) {
+        // Arrange
+        val factory = createFactory(account = moneyAccount, isMxnEnabled = isMxnEnabled)
+
+        // Act
+        val actual = factory.createWith(
+            networkFee = NetworkFeeState.Loaded(BigDecimal.ZERO),
+            sheet = AmountSheet.ROUTES,
+        ) as Content
+
+        // Assert
+        val expectedTitle = if (isMxnEnabled) {
+            R.string.tangempay_withdraw_bank_choose_transfer_method
+        } else {
+            R.string.tangempay_withdraw_bank_select_route
+        }
+        assertThat((actual.sheet as SheetUM.Routes).title).isEqualTo(resourceReference(expectedTitle))
     }
 
     private fun provideRailFeeModels() = listOf(
@@ -290,10 +312,14 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         onBackClick = onBackClick,
     )
 
-    private fun createFactory(account: BankWithdrawSourceAccount) = TangemPayBankWithdrawAmountUMFactory(
+    private fun createFactory(
+        account: BankWithdrawSourceAccount,
+        isMxnEnabled: Boolean = true,
+    ) = TangemPayBankWithdrawAmountUMFactory(
         step = TangemPayBankWithdrawInnerRoute.Amount,
         sourceAccount = account,
         callbacks = callbacks,
+        isMxnEnabled = isMxnEnabled,
     )
 
     private fun TangemPayBankWithdrawAmountUMFactory.createWith(

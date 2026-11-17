@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.transaction.error.GetFeeError
@@ -34,6 +35,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawAmountModel @Inject constructor(
@@ -43,6 +45,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     analytics: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val networkFeeLoader: BankWithdrawNetworkFeeLoader,
+    moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
@@ -70,6 +73,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             onContinueClick = ::onContinueClick,
             onRetryClick = ::onRetryClick,
         ),
+        isMxnEnabled = moneyAccountFeatureToggles.isMxnEnabled,
     )
 
     private val state = MutableStateFlow(AmountState())

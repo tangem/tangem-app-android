@@ -103,11 +103,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
                 val isMxnEnabled = moneyAccountFeatureToggles.isMxnEnabled
                 selected.copy(
                     fees = TangemPayRouteFeeUMConverter.convert(credentials),
-                    minimumDeposit = if (isMxnEnabled) {
-                        TangemPayMinimumDepositUMConverter.convert(credentials)
-                    } else {
-                        null
-                    },
+                    minimumDeposit = TangemPayMinimumDepositUMConverter.convert(credentials)?.takeIf { isMxnEnabled },
                     dailyDepositLimit = dailyDepositLimitConverter.convert(credentials)?.takeUnless { isMxnEnabled },
                 )
             }

@@ -38,12 +38,10 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.fade.TangemFade
@@ -52,9 +50,7 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
@@ -86,7 +82,7 @@ private fun EarnInfoPage(state: EarnInfoUM, chart: (@Composable () -> Unit)?, pu
     var chipsHeightPx by remember { mutableIntStateOf(0) }
     var footerHeightPx by remember { mutableIntStateOf(0) }
     val hasChart = chart != null
-    val items = remember(state.staleNotice, state.rewards, state.tabs, hasChart) {
+    val items = remember(state.rewards, state.tabs, hasChart) {
         buildPageItems(state = state, hasChart = hasChart)
     }
     val chipsIndex = remember(items) { items.indexOf(PageItem.Tabs) }
@@ -185,7 +181,6 @@ private fun LazyListScope.pageContent(
     items.forEach { pageItem ->
         when (pageItem) {
             PageItem.Balance -> item(key = pageItem.key) { BalanceBlock(state = state) }
-            is PageItem.StaleNotice -> item(key = pageItem.key) { StaleNotice(description = pageItem.description) }
             is PageItem.Rewards -> item(key = pageItem.key) { Rewards(item = pageItem) }
             PageItem.Chart -> item(key = pageItem.key) { ChartSlot(chart = chart) }
             PageItem.Tabs -> item(key = pageItem.key) { chipsSpace() }
@@ -273,20 +268,7 @@ private fun BalanceBlock(state: EarnInfoUM) {
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
-        state.earned?.let { earned ->
-            TangemBadge(text = earned, status = TangemBadge.Status.Info, size = TangemBadge.Size.X6)
-        }
     }
-}
-
-@Composable
-private fun StaleNotice(description: TextReference) {
-    TangemMessageBanner(
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-        title = resourceReference(R.string.warning_outdated_data_title),
-        description = description,
-        variant = TangemMessageBanner.Variant.Warning,
-    )
 }
 
 @Composable
@@ -297,7 +279,7 @@ private fun Rewards(item: PageItem.Rewards) {
         modifier = Modifier.padding(
             start = 16.dp,
             end = 16.dp,
-            top = if (item.isUnderStaleNotice) 0.dp else 12.dp,
+            top = 12.dp,
             bottom = if (item.isAboveChart) 36.dp else 24.dp,
         ),
         variant = TangemMessageBanner.Variant.Info,
@@ -379,15 +361,7 @@ private sealed interface PageItem {
         override val key = "balance"
     }
 
-    data class StaleNotice(val description: TextReference) : PageItem {
-        override val key = "stale"
-    }
-
-    data class Rewards(
-        val rewards: EarnInfoUM.RewardsUM,
-        val isUnderStaleNotice: Boolean,
-        val isAboveChart: Boolean,
-    ) : PageItem {
+    data class Rewards(val rewards: EarnInfoUM.RewardsUM, val isAboveChart: Boolean) : PageItem {
         override val key = "rewards"
     }
 
@@ -406,16 +380,7 @@ private sealed interface PageItem {
 
 private fun buildPageItems(state: EarnInfoUM, hasChart: Boolean): List<PageItem> = buildList {
     add(PageItem.Balance)
-    state.staleNotice?.let { add(PageItem.StaleNotice(description = it)) }
-    state.rewards?.let { rewards ->
-        add(
-            PageItem.Rewards(
-                rewards = rewards,
-                isUnderStaleNotice = state.staleNotice != null,
-                isAboveChart = hasChart,
-            ),
-        )
-    }
+    state.rewards?.let { rewards -> add(PageItem.Rewards(rewards = rewards, isAboveChart = hasChart)) }
     if (hasChart) add(PageItem.Chart)
     add(PageItem.Tabs)
     state.tabs.forEach { tab -> add(PageItem.Section(tab = tab)) }

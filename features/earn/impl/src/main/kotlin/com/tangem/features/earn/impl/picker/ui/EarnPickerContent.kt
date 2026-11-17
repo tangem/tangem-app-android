@@ -47,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.media.VideoSurfaceState
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.button.Close
@@ -60,6 +61,8 @@ import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.earn.EarnProductId
@@ -69,7 +72,6 @@ import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeReadyState
 import com.tangem.features.earn.impl.fake.fakeSummary
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.model.EarnPickerClickIntents
 import com.tangem.features.earn.impl.picker.model.EarnPickerConverter
 import com.tangem.features.earn.impl.picker.model.EarnPickerCta
@@ -79,7 +81,6 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.ui.EarnDetailRow
 import com.tangem.features.earn.impl.ui.EarnIncentiveBadge
 import com.tangem.features.earn.impl.ui.EarnIncentiveUM
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnTextBlock
@@ -234,7 +235,7 @@ private fun rememberSectionTabs(
         sections.mapIndexed { position, section ->
             TangemTabItemUM.Content(
                 id = section.name,
-                label = EarnPickerTexts.tab(section),
+                label = section.label(),
                 isSelected = section == active,
                 onClick = {
                     scope.launch {
@@ -247,6 +248,12 @@ private fun rememberSectionTabs(
             )
         }.toImmutableList()
     }
+}
+
+private fun EarnPickerTab.label(): TextReference = when (this) {
+    EarnPickerTab.Calculator -> resourceReference(R.string.earn_yield_picker_calculator)
+    EarnPickerTab.Benefits -> resourceReference(R.string.lending_position_benefits)
+    EarnPickerTab.Details -> resourceReference(R.string.lending_position_details)
 }
 
 @Suppress("LongParameterList")
@@ -365,7 +372,7 @@ private fun Description(description: TextReference, incentive: EarnIncentiveUM?)
 
 @Composable
 private fun CalculatorSection(calculator: @Composable () -> Unit) {
-    Section(title = EarnCalculatorTexts.title) {
+    Section(title = resourceReference(R.string.earn_calculator_title)) {
         Box(
             modifier = Modifier
                 .padding(horizontal = PAGE_MARGIN)
@@ -381,7 +388,7 @@ private fun CalculatorSection(calculator: @Composable () -> Unit) {
 
 @Composable
 private fun BenefitsSection(content: ContentUM.Ready) {
-    Section(title = EarnPickerTexts.benefitsSection) {
+    Section(title = resourceReference(R.string.lending_position_benefits)) {
         Column(
             modifier = Modifier.padding(start = PAGE_MARGIN, end = PAGE_MARGIN, top = 12.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -394,7 +401,7 @@ private fun BenefitsSection(content: ContentUM.Ready) {
 /** The rows keep 8 dp of the page margin and 16 dp of their own: their text lines up with the heading. */
 @Composable
 private fun DetailsSection(content: ContentUM.Ready) {
-    Section(title = EarnPickerTexts.detailsSection) {
+    Section(title = resourceReference(R.string.earn_product_details_more_details)) {
         Column(modifier = Modifier.padding(horizontal = 8.dp)) {
             content.details.forEachIndexed { index, row ->
                 EarnDetailRow(state = row, divider = index < content.details.lastIndex)
@@ -439,14 +446,14 @@ private fun UnavailableBody(onRetryClick: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = EarnPickerTexts.unavailable.resolveReference(),
+            text = stringResourceSafe(R.string.common_unable_to_load),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         TangemButton(
             variant = TangemButton.Variant.Secondary,
-            text = EarnPickerTexts.retry,
+            text = resourceReference(R.string.common_retry),
             onClick = onRetryClick,
         )
     }
