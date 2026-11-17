@@ -91,24 +91,34 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
 
     /**
      * Applies a fee estimate to the amount: a Max or percent tap waiting for it is set now; an amount that fitted with
-     * the previous fee but not with this one is capped to the new Max; any other amount is checked against it.
+     * the previous fee but not with this one is capped to the new Max; an amount above the new Max, or one already in
+     * error, is checked against it. Any other amount is left as is: rechecking a fiat input re-reads its rounded text
+     * and can move the crypto amount past the limit.
+     *
+     * The shared transformers skip a zero Max, so with nothing left after the fee an amount from before is checked
+     * against it and shows the error instead.
      */
     fun withFeeDeduction(state: EarnFlowState, deduction: BigDecimal): EarnFlowState {
-        val previousMax = state.availableMax
         val updated = state.copy(feeDeduction = deduction, pendingSharePercent = null)
-        val newMax = updated.availableMax
+        val newMax = updated.availableMax ?: return updated
         val entered = state.enteredAmount
         val pending = state.pendingSharePercent
-        val isNoLongerAffordable = entered != null && previousMax != null && newMax != null &&
-            entered <= previousMax && entered > newMax
         val amountState = when {
+            newMax.signum() == 0 -> entered?.let { revalidate(updated) }
             pending == FULL_SHARE_PERCENT -> max(updated)
             pending != null -> percent(updated, pending)
-            isNoLongerAffordable -> max(updated)
-            else -> revalidate(updated)
+            isNoLongerAffordable(entered, previousMax = state.availableMax, newMax = newMax) -> max(updated)
+            needsCheck(state, entered, newMax) -> revalidate(updated)
+            else -> null
         }
         return amountState?.let { updated.copy(amountState = it) } ?: updated
     }
+
+    private fun isNoLongerAffordable(entered: BigDecimal?, previousMax: BigDecimal?, newMax: BigDecimal): Boolean =
+        entered != null && previousMax != null && entered <= previousMax && entered > newMax
+
+    private fun needsCheck(state: EarnFlowState, entered: BigDecimal?, newMax: BigDecimal): Boolean =
+        entered != null && (entered > newMax || state.isAmountInvalid)
 
     fun withInitial(state: EarnFlowState): EarnFlowState = initial(state)?.let { state.copy(amountState = it) } ?: state
 

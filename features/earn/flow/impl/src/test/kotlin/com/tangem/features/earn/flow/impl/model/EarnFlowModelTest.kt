@@ -574,6 +574,64 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN Max before fee WHEN fee arrives THEN fee is estimated again for the set amount`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onMaxValueClick()
+            clearMocks(feeSelectorReloadTrigger, answers = false)
+
+            // Act
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount WHEN fee leaves nothing to deposit THEN field shows error and amount is kept`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+            model.onAmountValueChange("1")
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("2.02"))
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError to model.state.value.enteredAmount).isEqualTo(true to BigDecimal("1"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fiat Max WHEN the same fee arrives again THEN Max stays valid and exact`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.000333"))
+            advanceUntilIdle()
+            model.onCurrencyChangeClick(isFiat = true)
+            model.onMaxValueClick()
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("0.000333"))
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError to model.state.value.enteredAmount).isEqualTo(false to BigDecimal("2.009667"))
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN amount fits both fees WHEN fee rises THEN amount is kept`() = runTest {
             // Arrange
             val model = createModel(action = Deposit())
@@ -635,7 +693,7 @@ internal class EarnFlowModelTest {
             }
 
         @Test
-        fun `GIVEN Max deposited with fee A WHEN fee B on confirm THEN deduction is recalculated from entered amount`() =
+        fun `GIVEN Max deposited with fee A WHEN fee B on confirm THEN capped amount is prepared with its new fee`() =
             runTest {
                 // Arrange
                 val model = createModel(action = Deposit())
@@ -647,6 +705,8 @@ internal class EarnFlowModelTest {
                 advanceUntilIdle()
 
                 // Act
+                model.onFeeResult(testFeeContent("0.001"))
+                advanceUntilIdle()
                 model.onFeeResult(testFeeContent("0.001"))
                 advanceUntilIdle()
 
@@ -704,6 +764,8 @@ internal class EarnFlowModelTest {
             val confirm = model.confirm.value
             assertThat(confirm?.notifications?.filterIsInstance<NotificationUM.Error.ExceedsBalance>()).hasSize(1)
             assertThat(confirm?.primary?.isEnabled).isFalse()
+            assertThat(model.state.value.isPreparing).isFalse()
+            coVerify(exactly = 1) { session.prepare(action = any(), amount = any(), fee = any()) }
             model.onDestroy()
         }
 

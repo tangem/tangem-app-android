@@ -81,6 +81,9 @@ internal data class EarnFlowState(
             ?.value
             ?.takeIf { it.signum() > 0 }
 
+    val isAmountInvalid: Boolean
+        get() = (amountState as? AmountState.Data)?.amountTextField?.isError == true
+
     /** [enteredAmount] reduced by the fee when both do not fit into the balance, as Send and Staking do it. */
     val sendingAmount: BigDecimal?
         get() {
