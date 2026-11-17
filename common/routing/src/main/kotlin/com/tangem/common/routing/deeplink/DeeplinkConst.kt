@@ -26,6 +26,7 @@ object DeeplinkConst {
     const val CATEGORY_KEY = "category"
     const val NEWS_ID_KEY = "news_id"
     const val EARN_TYPE_KEY = "earn_type"
+    const val EARN_PRODUCT_KEY = "product"
     const val FROM_TOKEN_ID_KEY = "from_token_id"
     const val FROM_NETWORK_ID_KEY = "from_network_id"
     const val TO_TOKEN_ID_KEY = "to_token_id"
