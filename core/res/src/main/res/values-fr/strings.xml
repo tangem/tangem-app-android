@@ -2308,7 +2308,7 @@
   <string name="support_chat_share_logs_button">Joindre les logs de l\'app</string>
   <string name="support_chat_swap_prefilled_message">Données du SWAP :\nDepuis :%1$s%2$s\nVers :%3$s%4$s\nPar :%5$s-%6$s</string>
   <string name="support_selector_view_chat_button">Accéder au chat</string>
-  <string name="support_selector_view_email_button">Ouvrir un email</string>
+  <string name="support_selector_view_email_button">Ouvrir la messagerie</string>
   <string name="survey_demand_business_interest_question">Les services OTC pour votre entreprise vous intéressent-ils ?</string>
   <string name="survey_demand_button">Rejoindre la liste</string>
   <string name="survey_demand_current_solution_cash_exchange">Échange en espèces</string>
@@ -2415,10 +2415,10 @@
   <string name="tangem_pay_card_frozen">Carte gelée</string>
   <string name="tangem_pay_card_payment">Paiement par carte</string>
   <string name="tangem_pay_close_card_disabled_last_card">Vous ne pouvez pas clôturer la dernière carte</string>
-  <string name="tangem_pay_close_card_popup_description">Il disparaîtra de l’application</string>
+  <string name="tangem_pay_close_card_popup_description">Elle disparaîtra de l’application</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Clôturer la carte</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Retour</string>
-  <string name="tangem_pay_close_card_popup_title">Fermer votre carte ?</string>
+  <string name="tangem_pay_close_card_popup_title">Clôturer votre carte ?</string>
   <string name="tangem_pay_deposit">Dépôt</string>
   <string name="tangem_pay_dispute">Litige</string>
   <string name="tangem_pay_explore_transaction">Explorer la transaction</string>
@@ -2510,7 +2510,7 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">Vous avez dépassé le nombre de tentatives d\'activation</string>
   <string name="tangempay_card_activation_description">Saisissez les 4 derniers chiffres du numéro de votre carte</string>
   <string name="tangempay_card_activation_error">Chiffres incorrects. Réessayez</string>
-  <string name="tangempay_card_activation_error_already_active">Cette carte est déjà active.</string>
+  <string name="tangempay_card_activation_error_already_active">Cette carte est déjà active</string>
   <string name="tangempay_card_activation_error_in_progress">L\'activation est déjà en cours. Veuillez patienter.</string>
   <string name="tangempay_card_activation_error_not_physical">Ce n\'est pas une carte physique</string>
   <string name="tangempay_card_activation_error_not_ready">Cette carte n\'est pas encore prête à être activée. Réessayez après l\'avoir reçue.</string>
@@ -2519,8 +2519,8 @@
   <string name="tangempay_card_close_error_message">Réessayez plus tard ou contactez l’assistance</string>
   <string name="tangempay_card_close_error_title">Impossible de clôturer la carte</string>
   <string name="tangempay_card_close_last_card_disabled">Vous ne pouvez pas clôturer votre dernière carte</string>
-  <string name="tangempay_card_closed_toast">Carte ••%s clôturée</string>
-  <string name="tangempay_card_closed_toast_named">Carte %s clôturée</string>
+  <string name="tangempay_card_closed_toast">La carte %s a été clôturée</string>
+  <string name="tangempay_card_closed_toast_named">La carte « %s » a été clôturée</string>
   <string name="tangempay_card_default_name">Carte Tangem Pay 1</string>
   <string name="tangempay_card_delivery_activate_after_delivery_toast">Vous pourrez activer votre carte après sa livraison</string>
   <string name="tangempay_card_delivery_banner_description">Activez-la à sa réception</string>
@@ -2537,9 +2537,10 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Trop de tentatives. Réessayez dans 24 heures</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Impossible d’ajouter la carte</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet est indisponible. Vérifiez les paramètres système</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Carte ajoutée à Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Annuler %1$s, passer à %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Pour payer le forfait et activer la nouvelle carte</string>
-  <string name="tangempay_card_details_awaiting_deposit_title">Rechargez votre compte avant le %1$s</string>
+  <string name="tangempay_card_details_awaiting_deposit_title">Rechargez votre compte de %1$s</string>
   <string name="tangempay_card_details_card_number">Numéro de carte</string>
   <string name="tangempay_card_details_change_pin">Code PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">La carte est totalement prête pour les paiements.</string>
@@ -2632,8 +2633,8 @@
   <string name="tangempay_cashback_details_tier">%1$s%% sur achats avec cartes %2$s, achat min. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s gagné en %2$s</string>
   <string name="tangempay_cashback_empty_subtitle">Le montant accumulé s\'affichera ici</string>
-  <string name="tangempay_cashback_empty_title">Dépensez\\net gagnez du cashback</string>
-  <string name="tangempay_cashback_error_title">Échec du chargement.\\nAppuyez pour recharger</string>
+  <string name="tangempay_cashback_empty_title">Dépensez\net gagnez du cashback</string>
+  <string name="tangempay_cashback_error_title">Échec du chargement.\nAppuyez pour recharger</string>
   <string name="tangempay_cashback_menu_item_loading">Chargement...</string>
   <string name="tangempay_cashback_menu_item_title">Cashback en %s</string>
   <string name="tangempay_cashback_rate_subtitle">Avec votre forfait %1$s</string>
@@ -2728,7 +2729,7 @@
   <string name="tangempay_kyc_rejected">Refusé</string>
   <string name="tangempay_kyc_rejected_button_text">Masquer le statut</string>
   <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier</string>
-  <string name="tangempay_kyc_rejected_description_span">votre identité.</string>
+  <string name="tangempay_kyc_rejected_description_span">votre identité</string>
   <string name="tangempay_main_select_plan">Sélectionner un forfait</string>
   <string name="tangempay_maximum_cards_issued_description">Clôturez une carte pour en ajouter une nouvelle</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Passez à un forfait supérieur pour plus de cartes</string>
@@ -3371,8 +3372,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Votre transaction d\'un montant de %1$s %2$s n\'a pas été finalisée. Vous pouvez réessayer plus tard pour la finaliser.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Vous avez une transaction inachevée</string>
   <string name="warning_last_balance_updated_time">La dernière mise à jour a été %s</string>
-  <string name="warning_link_wallet_cold_message">Synchronisez votre portefeuille avec les services Tangem pour bénéficier d\'une protection supplémentaire.</string>
-  <string name="warning_link_wallet_hot_message">Synchronisez votre portefeuille avec les services Tangem pour bénéficier d\'une protection supplémentaire.</string>
+  <string name="warning_link_wallet_cold_message">Utilisez votre carte pour renforcer la sécurité lors de la connexion aux services Tangem.</string>
+  <string name="warning_link_wallet_hot_message">Ajoutez une couche de sécurité supplémentaire lors de la connexion aux services Tangem.</string>
   <string name="warning_link_wallet_title">Sécurisez votre connexion</string>
   <string name="warning_low_signatures_message">Il ne reste que %s signatures sur cette carte. Vous devez retirer tous vos fonds.</string>
   <string name="warning_low_signatures_title">Faible nombre de signatures</string>
