@@ -12,6 +12,7 @@ import com.tangem.data.tangempay.util.BankOfframpRouteConverter
 import com.tangem.data.tangempay.util.BankOfframpRouteRequestConverter
 import com.tangem.data.tangempay.util.BankOfframpTransferConverter
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
@@ -33,6 +34,7 @@ import javax.inject.Inject
 internal class DefaultBankOfframpOrderRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestPerformer: TangemPayRequestPerformer,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : BankOfframpOrderRepository {
 
     override suspend fun createOrder(
@@ -159,8 +161,13 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
         ensureNotNull(BankOfframpTransferConverter.convert(result)) { incompleteResult(operation = "createTransfer") }
     }
 
-    private fun TangemPayApiError.toBankOfframpError(operation: String) =
-        BankOfframpErrorConverter.convert(BankOfframpErrorConverter.Input(error = this, operation = operation))
+    private fun TangemPayApiError.toBankOfframpError(operation: String) = BankOfframpErrorConverter.convert(
+        BankOfframpErrorConverter.Input(
+            error = this,
+            operation = operation,
+            isMxnEnabled = moneyAccountFeatureToggles.isMxnEnabled,
+        ),
+    )
 
     private fun TangemPayApiError.toAccountOfframpError(operation: String): BankOfframpError =
         if (this == TangemPayApiError.NotFound || errorCode == FORBIDDEN_ERROR_CODE) {

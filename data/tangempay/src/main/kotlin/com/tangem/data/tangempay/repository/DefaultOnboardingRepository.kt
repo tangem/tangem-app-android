@@ -34,6 +34,7 @@ import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.tangempay.id
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
@@ -75,6 +76,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val userPropertiesSender: TangemPayUserPropertiesSender,
     private val orderPoller: Lazy<OrderPoller>,
     private val ordersStore: OrdersStore,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<TangemPayApiError, Boolean> {
@@ -158,7 +160,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             tangemPayApi.getBankCredentials(authHeader = authHeader, productInstanceId = productInstanceId)
         }.flatMap { response ->
             val result = response.result ?: return@flatMap TangemPayApiError.UnknownWithoutCode.left()
-            BankCredentialsConverter.convert(result).right()
+            bankCredentialsConverter().convert(result).right()
         }
     }
 
@@ -176,7 +178,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val credentials = response.result.orEmpty()
                 .filter { it.type.equals(FIAT_BANK_CREDENTIALS_TYPE, ignoreCase = true) }
                 .filterNot { it.accountNumber.isNullOrBlank() }
-                .map(BankCredentialsConverter::convert)
+                .map(bankCredentialsConverter()::convert)
             if (credentials.isEmpty()) TangemPayApiError.UnknownWithoutCode.left() else credentials.right()
         }
     }
@@ -194,7 +196,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             )
         }.flatMap { response ->
             val result = response.result ?: return@flatMap TangemPayApiError.UnknownWithoutCode.left()
-            result.mapNotNull(AccountFeeConverter::convert).right()
+            result.mapNotNull(accountFeeConverter()::convert).right()
         }
     }
 
@@ -308,6 +310,11 @@ internal class DefaultOnboardingRepository @Inject constructor(
             tangemPayStorage.storeVirtualAccountOrderFailed(customerWalletAddress, isFailed)
         }
     }
+
+    private fun bankCredentialsConverter() =
+        BankCredentialsConverter(isDepositFeeRead = moneyAccountFeatureToggles.isMxnEnabled)
+
+    private fun accountFeeConverter() = AccountFeeConverter(isFixedAmountRead = moneyAccountFeatureToggles.isMxnEnabled)
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
