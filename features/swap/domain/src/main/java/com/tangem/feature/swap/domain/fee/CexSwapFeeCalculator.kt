@@ -16,7 +16,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.canPayNativeFee
-import com.tangem.domain.transaction.models.tron.isPaidByOwnTronEnergy
+import com.tangem.domain.transaction.models.tron.isLoweredByOwnTronEnergy
 import com.tangem.domain.transaction.models.tron.isPreferredOverTronGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
@@ -40,7 +40,7 @@ import java.math.BigDecimal
  *
  * Strategy is selected by [selectedFeeToken]:
  *  - `null` on a Tron token supported by Tron gasless → the native fee when TRX covers it and either own
- *    energy covers the transfer or it is no dearer in fiat than the [GetTronGaslessFeeUseCase] compensation,
+ *    energy lowers it or it is no dearer in fiat than the [GetTronGaslessFeeUseCase] compensation,
  *    otherwise that compensation. When the quote is unavailable, the native fee if TRX covers it, else the
  *    `null` path below. The swap screen reloads the fee without a selected token after every quote reload,
  *    so this is what keeps a wallet without TRX on the token fee. With both
@@ -160,8 +160,8 @@ class CexSwapFeeCalculator(
         } else {
             null
         }
-        if (isClientEnergyEnabled && native != null && native.fee.isPaidByOwnTronEnergy(native.status)) {
-            TangemLogger.i("Own energy covers the Tron swap fee, paying it in the network coin")
+        if (isClientEnergyEnabled && native != null && native.fee.isLoweredByOwnTronEnergy(native.status)) {
+            TangemLogger.i("Own energy lowers the Tron swap fee, paying it in the network coin")
             return@either native.toExtended()
         }
 
