@@ -4,9 +4,11 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.right
+import com.tangem.core.res.R as ResR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.StatusSource
@@ -64,8 +66,7 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Info
 
-    // Temporary plain text: becomes a Lokalise resource together with the other plain strings of this product.
-    override val title: TextReference = stringReference("Pooled staking")
+    override val title: TextReference = resourceReference(ResR.string.earn_product_pooled_staking)
 
     override val provider: EarnProvider = EarnProvider(
         title = stringReference("P2P.org"),

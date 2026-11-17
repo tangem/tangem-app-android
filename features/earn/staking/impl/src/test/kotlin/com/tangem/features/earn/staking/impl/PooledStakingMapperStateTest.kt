@@ -2,7 +2,11 @@ package com.tangem.features.earn.staking.impl
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.staking.model.StakingAvailability
@@ -33,6 +37,9 @@ internal class PooledStakingMapperStateTest {
 
     private val mapper = PooledStakingMapper()
     private val ethereum = coin(Blockchain.Ethereum)
+
+    private val startEarningLabel = resourceReference(R.string.eth_yield_start_earning)
+    private val manageLabel = resourceReference(R.string.eth_yield_manage)
 
     @Test
     fun `GIVEN several vaults WHEN state THEN rate and fee come from the vault with the highest apy`() {
@@ -66,35 +73,33 @@ internal class PooledStakingMapperStateTest {
         // Assert
         val expected = EarnProductState.Ready(
             rate = EarnProductRate(BigDecimal("0.03"), EarnRateType.APY),
-            description = stringReference(
-                "Earn variable yield on ETH by staking with P2P, a professional validator that helps secure " +
-                    "Ethereum. Withdrawals take up to 5 days, and a small risk of loss applies if the validator is " +
-                    "penalised by the network.",
-            ),
+            description = resourceReference(R.string.earn_yield_picker_pooled_staking_description),
             projection = null,
             benefits = listOf(
                 textBlock(
-                    title = "Yield from Ethereum itself.",
-                    description = "You earn from securing the network, not from lending.",
+                    title = resourceReference(R.string.earn_product_details_staking_benefit_title),
+                    description = resourceReference(R.string.earn_product_details_staking_benefit_subtitle),
                 ),
             ),
             details = listOf(
-                row("Risk", "Low"),
-                row("Validator", "P2P"),
                 row(
-                    label = "Withdrawals",
-                    value = "Up to 5 days",
+                    label = resourceReference(R.string.earn_product_details_risk),
+                    value = resourceReference(R.string.earn_risk_level_low),
+                ),
+                row(label = resourceReference(R.string.staking_validator), value = stringReference("P2P")),
+                row(
+                    label = resourceReference(R.string.earn_product_details_withdrawals),
+                    value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
                     info = textBlock(
-                        title = "Withdrawals",
-                        description = "Withdrawals take up to 5 days, because Ethereum releases staked ETH through " +
-                            "an exit queue.",
+                        title = resourceReference(R.string.earn_product_details_withdrawals),
+                        description = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
                     ),
                 ),
                 feeRow(percent = "10"),
             ),
             limits = EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null),
             apyPeriods = emptyList(),
-            primary = EarnActionItem(PooledStakingAction(stringReference("Start earning"))),
+            primary = EarnActionItem(PooledStakingAction(startEarningLabel)),
             secondary = emptyList(),
             freshness = null,
             position = EarnPositionState.None,
@@ -214,9 +219,7 @@ internal class PooledStakingMapperStateTest {
 
             // Assert
             assertThat(actual.position).isEqualTo(model.expectedPosition)
-            assertThat(actual.primary).isEqualTo(
-                EarnActionItem(PooledStakingAction(stringReference(model.expectedLabel))),
-            )
+            assertThat(actual.primary).isEqualTo(EarnActionItem(PooledStakingAction(model.expectedLabel)))
         }
 
         @Test
@@ -248,17 +251,23 @@ internal class PooledStakingMapperStateTest {
                 ),
             )
             return listOf(
-                PositionModel("P2P staking balance", staked, isBalanceFailed = false, known, "Manage"),
-                PositionModel("P2P staking balance, refresh failed", staked, isBalanceFailed = true, known, "Manage"),
-                PositionModel("Failed balance", null, isBalanceFailed = true, EarnPositionState.Unknown, "Manage"),
+                PositionModel("P2P staking balance", staked, isBalanceFailed = false, known, manageLabel),
+                PositionModel("P2P staking balance, refresh failed", staked, isBalanceFailed = true, known, manageLabel),
+                PositionModel("Failed balance", null, isBalanceFailed = true, EarnPositionState.Unknown, manageLabel),
                 PositionModel(
                     name = "Empty balance",
                     contribution = StakingBalance.Empty(stakingId, StatusSource.ACTUAL),
                     isBalanceFailed = false,
                     expectedPosition = EarnPositionState.None,
-                    expectedLabel = "Start earning",
+                    expectedLabel = startEarningLabel,
                 ),
-                PositionModel("No balance", null, isBalanceFailed = false, EarnPositionState.None, "Start earning"),
+                PositionModel(
+                    name = "No balance",
+                    contribution = null,
+                    isBalanceFailed = false,
+                    expectedPosition = EarnPositionState.None,
+                    expectedLabel = startEarningLabel,
+                ),
             )
         }
     }
@@ -325,23 +334,26 @@ internal class PooledStakingMapperStateTest {
             vaults = listOf(MockStaking.vault(apy = BigDecimal(apy)).copy(feePercent = BigDecimal(feePercent))),
         )
 
-    private fun row(label: String, value: String, info: EarnTextBlock? = null): EarnRow = EarnRow(
-        label = stringReference(label),
-        value = EarnValue.Text(stringReference(value)),
+    private fun row(label: TextReference, value: TextReference, info: EarnTextBlock? = null): EarnRow = EarnRow(
+        label = label,
+        value = EarnValue.Text(value),
         info = info,
     )
 
-    private fun textBlock(title: String, description: String): EarnTextBlock = EarnTextBlock(
-        title = stringReference(title),
-        description = stringReference(description),
+    private fun textBlock(title: TextReference, description: TextReference): EarnTextBlock = EarnTextBlock(
+        title = title,
+        description = description,
     )
 
     private fun feeRow(percent: String): EarnRow = row(
-        label = "Performance fee",
-        value = "$percent% of yield",
+        label = resourceReference(R.string.earn_product_details_performance_fee),
+        value = resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList("$percent%")),
         info = textBlock(
-            title = "Performance fee",
-            description = "$percent% of the yield you earn. It is not charged on the amount you deposit.",
+            title = resourceReference(R.string.earn_product_details_performance_fee),
+            description = resourceReference(
+                R.string.earn_product_details_performance_fee_info,
+                wrappedList("$percent%"),
+            ),
         ),
     )
 
@@ -366,7 +378,7 @@ internal class PooledStakingMapperStateTest {
         val contribution: StakingBalance?,
         val isBalanceFailed: Boolean,
         val expectedPosition: EarnPositionState,
-        val expectedLabel: String,
+        val expectedLabel: TextReference,
     ) {
         override fun toString(): String = name
     }
