@@ -1,6 +1,8 @@
 package com.tangem.domain.polymarket.usecase
 
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
+import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
+import com.tangem.domain.polymarket.sports.PolymarketSportsEvent
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.domain.polymarket.model.PolymarketSportsState
@@ -32,10 +34,18 @@ class ObservePolymarketSportsStateUseCase(
     private val time: TimeSource = TimeSource.Monotonic,
 ) {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(
         events: Flow<List<PolymarketEvent>>,
         isResumed: Flow<Boolean> = flowOf(true),
+    ): Flow<PolymarketSportsState> = observe(events.map { it.map(PolymarketSportsEvent::from) }, isResumed)
+
+    fun observeSoccer(event: Flow<PolymarketSoccerEvent>, isResumed: Flow<Boolean>): Flow<PolymarketSportsState> =
+        observe(event.map { listOf(PolymarketSportsEvent.from(it)) }, isResumed)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observe(
+        events: Flow<List<PolymarketSportsEvent>>,
+        isResumed: Flow<Boolean>,
     ): Flow<PolymarketSportsState> = flow {
         val connections = repository.observeConnectionState()
         val merger = PolymarketSportsMerger(time)
@@ -69,7 +79,7 @@ class ObservePolymarketSportsStateUseCase(
     )
 
     private sealed interface Update {
-        data class Rest(val events: List<PolymarketEvent>) : Update
+        data class Rest(val events: List<PolymarketSportsEvent>) : Update
         data class Score(val value: PolymarketLiveScore) : Update
         data object Connected : Update
         data object Tick : Update

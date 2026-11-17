@@ -13,6 +13,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketSportsState
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
@@ -34,6 +36,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
@@ -52,6 +55,10 @@ internal class PolymarketSoccerModelTest {
     }
     private val observeQuotes: ObservePolymarketLiveQuotesUseCase = mockk {
         every { this@mockk(any()) } returns emptyFlow()
+    }
+    private val sports = MutableStateFlow(PolymarketSportsState(emptyMap()))
+    private val observeSports: ObservePolymarketSportsStateUseCase = mockk {
+        every { observeSoccer(any(), any()) } returns sports
     }
     private val router: Router = mockk(relaxed = true)
     private val messages: UiMessageSender = mockk(relaxed = true)
@@ -78,6 +85,7 @@ internal class PolymarketSoccerModelTest {
         coVerify(exactly = 0) { getEvent(any(), any()) }
         coVerify(exactly = 0) { getPrices(any(), any()) }
         verify(exactly = 0) { observeQuotes(any()) }
+        verify(exactly = 0) { observeSports.observeSoccer(any(), any()) }
         model.onDestroy()
     }
 
@@ -329,12 +337,97 @@ internal class PolymarketSoccerModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN live Sports WS WHEN ended before REST THEN stop prices until final snapshot succeeds`() = runTest {
+        // Arrange
+        val card = soccerPickerCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
+        val event = soccerEvent(listOf(card))
+        coEvery { getEvent(any(), any()) } returnsMany listOf(
+            event.right(), PolymarketEventError.Network.left(), event.right(), event.copy(isEnded = true).right(),
+        )
+        coEvery { getPrices(any(), any()) } returns mapOf("p2-left" to BigDecimal("0.61")).right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        val originalCards = content().cards
+        val originalTabs = content().tabs
+
+        // Act
+        sports.value = PolymarketSportsState(mapOf("main" to soccerGame(event, ended = true)))
+        runCurrent()
+
+        // Assert
+        assertThat(content().sports.isLive).isFalse()
+        assertThat(content().cards).isSameInstanceAs(originalCards)
+        assertThat(content().tabs).isSameInstanceAs(originalTabs)
+        repeat(2) { advanceTimeBy(10_000); runCurrent() }
+        coVerify(exactly = 1) { getPrices(any(), any()) }
+        coVerify(exactly = 4) { getEvent(any(), any()) }
+        val picker = content().cards.single().content as PolymarketSoccerCardUM.Content.Picker
+        assertThat(picker.outcomes.first().price).isEqualTo(stringReference("—"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN reconnect revision WHEN it changes THEN refresh once without needing a score change`() = runTest {
+        // Arrange
+        coEvery { getEvent(any(), any()) } returns soccerEvent(emptyList()).right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        sports.value = PolymarketSportsState(emptyMap(), resnapshotRevision = 1)
+        runCurrent()
+        sports.value = sports.value.copy()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { getEvent(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unconfirmed socket completion WHEN a newer frame reopens the match THEN prices resume`() = runTest {
+        // Arrange
+        val card = soccerPickerCard().let { it.copy(markets = it.markets.map { m -> m.copy(volume = null) }) }
+        val event = soccerEvent(listOf(card))
+        coEvery { getEvent(any(), any()) } returns event.right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        sports.value = PolymarketSportsState(mapOf("main" to soccerGame(event, ended = true)))
+        runCurrent()
+        advanceTimeBy(10_000)
+        runCurrent()
+        coVerify(exactly = 1) { getPrices(any(), any()) }
+
+        // Act
+        sports.value = PolymarketSportsState(mapOf("main" to soccerGame(event, ended = false)))
+        runCurrent()
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        // Assert
+        assertThat(content().sports.isLive).isTrue()
+        coVerify(exactly = 3) { getPrices(any(), any()) }
+        model.onDestroy()
+    }
+
+    private fun soccerGame(event: PolymarketSoccerEvent, ended: Boolean) = PolymarketSportsState.Game(
+        gameId = requireNotNull(event.gameId), score = PolymarketSportsState.Score(2, 1),
+        period = if (ended) "FT" else "2H", isLive = !ended, isEnded = ended,
+        home = PolymarketSportsState.Team(event.teams[0], 0), away = PolymarketSportsState.Team(event.teams[1], 1),
+        isStale = false,
+    )
+
     private fun TestScope.createModel(enabled: Boolean = true): PolymarketSoccerModel = PolymarketSoccerModel(
         paramsContainer = MutableParamsContainer(PolymarketSoccerComponent.Params("child", wallet)),
         dispatchers = createTestingCoroutineDispatcherProvider(),
         getEvent = getEvent,
         getPrices = getPrices,
         observeQuotes = observeQuotes,
+        observeSports = observeSports,
         router = router,
         messageSender = messages,
         regionAccess = region,
