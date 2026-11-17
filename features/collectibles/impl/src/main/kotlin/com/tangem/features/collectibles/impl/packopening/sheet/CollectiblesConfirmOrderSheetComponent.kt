@@ -4,13 +4,17 @@ import androidx.compose.runtime.Composable
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesRegionRestrictionsSheet
 import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.CollectiblesAutoBuybackSheet
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.CollectiblesLowInventorySheet
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.CollectiblesPackUnopenedSheet
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.CollectiblesRefundOnTheWaySheet
 
-/** A purchase outcome to show: a pack left unopened, low inventory, a refund on its way or a card sold by Turbo mode. */
+/**
+ * A purchase outcome to show: a pack left unopened, low inventory, a refund on its way or a card sold by Turbo mode;
+ * or the region restriction that stops a sell back.
+ */
 internal class CollectiblesConfirmOrderSheetComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
@@ -22,6 +26,7 @@ internal class CollectiblesConfirmOrderSheetComponent(
             CollectiblesConfirmOrderBottomSheetConfig.LowInventory -> params.onDismiss()
             CollectiblesConfirmOrderBottomSheetConfig.RefundOnTheWay -> params.onExplorePacks()
             is CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback -> params.onOpenAgain()
+            CollectiblesConfirmOrderBottomSheetConfig.RegionRestricted -> params.onDismiss()
         }
     }
 
@@ -49,6 +54,9 @@ internal class CollectiblesConfirmOrderSheetComponent(
                 onOpenAgainClick = params.onOpenAgain,
                 onExplorePacksClick = params.onExplorePacks,
                 onDismiss = whileShown(params.onOpenAgain),
+            )
+            CollectiblesConfirmOrderBottomSheetConfig.RegionRestricted -> CollectiblesRegionRestrictionsSheet(
+                onDismiss = params.onDismiss,
             )
         }
     }
