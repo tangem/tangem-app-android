@@ -12,9 +12,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
+import com.tangem.domain.polymarket.usecase.GetPredictionPricesUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketSoccerEventUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.R
+import com.tangem.features.polymarket.impl.common.feed.model.PolymarketStaleDataReporter
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -39,6 +42,8 @@ internal class PolymarketSoccerModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getEvent: GetPolymarketSoccerEventUseCase,
+    getPrices: GetPredictionPricesUseCase,
+    observeQuotes: ObservePolymarketLiveQuotesUseCase,
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
@@ -54,10 +59,29 @@ internal class PolymarketSoccerModel @Inject constructor(
     private var isStaleReported = false
     private var isDescriptionExpanded = false
 
+    private val staleReporter = PolymarketStaleDataReporter(::showStaleMessage)
+    private val prices = PolymarketSoccerPrices(
+        scope = modelScope,
+        getPrices = getPrices,
+        observeQuotes = observeQuotes,
+        isEnabled = toggles.isPolymarketPhaseTwoEnabled,
+        onStale = staleReporter::report,
+        onQuoteRecovery = ::load,
+    )
+
     val rulesNavigation = SlotNavigation<PolymarketSoccerCardUM.Rules>()
 
     val uiState: StateFlow<PolymarketSoccerUM>
         field = MutableStateFlow<PolymarketSoccerUM>(PolymarketSoccerUM.Loading)
+
+    init {
+        modelScope.launch {
+            prices.state.collect { update ->
+                val content = uiState.value as? PolymarketSoccerUM.Content ?: return@collect
+                uiState.value = content.withPrices(update)
+            }
+        }
+    }
 
     fun onResume() {
         if (isResumed) return
@@ -68,6 +92,7 @@ internal class PolymarketSoccerModel @Inject constructor(
     fun onPause() {
         isResumed = false
         loadingJob.cancel()
+        prices.onPause()
     }
 
     fun onRetry() = load()
@@ -122,15 +147,15 @@ internal class PolymarketSoccerModel @Inject constructor(
                             uiState.value = PolymarketSoccerUM.Error
                         } else if (!isStaleReported) {
                             isStaleReported = true
-                            messageSender.send(
-                                SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)),
-                            )
+                            staleReporter.report()
                         }
                     },
                     ifRight = { loaded ->
                         event = loaded
                         selection = selection.reconcile(loaded)
                         isStaleReported = false
+                        prices.update(loaded)
+                        prices.onResume()
                         showContent()
                     },
                 )
@@ -144,7 +169,11 @@ internal class PolymarketSoccerModel @Inject constructor(
         val loaded = event ?: return
         uiState.value = converter.convert(loaded, selection).copy(
             isDescriptionExpanded = isDescriptionExpanded,
-        )
+        ).withPrices(prices.state.value)
+    }
+
+    private fun showStaleMessage() {
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
 
     private companion object {
