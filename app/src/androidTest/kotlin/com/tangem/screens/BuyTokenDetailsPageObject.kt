@@ -133,6 +133,11 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
+    val fetchingBestRatesText: KNode = child {
+        hasText(getResourceString(R.string.onramp_fetching_best_rates))
+        useUnmergedTree = true
+    }
+
     val maxAmountRestriction: KNode = child {
         hasText(getResourceString(R.string.onramp_max_amount_restriction, ""), substring = true)
         useUnmergedTree = true

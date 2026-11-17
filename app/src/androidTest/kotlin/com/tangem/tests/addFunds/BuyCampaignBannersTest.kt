@@ -81,8 +81,8 @@ class BuyCampaignBannersTest : BaseTestCase() {
             step("Assert 'Waitlist' banner is displayed while offers are loading") {
                 onBuyTokenDetailsScreen { marketingBannerText(waitlistBannerTitle).assertIsDisplayed() }
             }
-            step("Assert offers are still loading after the banners were checked") {
-                onBuyTokenDetailsScreen { offerTokenAmount.assertDoesNotExist() }
+            step("Assert 'fetching best rates' indicator is still displayed after the banners were checked") {
+                onBuyTokenDetailsScreen { fetchingBestRatesText.assertIsDisplayed() }
             }
             step("Assert offer is displayed after loading") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenDetailsScreen { offerTokenAmount.assertIsDisplayed() } }
