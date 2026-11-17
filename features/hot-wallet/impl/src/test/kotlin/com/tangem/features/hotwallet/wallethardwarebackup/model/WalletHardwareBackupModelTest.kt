@@ -13,7 +13,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
-import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.HardwareBackupScreenOpened
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -78,17 +77,19 @@ internal class WalletHardwareBackupModelTest {
         every { paramsContainer.require<WalletHardwareBackupComponent.Params>() } returns
             WalletHardwareBackupComponent.Params(userWalletId = WALLET_ID, source = source)
         val expectedSource = when (source) {
-            AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> HardwareBackupScreenOpened.Source.UpgradeBanner
-            AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> HardwareBackupScreenOpened.Source.PermanentBanner
-            AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> HardwareBackupScreenOpened.Source.WalletSettings
-            AppRoute.WalletHardwareBackup.Source.BACKUP -> HardwareBackupScreenOpened.Source.Backup
+            AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> AnalyticsParam.ScreensSources.UpgradeBanner
+            AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> AnalyticsParam.ScreensSources.PermanentBanner
+            AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> AnalyticsParam.ScreensSources.WalletSettings
+            AppRoute.WalletHardwareBackup.Source.BACKUP -> AnalyticsParam.ScreensSources.Backup
         }
 
         // Act
         createModel(this)
 
         // Assert
-        verify(exactly = 1) { analyticsEventHandler.send(HardwareBackupScreenOpened(source = expectedSource)) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened(source = expectedSource))
+        }
     }
 
     @ParameterizedTest

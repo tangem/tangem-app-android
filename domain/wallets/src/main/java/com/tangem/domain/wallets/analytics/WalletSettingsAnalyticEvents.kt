@@ -230,18 +230,10 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Create Wallet Screen Opened",
     )
 
-    class HardwareBackupScreenOpened(source: Source) : WalletSettingsAnalyticEvents(
+    class HardwareBackupScreenOpened(source: AnalyticsParam.ScreensSources) : WalletSettingsAnalyticEvents(
         event = "Hardware Backup Screen Opened",
         params = mapOf(AnalyticsParam.SOURCE to source.value),
-    ) {
-
-        enum class Source(val value: String) {
-            UpgradeBanner(value = "Upgrade Banner"),
-            PermanentBanner(value = "Permanent Banner"),
-            WalletSettings(value = "Wallet Settings"),
-            Backup(value = "Backup"),
-        }
-    }
+    )
 
     data class RecoveryPhraseScreenInfo(
         val source: String,

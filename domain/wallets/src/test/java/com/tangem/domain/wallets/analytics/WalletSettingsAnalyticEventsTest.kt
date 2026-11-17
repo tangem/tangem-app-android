@@ -37,16 +37,20 @@ internal class WalletSettingsAnalyticEventsTest {
     }
 
     @ParameterizedTest
-    @EnumSource(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened.Source::class)
+    @EnumSource(
+        value = AnalyticsParam.ScreensSources::class,
+        names = ["UpgradeBanner", "PermanentBanner", "WalletSettings", "Backup"],
+    )
     fun `GIVEN an entry point WHEN HardwareBackupScreenOpened built THEN the source is reported`(
-        source: WalletSettingsAnalyticEvents.HardwareBackupScreenOpened.Source,
+        source: AnalyticsParam.ScreensSources,
     ) {
         // Arrange
         val expectedSource = when (source) {
-            WalletSettingsAnalyticEvents.HardwareBackupScreenOpened.Source.UpgradeBanner -> "Upgrade Banner"
-            WalletSettingsAnalyticEvents.HardwareBackupScreenOpened.Source.PermanentBanner -> "Permanent Banner"
-            WalletSettingsAnalyticEvents.HardwareBackupScreenOpened.Source.WalletSettings -> "Wallet Settings"
-            WalletSettingsAnalyticEvents.HardwareBackupScreenOpened.Source.Backup -> "Backup"
+            AnalyticsParam.ScreensSources.UpgradeBanner -> "Upgrade Banner"
+            AnalyticsParam.ScreensSources.PermanentBanner -> "Permanent Banner"
+            AnalyticsParam.ScreensSources.WalletSettings -> "Wallet Settings"
+            AnalyticsParam.ScreensSources.Backup -> "Backup"
+            else -> error("Not a hardware upgrade entry point: $source")
         }
 
         // Act

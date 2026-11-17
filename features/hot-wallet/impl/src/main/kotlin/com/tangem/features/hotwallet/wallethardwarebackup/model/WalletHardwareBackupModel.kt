@@ -28,7 +28,6 @@ import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
-import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.HardwareBackupScreenOpened
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -211,9 +210,9 @@ internal class WalletHardwareBackupModel @Inject constructor(
     }
 }
 
-private fun AppRoute.WalletHardwareBackup.Source.toAnalyticsSource(): HardwareBackupScreenOpened.Source = when (this) {
-    AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> HardwareBackupScreenOpened.Source.UpgradeBanner
-    AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> HardwareBackupScreenOpened.Source.PermanentBanner
-    AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> HardwareBackupScreenOpened.Source.WalletSettings
-    AppRoute.WalletHardwareBackup.Source.BACKUP -> HardwareBackupScreenOpened.Source.Backup
+private fun AppRoute.WalletHardwareBackup.Source.toAnalyticsSource(): AnalyticsParam.ScreensSources = when (this) {
+    AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> AnalyticsParam.ScreensSources.UpgradeBanner
+    AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> AnalyticsParam.ScreensSources.PermanentBanner
+    AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> AnalyticsParam.ScreensSources.WalletSettings
+    AppRoute.WalletHardwareBackup.Source.BACKUP -> AnalyticsParam.ScreensSources.Backup
 }
