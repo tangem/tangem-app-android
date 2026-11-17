@@ -260,6 +260,29 @@ internal class DefaultOnrampRepositoryTest {
     }
 
     @Test
+    fun `GIVEN unrestricted IP cached WHEN next lookup fails THEN original error is returned`() = runTest {
+        // Arrange
+        val failure = IllegalStateException("Offline")
+        val error = OnrampError.DomainError("Offline")
+        val resolver = mockk<OnrampErrorResolver>()
+        every { resolver.resolve(failure) } returns error
+        coEvery { api.getCountryByIp("0011", null) } returns
+            ApiResponse.Success(CountryConverter(CurrencyConverter()).convertBack(country))
+        val useCase = GetOnrampCountryByIpUseCase(repository, resolver)
+        useCase(wallet)
+        coEvery { api.getCountryByIp("0011", null) } throws failure
+
+        // Act
+        val actual = useCase(wallet)
+
+        // Assert
+        assertThat(actual).isEqualTo(error.left())
+        assertThat(countryByIp.getSyncOrNull()).isEqualTo(country)
+        coVerify(exactly = 2) { api.getCountryByIp("0011", null) }
+        verify(exactly = 1) { resolver.resolve(failure) }
+    }
+
+    @Test
     fun `GIVEN empty IP cache WHEN lookup fails THEN original error is returned after one API call`() = runTest {
         // Arrange
         val failure = IllegalStateException("Offline")

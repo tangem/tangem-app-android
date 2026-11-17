@@ -27,10 +27,11 @@ internal class GetOnrampCountryByIpUseCaseTest {
     private val userWallet: UserWallet = mockk()
     private val useCase = GetOnrampCountryByIpUseCase(repository, errorResolver)
 
-    @Test
-    fun `GIVEN fresh country available WHEN invoke THEN fresh result wins without reading cache`() = runTest {
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN fresh country WHEN invoke THEN fresh result wins without reading cache`(isOnrampAvailable: Boolean) = runTest {
         // Arrange
-        val freshCountry = createCountry(isOnrampAvailable = true)
+        val freshCountry = createCountry(isOnrampAvailable = isOnrampAvailable)
         coEvery { repository.getCountryByIp(userWallet) } returns freshCountry
 
         // Act
@@ -42,11 +43,10 @@ internal class GetOnrampCountryByIpUseCaseTest {
         coVerify(exactly = 0) { repository.getCachedCountryByIp() }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [false, true])
-    fun `GIVEN fresh lookup fails WHEN invoke THEN cached IP country is returned`(isOnrampAvailable: Boolean) = runTest {
+    @Test
+    fun `GIVEN restricted country cached WHEN fresh lookup fails THEN cached restriction is returned`() = runTest {
         // Arrange
-        val cachedCountry = createCountry(isOnrampAvailable = isOnrampAvailable)
+        val cachedCountry = createCountry(isOnrampAvailable = false)
         coEvery { repository.getCountryByIp(userWallet) } throws IllegalStateException("Offline")
         coEvery { repository.getCachedCountryByIp() } returns cachedCountry
 
@@ -60,13 +60,17 @@ internal class GetOnrampCountryByIpUseCaseTest {
         verify(exactly = 0) { errorResolver.resolve(any()) }
     }
 
-    @Test
-    fun `GIVEN failed lookup and empty cache WHEN invoke THEN original error is returned without retry`() = runTest {
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN no restricted cache WHEN lookup fails THEN original error is returned without retry`(
+        hasCachedCountry: Boolean,
+    ) = runTest {
         // Arrange
         val failure = IllegalStateException("No country")
         val error = OnrampError.DomainError("No country")
         coEvery { repository.getCountryByIp(userWallet) } throws failure
-        coEvery { repository.getCachedCountryByIp() } returns null
+        coEvery { repository.getCachedCountryByIp() } returns
+            createCountry(isOnrampAvailable = true).takeIf { hasCachedCountry }
         every { errorResolver.resolve(failure) } returns error
 
         // Act
