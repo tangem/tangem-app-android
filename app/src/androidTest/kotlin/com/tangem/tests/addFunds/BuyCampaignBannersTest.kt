@@ -202,7 +202,11 @@ class BuyCampaignBannersTest : BaseTestCase() {
                 }
             }
             step("Close the survey bottom sheet") {
-                device.uiDevice.pressBack()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    runCatching { onConciergeDemandSurveyScreen { navigationTitle.assertDoesNotExist() } }
+                        .onFailure { device.uiDevice.pressBack() }
+                        .getOrThrow()
+                }
             }
             step("Assert survey bottom sheet is closed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
