@@ -2,6 +2,7 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
@@ -12,6 +13,7 @@ internal fun depositCryptoCurrencyStatusValue(
     depositAddress: String,
     source: StatusSource,
     yieldSupplyStatus: YieldSupplyStatus? = null,
+    contributions: List<BalanceContribution> = emptyList(),
 ): CryptoCurrencyStatus.Value {
     val networkAddress = NetworkAddress.Single(
         defaultAddress = NetworkAddress.Address(
@@ -23,6 +25,7 @@ internal fun depositCryptoCurrencyStatusValue(
         networkSource = source,
         quoteSource = source,
         stakingBalanceSource = source,
+        contributionSources = contributions.map(BalanceContribution::source),
     )
 
     return if (fiatRate != null) {
@@ -36,6 +39,7 @@ internal fun depositCryptoCurrencyStatusValue(
             pendingTransactions = emptySet(),
             yieldSupplyStatus = yieldSupplyStatus,
             hasCurrentNetworkTransactions = false,
+            contributions = contributions,
         )
     } else {
         CryptoCurrencyStatus.NoQuote(
@@ -45,6 +49,7 @@ internal fun depositCryptoCurrencyStatusValue(
             sources = sources,
             pendingTransactions = emptySet(),
             hasCurrentNetworkTransactions = false,
+            contributions = contributions,
         )
     }
 }

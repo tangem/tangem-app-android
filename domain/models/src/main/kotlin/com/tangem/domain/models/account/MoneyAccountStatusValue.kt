@@ -4,10 +4,12 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 sealed class MoneyAccountStatusValue {
@@ -81,6 +83,10 @@ sealed class MoneyAccountStatusValue {
             is Active -> copy(source = source, error = error)
         }
 
+        fun copySealed(balance: Balance): Account = when (this) {
+            is Active -> copy(balance = balance)
+        }
+
         fun statusOf(
             currency: CryptoCurrency,
             amount: SerializedBigDecimal,
@@ -95,6 +101,7 @@ sealed class MoneyAccountStatusValue {
                     depositAddress = accountBalance.depositAddress,
                     source = source,
                     yieldSupplyStatus = accountBalance.yieldSupplyStatus.takeIf { currency.id == cryptoCurrency.id },
+                    contributions = accountBalance.contributions.takeIf { currency.id == cryptoCurrency.id }.orEmpty(),
                 ),
             )
         }
@@ -131,6 +138,10 @@ sealed class MoneyAccountStatusValue {
         }
     }
 
+    /**
+     * @property cryptoAmount the network amount with the spendable part of [contributions] folded in
+     * @property contributions extra balances of the account currency; not persisted, re-resolved from their own stores
+     */
     @Serializable
     data class Balance(
         @SerialName("crypto_amount") val cryptoAmount: SerializedBigDecimal,
@@ -138,5 +149,6 @@ sealed class MoneyAccountStatusValue {
         @SerialName("currency_code") val currencyCode: String,
         @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
         @SerialName("yield_supply_status") val yieldSupplyStatus: YieldSupplyStatus? = null,
+        @Transient val contributions: List<BalanceContribution> = emptyList(),
     )
 }
