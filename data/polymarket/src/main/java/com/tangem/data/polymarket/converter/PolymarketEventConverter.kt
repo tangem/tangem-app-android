@@ -40,6 +40,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             isEnded = value.isEnded,
             dataFetchedAt = value.dataFetchedAt?.let(Instant::parse),
             teams = value.teams?.map(PolymarketTeamConverter::convert),
+            cryptoWindow = PolymarketCryptoWindowConverter.convert(value),
         )
     }
 
