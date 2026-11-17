@@ -13,28 +13,18 @@ import okhttp3.Response
 import okhttp3.Route
 
 /**
- * OkHttp [Authenticator] that reacts to a 401 by rotating session tokens via [SessionTokenRefresher]
- * and retrying the original request with a fresh DPoP proof.
- *
- * OkHttp's `RetryAndFollowUpInterceptor` only ever calls `authenticator.authenticate()` for a 401
- * response (RFC 7235) — never for a 403 — so the 403 branch below is only reachable when this method
- * is invoked directly (e.g. in tests); in production a 403 is retried by [DpopAuthorizationInterceptor]
- * instead, which does see that response.
+ * OkHttp [Authenticator] that reacts to 401/403 by rotating session tokens via
+ * [SessionTokenRefresher] and retrying the original request with a fresh DPoP proof.
  *
  * Returns `null` (giving up) when:
  *  - the response code is not 401/403;
  *  - the Retrofit method is **not** annotated with [RequiresSessionRefresh] (or the umbrella
  *    [RequiresSessionAuth]) — keeps public endpoints and refresh-flow endpoints themselves
  *    (annotated with `@RequiresDpopProof` only) from triggering token rotation on incidental 401s;
- *  - the request was already retried once, either within this same `chain.proceed()` run
- *    (`response.priorResponse != null`) or by [DpopAuthorizationInterceptor]'s separate 403 retry
- *    (`response.request` carries [markSessionAuthRetried] — see that marker's KDoc for why OkHttp's
- *    own `priorResponse` tracking alone cannot see across the two mechanisms);
+ *  - the request was already retried once (`response.priorResponse != null`);
  *  - the refresher fails (revoked session, network error, etc.).
  *
- * This guarantees at most one retry per logical call — OkHttp will not loop on persistent 401s, and
- * neither will a 401-then-403 (or 403-then-401) sequence hand out a second retry between the two
- * mechanisms.
+ * This guarantees at most one retry per call site — OkHttp will not loop on persistent 401s.
  */
 class SessionAuthenticator(
     private val refresher: SessionTokenRefresher,
@@ -44,7 +34,6 @@ class SessionAuthenticator(
     override fun authenticate(route: Route?, response: Response): Request? {
         if (response.code != Code.UNAUTHORIZED.numericCode && response.code != Code.FORBIDDEN.numericCode) return null
         if (response.priorResponse != null) return null
-        if (response.request.isSessionAuthRetry()) return null
         if (!response.request.requiresSessionRefresh()) return null
 
         val refreshed = runBlocking { refresher.refresh() }.getOrElse { error ->
@@ -60,6 +49,6 @@ class SessionAuthenticator(
             return null
         }
 
-        return request.withDpopHeaders(refreshed.accessToken, proof).markSessionAuthRetried()
+        return request.withDpopHeaders(refreshed.accessToken, proof)
     }
 }

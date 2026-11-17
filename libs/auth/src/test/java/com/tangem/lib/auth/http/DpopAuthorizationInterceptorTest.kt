@@ -21,13 +21,11 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import kotlinx.datetime.Instant
 import okhttp3.Interceptor
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -217,154 +215,6 @@ class DpopAuthorizationInterceptorTest {
         assertThat(proceeded.captured.headers("Authorization")).containsExactly("Bearer gasless-key")
         assertThat(proceeded.captured.header("DPoP")).isNull()
     }
-
-    @Test
-    fun `GIVEN 403 on session-auth request WHEN refresh succeeds THEN retried once with refreshed DPoP`() {
-        // Arrange
-        coEvery { refresher.ensureSession() } returns storedTokens.right()
-        coEvery { refresher.refresh() } returns storedTokens.copy(accessToken = "new-access").right()
-        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("old-proof")
-        coEvery { proofFactory.create(any(), any(), "new-access") } returns Some("new-proof")
-
-        val req = request(sessionAuth = true)
-        val forbidden = response(req, code = 403)
-        val ok = response(req, code = 200)
-        val chain = mockk<Interceptor.Chain>()
-        every { chain.request() } returns req
-        every { chain.proceed(any()) } answers {
-            if (firstArg<Request>().header("Authorization") == "DPoP old-access") forbidden else ok
-        }
-
-        // Act
-        val result = interceptor.intercept(chain)
-
-        // Assert
-        assertThat(result.code).isEqualTo(200)
-        verify(exactly = 2) { chain.proceed(any()) }
-        coVerify(exactly = 1) { refresher.refresh() }
-    }
-
-    @Test
-    fun `GIVEN 403 on session-auth request WHEN refresh fails THEN original 403 is returned without a second request`() {
-        // Arrange
-        coEvery { refresher.ensureSession() } returns storedTokens.right()
-        coEvery { refresher.refresh() } returns SessionRefreshError.DeviceKeyUnavailable.left()
-        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("old-proof")
-
-        val req = request(sessionAuth = true)
-        val forbidden = response(req, code = 403)
-        val chain = mockk<Interceptor.Chain>()
-        every { chain.request() } returns req
-        every { chain.proceed(any()) } returns forbidden
-
-        // Act
-        val result = interceptor.intercept(chain)
-
-        // Assert
-        assertThat(result.code).isEqualTo(403)
-        verify(exactly = 1) { chain.proceed(any()) }
-    }
-
-    @Test
-    fun `GIVEN 403 on session-auth request WHEN proof after refresh fails THEN original 403 is returned without a second request`() {
-        // Arrange
-        coEvery { refresher.ensureSession() } returns storedTokens.right()
-        coEvery { refresher.refresh() } returns storedTokens.copy(accessToken = "new-access").right()
-        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("old-proof")
-        coEvery { proofFactory.create(any(), any(), "new-access") } returns None
-
-        val req = request(sessionAuth = true)
-        val forbidden = response(req, code = 403)
-        val chain = mockk<Interceptor.Chain>()
-        every { chain.request() } returns req
-        every { chain.proceed(any()) } returns forbidden
-
-        // Act
-        val result = interceptor.intercept(chain)
-
-        // Assert
-        assertThat(result.code).isEqualTo(403)
-        verify(exactly = 1) { chain.proceed(any()) }
-    }
-
-    @Test
-    fun `GIVEN 403 on @RequiresDpopProof-only request THEN no retry is attempted`() {
-        // Arrange
-        coEvery { store.get() } returns Some(storedTokens)
-        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("old-proof")
-
-        val req = request(dpop = true)
-        val forbidden = response(req, code = 403)
-        val chain = mockk<Interceptor.Chain>()
-        every { chain.request() } returns req
-        every { chain.proceed(any()) } returns forbidden
-
-        // Act
-        val result = interceptor.intercept(chain)
-
-        // Assert
-        assertThat(result.code).isEqualTo(403)
-        verify(exactly = 1) { chain.proceed(any()) }
-        coVerify(exactly = 0) { refresher.refresh() }
-    }
-
-    @Test
-    fun `retried request after a 403 carries the session-auth retry marker`() {
-        // Arrange
-        coEvery { refresher.ensureSession() } returns storedTokens.right()
-        coEvery { refresher.refresh() } returns storedTokens.copy(accessToken = "new-access").right()
-        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("old-proof")
-        coEvery { proofFactory.create(any(), any(), "new-access") } returns Some("new-proof")
-
-        val req = request(sessionAuth = true)
-        val sentRequests = mutableListOf<Request>()
-        val chain = mockk<Interceptor.Chain>()
-        every { chain.request() } returns req
-        every { chain.proceed(any()) } answers {
-            val sent = firstArg<Request>()
-            sentRequests += sent
-            if (sent.header("Authorization") == "DPoP old-access") response(sent, code = 403) else response(sent, code = 200)
-        }
-
-        // Act
-        interceptor.intercept(chain)
-
-        // Assert
-        assertThat(sentRequests).hasSize(2)
-        assertThat(sentRequests[1].isSessionAuthRetry()).isTrue()
-    }
-
-    @Test
-    fun `GIVEN 403 whose request is already marked as a session-auth retry THEN no further retry is attempted`() {
-        // Arrange — mirrors a 401-then-403 sequence: SessionAuthenticator already retried once for
-        // the 401 (within the same chain.proceed() call) and marked the retried request. This
-        // interceptor must not add a second, independent retry on top of that one.
-        coEvery { refresher.ensureSession() } returns storedTokens.right()
-        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("old-proof")
-
-        val req = request(sessionAuth = true)
-        val alreadyRetried = req.markSessionAuthRetried()
-        val forbidden = response(alreadyRetried, code = 403)
-        val chain = mockk<Interceptor.Chain>()
-        every { chain.request() } returns req
-        every { chain.proceed(any()) } returns forbidden
-
-        // Act
-        val result = interceptor.intercept(chain)
-
-        // Assert
-        assertThat(result.code).isEqualTo(403)
-        verify(exactly = 1) { chain.proceed(any()) }
-        coVerify(exactly = 0) { refresher.refresh() }
-    }
-
-    private fun response(request: Request, code: Int): Response = Response.Builder()
-        .request(request)
-        .protocol(Protocol.HTTP_1_1)
-        .code(code)
-        .message("test")
-        .body("".toResponseBody(null))
-        .build()
 
     private fun request(
         dpop: Boolean = false,

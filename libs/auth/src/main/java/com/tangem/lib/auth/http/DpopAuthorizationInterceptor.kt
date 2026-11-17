@@ -1,6 +1,5 @@
 package com.tangem.lib.auth.http
 
-import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.lib.auth.api.RequiresDpopProof
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.lib.auth.dpop.DpopProofFactory
@@ -10,7 +9,6 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
 
 /**
@@ -26,15 +24,6 @@ import okhttp3.Response
  * On unrecoverable proof-generation failures (e.g. device key unavailable) the request is passed
  * through unmodified — the upstream HTTP layer will surface the resulting 401/403 and the
  * `SessionAuthenticator` (if installed) will attempt recovery.
- *
- * A 403 is handled right here instead: OkHttp's `Authenticator` mechanism (`RetryAndFollowUpInterceptor`)
- * only ever calls `authenticator.authenticate()` for a 401 response, so `SessionAuthenticator` is simply
- * never reached for a 403 — this interceptor is the only place in the chain that still sees that response
- * and can retry it.
- *
- * This retry and [SessionAuthenticator]'s 401 retry share one budget via [markSessionAuthRetried] /
- * [isSessionAuthRetry] — see that marker's KDoc for why OkHttp's own retry tracking isn't enough to
- * keep a 401-then-403 (or 403-then-401) sequence down to a single retry.
  */
 class DpopAuthorizationInterceptor(
     private val store: SessionTokensStore,
@@ -49,24 +38,12 @@ class DpopAuthorizationInterceptor(
 
         if (!original.requiresDpopProof()) return chain.proceed(original)
 
-        val isSessionRefreshRequired = original.requiresSessionRefresh()
-        val response = chain.proceed(signRequest(original, isSessionRefreshRequired))
-
-        val canRetry = isSessionRefreshRequired &&
-            response.code == Code.FORBIDDEN.numericCode &&
-            !response.request.isSessionAuthRetry()
-        if (!canRetry) return response
-
-        return retryAfterForbidden(chain, original, response) ?: response
-    }
-
-    private fun signRequest(original: Request, requiresSessionRefresh: Boolean): Request {
-        val accessToken = runBlocking { resolveAccessToken(requiresSessionRefresh) }
+        val accessToken = runBlocking { resolveAccessToken(original.requiresSessionRefresh()) }
         if (accessToken == null) {
             // Annotated endpoint reached without a session — let the upstream HTTP layer surface
             // the resulting 401 so `SessionAuthenticator` can drive recovery.
             TangemLogger.e("Skipping DPoP headers: no access token in store")
-            return original
+            return chain.proceed(original)
         }
 
         val proof = runBlocking {
@@ -75,31 +52,10 @@ class DpopAuthorizationInterceptor(
 
         if (proof == null) {
             TangemLogger.e("DPoP proof generation failed; sending request without DPoP headers")
-            return original
+            return chain.proceed(original)
         }
 
-        return original.withDpopHeaders(accessToken, proof)
-    }
-
-    // Mirrors SessionAuthenticator's 401 retry (force a real rotation via refresh(), not ensureSession() —
-    // the token that just got a 403 is still "valid" by TTL, so ensureSession() would hand back the same one).
-    private fun retryAfterForbidden(chain: Interceptor.Chain, original: Request, forbidden: Response): Response? {
-        val refreshed = runBlocking { refresher.get().refresh() }.getOrNull()
-        if (refreshed == null) {
-            TangemLogger.e("Session refresh after 403 failed; surfacing original response")
-            return null
-        }
-
-        val proof = runBlocking {
-            proofFactory.create(original.method, original.htuUrl(), refreshed.accessToken)
-        }.getOrNull()
-        if (proof == null) {
-            TangemLogger.e("DPoP proof generation failed after 403 refresh; surfacing original response")
-            return null
-        }
-
-        forbidden.close()
-        return chain.proceed(original.withDpopHeaders(refreshed.accessToken, proof).markSessionAuthRetried())
+        return chain.proceed(original.withDpopHeaders(accessToken, proof))
     }
 
     private suspend fun resolveAccessToken(requiresSessionRefresh: Boolean): String? = if (requiresSessionRefresh) {
