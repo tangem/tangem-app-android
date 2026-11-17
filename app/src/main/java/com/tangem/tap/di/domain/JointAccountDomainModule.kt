@@ -296,14 +296,12 @@ internal object JointAccountDomainModule {
         repository: JointAccountRepository,
         signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
-        supplier: SingleJointAccountListSupplier,
         accountListFetcher: SingleAccountListFetcher,
     ): JoinJointAccountUseCase {
         return JoinJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,
-            supplier = supplier,
             accountListFetcher = accountListFetcher,
         )
     }

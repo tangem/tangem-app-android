@@ -22,8 +22,8 @@ internal class JointAccountJoinDraftHolder {
         draft.update { it.copy(selectedWalletId = walletId) }
     }
 
-    fun setConfig(config: JointAccountConfig) {
-        draft.update { it.copy(config = config) }
+    fun setInvite(config: JointAccountConfig, creatorAddress: String) {
+        draft.update { it.copy(config = config, creatorAddress = creatorAddress) }
     }
 
     fun setDisplayName(displayName: String) {
