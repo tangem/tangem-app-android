@@ -23,13 +23,7 @@ internal fun SignaturesBanner(signaturesUM: SendSignaturesUM, modifier: Modifier
                 count = signaturesUM.threshold,
                 formatArgs = wrappedList(signaturesUM.threshold),
             ),
-            subtitle = resourceReference(
-                if (signaturesUM.isFirstOperation) {
-                    R.string.joint_account_send_sends_automatically_setup_fee
-                } else {
-                    R.string.joint_account_send_sends_automatically
-                },
-            ),
+            subtitle = resourceReference(R.string.joint_account_send_sends_automatically),
         ),
     )
 }

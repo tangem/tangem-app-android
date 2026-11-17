@@ -4,9 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +33,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 
 private const val BLOCKS_KEY = "BLOCKS_KEY"
+
+private val JointFeeCardShape = RoundedCornerShape(24.dp)
 
 @Suppress("LongParameterList")
 @Composable
@@ -89,22 +94,41 @@ private fun LazyListScope.blocks(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             amountBlockComponent.Content(modifier = Modifier)
             destinationBlockComponent.Content(modifier = Modifier)
-            feeSelectorBlockComponent.Content(
-                modifier = Modifier
-                    .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    .background(TangemTheme.colors3.bg.secondary),
-            )
             if (signaturesUM != null) {
+                JointFeeCard(feeSelectorBlockComponent = feeSelectorBlockComponent, setupFeeNote = setupFeeNote)
                 SignaturesBanner(signaturesUM = signaturesUM)
-            }
-            if (setupFeeNote != null) {
-                Text(
-                    text = setupFeeNote.resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors3.text.secondary,
-                    modifier = Modifier.padding(horizontal = 12.dp),
+            } else {
+                feeSelectorBlockComponent.Content(
+                    modifier = Modifier
+                        .clip(TangemTheme.shapes.roundedCornersXMedium)
+                        .background(TangemTheme.colors3.bg.secondary),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun JointFeeCard(feeSelectorBlockComponent: FeeSelectorBlockComponent, setupFeeNote: TextReference?) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(JointFeeCardShape)
+            .background(TangemTheme.colors3.bg.secondary),
+    ) {
+        feeSelectorBlockComponent.Content(modifier = Modifier.fillMaxWidth())
+        if (setupFeeNote != null) {
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = TangemTheme.colors3.border.secondary,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            Text(
+                text = setupFeeNote.resolveReference(),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.tertiary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            )
         }
     }
 }
