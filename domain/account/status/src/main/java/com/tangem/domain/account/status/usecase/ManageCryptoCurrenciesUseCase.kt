@@ -147,7 +147,7 @@ class ManageCryptoCurrenciesUseCase(
             )
 
             syncTokensAndLaunchUpdates(
-                edit = TokensEdit(accountId = accountId, add = add, remove = remove),
+                edit = TokensEdit(accountId = accountId, add = modifiedCurrencyList.added, remove = remove),
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -272,7 +272,7 @@ class ManageCryptoCurrenciesUseCase(
                     }
                 }
 
-                mutableCurrencies.removeAll(currenciesById.values)
+                mutableCurrencies.removeAll { TempID(it) in currenciesById.keys }
                 removed.addAll(currenciesById.values)
             }
 

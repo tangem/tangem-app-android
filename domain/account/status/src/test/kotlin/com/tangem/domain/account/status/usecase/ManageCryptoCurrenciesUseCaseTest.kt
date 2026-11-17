@@ -135,7 +135,43 @@ internal class ManageCryptoCurrenciesUseCaseTest {
                 refreshed = listOf(coin),
                 expected = listOf(coin, own),
             ),
+            StaleModel(
+                name = "own removal reaches a token renamed on the backend",
+                local = listOf(coin, own, peer),
+                remove = listOf(own),
+                refreshed = listOf(coin, own.copy(name = "Renamed", symbol = "RNM"), peer),
+                expected = listOf(coin, peer),
+            ),
         )
+
+        @Test
+        fun `GIVEN additions dropped on a derivation error WHEN the list is refreshed THEN only the removal repeats`() =
+            runTest {
+                // Arrange
+                val account = createAccount(currencies = listOf(coin, peer))
+                coEvery {
+                    singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+                } returns createAccountStatusList(account = account, currencies = listOf(coin, peer))
+                coEvery {
+                    derivationsRepository.derivePublicKeys(userWalletId, any<List<CryptoCurrency>>())
+                } throws IllegalStateException("No card")
+                coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } returnsMany listOf(true, false)
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
+                    account.copy(cryptoCurrencies = listOf(coin, peer)).some()
+
+                // Act
+                val actual = useCase.invokeAndAwait(
+                    accountId = account.accountId,
+                    add = listOf(own),
+                    remove = listOf(peer),
+                    skipDerivationErrors = false,
+                )
+
+                // Assert
+                Truth.assertThat(actual.isLeft()).isTrue()
+                coVerify(exactly = 2) { accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin))) }
+                coVerify(exactly = 2) { accountsCRUDRepository.saveAccount(any()) }
+            }
 
         @Test
         fun `GIVEN the peer made the same edit WHEN the list is refreshed THEN nothing is saved or synced again`() =
