@@ -33,6 +33,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.utils.LastItemAtBottomArrangement
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.tangempay.TangemPayCardType
@@ -134,43 +135,39 @@ private fun BoxScope.CardPageLayout(
             .background(TangemTheme.colors3.bg.primary)
             .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
     )
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = contentPadding.copy(
-                bottom = if (isAddedToGoogleWalletShown) 16.dp else contentPadding.calculateBottomPadding() + 16.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            item(key = "Card") {
-                Box(modifier = Modifier.padding(top = CardTopSpacing)) {
-                    cardSection()
-                }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding.copy(bottom = contentPadding.calculateBottomPadding() + 16.dp),
+        verticalArrangement = if (isAddedToGoogleWalletShown) LastItemAtBottomArrangement else Arrangement.Top,
+    ) {
+        item(key = "Card") {
+            Box(modifier = Modifier.padding(top = CardTopSpacing)) {
+                cardSection()
             }
-            if (
-                state.settings.isNotEmpty() &&
-                state.cardState == TangemPayCardState.Active
-            ) {
-                cardPageItem("Settings buttons") {
-                    CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
-                        TangemPayCardPageSettingsButtonsBlock(
-                            modifier = Modifier.fillMaxWidth(),
-                            settings = state.settings,
-                        )
-                    }
-                }
-            }
-            cardState(state = state)
         }
+        if (
+            state.settings.isNotEmpty() &&
+            state.cardState == TangemPayCardState.Active
+        ) {
+            cardPageItem("Settings buttons") {
+                CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+                    TangemPayCardPageSettingsButtonsBlock(
+                        modifier = Modifier.fillMaxWidth(),
+                        settings = state.settings,
+                    )
+                }
+            }
+        }
+        cardState(state = state)
         if (isAddedToGoogleWalletShown) {
-            TangemPayAddedToGoogleWalletStatus(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = contentPadding.calculateBottomPadding() + 16.dp),
-            )
+            cardPageItem(key = "AddedToGoogleWallet") {
+                TangemPayAddedToGoogleWalletStatus(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .wrapContentWidth(),
+                )
+            }
         }
     }
 }

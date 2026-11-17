@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -33,6 +34,7 @@ internal fun TangemPayAddedToGoogleWalletStatus(modifier: Modifier = Modifier) {
             text = stringResourceSafe(R.string.tangempay_card_details_added_to_google_wallet_text),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
+            textAlign = TextAlign.Center,
         )
     }
 }
