@@ -54,6 +54,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -65,6 +66,7 @@ internal class DefaultEarnTxTrackerTest {
     private val accountListSupplier: SingleAccountListSupplier = mockk()
     private val session: EarnSession = mockk()
     private val sessionFactory: EarnSession.Factory = mockk()
+    private val clock: EarnTxClock = mockk()
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val otherCurrency: CryptoCurrency = MockCryptoCurrencyFactory().stellar
@@ -79,8 +81,16 @@ internal class DefaultEarnTxTrackerTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(analyticsEventHandler, userWalletsListRepository, accountListSupplier, session, sessionFactory)
+        clearMocks(
+            analyticsEventHandler,
+            userWalletsListRepository,
+            accountListSupplier,
+            session,
+            sessionFactory,
+            clock,
+        )
         mockkObject(TangemLogger)
+        every { clock.now() } returns NOW
         every { sessionFactory.create(any()) } returns session
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet(USER_WALLET_ID)))
         every { accountListSupplier(USER_WALLET_ID) } returns flowOf(accountListWith(currency))
@@ -252,6 +262,47 @@ internal class DefaultEarnTxTrackerTest {
     }
 
     @Test
+    fun `GIVEN a record created 8 days ago WHEN resume THEN it is removed without lookups, track and event`() =
+        runTest {
+            // Arrange
+            val store = createStore()
+            val expired = createRef(id = "0xaaa", createdAt = NOW - 8.days)
+            store.add(expired)
+            val tracker = createTracker(store)
+
+            // Act
+            tracker.resume()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { userWalletsListRepository.userWallets }
+            verify(exactly = 0) { accountListSupplier(any<UserWalletId>()) }
+            verify(exactly = 0) { session.track(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
+            assertThat(store.all()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN a record created 6 days ago WHEN resume THEN it is tracked and its result is sent`() = runTest {
+        // Arrange
+        val store = createStore()
+        val recent = createRef(id = "0xaaa", createdAt = NOW - 6.days)
+        store.add(recent)
+        val tracker = createTracker(store)
+        every { session.track(recent) } returns statuses(TransactionStatus.Confirmed)
+
+        // Act
+        tracker.resume()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { session.track(recent) }
+        verify(exactly = 1) { analyticsEventHandler.send(expectedConfirmed) }
+        assertThat(store.all()).isEmpty()
+    }
+
+    @Test
     fun `GIVEN the wallets never load WHEN resume THEN no event and the record stays`() = runTest {
         // Arrange
         val store = createStore()
@@ -320,7 +371,7 @@ internal class DefaultEarnTxTrackerTest {
         }
 
     @Test
-    fun `GIVEN onSent and resume with the same ref THEN track is called once`() = runTest {
+    fun `GIVEN the same ref WHEN onSent and resume both start tracking THEN track is called once`() = runTest {
         // Arrange
         val store = createStore()
         val tracker = createTracker(store)
@@ -389,6 +440,7 @@ internal class DefaultEarnTxTrackerTest {
         accountListSupplier = accountListSupplier,
         analyticsEventHandler = analyticsEventHandler,
         appScope = TestAppCoroutineScope(this),
+        clock = clock,
     )
 
     private fun createStore(
@@ -420,13 +472,14 @@ internal class DefaultEarnTxTrackerTest {
         productId: EarnProductId = LENDING_ID,
         currencyId: CryptoCurrency.ID = currency.id,
         userWalletId: UserWalletId = USER_WALLET_ID,
+        createdAt: Instant = Instant.parse("2030-01-01T00:00:00Z"),
     ) = EarnTxRef(
         version = 1,
         productId = productId,
         id = id,
         userWalletId = userWalletId,
         currencyId = currencyId,
-        createdAt = Instant.parse("2030-01-01T00:00:00Z"),
+        createdAt = createdAt,
         analytics = EarnTxAnalytics(
             params = mapOf("Transaction Type" to "Deposit", "With Upgrade" to "false"),
             confirmedParams = mapOf("Amount Bucket" to "250-1K"),
@@ -438,6 +491,7 @@ internal class DefaultEarnTxTrackerTest {
         val REMOVED_WALLET_ID = UserWalletId("fedcba9876543210")
         val LENDING_ID = EarnProductId("lending")
         val STAKING_ID = EarnProductId("staking")
+        val NOW: Instant = Instant.parse("2030-01-02T00:00:00Z")
         const val READ_DELAY_MILLIS = 100L
     }
 }

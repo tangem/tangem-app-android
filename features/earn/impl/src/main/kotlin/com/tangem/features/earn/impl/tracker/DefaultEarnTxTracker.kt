@@ -26,13 +26,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * A record leaves the journal before its event is sent: a crash between the two loses the event instead of sending it
- * twice. A record whose result is unknown (the wallet is locked, the network is down, the polling gave up) stays for
- * the next [resume].
- */
 @Suppress("LongParameterList")
 @Singleton
 internal class DefaultEarnTxTracker @Inject constructor(
@@ -43,6 +39,7 @@ internal class DefaultEarnTxTracker @Inject constructor(
     private val accountListSupplier: SingleAccountListSupplier,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appScope: AppCoroutineScope,
+    private val clock: EarnTxClock,
 ) : EarnTxTracker {
 
     private val mutex = Mutex()
@@ -77,6 +74,11 @@ internal class DefaultEarnTxTracker @Inject constructor(
     private suspend fun follow(ref: EarnTxRef) {
         // A journal read made before another tracking resolved this record must not report it again
         if (store.all().none { it.id == ref.id }) return
+
+        if (clock.now() - ref.createdAt > RECORD_TTL) {
+            drop(ref, reason = "the result is still unknown after $RECORD_TTL")
+            return
+        }
 
         val product = registry.find(ref.productId)
         val factory = sessionFactories[ref.productId.value]
@@ -133,6 +135,7 @@ internal class DefaultEarnTxTracker @Inject constructor(
             }
         }
 
+        // Removed before sending: a crash in between loses the event instead of sending it twice
         store.remove(ref.id)
         analyticsEventHandler.send(event)
     }
@@ -154,5 +157,6 @@ internal class DefaultEarnTxTracker @Inject constructor(
 
     private companion object {
         val CURRENCY_TIMEOUT = 30.seconds
+        val RECORD_TTL = 7.days
     }
 }
