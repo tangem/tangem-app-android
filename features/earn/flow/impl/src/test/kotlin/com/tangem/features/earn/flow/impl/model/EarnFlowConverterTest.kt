@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
@@ -379,6 +380,16 @@ internal class EarnFlowConverterTest {
             assertThat(actual.primary.isLoading).isTrue()
         }
 
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN amount validity WHEN confirm THEN primary is enabled only for a valid amount`(isValid: Boolean) {
+            // Act
+            val actual = confirm(isAmountValid = isValid)
+
+            // Assert
+            assertThat(actual.primary.isEnabled).isEqualTo(isValid)
+        }
+
         @Test
         fun `GIVEN action without amount WHEN confirm THEN button label comes from the action`() {
             // Act
@@ -565,6 +576,7 @@ internal class EarnFlowConverterTest {
             isHoldToConfirm: Boolean = false,
             onLegalClick: (String) -> Unit = {},
             appCurrency: AppCurrency? = AppCurrency.Default,
+            isAmountValid: Boolean = true,
         ) = converter.confirm(
             action = action,
             product = product,
@@ -573,6 +585,7 @@ internal class EarnFlowConverterTest {
             appCurrency = appCurrency,
             signing = signing,
             isFeeReady = true,
+            isAmountValid = isAmountValid,
             isPreparing = false,
             notifications = persistentListOf(),
             walletIcon = walletIcon,

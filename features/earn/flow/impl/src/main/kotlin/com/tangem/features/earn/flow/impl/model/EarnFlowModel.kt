@@ -238,11 +238,14 @@ internal class EarnFlowModel @Inject constructor(
     private fun isSameAmount(first: BigDecimal?, second: BigDecimal?): Boolean =
         if (first == null || second == null) first == second else first.compareTo(second) == 0
 
-    /** A wallet Max leaves room for the fee, so a tap before the first fee estimate is set once the fee arrives. */
+    /**
+     * A wallet Max leaves room for the fee, so a tap before the first fee estimate, the Max or the card is set once all
+     * of them are there.
+     */
     private fun deferShareUntilFee(percent: Int): Boolean {
-        val isFeeUnknown = amountSource == EarnActionInput.Amount.Source.Wallet && state.value.feeDeduction == null
-        if (isFeeUnknown) state.update { it.copy(pendingSharePercent = percent) }
-        return isFeeUnknown
+        val isWaiting = amountSource == EarnActionInput.Amount.Source.Wallet && !amountInput.isShareReady(state.value)
+        if (isWaiting) state.update { it.copy(pendingSharePercent = percent) }
+        return isWaiting
     }
 
     fun onSubmit() {
@@ -256,6 +259,8 @@ internal class EarnFlowModel @Inject constructor(
     fun onConfirmClick() {
         val current = state.value
         if (current.signing.isExecuting || current.isPreparing || feeJob?.isActive == true) return
+        // A fee that moved the amount out of its limits leaves nothing to prepare: the amount step fixes it
+        if (current.isAmountInvalid) return
         val plan = current.plan?.takeIf { current.isPlanCurrent } ?: return prepare()
 
         state.update { it.copy(signing = EarnSigningState(stepLabel = null, isExecuting = true)) }
@@ -331,11 +336,14 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     /** The amount card leaves its shimmer once balance, currency status and app currency are all known. */
+    /** A Max or percent tap waiting for the card is set here, so the fee is estimated again for that amount. */
     private fun updateWithInitialAmount(transform: (EarnFlowState) -> EarnFlowState) {
+        val enteredBefore = state.value.enteredAmount
         state.update { current ->
             val updated = transform(current)
             if (amountSource != null) amountInput.withInitial(updated) else updated
         }
+        if (!isSameAmount(state.value.enteredAmount, enteredBefore)) reloadFee()
     }
 
     private fun updateAmount(amountState: AmountState) {

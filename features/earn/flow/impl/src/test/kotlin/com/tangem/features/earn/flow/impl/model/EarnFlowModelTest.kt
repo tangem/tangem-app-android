@@ -80,6 +80,7 @@ import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -628,6 +629,62 @@ internal class EarnFlowModelTest {
             // Assert
             val field = (model.state.value.amountState as AmountState.Data).amountTextField
             assertThat(field.isError to model.state.value.enteredAmount).isEqualTo(false to BigDecimal("2.009667"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max tapped before Max loads WHEN fee then Max arrive THEN Max is set and fee estimated again`() =
+            runTest {
+                // Arrange
+                coEvery { session.maxAmount(action = any()) } coAnswers {
+                    delay(MAX_AMOUNT_DELAY_MS)
+                    TEST_BALANCE.right()
+                }
+                val model = createModel(action = Deposit())
+                runCurrent()
+                model.onMaxValueClick()
+                model.onFeeResult(testFeeContent("0.01"))
+                runCurrent()
+                clearMocks(feeSelectorReloadTrigger, answers = false)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("2.00"))
+                coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate(any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN fee caps amount below minimum on confirm WHEN confirm pressed THEN nothing is prepared`() = runTest {
+            // Arrange
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returnsMany listOf(
+                EarnSessionError.BelowMinimum(BigDecimal("1.95")).left(),
+                TestPlan().right(),
+            )
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.001"))
+            advanceUntilIdle()
+            model.onAmountValueChange("1")
+            model.onSubmit()
+            advanceUntilIdle()
+            model.onAmountValueChange("2")
+            model.onSubmit()
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.07"))
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.07"))
+            advanceUntilIdle()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.confirm.value?.primary?.isEnabled).isFalse()
+            coVerify(exactly = 2) { session.prepare(action = any(), amount = any(), fee = any()) }
             model.onDestroy()
         }
 
@@ -1666,6 +1723,7 @@ internal class EarnFlowModelTest {
     data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
 }
 
+private const val MAX_AMOUNT_DELAY_MS = 1_000L
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
 private const val TEST_LEARN_MORE_URL = "https://tangem.com/blog/yield-mode"
 

@@ -90,28 +90,38 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
     }
 
     /**
-     * Applies a fee estimate to the amount: a Max or percent tap waiting for it is set now; an amount that fitted with
-     * the previous fee but not with this one is capped to the new Max; an amount above the new Max, or one already in
-     * error, is checked against it. Any other amount is left as is: rechecking a fiat input re-reads its rounded text
-     * and can move the crypto amount past the limit.
+     * Applies a fee estimate to the amount: a Max or percent tap waiting for it is set once the card is there too; an
+     * amount that fitted with the previous fee but not with this one is capped to the new Max; an amount above the new
+     * Max, or one already in error, is checked against it. Any other amount is left as is: rechecking a fiat input
+     * re-reads its rounded text and can move the crypto amount past the limit.
      *
      * The shared transformers skip a zero Max, so with nothing left after the fee an amount from before is checked
      * against it and shows the error instead.
      */
     fun withFeeDeduction(state: EarnFlowState, deduction: BigDecimal): EarnFlowState {
-        val updated = state.copy(feeDeduction = deduction, pendingSharePercent = null)
+        val updated = state.copy(feeDeduction = deduction)
+        if (updated.pendingSharePercent != null) return withPendingShare(updated)
         val newMax = updated.availableMax ?: return updated
         val entered = state.enteredAmount
-        val pending = state.pendingSharePercent
         val amountState = when {
             newMax.signum() == 0 -> entered?.let { revalidate(updated) }
-            pending == FULL_SHARE_PERCENT -> max(updated)
-            pending != null -> percent(updated, pending)
             isNoLongerAffordable(entered, previousMax = state.availableMax, newMax = newMax) -> max(updated)
             needsCheck(state, entered, newMax) -> revalidate(updated)
             else -> null
         }
         return amountState?.let { updated.copy(amountState = it) } ?: updated
+    }
+
+    /** A Max or percent tap can be set once the fee, the Max and the card are all there */
+    fun isShareReady(state: EarnFlowState): Boolean =
+        state.feeDeduction != null && state.availableMax != null && state.amountState is AmountState.Data
+
+    /** Sets a waiting Max or percent tap once it can be set; until then it keeps waiting */
+    private fun withPendingShare(state: EarnFlowState): EarnFlowState {
+        val pending = state.pendingSharePercent ?: return state
+        if (!isShareReady(state)) return state
+        val amountState = if (pending == FULL_SHARE_PERCENT) max(state) else percent(state, pending)
+        return state.copy(pendingSharePercent = null, amountState = amountState ?: state.amountState)
     }
 
     private fun isNoLongerAffordable(entered: BigDecimal?, previousMax: BigDecimal?, newMax: BigDecimal): Boolean =
@@ -120,7 +130,8 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
     private fun needsCheck(state: EarnFlowState, entered: BigDecimal?, newMax: BigDecimal): Boolean =
         entered != null && (entered > newMax || state.isAmountInvalid)
 
-    fun withInitial(state: EarnFlowState): EarnFlowState = initial(state)?.let { state.copy(amountState = it) } ?: state
+    fun withInitial(state: EarnFlowState): EarnFlowState =
+        initial(state)?.let { withPendingShare(state.copy(amountState = it)) } ?: state
 
     /** The minimum joins the field validation from now on, so the field shows the error right away. */
     fun withMinimum(state: EarnFlowState, min: BigDecimal): EarnFlowState {
