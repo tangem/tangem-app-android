@@ -46,6 +46,7 @@ import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
+import com.tangem.features.earn.product.api.session.EarnTxTracker
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
@@ -85,6 +86,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var sendUnsubmittedHashesUseCase: SendUnsubmittedHashesUseCase
+
+    @Inject
+    lateinit var earnTxTracker: EarnTxTracker
 
     @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
@@ -208,6 +212,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         initContent()
 
         sendStakingUnsubmittedHashes()
+        earnTxTracker.resume()
         sendPendingWalletCardsBackups()
         checkGoogleServicesAvailability()
 

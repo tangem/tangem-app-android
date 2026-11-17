@@ -321,6 +321,7 @@ dependencies {
     implementation(projects.features.disclaimer.impl)
     implementation(projects.features.earn.api)
     implementation(projects.features.earn.impl)
+    implementation(projects.features.earn.product.api)
     implementation(projects.features.earn.lending.impl)
     implementation(projects.features.earn.flow.impl)
     implementation(projects.features.earn.staking.impl)

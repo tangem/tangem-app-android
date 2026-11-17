@@ -57,6 +57,7 @@ import com.tangem.features.earn.product.api.session.EarnSessionError
 import com.tangem.features.earn.product.api.session.EarnSigningStep
 import com.tangem.features.earn.product.api.session.EarnTxRef
 import com.tangem.features.earn.product.api.session.EarnTxStatus
+import com.tangem.features.earn.product.api.session.EarnTxTracker
 import com.tangem.features.earn.product.api.session.EarnVerification
 import com.tangem.features.earn.product.api.session.VerifiedPlan
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
@@ -97,6 +98,7 @@ internal class EarnFlowModel @Inject constructor(
     private val links: EarnFlowLinks,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val usdValuation: EarnUsdValuation,
+    private val txTracker: EarnTxTracker,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -541,8 +543,11 @@ internal class EarnFlowModel @Inject constructor(
                         it.copy(signing = EarnSigningState(stepLabel = step.stepLabel, isExecuting = true))
                     }
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
-                    is EarnSigningStep.Sent -> state.update {
-                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount, sentPlan = plan.plan)
+                    is EarnSigningStep.Sent -> {
+                        txTracker.onSent(step.ref)
+                        state.update {
+                            it.copy(plan = null, planFee = null, sentAmount = expectedAmount, sentPlan = plan.plan)
+                        }
                     }
                     is EarnSigningStep.Done -> showResult(step)
                     is EarnSigningStep.Failed -> onSigningFailed(step.error)
