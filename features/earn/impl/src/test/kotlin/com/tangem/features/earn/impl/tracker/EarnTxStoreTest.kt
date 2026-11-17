@@ -118,6 +118,24 @@ internal class EarnTxStoreTest {
     }
 
     @Test
+    fun `GIVEN a stored ref with a key this version does not know WHEN all THEN the ref still decodes`() = runTest {
+        // Arrange
+        val ref = createRef(id = "0xaaa")
+        store.add(ref)
+        preferencesStore.editData { preferences ->
+            val stored = requireNotNull(preferences[keys.earnSentTransactionsKey])
+            preferences[keys.earnSentTransactionsKey] = stored.replaceFirst("{", """{"addedLater":"value",""")
+        }
+
+        // Act
+        val actual = store.all()
+
+        // Assert
+        assertThat(actual).containsExactly(ref)
+        verify(exactly = 0) { TangemLogger.e(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN a broken stored string WHEN add THEN the journal holds only the new ref`() = runTest {
         // Arrange
         preferencesStore.editData { it[keys.earnSentTransactionsKey] = "{not a list" }

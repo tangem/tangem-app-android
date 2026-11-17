@@ -31,13 +31,13 @@ internal class EarnTxStore @Inject constructor(
 
     suspend fun all(): List<EarnTxRef> = decode(appPreferencesStore.data.first()[keys.earnSentTransactionsKey])
 
-    private fun encode(refs: List<EarnTxRef>): String = Json.encodeToString(serializer, refs)
+    private fun encode(refs: List<EarnTxRef>): String = json.encodeToString(serializer, refs)
 
     private fun decode(value: String?): List<EarnTxRef> {
         if (value == null) return emptyList()
 
         return try {
-            Json.decodeFromString(serializer, value)
+            json.decodeFromString(serializer, value)
         } catch (e: Exception) {
             TangemLogger.e("Earn journal is unreadable, dropped", e)
             emptyList()
@@ -46,5 +46,7 @@ internal class EarnTxStore @Inject constructor(
 
     private companion object {
         val serializer = ListSerializer(EarnTxRef.serializer())
+
+        val json = Json { ignoreUnknownKeys = true }
     }
 }
