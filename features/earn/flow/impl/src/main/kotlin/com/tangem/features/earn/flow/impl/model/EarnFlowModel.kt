@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,9 +26,17 @@ import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowAnalyticsEvent
+import com.tangem.features.earn.flow.impl.analytics.EarnTxType
+import com.tangem.features.earn.flow.impl.analytics.isLiquidityCapped
+import com.tangem.features.earn.flow.impl.analytics.toResultDestination
+import com.tangem.features.earn.flow.impl.analytics.toTxType
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
+import com.tangem.features.earn.product.api.analytics.EarnAnalyticsPercent
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
+import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
 import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
@@ -77,6 +86,8 @@ internal class EarnFlowModel @Inject constructor(
     private val converter: EarnFlowConverter,
     private val support: EarnFlowSupport,
     private val links: EarnFlowLinks,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val usdValuation: EarnUsdValuation,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -91,6 +102,8 @@ internal class EarnFlowModel @Inject constructor(
     val action: EarnFlowAction = params.action
 
     private val amountSource: EarnActionInput.Amount.Source? = (action.input as? EarnActionInput.Amount)?.source
+
+    private val txType: EarnTxType? = action.toTxType()
 
     val initialStep: EarnFlowStep = if (amountSource != null) EarnFlowStep.Amount else EarnFlowStep.Confirm
 
@@ -116,7 +129,7 @@ internal class EarnFlowModel @Inject constructor(
             ),
             resultCallbacks = EarnResultCallbacks(
                 onInfoClick = ::showInfo,
-                onExit = ::finish,
+                onExit = ::onResultExit,
                 onExploreClick = links::open,
                 onShareClick = links::share,
             ),
@@ -160,6 +173,7 @@ internal class EarnFlowModel @Inject constructor(
                 )
             }
             if (amountSource == EarnActionInput.Amount.Source.Wallet) loadSource(userWallet)
+            if (amountSource != null) sendAmountScreenOpened()
         }
     }
 
@@ -297,7 +311,13 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun onHowItWorksClick() {
         val content = params.flowProduct.howItWorks ?: return
-        howItWorks.value = content.toUM(onLearnMoreClick = { post -> modelScope.launch { links.openBlogPost(post) } })
+        sendFlowEvent { category, _ -> EarnFlowAnalyticsEvent.HowItWorksOpened(category, params.source) }
+        howItWorks.value = content.toUM(
+            onLearnMoreClick = { post ->
+                sendFlowEvent { category, _ -> EarnFlowAnalyticsEvent.LearnMore(category, params.source) }
+                modelScope.launch { links.openBlogPost(post) }
+            },
+        )
     }
 
     private fun subscribeOnStatuses() {
@@ -494,6 +514,7 @@ internal class EarnFlowModel @Inject constructor(
             )
         }
         moveTo(EarnFlowStep.Result)
+        sendSuccessScreenOpened()
 
         session.track(done.ref)
             .onEach { txStatus -> state.update { it.copy(txStatus = txStatus) } }
@@ -526,9 +547,70 @@ internal class EarnFlowModel @Inject constructor(
             EarnFlowStep.Result -> navigation.replaceAll(step)
             else -> navigation.pushNew(step)
         }
+        if (step == EarnFlowStep.Confirm) sendConfirmScreenOpened()
     }
 
     private fun finish(exit: EarnFlowExit) = params.callback.onFinished(exit)
+
+    private fun onResultExit(exit: EarnFlowExit) {
+        exit.toResultDestination()?.let { destination ->
+            sendFlowEvent { category, _ -> EarnFlowAnalyticsEvent.ResultAction(category, destination) }
+        }
+        finish(exit)
+    }
+
+    private fun sendAmountScreenOpened() {
+        launchFlowEvent { category, type ->
+            val screen = session.screenAnalytics(action)
+            when (type) {
+                EarnTxType.Deposit -> EarnFlowAnalyticsEvent.DepositScreenOpened(
+                    category = category,
+                    source = params.source,
+                    currentApy = screen.rate?.toAnalyticsApy(),
+                )
+                EarnTxType.Withdraw -> EarnFlowAnalyticsEvent.WithdrawScreenOpened(
+                    category = category,
+                    positionBucket = usdValuation.bucket(params.product.currency, screen.position),
+                    isLiquidityCapped = screen.isLiquidityCapped(),
+                )
+            }
+        }
+    }
+
+    private fun sendConfirmScreenOpened() {
+        val amount = state.value.sendingAmount
+        launchFlowEvent { category, type ->
+            val screen = session.screenAnalytics(action)
+            EarnFlowAnalyticsEvent.ConfirmScreenOpened(
+                category = category,
+                type = type,
+                amountBucket = usdValuation.bucket(params.product.currency, amount),
+                currentApy = screen.rate?.toAnalyticsApy(),
+                performanceFee = screen.performanceFee?.let(EarnAnalyticsPercent::of),
+            )
+        }
+    }
+
+    private fun sendSuccessScreenOpened() {
+        launchFlowEvent { category, type ->
+            val screen = session.screenAnalytics(action)
+            EarnFlowAnalyticsEvent.SuccessScreenOpened(
+                category = category,
+                type = type,
+                currentApy = screen.rate?.toAnalyticsApy(),
+            )
+        }
+    }
+
+    private fun sendFlowEvent(event: (category: String, type: EarnTxType) -> EarnFlowAnalyticsEvent) {
+        val type = txType ?: return
+        analyticsEventHandler.send(event(params.flowProduct.analytics.category, type))
+    }
+
+    private fun launchFlowEvent(event: suspend (category: String, type: EarnTxType) -> EarnFlowAnalyticsEvent) {
+        val type = txType ?: return
+        modelScope.launch { analyticsEventHandler.send(event(params.flowProduct.analytics.category, type)) }
+    }
 
     private fun showSessionError(error: EarnSessionError) {
         TangemLogger.e("Earn flow: ${action.id} session error: $error")

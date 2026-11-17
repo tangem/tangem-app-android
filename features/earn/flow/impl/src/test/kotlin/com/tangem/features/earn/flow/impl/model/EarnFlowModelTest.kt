@@ -11,6 +11,7 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
@@ -42,11 +43,17 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowAnalyticsEvent
+import com.tangem.features.earn.flow.impl.analytics.EarnResultDestination
+import com.tangem.features.earn.flow.impl.analytics.EarnTxType
+import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRow
@@ -58,6 +65,7 @@ import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnFlowExit
+import com.tangem.features.earn.product.api.session.EarnResultButton
 import com.tangem.features.earn.product.api.session.EarnSession
 import com.tangem.features.earn.product.api.session.EarnSessionError
 import com.tangem.features.earn.product.api.session.EarnSigningStep
@@ -126,6 +134,8 @@ internal class EarnFlowModelTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val usdValuation: EarnUsdValuation = mockk()
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -161,7 +171,11 @@ internal class EarnFlowModelTest {
             getUserWalletUseCase,
             getAccountCurrencyStatusUseCase,
             isAccountsModeEnabledUseCase,
+            analyticsEventHandler,
+            usdValuation,
         )
+        coEvery { usdValuation.bucket(currency = any(), cryptoAmount = any()) } returns "1K-5K"
+        coEvery { session.screenAnalytics(action = any()) } returns EarnScreenAnalytics()
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns TEST_LEARN_MORE_URL
@@ -1843,6 +1857,299 @@ internal class EarnFlowModelTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN deposit from the banner WHEN created THEN deposit screen opened is sent once with the rate`() =
+            runTest {
+                // Arrange
+                coEvery { session.screenAnalytics(action = Deposit()) } returns
+                    EarnScreenAnalytics(rate = createRate("0.055"))
+
+                // Act
+                val model = createModel(action = Deposit(), source = EarnEntrySource.EarnBanner)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.DepositScreenOpened(
+                            category = "ETH Lending",
+                            source = EarnEntrySource.EarnBanner,
+                            currentApy = "5.50",
+                        ),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN deposit without a rate WHEN created THEN deposit screen opened omits the apy`() = runTest {
+            // Act
+            val model = createModel(action = Deposit(), source = EarnEntrySource.Markets)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.DepositScreenOpened(
+                        category = "ETH Lending",
+                        source = EarnEntrySource.Markets,
+                        currentApy = null,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN withdraw WHEN created THEN withdraw screen opened carries the position bucket and the cap`(
+            model: LiquidityModel,
+        ) = runTest {
+            // Arrange
+            coEvery { session.screenAnalytics(action = Withdraw()) } returns EarnScreenAnalytics(
+                position = model.position,
+                availableToWithdraw = model.availableToWithdraw,
+                isLiquidityKnown = model.isLiquidityKnown,
+            )
+
+            // Act
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.WithdrawScreenOpened(
+                        category = "ETH Lending",
+                        positionBucket = "1K-5K",
+                        isLiquidityCapped = model.expectedCapped,
+                    ),
+                )
+            }
+            coVerify(exactly = 1) { usdValuation.bucket(currency = testEthereum, cryptoAmount = model.position) }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount entered WHEN submitted twice with a back in between THEN confirm screen opened is sent twice`() =
+            runTest {
+                // Arrange
+                coEvery { session.screenAnalytics(action = Deposit()) } returns EarnScreenAnalytics(
+                    rate = createRate("0.055"),
+                    performanceFee = BigDecimal("0.15"),
+                )
+                val model = createConfirmedModel()
+
+                // Act
+                model.onBack()
+                model.onSubmit()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
+                verify(exactly = 2) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.ConfirmScreenOpened(
+                            category = "ETH Lending",
+                            type = EarnTxType.Deposit,
+                            amountBucket = "1K-5K",
+                            currentApy = "5.50",
+                            performanceFee = "15.00",
+                        ),
+                    )
+                }
+                coVerify(exactly = 2) {
+                    usdValuation.bucket(
+                        currency = testEthereum,
+                        cryptoAmount = match { amount -> amount?.compareTo(BigDecimal("0.5")) == 0 },
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Done WHEN the result shows THEN success screen opened is sent with the rate`() = runTest {
+            // Arrange
+            coEvery { session.screenAnalytics(action = Deposit()) } returns
+                EarnScreenAnalytics(rate = createRate("0.055"))
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Result)
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.SuccessScreenOpened(
+                        category = "ETH Lending",
+                        type = EarnTxType.Deposit,
+                        currentApy = "5.50",
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideResultExitModels")
+        fun `GIVEN the result WHEN its button exits THEN the result action is sent only for a destination`(
+            model: ResultExitModel,
+        ) = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Done(txRef, testResult(primary = EarnResultButton(stringReference("Exit"), model.exit))),
+            )
+            val flow = createConfirmedModel()
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            flow.result.value?.primary?.onClick?.invoke()
+
+            // Assert
+            verify(exactly = 1) { callback.onFinished(model.exit) }
+            if (model.expectedDestination == null) {
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ResultAction>()) }
+            } else {
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.ResultAction(
+                            category = "ETH Lending",
+                            destination = model.expectedDestination,
+                        ),
+                    )
+                }
+            }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the result WHEN closed THEN no result action is sent`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            model.result.value?.onClose?.invoke()
+
+            // Assert
+            verify(exactly = 1) { callback.onFinished(EarnFlowExit.Done) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ResultAction>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN How it works WHEN opened and Learn more clicked THEN both events carry the entry source`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks),
+                    source = EarnEntrySource.YieldSheet,
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.amount.value?.onHowItWorksClick?.invoke()
+                model.howItWorks.value?.onLearnMoreClick?.invoke()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.HowItWorksOpened(
+                            category = "ETH Lending",
+                            source = EarnEntrySource.YieldSheet,
+                        ),
+                    )
+                }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.LearnMore(
+                            category = "ETH Lending",
+                            source = EarnEntrySource.YieldSheet,
+                        ),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN product without How it works WHEN info pressed THEN no How it works event is sent`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.HowItWorksOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an action that is neither deposit nor withdraw WHEN the flow runs to the result THEN no flow event is sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(action = TestClaim)
+                model.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Act
+                model.onConfirmClick()
+                advanceUntilIdle()
+                model.result.value?.primary?.onClick?.invoke()
+
+                // Assert
+                assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Result)
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                coVerify(exactly = 0) { session.screenAnalytics(action = any()) }
+                model.onDestroy()
+            }
+
+        private fun provideTestModels() = listOf(
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = BigDecimal("1"),
+                isLiquidityKnown = true,
+                expectedCapped = true,
+            ),
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = BigDecimal("2"),
+                isLiquidityKnown = true,
+                expectedCapped = false,
+            ),
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = BigDecimal("1"),
+                isLiquidityKnown = false,
+                expectedCapped = null,
+            ),
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = null,
+                isLiquidityKnown = true,
+                expectedCapped = null,
+            ),
+        )
+
+        private fun provideResultExitModels() = listOf(
+            ResultExitModel(exit = EarnFlowExit.ToYield, expectedDestination = EarnResultDestination.Yield),
+            ResultExitModel(exit = EarnFlowExit.ToToken, expectedDestination = EarnResultDestination.Token),
+            ResultExitModel(exit = EarnFlowExit.Done, expectedDestination = null),
+        )
+    }
+
     private suspend fun TestScope.createConfirmedModel(): EarnFlowModel {
         val model = createModel(action = Deposit())
         advanceUntilIdle()
@@ -1875,9 +2182,12 @@ internal class EarnFlowModelTest {
             testFlowProduct.productId.value to EarnSession.Factory { session },
         ),
         flowProduct: EarnFlowProduct = testFlowProduct,
+        source: EarnEntrySource = EarnEntrySource.TokenPage,
     ): EarnFlowModel = EarnFlowModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(testParams(action, callback).copy(flowProduct = flowProduct)),
+        paramsContainer = MutableParamsContainer(
+            testParams(action, callback).copy(flowProduct = flowProduct, source = source),
+        ),
         sessionFactories = EarnSessionFactories(factories),
         statuses = EarnFlowStatuses(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -1905,6 +2215,8 @@ internal class EarnFlowModelTest {
             getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
             blogUrlBuilder = blogUrlBuilder,
         ),
+        analyticsEventHandler = analyticsEventHandler,
+        usdValuation = usdValuation,
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
@@ -1912,6 +2224,15 @@ internal class EarnFlowModelTest {
     data class PercentModel(val percent: Int, val expected: String)
 
     data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
+
+    data class LiquidityModel(
+        val position: BigDecimal,
+        val availableToWithdraw: BigDecimal?,
+        val isLiquidityKnown: Boolean,
+        val expectedCapped: Boolean?,
+    )
+
+    data class ResultExitModel(val exit: EarnFlowExit, val expectedDestination: EarnResultDestination?)
 }
 
 private const val MAX_AMOUNT_DELAY_MS = 1_000L

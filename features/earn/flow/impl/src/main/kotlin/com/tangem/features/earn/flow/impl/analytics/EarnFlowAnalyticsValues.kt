@@ -1,7 +1,9 @@
 package com.tangem.features.earn.flow.impl.analytics
 
+import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnFlowAction
+import com.tangem.features.earn.product.api.session.EarnFlowExit
 import com.tangem.features.earn.product.api.session.Withdraw
 
 internal enum class EarnFlowScreen(val value: String) {
@@ -39,4 +41,17 @@ internal fun EarnFlowAction.toTxType(): EarnTxType? = when (this) {
 internal fun EarnTxType.amountScreen(): EarnFlowScreen = when (this) {
     EarnTxType.Deposit -> EarnFlowScreen.Deposit
     EarnTxType.Withdraw -> EarnFlowScreen.Withdraw
+}
+
+internal fun EarnFlowExit.toResultDestination(): EarnResultDestination? = when (this) {
+    EarnFlowExit.ToToken -> EarnResultDestination.Token
+    EarnFlowExit.ToYield -> EarnResultDestination.Yield
+    EarnFlowExit.Done -> null
+}
+
+internal fun EarnScreenAnalytics.isLiquidityCapped(): Boolean? {
+    if (!isLiquidityKnown) return null
+    val position = position ?: return null
+    val available = availableToWithdraw ?: return null
+    return available < position
 }
