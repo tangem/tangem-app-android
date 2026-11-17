@@ -6,7 +6,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -280,7 +279,7 @@ internal class EarnBannerModelTest {
 
         // Assert
         val enabled = model.uiState.value as EarnBannerUM.Enabled
-        assertThat(enabled.description).isEqualTo(stringReference("*** · 2 active"))
+        assertThat(enabled.description).isEqualTo(activeCountText(amount = "***", count = 2))
         model.onDestroy()
     }
 
@@ -300,8 +299,8 @@ internal class EarnBannerModelTest {
         val shownAgain = (model.uiState.value as EarnBannerUM.Enabled).description
 
         // Assert
-        assertThat(shown).isNotEqualTo(stringReference("*** · 1 active"))
-        assertThat(masked).isEqualTo(stringReference("*** · 1 active"))
+        assertThat(shown).isNotEqualTo(activeCountText(amount = "***", count = 1))
+        assertThat(masked).isEqualTo(activeCountText(amount = "***", count = 1))
         assertThat(shownAgain).isEqualTo(shown)
         model.onDestroy()
     }

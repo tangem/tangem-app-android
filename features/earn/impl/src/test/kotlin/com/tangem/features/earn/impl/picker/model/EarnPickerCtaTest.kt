@@ -10,7 +10,6 @@ import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.fakeReadyState
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnFreshness
 import com.tangem.features.earn.product.api.product.EarnProductState
@@ -97,7 +96,7 @@ internal class EarnPickerCtaTest {
     private fun idle(state: EarnProductState) = ResolveModel(
         state = state,
         ethBalance = BigDecimal.ONE,
-        text = EarnPickerTexts.startEarning,
+        text = resourceReference(R.string.eth_yield_start_earning),
         isEnabled = false,
         isDimmed = false,
     )
@@ -115,7 +114,7 @@ internal class EarnPickerCtaTest {
     private fun addFunds(state: EarnProductState, ethBalance: BigDecimal) = ResolveModel(
         state = state,
         ethBalance = ethBalance,
-        text = EarnPickerTexts.addFunds,
+        text = resourceReference(R.string.common_add_funds),
         isEnabled = true,
         isDimmed = false,
         expectedCalls = listOf(Call.AddFunds),

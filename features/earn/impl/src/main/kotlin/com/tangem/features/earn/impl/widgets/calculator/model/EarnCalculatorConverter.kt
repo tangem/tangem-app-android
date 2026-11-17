@@ -1,14 +1,17 @@
 package com.tangem.features.earn.impl.widgets.calculator.model
 
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.ui.toIncentiveUM
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnHorizonItemUM
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnHorizonSelectUM
@@ -41,21 +44,21 @@ internal class EarnCalculatorConverter @Inject constructor() {
         earned = stringReference(
             StringsSigns.PLUS + result.earned.format { fiat(appCurrency.code, appCurrency.symbol) },
         ),
-        earnedLabel = EarnCalculatorTexts.earnedIn,
+        earnedLabel = resourceReference(R.string.earn_calculator_earned_in_label),
         horizon = horizonSelect(selected = input.horizon, onSelect = onHorizonSelect),
         bars = bars(result = result, appCurrency = appCurrency).toImmutableList(),
         axisLabels = axisLabels(input.horizon).toImmutableList(),
         selectedBar = null,
         onBarSelected = onBarSelected,
         initialBalance = stepper(
-            label = EarnCalculatorTexts.initialBalance,
+            label = resourceReference(R.string.earn_calculator_initial_balance),
             value = input.initialFiat.wholeAmount(appCurrency),
             canDecrease = input.canDecreaseInitial,
             canIncrease = input.canIncreaseInitial,
             onStep = onInitialStep,
         ),
         monthlyTopUp = stepper(
-            label = EarnCalculatorTexts.monthlyTopUp,
+            label = resourceReference(R.string.earn_calculator_monthly_top_up),
             value = input.monthlyTopUpFiat.wholeAmount(appCurrency),
             canDecrease = input.canDecreaseTopUp,
             canIncrease = input.canIncreaseTopUp,
@@ -64,15 +67,26 @@ internal class EarnCalculatorConverter @Inject constructor() {
     )
 
     private fun horizonSelect(selected: EarnHorizon, onSelect: (EarnHorizon) -> Unit) = EarnHorizonSelectUM(
-        selected = EarnCalculatorTexts.horizon(selected),
+        selected = horizonText(selected),
         items = EarnHorizon.entries.map { horizon ->
             EarnHorizonItemUM(
-                label = EarnCalculatorTexts.horizon(horizon),
+                label = horizonText(horizon),
                 isSelected = horizon == selected,
                 onClick = { onSelect(horizon) },
             )
         }.toImmutableList(),
     )
+
+    private fun horizonText(horizon: EarnHorizon): TextReference = if (horizon.months % MONTHS_IN_YEAR == 0) {
+        val years = horizon.months / MONTHS_IN_YEAR
+        pluralReference(R.plurals.earn_calculator_years, count = years, formatArgs = wrappedList(years))
+    } else {
+        pluralReference(
+            id = R.plurals.earn_calculator_months,
+            count = horizon.months,
+            formatArgs = wrappedList(horizon.months),
+        )
+    }
 
     private fun bars(result: EarnProjectionResult, appCurrency: AppCurrency): List<EarnProjectionBarUM> {
         val points = result.points.sampled()
@@ -100,9 +114,9 @@ internal class EarnCalculatorConverter @Inject constructor() {
         val months = horizon.months * step / AXIS_LABELS_COUNT
 
         if (months % MONTHS_IN_YEAR == 0) {
-            EarnCalculatorTexts.axisYears(months / MONTHS_IN_YEAR)
+            resourceReference(R.string.earn_calculator_axis_years, wrappedList(months / MONTHS_IN_YEAR))
         } else {
-            EarnCalculatorTexts.axisMonths(months)
+            resourceReference(R.string.earn_calculator_axis_months, wrappedList(months))
         }
     }
 
@@ -118,8 +132,8 @@ internal class EarnCalculatorConverter @Inject constructor() {
         value = stringReference(value),
         isMinusEnabled = canDecrease,
         isPlusEnabled = canIncrease,
-        minusDescription = EarnCalculatorTexts.decrease(label),
-        plusDescription = EarnCalculatorTexts.increase(label),
+        minusDescription = resourceReference(R.string.earn_calculator_decrease_accessibility, wrappedList(label)),
+        plusDescription = resourceReference(R.string.earn_calculator_increase_accessibility, wrappedList(label)),
         onMinus = { onStep(-1) },
         onPlus = { onStep(1) },
     )
