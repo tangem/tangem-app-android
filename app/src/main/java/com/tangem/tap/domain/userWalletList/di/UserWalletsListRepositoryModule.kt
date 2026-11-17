@@ -25,6 +25,7 @@ import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -36,6 +37,7 @@ import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysStoreDecor
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
+import com.tangem.tap.domain.userWalletList.utils.HotWalletIdMoshiAdapter
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -147,6 +149,7 @@ internal object UserWalletsListRepositoryModule {
             .add(TangemSdkAdapter.DateAdapter())
             .add(TangemSdkAdapter.DerivationNodeAdapter())
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
+            .add(HotWalletId::class.java, HotWalletIdMoshiAdapter.nullSafe())
             .add(persistedModelGuard)
             .addLast(KotlinJsonAdapterFactory())
             .build()
