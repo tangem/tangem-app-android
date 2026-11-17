@@ -158,7 +158,7 @@ internal class DefaultEarnRepository(
 
     override suspend fun getBestOffer(type: EarnType): Either<Throwable, EarnToken?> = Either.catch {
         val apiType = when (type) {
-            EarnType.STAKING -> "staking"
+            EarnType.STAKING -> STAKING_TYPE
             EarnType.YIELD -> YIELD_TYPE
         }
         getFirstEarnPage(type = apiType, limit = 1).items.firstOrNull()?.let(EarnTokenConverter::convert)
@@ -209,6 +209,7 @@ internal class DefaultEarnRepository(
         private const val INITIAL_BATCH_KEY = 0
         private const val CATALOG_PAGE_SIZE = 50
         private const val YIELD_OFFERS_LIMIT = 20
+        private const val STAKING_TYPE = "staking"
         private const val YIELD_TYPE = "yield"
         private const val GROSS_APY_TYPE = "gross"
     }
