@@ -1388,7 +1388,7 @@
   <string name="mcp_swap_intent_processed_subtitle">Scambia %1$s con %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">È necessario aggiornare a %1$s prima di creare un portafoglio mobile</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Il portafoglio mobile richiede %1$s o versione successiva</string>
-  <string name="money_account_add_funds_bank_description">Ricezione di USD da un conto bancario via ACH/Wire o SPEI</string>
+  <string name="money_account_add_funds_bank_description">Ricevi USD da banche USA tramite ACH o MXN da banche messicane tramite SPEI</string>
   <string name="money_account_add_funds_receive_description">Invio di USDC su Polygon all’indirizzo del conto</string>
   <string name="money_account_add_funds_swap_description">Ricarica del conto in USD con le criptovalute del wallet</string>
   <string name="money_account_balance_unavailable_description">Si è verificato un problema nel caricamento del saldo. Riprovi più tardi</string>
@@ -1401,7 +1401,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">Si apre dopo il deposito</string>
   <string name="money_account_main_status_dialog_activating_description">Stiamo preparando il tuo conto. Potrebbe volerci un po’ di tempo</string>
-  <string name="money_account_main_status_dialog_activating_title">Creazione del tuo conto bancario in corso</string>
+  <string name="money_account_main_status_dialog_activating_title">Creazione del tuo conto in USD</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Stiamo lavorando per espanderci in altre regioni. Hai bisogno di aiuto?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Stiamo ampliando la copertura ad altre regioni. Serve aiuto? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Non ancora disponibile nella tua regione</string>
@@ -1418,7 +1418,7 @@
   <string name="money_account_main_status_verification">Verifica in corso…</string>
   <string name="money_account_onboarding_currency_card_caption">Valuta del conto</string>
   <string name="money_account_onboarding_description">Funziona come un normale conto bancario. Basato sulle criptovalute e interamente sotto il Suo controllo.</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay è una società di tecnologia finanziaria, non una banca. I servizi bancari sono forniti da SSB, membro FDIC. I fondi depositati presso SSB sono idonei alla copertura assicurativa FDIC fino a 250.000 USD per depositante, per banca assicurata, nel rispetto delle limitazioni applicabili e delle norme FDIC.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay non è una banca. Le coordinate del conto sono fornite da SSB Bank. I fondi sono detenuti come USDC, non come depositi presso SSB Bank. USDC non è assicurato dalla FDIC.</string>
   <string name="money_account_onboarding_earn_card_caption">Rendimenti</string>
   <string name="money_account_onboarding_fees_error">Impossibile caricare le commissioni.\nToccare per ricaricare</string>
   <string name="money_account_onboarding_fees_notice">I bonifici SWIFT non sono supportati. Gli importi inviati saranno restituiti</string>
@@ -2830,7 +2830,7 @@
   <string name="tangempay_tangem_visa_card">Spendi le tue crypto nel mondo reale</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Riceva USD da un conto bancario tramite ACH/Wire</string>
+  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario USA tramite ACH</string>
   <string name="tangempay_topup_bank_transfer_pending_body">Creazione delle tue coordinate bancarie...</string>
   <string name="tangempay_topup_bank_transfer_title">Da un conto bancario</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
@@ -2858,7 +2858,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Pagamenti</string>
-  <string name="tangempay_unified_onboarding_payments_title">Bonifici ACH e bancari per ogni giorno</string>
+  <string name="tangempay_unified_onboarding_payments_title">Bonifici bancari per ogni giorno</string>
   <string name="tangempay_unified_onboarding_plan_caption">Un solo piano</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic è gratuito.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus copre entrambi e offre molto di più</string>

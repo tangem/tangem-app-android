@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="hw_upgrade_to_cold_badge">콜드 지갑으로 업그레이드</string>
   <string name="money_account_add_funds_bank_description">은행 계좌에서 ACH/Wire 또는 SPEI로 USD 수취</string>
   <string name="money_account_add_funds_receive_description">Polygon 네트워크의 USDC를 계좌 주소로 전송</string>
   <string name="money_account_add_funds_swap_description">지갑의 암호화폐로 USD 계좌에 입금</string>

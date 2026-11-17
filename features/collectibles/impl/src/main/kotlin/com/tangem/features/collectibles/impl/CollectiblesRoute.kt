@@ -29,4 +29,7 @@ internal sealed interface CollectiblesRoute : Route {
 
     @Serializable
     data object PackOpenFailed : CollectiblesRoute
+
+    @Serializable
+    data object Inventory : CollectiblesRoute
 }
