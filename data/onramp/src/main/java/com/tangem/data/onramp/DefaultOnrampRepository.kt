@@ -86,8 +86,6 @@ internal class DefaultOnrampRepository(
 
     private val countryByIpMutex = Mutex()
 
-    @Volatile
-    private var countryByIpFetches = 0L
     private val currencyConverter = CurrencyConverter()
     private val countryConverter = CountryConverter(currencyConverter)
     private val statusConverter = StatusConverter(moshi)
@@ -136,10 +134,8 @@ internal class DefaultOnrampRepository(
 
     override suspend fun getCountryByIp(userWallet: UserWallet, fromCache: Boolean): OnrampCountry =
         withContext(dispatchers.io) {
-            val fetchesBeforeWaiting = countryByIpFetches
             countryByIpMutex.withLock {
-                val isLookupFinishedWhileWaiting = countryByIpFetches != fetchesBeforeWaiting
-                if (fromCache || isLookupFinishedWhileWaiting) {
+                if (fromCache) {
                     val country = onrampCurrentCountryByIPStore.getSyncOrNull()
 
                     if (country != null) {
@@ -156,11 +152,16 @@ internal class DefaultOnrampRepository(
                 val country = countryConverter.convert(response)
 
                 onrampCurrentCountryByIPStore.store(country)
-                countryByIpFetches++
 
                 country
             }
         }
+
+    override suspend fun getCachedCountryByIp(): OnrampCountry? = withContext(dispatchers.io) {
+        countryByIpMutex.withLock {
+            onrampCurrentCountryByIPStore.getSyncOrNull()
+        }
+    }
 
     override suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus = withContext(dispatchers.io) {
         val response = onrampApi.getStatus(
