@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.impl.tokenactions.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
+import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -14,7 +15,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import org.junit.jupiter.api.Test
@@ -127,7 +130,48 @@ internal class TokenActionsModelTest {
         model.onDestroy()
     }
 
-    private fun createModel(scheduler: TestCoroutineScheduler): TokenActionsModel {
+    @Test
+    fun `GIVEN transfer context WHEN data emitted THEN no IP lookup and no banner input`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { resolver.resolveRestrictedRegionName(userWallet) } returns "United Kingdom"
+
+        // Act
+        val model = createModel(scheduler, context = TokenActionsContext.Transfer)
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(builtInputs.last().onrampRestrictedRegionName).isNull()
+        coVerify(exactly = 0) { resolver.resolveRestrictedRegionName(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN cold token data WHEN model built THEN upstream collected once`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { resolver.resolveRestrictedRegionName(userWallet) } returns null
+        var collections = 0
+        val coldData = flow {
+            collections++
+            emit(firstToken)
+        }
+
+        // Act
+        val model = createModel(scheduler, tokenData = coldData)
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(collections).isEqualTo(1)
+        assertThat(builtInputs).isNotEmpty()
+        model.onDestroy()
+    }
+
+    private fun createModel(
+        scheduler: TestCoroutineScheduler,
+        context: TokenActionsContext = TokenActionsContext.AddFunds,
+        tokenData: Flow<CryptoCurrencyData> = data,
+    ): TokenActionsModel {
         val appCurrency: GetSelectedAppCurrencyUseCase = mockk {
             every { invokeOrDefault() } returns flowOf(AppCurrency.Default)
         }
@@ -142,7 +186,7 @@ internal class TokenActionsModelTest {
         }
         return TokenActionsModel(
             paramsContainer = MutableParamsContainer(
-                TokenActionsComponent.Params(data = data, callbacks = mockk(relaxed = true)),
+                TokenActionsComponent.Params(data = tokenData, callbacks = mockk(relaxed = true), context = context),
             ),
             getSelectedAppCurrencyUseCase = appCurrency,
             getBalanceHidingSettingsUseCase = balanceHiding,

@@ -2,7 +2,9 @@ package com.tangem.features.commonfeatures.impl.tokenactions.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
+import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -60,19 +62,27 @@ internal class TokenActionsModel @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     ).apply { tryEmit(Unit) }
 
+    private val cryptoCurrencyData: SharedFlow<CryptoCurrencyData> = params.data
+        .flowOn(dispatchers.default)
+        .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val onrampRestrictedRegionName: StateFlow<String?> = combine(
-        params.data.distinctUntilChangedBy { it.userWallet.walletId to it.status.currency.id },
-        regionRefreshRequests,
-    ) { data, _ -> data.userWallet }
-        .mapLatest { onrampRegionRestrictionResolver.resolveRestrictedRegionName(it) }
-        .flowOn(dispatchers.io)
-        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val onrampRestrictedRegionName: Flow<String?> = if (params.context == TokenActionsContext.AddFunds) {
+        combine(
+            cryptoCurrencyData.distinctUntilChangedBy { it.userWallet.walletId to it.status.currency.id },
+            regionRefreshRequests,
+        ) { data, _ -> data.userWallet }
+            .mapLatest { onrampRegionRestrictionResolver.resolveRestrictedRegionName(it) }
+            .flowOn(dispatchers.io)
+            .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
+    } else {
+        flowOf(null)
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<TokenActionsUM?> =
         combine(
-            flow = params.data,
+            flow = cryptoCurrencyData,
             flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
             flow3 = params.bottomAction,
             flow4 = onrampRestrictedRegionName,
