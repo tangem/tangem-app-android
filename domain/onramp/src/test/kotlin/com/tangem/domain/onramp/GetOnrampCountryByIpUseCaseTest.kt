@@ -39,7 +39,7 @@ internal class GetOnrampCountryByIpUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(freshCountry.right())
         coVerify(exactly = 1) { repository.getCountryByIp(userWallet, fromCache = false) }
-        coVerify(exactly = 0) { repository.getCountryByIp(userWallet, fromCache = true) }
+        coVerify(exactly = 0) { repository.getCachedCountryByIp() }
     }
 
     @ParameterizedTest
@@ -48,24 +48,25 @@ internal class GetOnrampCountryByIpUseCaseTest {
         // Arrange
         val cachedCountry = createCountry(isOnrampAvailable = isOnrampAvailable)
         coEvery { repository.getCountryByIp(userWallet) } throws IllegalStateException("Offline")
-        coEvery { repository.getCountryByIp(userWallet, fromCache = true) } returns cachedCountry
+        coEvery { repository.getCachedCountryByIp() } returns cachedCountry
 
         // Act
         val actual = useCase(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(cachedCountry.right())
-        coVerify(exactly = 1) { repository.getCountryByIp(userWallet, fromCache = true) }
+        coVerify(exactly = 1) { repository.getCachedCountryByIp() }
         coVerify(exactly = 0) { repository.getDefaultCountrySync() }
         verify(exactly = 0) { errorResolver.resolve(any()) }
     }
 
     @Test
-    fun `GIVEN both country lookups fail WHEN invoke THEN domain error is returned`() = runTest {
+    fun `GIVEN failed lookup and empty cache WHEN invoke THEN original error is returned without retry`() = runTest {
         // Arrange
         val failure = IllegalStateException("No country")
         val error = OnrampError.DomainError("No country")
-        coEvery { repository.getCountryByIp(userWallet, any()) } throws failure
+        coEvery { repository.getCountryByIp(userWallet) } throws failure
+        coEvery { repository.getCachedCountryByIp() } returns null
         every { errorResolver.resolve(failure) } returns error
 
         // Act
@@ -73,6 +74,9 @@ internal class GetOnrampCountryByIpUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(error.left())
+        coVerify(exactly = 1) { repository.getCountryByIp(userWallet, any()) }
+        coVerify(exactly = 1) { repository.getCachedCountryByIp() }
+        verify(exactly = 1) { errorResolver.resolve(failure) }
     }
 
     @ParameterizedTest
@@ -82,7 +86,7 @@ internal class GetOnrampCountryByIpUseCaseTest {
         val cancellation = CancellationException("Cancelled")
         coEvery { repository.getCountryByIp(userWallet) } throws
             if (cancelFallback) IllegalStateException("Offline") else cancellation
-        coEvery { repository.getCountryByIp(userWallet, fromCache = true) } throws cancellation
+        coEvery { repository.getCachedCountryByIp() } throws cancellation
 
         // Act
         val actual = runCatching { useCase(userWallet) }.exceptionOrNull()
@@ -90,7 +94,7 @@ internal class GetOnrampCountryByIpUseCaseTest {
         // Assert
         assertThat(actual).isSameInstanceAs(cancellation)
         coVerify(exactly = if (cancelFallback) 1 else 0) {
-            repository.getCountryByIp(userWallet, fromCache = true)
+            repository.getCachedCountryByIp()
         }
         verify(exactly = 0) { errorResolver.resolve(any()) }
     }
