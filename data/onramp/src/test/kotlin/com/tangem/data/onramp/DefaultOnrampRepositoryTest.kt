@@ -191,35 +191,60 @@ internal class DefaultOnrampRepositoryTest {
     }
 
     @Test
-    fun `GIVEN overlapping IP requests WHEN next lookup fails THEN fallback retains newer restriction`() = runTest {
+    fun `GIVEN overlapping IP requests WHEN first lookup completes THEN both callers share one request`() = runTest {
         // Arrange
-        val converter = CountryConverter(CurrencyConverter())
         val restricted = country.copy(isOnrampAvailable = false)
-        val olderResponse = CompletableDeferred<ApiResponse<OnrampCountryDTO>>()
-        val newerResponse = CompletableDeferred<ApiResponse<OnrampCountryDTO>>()
-        var requests = 0
-        coEvery { api.getCountryByIp("0011", null) } coAnswers {
-            if (++requests == 1) olderResponse.await() else newerResponse.await()
-        }
-        val useCase = GetOnrampCountryByIpUseCase(repository, mockk())
-        val older = async { useCase(wallet) }
+        val response = CompletableDeferred<ApiResponse<OnrampCountryDTO>>()
+        coEvery { api.getCountryByIp("0011", null) } coAnswers { response.await() }
+        val first = async { repository.getCountryByIp(wallet, fromCache = false) }
         runCurrent()
-        val newer = async { useCase(wallet) }
+        val second = async { repository.getCountryByIp(wallet, fromCache = false) }
         runCurrent()
 
         // Act
-        newerResponse.complete(ApiResponse.Success(converter.convertBack(restricted)))
-        runCurrent()
-        olderResponse.complete(ApiResponse.Success(converter.convertBack(country)))
-        older.await()
-        newer.await()
+        response.complete(ApiResponse.Success(CountryConverter(CurrencyConverter()).convertBack(restricted)))
+
+        // Assert
+        assertThat(first.await()).isEqualTo(restricted)
+        assertThat(second.await()).isEqualTo(restricted)
+        coVerify(exactly = 1) { api.getCountryByIp("0011", null) }
+    }
+
+    @Test
+    fun `GIVEN finished IP lookup WHEN screen entered again THEN a fresh request is made`() = runTest {
+        // Arrange
+        val restricted = country.copy(isOnrampAvailable = false)
+        val converter = CountryConverter(CurrencyConverter())
+        coEvery { api.getCountryByIp("0011", null) } returnsMany listOf(
+            ApiResponse.Success(converter.convertBack(country)),
+            ApiResponse.Success(converter.convertBack(restricted)),
+        )
+        repository.getCountryByIp(wallet, fromCache = false)
+
+        // Act
+        val actual = repository.getCountryByIp(wallet, fromCache = false)
+
+        // Assert
+        assertThat(actual).isEqualTo(restricted)
+        coVerify(exactly = 2) { api.getCountryByIp("0011", null) }
+    }
+
+    @Test
+    fun `GIVEN restricted IP country cached WHEN next lookup fails THEN fallback keeps the restriction`() = runTest {
+        // Arrange
+        val restricted = country.copy(isOnrampAvailable = false)
+        coEvery { api.getCountryByIp("0011", null) } returns
+            ApiResponse.Success(CountryConverter(CurrencyConverter()).convertBack(restricted))
+        val useCase = GetOnrampCountryByIpUseCase(repository, mockk())
+        useCase(wallet)
         coEvery { api.getCountryByIp("0011", null) } throws IllegalStateException("Offline")
+
+        // Act
         val fallback = useCase(wallet)
 
         // Assert
         assertThat(fallback.getOrNull()).isEqualTo(restricted)
-        assertThat(countryByIp.getSyncOrNull()).isEqualTo(restricted)
-        coVerify(exactly = 3) { api.getCountryByIp("0011", null) }
+        coVerify(exactly = 2) { api.getCountryByIp("0011", null) }
     }
 
     @Test
