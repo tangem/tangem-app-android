@@ -246,6 +246,12 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val awaitingDepositBannerSubtitle: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_subtitle))
+        useUnmergedTree = true
+    }
+
     fun awaitingDepositBannerTitle(planFee: String): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_title, planFee))

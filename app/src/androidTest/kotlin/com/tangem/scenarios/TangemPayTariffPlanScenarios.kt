@@ -44,6 +44,7 @@ private const val HISTORY_AFTER_PLAN_FEE_STATE = "AfterPlanFee"
 private const val PLAN_BASIC_STATE = "Basic"
 
 private const val PLACE_ORDER_ENDPOINT = "/bff-v2/v1/order"
+private const val PLAN_ORDER_ENDPOINT = "/bff-v2/v1/order/mock-tariff-plan-order-001"
 private const val CANCEL_ORDER_ENDPOINT = "/bff-v2/v1/order/mock-tariff-plan-order-001/cancel"
 private const val PENDING_TRANSITION_ENDPOINT = "/bff-v2/v1/customer/tariff-plan/pending-transition"
 private const val CANCEL_PENDING_TRANSITION_ENDPOINT = "/bff-v2/v1/customer/tariff-plan/pending-transition/cancel"
@@ -166,6 +167,8 @@ fun drainTangemPayPlanOrders() {
 }
 
 fun getTangemPayPlanOrderRequestCount(): Int = getWireMockRequestCount("POST", PLACE_ORDER_ENDPOINT)
+
+fun getTangemPayPlanOrderPollCount(): Int = getWireMockRequestCount("GET", PLAN_ORDER_ENDPOINT)
 
 fun getTangemPayCancelPlanOrderRequestCount(): Int = getWireMockRequestCount("POST", CANCEL_ORDER_ENDPOINT)
 

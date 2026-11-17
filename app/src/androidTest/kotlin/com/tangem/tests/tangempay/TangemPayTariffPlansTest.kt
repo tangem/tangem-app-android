@@ -64,6 +64,8 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     private val noFeeAppliedPoint = getResourceString(CoreResR.string.tangempay_select_plan_confirm_point_no_fee)
     private val stayOnPlusButton =
         getResourceString(CoreResR.string.tangempay_current_plan_stay_button, plusPlan)
+    private val cancelPlusButton =
+        getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_cancel_button, plusPlan, basicPlan)
     private val awaitingPlanFeeNotification =
         getResourceString(CoreResR.string.tangempay_current_plan_awaiting_deposit_notification, plusPlan)
     private val upgradeConfirmTitle =
@@ -238,6 +240,9 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
+            step("Assert '$basicPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) } }
+            }
             step("Swipe to the '$plusPlan' plan") {
                 onTangemPaySelectPlanScreen { scrollToPlanAt(index = 1) }
             }
@@ -250,13 +255,31 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Put the plan fee order in 'awaiting deposit' in WireMock") {
                 stageTangemPayPlanFeeAwaitingDeposit()
             }
+            val ordersBefore = getTangemPayPlanOrderRequestCount()
+            val orderPollsBefore = getTangemPayPlanOrderPollCount()
             step("Click on 'Select' button") {
                 onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
+            }
+            step("Assert the plan order request was sent once") {
+                assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
+            }
+            step("Assert the plan order is polled") {
+                awaitSuccess {
+                    if (getTangemPayPlanOrderPollCount() <= orderPollsBefore) {
+                        throw AssertionError("The plan order should be polled after it is placed")
+                    }
+                }
             }
             step("Assert 'Top-up your account' banner is displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayMainScreen { awaitingDepositBannerTitle(plusFee).assertIsDisplayed() }
                 }
+            }
+            step("Assert 'Top-up your account' banner subtitle is displayed") {
+                onTangemPayMainScreen { awaitingDepositBannerSubtitle.assertIsDisplayed() }
+            }
+            step("Assert 'Add funds' banner button is displayed") {
+                onTangemPayMainScreen { awaitingDepositBannerAddFundsButton.assertIsDisplayed() }
             }
             step("Assert 'Inactive' badge is displayed") {
                 onTangemPayMainScreen { inactiveBadge.assertIsDisplayed() }
@@ -270,7 +293,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                     }
                 }
             }
-            step("Click on 'Cancel $plusPlan, move to $basicPlan' button") {
+            step("Assert '$cancelPlusButton' button is displayed") {
+                onTangemPayCurrentPlanScreen { notificationButtonWithText(cancelPlusButton).assertIsDisplayed() }
+            }
+            step("Click on '$cancelPlusButton' button") {
                 onTangemPayCurrentPlanScreen { notificationButton.clickWithAssertion() }
             }
             // The cancel stub only flips the polled order; the list the notification reads is drained here.
