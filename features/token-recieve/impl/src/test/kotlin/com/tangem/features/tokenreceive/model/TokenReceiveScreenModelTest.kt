@@ -48,6 +48,10 @@ internal class TokenReceiveScreenModelTest {
         type = ReceiveAddress.Type.Primary.Default(displayName = stringReference("Default")),
     )
     private val ensAddress = ReceiveAddress(value = "cryptomonster.eth", type = ReceiveAddress.Type.Ens)
+    private val legacyAddress = ReceiveAddress(
+        value = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+        type = ReceiveAddress.Type.Primary.Legacy(displayName = stringReference("Legacy")),
+    )
 
     @BeforeEach
     fun resetMocks() {
@@ -115,6 +119,22 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onShareClick(defaultAddress.value) }
+        screenModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN legacy page selected WHEN share and copy address THEN both take the legacy address`() {
+        // Arrange
+        val screenModel = createModel(addresses = listOf(defaultAddress, legacyAddress))
+
+        // Act
+        screenModel.state.value.onAddressPageChange(1)
+        screenModel.onShareClick()
+        screenModel.state.value.onCopyAddressClick()
+
+        // Assert
+        verify(exactly = 1) { callback.onShareClick(legacyAddress.value) }
+        verify(exactly = 1) { callback.onCopyClick(legacyAddress, TokenReceiveCopyActionSource.Receive) }
         screenModel.onDestroy()
     }
 

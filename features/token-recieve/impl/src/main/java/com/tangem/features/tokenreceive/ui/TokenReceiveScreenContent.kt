@@ -31,6 +31,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.features.tokenreceive.entity.ReceiveExtrasHint
 import com.tangem.features.tokenreceive.impl.R
+import com.tangem.features.tokenreceive.ui.state.ReceiveAddressUM
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -48,16 +49,22 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Header(state = state)
-            SpacerH(24.dp)
-            ReceiveAddressCard(
-                address = state.address,
-                iconState = state.iconState,
-                extrasHint = state.extrasHint,
-                ensName = state.ensName,
-                networkNotice = state.networkNotice,
-                onCopyAddressClick = state.onCopyAddressClick,
-                onCopyEnsClick = state.onCopyEnsClick,
-            )
+            val reveal = rememberNoticeReveal()
+            if (state.addresses.size > 1) {
+                SpacerH(16.dp)
+                ReceiveAddressPager(state = state, reveal = reveal)
+            } else {
+                SpacerH(24.dp)
+                ReceiveAddressCard(
+                    address = state.addresses.first(),
+                    iconState = state.iconState,
+                    extrasHint = state.extrasHint,
+                    ensName = state.ensName,
+                    networkNotice = state.networkNotice,
+                    reveal = reveal,
+                    onCopyEnsClick = state.onCopyEnsClick,
+                )
+            }
             if (state.warnings.isNotEmpty()) {
                 Column(
                     modifier = Modifier
@@ -121,16 +128,30 @@ private fun Preview_TokenReceiveScreenContent() {
     TangemThemePreviewRedesign {
         TokenReceiveScreenContent(
             state = ReceiveScreenUM(
-                title = stringReference("Tether • USDT"),
-                subtitle = stringReference("Ethereum network • ERC20"),
+                title = stringReference("Bitcoin • BTC"),
+                subtitle = stringReference("Bitcoin network"),
                 iconState = CurrencyIconState.Loading,
-                address = "0x3987734c3379A3E2e3eF21c3C8090Cc7aBCD6260",
-                ensName = "cryptomonster.eth",
-                extrasHint = ReceiveExtrasHint.NoTag,
-                networkNotice = stringReference("Send only USDT on Ethereum (ERC20) network"),
+                addresses = persistentListOf(
+                    ReceiveAddressUM(
+                        value = "bc1q44yecmh2ct4u6rgqrzhqvwc636ej2r240yqts6",
+                        label = stringReference("Bitcoin address"),
+                        isDynamic = false,
+                        onCopyClick = {},
+                    ),
+                    ReceiveAddressUM(
+                        value = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                        label = stringReference("Legacy Bitcoin Address"),
+                        isDynamic = false,
+                        onCopyClick = {},
+                    ),
+                ),
+                ensName = null,
+                extrasHint = ReceiveExtrasHint.None,
+                networkNotice = stringReference("Send only BTC on Bitcoin network"),
                 warnings = persistentListOf(),
                 onCopyAddressClick = {},
                 onCopyEnsClick = {},
+                onAddressPageChange = {},
             ),
         )
     }

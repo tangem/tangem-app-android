@@ -17,9 +17,10 @@ import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -44,12 +45,13 @@ internal class TokenReceiveScreenModel @Inject constructor(
         warnings = params.warnings,
     )
 
-    val state: StateFlow<ReceiveScreenUM> = params.receiveState
-        .map(::createState)
+    private val selectedAddressIndex = MutableStateFlow(0)
+
+    val state: StateFlow<ReceiveScreenUM> = combine(params.receiveState, selectedAddressIndex, ::createState)
         .stateIn(
             scope = modelScope,
             started = SharingStarted.Eagerly,
-            initialValue = createState(params.receiveState.value),
+            initialValue = createState(params.receiveState.value, selectedAddressIndex.value),
         )
 
     init {
@@ -67,13 +69,16 @@ internal class TokenReceiveScreenModel @Inject constructor(
     }
 
     fun onShareClick() {
-        params.callback.onShareClick(state.value.address)
+        val addresses = state.value.addresses
+        params.callback.onShareClick(addresses[selectedAddressIndex.value.coerceIn(addresses.indices)].value)
     }
 
-    private fun createState(receiveState: TokenReceiveUM): ReceiveScreenUM = stateFactory.create(
+    private fun createState(receiveState: TokenReceiveUM, selectedIndex: Int): ReceiveScreenUM = stateFactory.create(
         addresses = receiveState.addresses,
+        selectedIndex = selectedIndex,
         onCopyAddressClick = ::copy,
         onCopyEnsClick = ::copy,
+        onAddressPageChange = { selectedAddressIndex.value = it },
     )
 
     private fun copy(address: ReceiveAddress) {

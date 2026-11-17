@@ -10,9 +10,11 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.Asset
 import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.tokenreceive.ui.state.ReceiveAddressUM
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
 import com.tangem.lib.crypto.receiveNetworkLabel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")
 internal class ReceiveScreenStateFactory(
@@ -30,16 +32,26 @@ internal class ReceiveScreenStateFactory(
 
     fun create(
         addresses: List<ReceiveAddress>,
+        selectedIndex: Int,
         onCopyAddressClick: (ReceiveAddress) -> Unit,
         onCopyEnsClick: (ReceiveAddress) -> Unit,
+        onAddressPageChange: (Int) -> Unit,
     ): ReceiveScreenUM {
-        val address = addresses.first { it.type is ReceiveAddress.Type.Primary }
+        val primaries = addresses.filter { it.type is ReceiveAddress.Type.Primary }
+        val selected = primaries[selectedIndex.coerceIn(primaries.indices)]
         val ens = addresses.firstOrNull { it.type == ReceiveAddress.Type.Ens }
         return ReceiveScreenUM(
             title = title(),
             subtitle = subtitle(),
             iconState = iconState,
-            address = address.value,
+            addresses = primaries.map { address ->
+                ReceiveAddressUM(
+                    value = address.value,
+                    label = label(address.type as ReceiveAddress.Type.Primary, isSingle = primaries.size == 1),
+                    isDynamic = address.type is ReceiveAddress.Type.Primary.Dynamic,
+                    onCopyClick = { onCopyAddressClick(address) },
+                )
+            }.toImmutableList(),
             ensName = ens?.value,
             extrasHint = receiveExtrasHint(
                 shouldShowMemoDisclaimer = shouldShowMemoDisclaimer,
@@ -47,9 +59,23 @@ internal class ReceiveScreenStateFactory(
             ),
             networkNotice = networkNotice(),
             warnings = warnings,
-            onCopyAddressClick = { onCopyAddressClick(address) },
+            onCopyAddressClick = { onCopyAddressClick(selected) },
             onCopyEnsClick = { ens?.let(onCopyEnsClick) },
+            onAddressPageChange = onAddressPageChange,
         )
+    }
+
+    private fun label(type: ReceiveAddress.Type.Primary, isSingle: Boolean): TextReference? = when (type) {
+        is ReceiveAddress.Type.Primary.Dynamic -> resourceReference(R.string.dynamic_addresses)
+        is ReceiveAddress.Type.Primary.Legacy -> resourceReference(
+            id = R.string.domain_receive_assets_legacy_address,
+            formatArgs = wrappedList(cryptoCurrency.name),
+        )
+        is ReceiveAddress.Type.Primary.Default -> if (isSingle) {
+            null
+        } else {
+            resourceReference(R.string.domain_receive_assets_network_name_address, wrappedList(cryptoCurrency.name))
+        }
     }
 
     private fun title(): TextReference {
