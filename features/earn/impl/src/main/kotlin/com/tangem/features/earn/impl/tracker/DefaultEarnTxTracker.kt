@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.tracker
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.features.earn.impl.analytics.EarnTxResultAnalyticsEvent
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
@@ -14,6 +15,7 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -31,11 +33,13 @@ import kotlin.time.Duration.Companion.seconds
  * twice. A record whose result is unknown (the wallet is locked, the network is down, the polling gave up) stays for
  * the next [resume].
  */
+@Suppress("LongParameterList")
 @Singleton
 internal class DefaultEarnTxTracker @Inject constructor(
     private val store: EarnTxStore,
     private val registry: EarnProductsRegistry,
     private val sessionFactories: Map<String, @JvmSuppressWildcards EarnSession.Factory>,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val accountListSupplier: SingleAccountListSupplier,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appScope: AppCoroutineScope,
@@ -81,11 +85,22 @@ internal class DefaultEarnTxTracker @Inject constructor(
             return
         }
 
+        val wallets = withTimeoutOrNull(CURRENCY_TIMEOUT) {
+            userWalletsListRepository.userWallets.filterNotNull().first()
+        }
+        if (wallets == null) {
+            keep(ref, reason = "the wallets are not loaded")
+            return
+        }
+        // The account list of a removed wallet never emits, it is only retried, so a removed wallet is checked here
+        if (wallets.none { it.walletId == ref.userWalletId }) {
+            drop(ref, reason = "the wallet is removed")
+            return
+        }
+
         val accountList = withTimeoutOrNull(CURRENCY_TIMEOUT) { accountListSupplier(ref.userWalletId).first() }
         if (accountList == null) {
-            TangemLogger.i(
-                "Earn tracker: wallet of a ${product.id.value} record is unavailable, kept for the next start",
-            )
+            keep(ref, reason = "the account list of the wallet is unavailable")
             return
         }
         val currency = accountList.getCryptoCurrency(ref.currencyId.value).getOrNull()
@@ -113,7 +128,7 @@ internal class DefaultEarnTxTracker @Inject constructor(
                 params = ref.analytics.params,
             )
             TxInfo.TransactionStatus.Unconfirmed, null -> {
-                TangemLogger.i("Earn tracker: result of ${product.id.value} is unknown, kept for the next start")
+                keep(ref, reason = "the result is unknown")
                 return
             }
         }
@@ -125,6 +140,10 @@ internal class DefaultEarnTxTracker @Inject constructor(
     private suspend fun drop(ref: EarnTxRef, reason: String) {
         store.remove(ref.id)
         TangemLogger.e("Earn tracker: ${ref.productId.value} record dropped, $reason")
+    }
+
+    private fun keep(ref: EarnTxRef, reason: String) {
+        TangemLogger.i("Earn tracker: ${ref.productId.value} record kept for the next start, $reason")
     }
 
     private suspend fun claim(id: String): Boolean = mutex.withLock { trackedIds.add(id) }

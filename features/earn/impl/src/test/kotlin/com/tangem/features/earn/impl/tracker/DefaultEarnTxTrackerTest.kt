@@ -8,9 +8,11 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.network.TxInfo.TransactionStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.impl.analytics.EarnTxResultAnalyticsEvent
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
@@ -38,6 +40,7 @@ import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -58,6 +61,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class DefaultEarnTxTrackerTest {
 
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val accountListSupplier: SingleAccountListSupplier = mockk()
     private val session: EarnSession = mockk()
     private val sessionFactory: EarnSession.Factory = mockk()
@@ -75,9 +79,10 @@ internal class DefaultEarnTxTrackerTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(analyticsEventHandler, accountListSupplier, session, sessionFactory)
+        clearMocks(analyticsEventHandler, userWalletsListRepository, accountListSupplier, session, sessionFactory)
         mockkObject(TangemLogger)
         every { sessionFactory.create(any()) } returns session
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet(USER_WALLET_ID)))
         every { accountListSupplier(USER_WALLET_ID) } returns flowOf(accountListWith(currency))
     }
 
@@ -247,12 +252,12 @@ internal class DefaultEarnTxTrackerTest {
     }
 
     @Test
-    fun `GIVEN the account list never comes WHEN resume THEN no event and the record stays`() = runTest {
+    fun `GIVEN the wallets never load WHEN resume THEN no event and the record stays`() = runTest {
         // Arrange
         val store = createStore()
         store.add(ref)
         val tracker = createTracker(store)
-        every { accountListSupplier(USER_WALLET_ID) } returns flow { awaitCancellation() }
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(null)
 
         // Act
         tracker.resume()
@@ -261,10 +266,32 @@ internal class DefaultEarnTxTrackerTest {
         runCurrent()
 
         // Assert
+        verify(exactly = 0) { accountListSupplier(any<UserWalletId>()) }
         verify(exactly = 0) { session.track(any()) }
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
         assertThat(store.all()).containsExactly(ref)
     }
+
+    @Test
+    fun `GIVEN the wallet is present but its account list never comes WHEN resume THEN no event and the record stays`() =
+        runTest {
+            // Arrange
+            val store = createStore()
+            store.add(ref)
+            val tracker = createTracker(store)
+            every { accountListSupplier(USER_WALLET_ID) } returns flow { awaitCancellation() }
+
+            // Act
+            tracker.resume()
+            runCurrent()
+            advanceTimeBy(31.seconds)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { session.track(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            assertThat(store.all()).containsExactly(ref)
+        }
 
     @Test
     fun `GIVEN the account list timed out WHEN resume again with the wallet unlocked THEN the record is tracked`() =
@@ -347,6 +374,7 @@ internal class DefaultEarnTxTrackerTest {
         DropModel(name = "unknown product", dropped = createRef(id = "0xccc", productId = EarnProductId("vault"))),
         DropModel(name = "no session factory", dropped = createRef(id = "0xccc", productId = STAKING_ID)),
         DropModel(name = "no currency in the wallet", dropped = createRef(id = "0xccc", currencyId = otherCurrency.id)),
+        DropModel(name = "removed wallet", dropped = createRef(id = "0xccc", userWalletId = REMOVED_WALLET_ID)),
     )
 
     internal data class DropModel(val name: String, val dropped: EarnTxRef) {
@@ -357,6 +385,7 @@ internal class DefaultEarnTxTrackerTest {
         store = store,
         registry = EarnProductsRegistry(products = setOf(lending, staking), rateSources = emptySet()),
         sessionFactories = mapOf(LENDING_ID.value to sessionFactory),
+        userWalletsListRepository = userWalletsListRepository,
         accountListSupplier = accountListSupplier,
         analyticsEventHandler = analyticsEventHandler,
         appScope = TestAppCoroutineScope(this),
@@ -375,6 +404,8 @@ internal class DefaultEarnTxTrackerTest {
     private fun statuses(vararg values: TransactionStatus): Flow<EarnTxStatus> =
         flowOf(*values.map(::EarnTxStatus).toTypedArray())
 
+    private fun userWallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
+
     private fun accountListWith(currency: CryptoCurrency): AccountList =
         AccountList.empty(userWalletId = USER_WALLET_ID, cryptoCurrencies = listOf(currency))
 
@@ -388,11 +419,12 @@ internal class DefaultEarnTxTrackerTest {
         id: String,
         productId: EarnProductId = LENDING_ID,
         currencyId: CryptoCurrency.ID = currency.id,
+        userWalletId: UserWalletId = USER_WALLET_ID,
     ) = EarnTxRef(
         version = 1,
         productId = productId,
         id = id,
-        userWalletId = USER_WALLET_ID,
+        userWalletId = userWalletId,
         currencyId = currencyId,
         createdAt = Instant.parse("2030-01-01T00:00:00Z"),
         analytics = EarnTxAnalytics(
@@ -403,6 +435,7 @@ internal class DefaultEarnTxTrackerTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("0123456789abcdef")
+        val REMOVED_WALLET_ID = UserWalletId("fedcba9876543210")
         val LENDING_ID = EarnProductId("lending")
         val STAKING_ID = EarnProductId("staking")
         const val READ_DELAY_MILLIS = 100L
