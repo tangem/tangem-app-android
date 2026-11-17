@@ -170,6 +170,8 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="all_services_header_description">Everything available to you in one place.\nAdd what you need, when you need it.</string>
+  <string name="all_services_header_title">All services</string>
   <string name="all_services_title">Services</string>
   <string name="app_settings_access_code_warning">Set an access code to enable biometrics</string>
   <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
@@ -1418,6 +1420,9 @@
     <item quantity="one">Waiting for %d member</item>
     <item quantity="other">Waiting for %d members</item>
   </plurals>
+  <string name="joint_account_members_access_loss_all">If all members lose access to the wallet, the funds will be permanently lost</string>
+  <string name="joint_account_members_access_loss_any">If any member loses access to the wallet, the funds will be permanently lost</string>
+  <string name="joint_account_members_access_loss_some">If %1$s of %2$s members lose access to the wallet, the funds will be permanently lost</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d member</item>
     <item quantity="other">%d members</item>
@@ -1803,6 +1808,7 @@
   <string name="money_account_balance_unavailable_title">Balance unavailable</string>
   <string name="money_account_banner_proceed">Proceed</string>
   <string name="money_account_close_account">Close account</string>
+  <string name="money_account_main_details_button">Details</string>
   <string name="money_account_main_name">USD account</string>
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
@@ -1818,6 +1824,9 @@
   <string name="money_account_main_status_dialog_failed_title">We couldn\'t activate your account</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
+  <string name="money_account_main_status_dialog_not_started_description">Receive ACH transfers with your own US bank details. Separate balance, your card stays as it is. Ready in up to 2 days.</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Pay Virtual Account Terms</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">By tapping Activate, you agree to the\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Sorry, we couldn\'t verify your identity based on the information provided</string>
   <string name="money_account_main_status_dialog_verification_declined_title">We couldn\'t verify your identity</string>
   <string name="money_account_main_status_dialog_verification_description">This usually takes a few minutes. You can check the status below</string>
@@ -1834,6 +1843,7 @@
   <string name="money_account_onboarding_fees_provider">Provider</string>
   <string name="money_account_onboarding_fees_title">Fees</string>
   <string name="money_account_onboarding_secondary_button">Terms and fees</string>
+  <string name="money_account_onboarding_success_title">USD account is activating</string>
   <string name="money_account_onboarding_terms_link">Terms of Service</string>
   <string name="money_account_onboarding_terms_notice">By using the service, you agree to the provider’s %1$s</string>
   <string name="money_account_onboarding_title">Get a USD account</string>
