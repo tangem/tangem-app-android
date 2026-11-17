@@ -17,7 +17,11 @@ internal class EarnFlowNotificationsTest {
     @ProvideTestModels
     fun `GIVEN fee and wallet balance WHEN amount THEN fee exceeds balance card follows them`(model: FeeModel) {
         // Arrange
-        val state = state(fee = model.fee, feeStatus = model.feeStatus)
+        val state = state(
+            fee = model.fee,
+            feeStatus = model.feeStatus,
+            isAmountSubtractAvailable = model.isAmountSubtractAvailable,
+        )
 
         // Act
         val actual = EarnFlowNotifications.amount(state, isFromPosition = model.isFromPosition, onFeeReload = {})
@@ -61,16 +65,39 @@ internal class EarnFlowNotificationsTest {
             isFromPosition = false,
             fee = "0.0001",
             feeStatus = testStatus(amount = BigDecimal("0.00005")),
+            expected = listOf(feeExceedsBalance),
+        ),
+        FeeModel(
+            isFromPosition = false,
+            fee = "0.0001",
+            feeStatus = testStatus(amount = BigDecimal("0.0001")),
+            isAmountSubtractAvailable = true,
+            expected = listOf(feeExceedsBalance),
+        ),
+        FeeModel(
+            isFromPosition = false,
+            fee = "0.0001",
+            feeStatus = testStatus(amount = BigDecimal("0.0001")),
+            isAmountSubtractAvailable = false,
+            expected = emptyList(),
+        ),
+        FeeModel(
+            isFromPosition = false,
+            fee = "0.0001",
+            feeStatus = testStatus(amount = BigDecimal("0.0002")),
+            isAmountSubtractAvailable = true,
             expected = emptyList(),
         ),
     )
 
-    private fun state(fee: String, feeStatus: CryptoCurrencyStatus?) = EarnFlowState(
-        step = EarnFlowStep.Amount,
-        status = testStatus(),
-        feeStatus = feeStatus,
-        fee = testFeeContent(fee),
-    )
+    private fun state(fee: String, feeStatus: CryptoCurrencyStatus?, isAmountSubtractAvailable: Boolean = false) =
+        EarnFlowState(
+            step = EarnFlowStep.Amount,
+            status = testStatus(),
+            feeStatus = feeStatus,
+            fee = testFeeContent(fee),
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
+        )
 
     private val feeExceedsBalance = NotificationUM.Error.ExceedsBalance(
         networkIconId = testEthereum.networkIconResId,
@@ -85,5 +112,6 @@ internal class EarnFlowNotificationsTest {
         val fee: String,
         val feeStatus: CryptoCurrencyStatus?,
         val expected: List<NotificationUM>,
+        val isAmountSubtractAvailable: Boolean = false,
     )
 }

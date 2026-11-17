@@ -90,6 +90,7 @@ internal class EarnFlowConverter @Inject constructor() {
             appCurrency = state.appCurrency,
             signing = state.signing,
             isFeeReady = state.feeSelection != null,
+            isAmountValid = !state.isAmountInvalid,
             isPreparing = state.isPreparing,
             notifications = EarnFlowNotifications.confirm(
                 state = state,
@@ -166,6 +167,7 @@ internal class EarnFlowConverter @Inject constructor() {
         appCurrency: AppCurrency?,
         signing: EarnSigningState,
         isFeeReady: Boolean,
+        isAmountValid: Boolean,
         isPreparing: Boolean,
         notifications: ImmutableList<NotificationUM>,
         @DrawableRes walletIcon: Int?,
@@ -193,7 +195,10 @@ internal class EarnFlowConverter @Inject constructor() {
         primary = TangemButtonUM(
             text = action.label,
             type = TangemButtonType.Primary,
-            isEnabled = isFeeReady && !isPreparing && notifications.none { it is NotificationUM.Error },
+            isEnabled = isFeeReady &&
+                isAmountValid &&
+                !isPreparing &&
+                notifications.none { it is NotificationUM.Error },
             isLoading = signing.isExecuting || isPreparing,
             tangemIconUM = walletIcon?.let { TangemIconUM.Icon(iconRes = it) },
             iconPosition = TangemButtonIconPosition.End,
