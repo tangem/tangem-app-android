@@ -18,9 +18,11 @@ import com.tangem.features.survey.impl.nativesurvey.model.toSurveySource
 import com.tangem.features.survey.impl.nativesurvey.repository.NativeSurveyRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
 
 /** The single way into a native survey (§7.1 of the spec), whatever opened it. */
 @Singleton
@@ -36,14 +38,20 @@ internal class NativeSurveyOpener @Inject constructor(
         get() = repository.isAvailable && NativeSurvey.Type.entries.any(::isEnabled)
 
     suspend fun open(request: Request, router: Router) {
-        val userWallet = getSelectedWalletSyncUseCase().getOrNull()?.takeUnless(UserWallet::isLocked)
+        val userWallet = selectedUnlockedWallet()
         if (userWallet == null) {
             TangemLogger.i("Native survey: no unlocked wallet to open survey ${request.surveyId} for")
             return
         }
 
         val screenBeforeLoading = router.topRoute()
-        when (val outcome = prepare(request, userWallet)) {
+        val outcome = prepare(request, userWallet)
+        if (selectedUnlockedWallet()?.walletId != userWallet.walletId) {
+            TangemLogger.i("Native survey: the wallet changed while survey ${request.surveyId} was loading")
+            return
+        }
+
+        when (outcome) {
             is Outcome.Show -> router.navigate(
                 transformer = { stack ->
                     if (stack.canShowSurveyAfter(screenBeforeLoading)) stack + outcome.route else stack
@@ -86,10 +94,18 @@ internal class NativeSurveyOpener @Inject constructor(
     private fun List<Route>.canShowSurveyAfter(screenBeforeLoading: Route?): Boolean =
         lastOrNull() == screenBeforeLoading && none { route -> route is AppRoute.NativeSurvey }
 
+    private fun selectedUnlockedWallet(): UserWallet? =
+        getSelectedWalletSyncUseCase().getOrNull()?.takeUnless(UserWallet::isLocked)
+
+    /** Decompose defers a navigation started while another one is running, e.g. a deep link dispatched on unlock. */
     private suspend fun Router.topRoute(): Route? = withContext(dispatchers.mainImmediate) {
-        var top: Route? = null
-        navigate(transformer = { stack -> stack.also { top = it.lastOrNull() } })
-        top
+        suspendCancellableCoroutine { continuation ->
+            var top: Route? = null
+            navigate(
+                transformer = { stack -> stack.also { top = it.lastOrNull() } },
+                onComplete = { continuation.resume(top) },
+            )
+        }
     }
 
     private fun isEnabled(type: NativeSurvey.Type): Boolean = when (type) {

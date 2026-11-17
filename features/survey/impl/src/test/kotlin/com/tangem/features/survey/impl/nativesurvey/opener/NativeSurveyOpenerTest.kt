@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -46,17 +47,30 @@ internal class NativeSurveyOpenerTest {
     private val uiMessageSender: UiMessageSender = mockk()
     private val router: Router = mockk()
     private val userWallet: UserWallet.Cold = mockk()
+    private val anotherUserWallet: UserWallet.Cold = mockk()
 
     private var stack: List<Route> = emptyList()
     private val messages = mutableListOf<UiMessage>()
+    private val deferredNavigations = ArrayDeque<() -> Unit>()
 
     @BeforeEach
     fun setUp() {
-        clearMocks(repository, surveyFeatureToggles, getSelectedWalletSyncUseCase, uiMessageSender, router, userWallet)
+        clearMocks(
+            repository,
+            surveyFeatureToggles,
+            getSelectedWalletSyncUseCase,
+            uiMessageSender,
+            router,
+            userWallet,
+            anotherUserWallet,
+        )
         stack = listOf(AppRoute.Wallet)
         messages.clear()
+        deferredNavigations.clear()
         every { userWallet.walletId } returns USER_WALLET_ID
         every { userWallet.isLocked } returns false
+        every { anotherUserWallet.walletId } returns ANOTHER_USER_WALLET_ID
+        every { anotherUserWallet.isLocked } returns false
         every { getSelectedWalletSyncUseCase() } returns userWallet.right()
         every { surveyFeatureToggles.isNpsSurveyEnabled } returns true
         coEvery { repository.isAnswered(any()) } returns false
@@ -64,6 +78,7 @@ internal class NativeSurveyOpenerTest {
         justRun { uiMessageSender.send(capture(messages)) }
         every { router.navigate(any(), any()) } answers {
             stack = firstArg<(List<Route>) -> List<Route>>().invoke(stack)
+            secondArg<(Boolean) -> Unit>().invoke(true)
         }
     }
 
@@ -169,6 +184,54 @@ internal class NativeSurveyOpenerTest {
         assertThat(messages).isEmpty()
     }
 
+    @ParameterizedTest
+    @EnumSource(WalletChange::class)
+    fun `GIVEN the wallet changed while loading WHEN loaded THEN the survey is not shown`(
+        change: WalletChange,
+    ) = runTest {
+        // Arrange
+        coEvery { repository.load(any()) } coAnswers {
+            when (change) {
+                WalletChange.ANOTHER_SELECTED -> {
+                    every { getSelectedWalletSyncUseCase() } returns anotherUserWallet.right()
+                }
+                WalletChange.LOCKED -> every { userWallet.isLocked } returns true
+            }
+            LoadedNativeSurvey(npsSurvey(), isFromCache = false)
+        }
+
+        // Act
+        createOpener().open(REQUEST, router)
+
+        // Assert
+        assertThat(stack).containsExactly(AppRoute.Wallet)
+        assertThat(messages).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a navigation in progress WHEN opened THEN the survey is shown after it`() = runTest {
+        // Arrange
+        every { router.navigate(any(), any()) } answers {
+            val transformer = firstArg<(List<Route>) -> List<Route>>()
+            val onComplete = secondArg<(Boolean) -> Unit>()
+            deferredNavigations.addLast {
+                stack = transformer(stack)
+                onComplete(true)
+            }
+        }
+        launch { createOpener().open(REQUEST, router) }
+        advanceUntilIdle()
+
+        // Act
+        while (deferredNavigations.isNotEmpty()) {
+            deferredNavigations.removeFirst().invoke()
+            advanceUntilIdle()
+        }
+
+        // Assert
+        assertThat(stack).containsExactly(AppRoute.Wallet, route()).inOrder()
+    }
+
     @Test
     fun `GIVEN a survey already open WHEN opened again THEN it is not shown twice`() = runTest {
         // Arrange
@@ -240,8 +303,11 @@ internal class NativeSurveyOpenerTest {
 
     data class AvailabilityModel(val hasToken: Boolean, val isTypeEnabled: Boolean, val expected: Boolean)
 
+    enum class WalletChange { ANOTHER_SELECTED, LOCKED }
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("0A1B2C3D4E5F")
+        val ANOTHER_USER_WALLET_ID = UserWalletId("F5E4D3C2B1A0")
         const val STAGE = "funded_30d"
         const val REPEAT_AFTER_DAYS = 180
         val REQUEST = NativeSurveyOpener.Request(
