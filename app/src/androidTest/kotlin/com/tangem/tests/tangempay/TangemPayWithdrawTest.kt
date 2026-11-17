@@ -1,6 +1,7 @@
 package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
@@ -756,6 +757,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val exchangeStatusState = "Changelly"
         val balanceInitialState = "InitialBalance"
         val historyInitialState = "InitialEmpty"
+        val channelsBankOfframpState = "BankOfframp"
         val withdrawAmount = "5"
         val receiveToken = "Bitcoin"
 
@@ -778,8 +780,16 @@ class TangemPayWithdrawTest : BaseTestCase() {
             step("Set WireMock scenario '$historyScenario' to '$historyInitialState'") {
                 setWireMockScenarioState(historyScenario, historyInitialState)
             }
-            step("Open the withdraw to '$receiveToken' ready to confirm") {
-                openTangemPayWithdrawReadyToConfirm(receiveToken, withdrawAmount)
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBankOfframpState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBankOfframpState)
+            }
+            step("Open 'Withdraw' within the portfolio") { openTangemPayWithdrawWithinPortfolio() }
+            step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
+            enterWithdrawAmount(withdrawAmount)
+            step("Assert receive amount is displayed") {
+                awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { receiveAmount.assertIsDisplayed() }
+                }
             }
             val withdrawBefore = getWireMockRequestCount("POST", withdrawEndpoint)
             val ordersBefore = getWireMockRequestCount("GET", withdrawOrderEndpoint)

@@ -7,6 +7,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.assertUrlOpenedStartingWith
 import com.tangem.common.utils.stubExternalUrlOpening
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.scenarios.*
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
@@ -28,7 +29,6 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     private val planPlusState = "Plus"
     private val planPlusFiveCardsState = "PlusFiveCards"
     private val planDowngradePendingState = "DowngradePending"
-    private val planTransitioningState = "Transitioning"
 
     private val transitionsOnboardingState = "Onboarding"
     private val transitionsFromBasicState = "FromBasic"
@@ -257,6 +257,9 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayMainScreen { awaitingDepositBannerTitle(plusFee).assertIsDisplayed() }
                 }
+            }
+            step("Assert 'Inactive' badge is displayed") {
+                onTangemPayMainScreen { inactiveBadge.assertIsDisplayed() }
             }
             val cancelsBefore = getTangemPayCancelPlanOrderRequestCount()
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
@@ -658,16 +661,51 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setTangemPayTariffPlanScenarios(
-                    plan = planTransitioningState,
-                    transitions = transitionsFromBasicState,
+                    plan = planSelectNeededState,
+                    transitions = transitionsOnboardingState,
                 )
             }
         ).run {
-            step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
-            step("Assert 'Change plan' button is not displayed") {
-                onTangemPayCurrentPlanScreen { changePlanButton.assertDoesNotExist() }
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
+            step("Assert '$basicPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) } }
+            }
+            step("Swipe to the '$plusPlan' plan") {
+                onTangemPaySelectPlanScreen { scrollToPlanAt(index = 1) }
+            }
+            step("Assert '$plusPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) } }
+            }
+            step("Put the plan fee order in 'awaiting deposit' in WireMock") {
+                stageTangemPayPlanFeeAwaitingDeposit()
+            }
+            step("Click on 'Select' button") {
+                onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
+            }
+            step("Assert 'Top-up your account' banner is displayed") {
+                awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayMainScreen { awaitingDepositBannerTitle(plusFee).assertIsDisplayed() }
+                }
+            }
+            step("Click on 'More' button") {
+                onTangemPayMainScreen { moreActionsButton.performClick() }
+            }
+            step("Assert 'Current plan' menu item has the arrows icon") {
+                awaitSuccess {
+                    onTangemPayMainScreen {
+                        currentPlanMenuItemIcon(CoreUiR.drawable.ic_arrow_refresh_20).assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert 'Current plan' menu item is clickable") {
+                onTangemPayMainScreen { currentPlanMenuItem.assertHasClickAction() }
+            }
+            step("Click on 'Current plan' menu item") {
+                onTangemPayMainScreen { currentPlanMenuItem.performClick() }
+            }
+            step("Assert 'Current plan' screen is displayed") {
+                awaitSuccess { onTangemPayCurrentPlanScreen { screen.assertIsDisplayed() } }
             }
         }
     }

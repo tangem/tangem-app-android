@@ -56,6 +56,10 @@ sealed interface TangemIconUM {
             tintReference: ColorReference2? = null,
         ) : this(Either.Right(imageVector), tintReference)
 
+        @get:DrawableRes
+        val iconRes: Int?
+            get() = icon.fold(ifLeft = { it }, ifRight = { null })
+
         @Composable
         fun imageVector(): ImageVector = icon.fold(
             ifLeft = { resId -> ImageVector.vectorResource(resId) },

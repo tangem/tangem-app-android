@@ -434,7 +434,9 @@ private fun BalanceBlock(
         }
         if (isInactive) {
             TangemBadge(
-                modifier = Modifier.padding(vertical = 4.dp),
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_INACTIVE_BADGE),
                 text = resourceReference(R.string.tangempay_status_inactive),
                 variant = TangemBadge.Variant.Outline,
                 status = TangemBadge.Status.Warning,

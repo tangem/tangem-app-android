@@ -804,7 +804,23 @@ fun BaseTestCase.openTangemPayWithdrawSwapScreen(expectedBalance: String = "10")
     step("Click on 'Withdraw' action chip") {
         onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
     }
-    // Stories auto-advance; a tap can miss mid-animation — retry the close until the Withdraw screen shows.
+    closeSwapStoriesUntilWithdrawScreen()
+}
+
+fun BaseTestCase.openTangemPayWithdrawWithinPortfolio(expectedBalance: String = "10") {
+    openTangemPay()
+    step("Assert initial balance contains '$expectedBalance'") {
+        onTangemPayMainScreen { balance.assertTextContainsSafe(expectedBalance, substring = true) }
+    }
+    openWithdrawHubFromPaymentAccount()
+    step("Click on 'Within your portfolio' card") {
+        onTangemPayWithdrawHubScreen { withinPortfolioCard.performClick() }
+    }
+    closeSwapStoriesUntilWithdrawScreen()
+}
+
+// Stories auto-advance; a tap can miss mid-animation — retry the close until the Withdraw screen shows.
+private fun BaseTestCase.closeSwapStoriesUntilWithdrawScreen() {
     step("Close 'Swap stories' and land on the 'Withdraw' screen (USDC pre-filled as source)") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             runCatching { onSwapStoriesScreen { closeButton.performClick() } }
