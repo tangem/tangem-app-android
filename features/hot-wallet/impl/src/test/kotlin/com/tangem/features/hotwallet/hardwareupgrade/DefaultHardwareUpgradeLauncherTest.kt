@@ -97,7 +97,7 @@ internal class DefaultHardwareUpgradeLauncherTest {
         ),
         VariantModel(
             variant = HardwareUpgradeStoriesVariant.CONTROL,
-            expectedRoute = AppRoute.WalletHardwareBackup(userWalletId = USER_WALLET_ID),
+            expectedRoute = AppRoute.WalletHardwareBackup(userWalletId = USER_WALLET_ID, source = SOURCE),
         ),
     )
 
@@ -105,6 +105,6 @@ internal class DefaultHardwareUpgradeLauncherTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
-        val SOURCE = AppRoute.HardwareUpgradeStories.Source.WALLET_SETTINGS
+        val SOURCE = AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS
     }
 }

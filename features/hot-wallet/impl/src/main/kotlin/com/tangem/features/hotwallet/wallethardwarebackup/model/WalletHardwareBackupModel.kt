@@ -28,6 +28,7 @@ import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.HardwareBackupScreenOpened
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -95,7 +96,9 @@ internal class WalletHardwareBackupModel @Inject constructor(
 
     init {
         trackingContextProxy.addHotWalletContext()
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened())
+        analyticsEventHandler.send(
+            WalletSettingsAnalyticEvents.HardwareBackupScreenOpened(source = params.source.toAnalyticsSource()),
+        )
     }
 
     override fun onDestroy() {
@@ -206,4 +209,11 @@ internal class WalletHardwareBackupModel @Inject constructor(
                 .invoke(GenerateBuyTangemCardLinkUseCase.Source.Backup).let { urlOpener.openUrl(it) }
         }
     }
+}
+
+private fun AppRoute.WalletHardwareBackup.Source.toAnalyticsSource(): HardwareBackupScreenOpened.Source = when (this) {
+    AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> HardwareBackupScreenOpened.Source.UpgradeBanner
+    AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> HardwareBackupScreenOpened.Source.PermanentBanner
+    AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> HardwareBackupScreenOpened.Source.WalletSettings
+    AppRoute.WalletHardwareBackup.Source.BACKUP -> HardwareBackupScreenOpened.Source.Backup
 }

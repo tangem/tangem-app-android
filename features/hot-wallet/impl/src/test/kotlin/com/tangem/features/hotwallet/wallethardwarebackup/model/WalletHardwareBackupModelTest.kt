@@ -13,6 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.HardwareBackupScreenOpened
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -30,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 
 internal class WalletHardwareBackupModelTest {
@@ -44,7 +46,10 @@ internal class WalletHardwareBackupModelTest {
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk {
         every { require<WalletHardwareBackupComponent.Params>() } returns
-            WalletHardwareBackupComponent.Params(userWalletId = WALLET_ID)
+            WalletHardwareBackupComponent.Params(
+                userWalletId = WALLET_ID,
+                source = AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS,
+            )
     }
     private val hotWalletId: HotWalletId = mockk {
         every { authType } returns HotWalletId.AuthType.NoPassword
@@ -62,6 +67,28 @@ internal class WalletHardwareBackupModelTest {
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
         every { hotWallet.isBackedUp } returns false
         coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns false
+    }
+
+    @ParameterizedTest
+    @EnumSource(AppRoute.WalletHardwareBackup.Source::class)
+    fun `GIVEN an entry point WHEN the screen opens THEN the opening is reported with its source`(
+        source: AppRoute.WalletHardwareBackup.Source,
+    ) = runTest {
+        // Arrange
+        every { paramsContainer.require<WalletHardwareBackupComponent.Params>() } returns
+            WalletHardwareBackupComponent.Params(userWalletId = WALLET_ID, source = source)
+        val expectedSource = when (source) {
+            AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> HardwareBackupScreenOpened.Source.UpgradeBanner
+            AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> HardwareBackupScreenOpened.Source.PermanentBanner
+            AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> HardwareBackupScreenOpened.Source.WalletSettings
+            AppRoute.WalletHardwareBackup.Source.BACKUP -> HardwareBackupScreenOpened.Source.Backup
+        }
+
+        // Act
+        createModel(this)
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(HardwareBackupScreenOpened(source = expectedSource)) }
     }
 
     @ParameterizedTest

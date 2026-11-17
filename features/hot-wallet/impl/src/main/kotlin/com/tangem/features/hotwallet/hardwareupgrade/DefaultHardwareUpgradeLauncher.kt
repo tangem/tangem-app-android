@@ -17,10 +17,10 @@ internal class DefaultHardwareUpgradeLauncher @Inject constructor(
     private val storiesV2Prefetcher: StoriesV2Prefetcher,
 ) : HardwareUpgradeLauncher {
 
-    override suspend fun launch(userWalletId: UserWalletId, source: AppRoute.HardwareUpgradeStories.Source) {
+    override suspend fun launch(userWalletId: UserWalletId, source: AppRoute.WalletHardwareBackup.Source) {
         val route = when (getHardwareUpgradeStoriesVariantUseCase()) {
             HardwareUpgradeStoriesVariant.TREATMENT -> AppRoute.HardwareUpgradeStories(userWalletId, source)
-            HardwareUpgradeStoriesVariant.CONTROL -> AppRoute.WalletHardwareBackup(userWalletId)
+            HardwareUpgradeStoriesVariant.CONTROL -> AppRoute.WalletHardwareBackup(userWalletId, source)
         }
         appRouter.pushIfAbsent(route)
     }
