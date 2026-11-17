@@ -125,7 +125,7 @@ class DefaultStakingCleanerTest {
             coEvery { stakingIdFactory.create(userWalletId, coin) } returns stakingId.right()
 
             // Act
-            cleaner(userWalletId = userWalletId, currency = coin)
+            cleaner(userWalletId = userWalletId, currencies = listOf(coin))
 
             // Assert
             coVerify {
@@ -179,7 +179,7 @@ class DefaultStakingCleanerTest {
             } throws Exception()
 
             // Act
-            cleaner(userWalletId = userWalletId, currency = coin)
+            cleaner(userWalletId = userWalletId, currencies = listOf(coin))
 
             // Assert
             coVerify {
