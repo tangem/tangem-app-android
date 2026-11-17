@@ -57,7 +57,9 @@ import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
@@ -120,6 +122,7 @@ internal class MoneyAccountDetailsModelTest {
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore = mockk()
     private val isBalanceHiddenFlow = MutableStateFlow(false)
 
     @BeforeEach
@@ -128,6 +131,9 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
         clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase, tangemPayFeatureToggles, getUserWalletUseCase)
+        clearMocks(kycAdditionalInfoPopupStore)
+        coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returns true
+        coEvery { kycAdditionalInfoPopupStore.reset(any()) } returns Unit
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
@@ -676,6 +682,29 @@ internal class MoneyAccountDetailsModelTest {
                 verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN popup shown on first entry WHEN account entered again THEN notice shown without popup`() = runTest {
+            // Arrange
+            coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returnsMany listOf(true, false)
+            val flagged = activeAccount(balance = balance(), isKycAdditionalInfoRequired = true)
+            val firstEntry = createModel(flagged)
+            advanceUntilIdle()
+            firstEntry.onDestroy()
+
+            // Act
+            val secondEntry = createModel(flagged)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 2) { analytics.send(NoticeShown(AccountType.MONEY, Placement.ACCOUNT_BLOCK)) }
+            verify(exactly = 1) { analytics.send(PopupShown(AccountType.MONEY, EntryPoint.ACCOUNT_ENTRY)) }
+            verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+            coVerify(exactly = 2) {
+                kycAdditionalInfoPopupStore.tryMarkShown(KycAdditionalInfoAccount(userWalletId, AccountType.MONEY))
+            }
+            secondEntry.onDestroy()
+        }
 
         @Test
         fun `GIVEN active account without flag WHEN loaded THEN no banner and no cdd events`() = runTest {
@@ -1446,6 +1475,7 @@ internal class MoneyAccountDetailsModelTest {
             uiMessageSender = uiMessageSender,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             getUserWalletUseCase = getUserWalletUseCase,
+            kycAdditionalInfoPopupStore = kycAdditionalInfoPopupStore,
         )
     }
 

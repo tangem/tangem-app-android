@@ -13,6 +13,7 @@ import com.tangem.core.ui.message.ModalMessage
 import com.tangem.core.ui.message.modal.MessageModalUM
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_24
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.CloseMethod
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ContactSupportClicked
@@ -23,11 +24,16 @@ import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Pop
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.PopupShown
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ProvideInformationClicked
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Source
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -41,10 +47,14 @@ internal class KycAdditionalInfoNoticeTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val onProvideInformation: () -> Unit = mockk(relaxed = true)
     private val onContactSupport: () -> Unit = mockk(relaxed = true)
+    private val popupStore: KycAdditionalInfoPopupStore = mockk()
+    private val userWalletId = UserWalletId("1234")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(analytics, uiMessageSender, onProvideInformation, onContactSupport)
+        clearMocks(analytics, uiMessageSender, onProvideInformation, onContactSupport, popupStore)
+        coEvery { popupStore.tryMarkShown(any()) } returns true
+        coEvery { popupStore.reset(any()) } returns Unit
     }
 
     @Nested
@@ -52,27 +62,32 @@ internal class KycAdditionalInfoNoticeTest {
     inner class OnStatus {
 
         @Test
-        fun `GIVEN flag true first time AND popup allowed WHEN onStatus THEN notice and popup shown with modal`() {
+        fun `GIVEN flag true first time AND popup allowed WHEN onStatus THEN notice and popup shown with modal`() =
+            runTest {
+                // Arrange
+                val notice = createNotice()
+
+                // Act
+                notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+                // Assert
+                verify(exactly = 1) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY)) }
+                verify(exactly = 2) { analytics.send(any()) }
+                verify(exactly = 1) { uiMessageSender.send(any<ModalMessage>()) }
+                coVerify(exactly = 1) {
+                    popupStore.tryMarkShown(KycAdditionalInfoAccount(userWalletId, AccountType.PAYMENT))
+                }
+            }
+
+        @Test
+        fun `GIVEN popup already shown in session WHEN flag appears THEN notice sent and popup not shown`() = runTest {
             // Arrange
+            coEvery { popupStore.tryMarkShown(any()) } returns false
             val notice = createNotice()
 
             // Act
             notice.onStatus(isRequired = true, isPopupAllowed = true)
-
-            // Assert
-            verify(exactly = 1) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
-            verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY)) }
-            verify(exactly = 2) { analytics.send(any()) }
-            verify(exactly = 1) { uiMessageSender.send(any<ModalMessage>()) }
-        }
-
-        @Test
-        fun `GIVEN flag true first time AND popup not allowed WHEN onStatus THEN notice shown without popup`() {
-            // Arrange
-            val notice = createNotice()
-
-            // Act
-            notice.onStatus(isRequired = true, isPopupAllowed = false)
 
             // Assert
             verify(exactly = 1) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
@@ -81,25 +96,49 @@ internal class KycAdditionalInfoNoticeTest {
         }
 
         @Test
-        fun `GIVEN flag already true WHEN onStatus true again THEN nothing sent`() {
+        fun `GIVEN popup not allowed WHEN flag appears THEN popup not marked as shown`() = runTest {
             // Arrange
             val notice = createNotice()
-            notice.onStatus(isRequired = true, isPopupAllowed = true)
-            clearMocks(analytics, uiMessageSender)
 
             // Act
-            notice.onStatus(isRequired = true, isPopupAllowed = true)
-
-            // Assert
-            verify(exactly = 0) { analytics.send(any()) }
-            verify(exactly = 0) { uiMessageSender.send(any()) }
-        }
-
-        @Test
-        fun `GIVEN flag appeared without popup WHEN flag true again with popup allowed THEN popup not shown`() {
-            // Arrange
-            val notice = createNotice()
             notice.onStatus(isRequired = true, isPopupAllowed = false)
+
+            // Assert
+            coVerify(exactly = 0) { popupStore.tryMarkShown(any()) }
+        }
+
+        @Test
+        fun `GIVEN flag false WHEN onStatus THEN popup shown state reset for account`() = runTest {
+            // Arrange
+            val notice = createNotice(accountType = AccountType.MONEY)
+
+            // Act
+            notice.onStatus(isRequired = false, isPopupAllowed = true)
+
+            // Assert
+            coVerify(exactly = 1) { popupStore.reset(KycAdditionalInfoAccount(userWalletId, AccountType.MONEY)) }
+        }
+
+        @Test
+        fun `GIVEN flag true first time AND popup not allowed WHEN onStatus THEN notice shown without popup`() =
+            runTest {
+                // Arrange
+                val notice = createNotice()
+
+                // Act
+                notice.onStatus(isRequired = true, isPopupAllowed = false)
+
+                // Assert
+                verify(exactly = 1) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
+                verify(exactly = 0) { analytics.send(ofType<PopupShown>()) }
+                verify(exactly = 0) { uiMessageSender.send(any()) }
+            }
+
+        @Test
+        fun `GIVEN flag already true WHEN onStatus true again THEN nothing sent`() = runTest {
+            // Arrange
+            val notice = createNotice()
+            notice.onStatus(isRequired = true, isPopupAllowed = true)
             clearMocks(analytics, uiMessageSender)
 
             // Act
@@ -111,7 +150,23 @@ internal class KycAdditionalInfoNoticeTest {
         }
 
         @Test
-        fun `GIVEN flag dropped WHEN flag returns THEN notice and popup sent again`() {
+        fun `GIVEN flag appeared without popup WHEN flag true again with popup allowed THEN popup not shown`() =
+            runTest {
+                // Arrange
+                val notice = createNotice()
+                notice.onStatus(isRequired = true, isPopupAllowed = false)
+                clearMocks(analytics, uiMessageSender)
+
+                // Act
+                notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+                // Assert
+                verify(exactly = 0) { analytics.send(any()) }
+                verify(exactly = 0) { uiMessageSender.send(any()) }
+            }
+
+        @Test
+        fun `GIVEN flag dropped WHEN flag returns THEN notice and popup sent again`() = runTest {
             // Arrange
             val notice = createNotice()
             notice.onStatus(isRequired = true, isPopupAllowed = true)
@@ -127,7 +182,7 @@ internal class KycAdditionalInfoNoticeTest {
         }
 
         @Test
-        fun `GIVEN flag false WHEN onStatus THEN nothing sent`() {
+        fun `GIVEN flag false WHEN onStatus THEN nothing sent`() = runTest {
             // Arrange
             val notice = createNotice()
 
@@ -145,7 +200,7 @@ internal class KycAdditionalInfoNoticeTest {
     inner class Popup {
 
         @Test
-        fun `GIVEN modal WHEN content inspected THEN warning status with lightning and both buttons`() {
+        fun `GIVEN modal WHEN content inspected THEN warning status with lightning and both buttons`() = runTest {
             // Act
             val popup = showPopup(createNotice())
 
@@ -165,47 +220,53 @@ internal class KycAdditionalInfoNoticeTest {
         }
 
         @Test
-        fun `GIVEN modal WHEN provide information clicked THEN event sent and callback invoked without popup closed`() {
-            // Arrange
-            val popup = showPopup(createNotice())
-            val host = FakeModalHost(popup)
-            clearMocks(analytics)
+        fun `GIVEN modal WHEN provide information clicked THEN event sent and callback invoked without popup closed`() =
+            runTest {
+                // Arrange
+                val popup = showPopup(createNotice())
+                val host = FakeModalHost(popup)
+                clearMocks(analytics)
 
-            // Act
-            popup.provideInformationButton().onClick(host)
+                // Act
+                popup.provideInformationButton().onClick(host)
 
-            // Assert
-            verify(exactly = 1) {
-                analytics.send(ProvideInformationClicked(AccountType.PAYMENT, Source.POPUP, EntryPoint.ACCOUNT_ENTRY))
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(
+                        ProvideInformationClicked(AccountType.PAYMENT, Source.POPUP, EntryPoint.ACCOUNT_ENTRY),
+                    )
+                }
+                verify(exactly = 0) { analytics.send(ofType<PopupClosed>()) }
+                verify(exactly = 1) { analytics.send(any()) }
+                verify(exactly = 1) { onProvideInformation() }
+                verify(exactly = 0) { onContactSupport() }
+                assertThat(host.dismissCount).isEqualTo(1)
             }
-            verify(exactly = 0) { analytics.send(ofType<PopupClosed>()) }
-            verify(exactly = 1) { analytics.send(any()) }
-            verify(exactly = 1) { onProvideInformation() }
-            verify(exactly = 0) { onContactSupport() }
-            assertThat(host.dismissCount).isEqualTo(1)
-        }
 
         @Test
-        fun `GIVEN modal WHEN contact support clicked THEN event sent and callback invoked without popup closed`() {
-            // Arrange
-            val popup = showPopup(createNotice())
-            val host = FakeModalHost(popup)
-            clearMocks(analytics)
+        fun `GIVEN modal WHEN contact support clicked THEN event sent and callback invoked without popup closed`() =
+            runTest {
+                // Arrange
+                val popup = showPopup(createNotice())
+                val host = FakeModalHost(popup)
+                clearMocks(analytics)
 
-            // Act
-            popup.contactSupportButton().onClick(host)
+                // Act
+                popup.contactSupportButton().onClick(host)
 
-            // Assert
-            verify(exactly = 1) { analytics.send(ContactSupportClicked(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY)) }
-            verify(exactly = 0) { analytics.send(ofType<PopupClosed>()) }
-            verify(exactly = 1) { analytics.send(any()) }
-            verify(exactly = 1) { onContactSupport() }
-            verify(exactly = 0) { onProvideInformation() }
-            assertThat(host.dismissCount).isEqualTo(1)
-        }
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(ContactSupportClicked(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY))
+                }
+                verify(exactly = 0) { analytics.send(ofType<PopupClosed>()) }
+                verify(exactly = 1) { analytics.send(any()) }
+                verify(exactly = 1) { onContactSupport() }
+                verify(exactly = 0) { onProvideInformation() }
+                assertThat(host.dismissCount).isEqualTo(1)
+            }
 
         @Test
-        fun `GIVEN modal WHEN dismissed without action THEN popup closed sent with unknown method`() {
+        fun `GIVEN modal WHEN dismissed without action THEN popup closed sent with unknown method`() = runTest {
             // Arrange
             val popup = showPopup(createNotice())
             clearMocks(analytics)
@@ -223,27 +284,28 @@ internal class KycAdditionalInfoNoticeTest {
         }
 
         @Test
-        fun `GIVEN action chosen in previous modal WHEN next modal dismissed without action THEN popup closed sent`() {
-            // Arrange
-            val notice = createNotice()
-            val previousPopup = showPopup(notice)
-            previousPopup.provideInformationButton().onClick(FakeModalHost(previousPopup))
-            notice.onStatus(isRequired = false, isPopupAllowed = true)
-            clearMocks(uiMessageSender)
-            val nextPopup = showPopup(notice)
-            clearMocks(analytics)
+        fun `GIVEN action chosen in previous modal WHEN next modal dismissed without action THEN popup closed sent`() =
+            runTest {
+                // Arrange
+                val notice = createNotice()
+                val previousPopup = showPopup(notice)
+                previousPopup.provideInformationButton().onClick(FakeModalHost(previousPopup))
+                notice.onStatus(isRequired = false, isPopupAllowed = true)
+                clearMocks(uiMessageSender)
+                val nextPopup = showPopup(notice)
+                clearMocks(analytics)
 
-            // Act
-            nextPopup.onDismiss()
+                // Act
+                nextPopup.onDismiss()
 
-            // Assert
-            verify(exactly = 1) {
-                analytics.send(PopupClosed(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY, CloseMethod.UNKNOWN))
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(PopupClosed(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY, CloseMethod.UNKNOWN))
+                }
             }
-        }
 
         @Test
-        fun `GIVEN modal dismissed WHEN onDismiss invoked again THEN popup closed sent once`() {
+        fun `GIVEN modal dismissed WHEN onDismiss invoked again THEN popup closed sent once`() = runTest {
             // Arrange
             val popup = showPopup(createNotice())
             clearMocks(analytics)
@@ -261,23 +323,24 @@ internal class KycAdditionalInfoNoticeTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN modal resolved WHEN another action THEN nothing sent and no callback invoked`(model: ResolvedModel) {
-            // Arrange
-            val popup = showPopup(createNotice())
-            val host = FakeModalHost(popup)
-            popup.perform(action = model.resolvedBy, host = host)
-            clearMocks(analytics, onProvideInformation, onContactSupport)
-            val dismissCountAfterResolution = host.dismissCount
+        fun `GIVEN modal resolved WHEN another action THEN nothing sent and no callback invoked`(model: ResolvedModel) =
+            runTest {
+                // Arrange
+                val popup = showPopup(createNotice())
+                val host = FakeModalHost(popup)
+                popup.perform(action = model.resolvedBy, host = host)
+                clearMocks(analytics, onProvideInformation, onContactSupport)
+                val dismissCountAfterResolution = host.dismissCount
 
-            // Act
-            popup.perform(action = model.followedBy, host = host)
+                // Act
+                popup.perform(action = model.followedBy, host = host)
 
-            // Assert
-            verify(exactly = 0) { analytics.send(any()) }
-            verify(exactly = 0) { onProvideInformation() }
-            verify(exactly = 0) { onContactSupport() }
-            assertThat(host.dismissCount).isEqualTo(dismissCountAfterResolution)
-        }
+                // Assert
+                verify(exactly = 0) { analytics.send(any()) }
+                verify(exactly = 0) { onProvideInformation() }
+                verify(exactly = 0) { onContactSupport() }
+                assertThat(host.dismissCount).isEqualTo(dismissCountAfterResolution)
+            }
 
         private fun provideTestModels() = listOf(
             ResolvedModel(resolvedBy = PopupAction.PROVIDE_INFORMATION, followedBy = PopupAction.PROVIDE_INFORMATION),
@@ -296,34 +359,36 @@ internal class KycAdditionalInfoNoticeTest {
     inner class OnBannerProvideInformationClick {
 
         @Test
-        fun `GIVEN notice WHEN banner provide information clicked THEN event with account block source and callback`() {
-            // Arrange
-            val notice = createNotice(accountType = AccountType.MONEY)
+        fun `GIVEN notice WHEN banner provide information clicked THEN event with account block source and callback`() =
+            runTest {
+                // Arrange
+                val notice = createNotice(accountType = AccountType.MONEY)
 
-            // Act
-            notice.onBannerProvideInformationClick()
+                // Act
+                notice.onBannerProvideInformationClick()
 
-            // Assert
-            verify(exactly = 1) {
-                analytics.send(
-                    ProvideInformationClicked(AccountType.MONEY, Source.ACCOUNT_BLOCK, EntryPoint.ACCOUNT_BLOCK),
-                )
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(
+                        ProvideInformationClicked(AccountType.MONEY, Source.ACCOUNT_BLOCK, EntryPoint.ACCOUNT_BLOCK),
+                    )
+                }
+                verify(exactly = 1) { analytics.send(any()) }
+                verify(exactly = 1) { onProvideInformation() }
+                verify(exactly = 0) { uiMessageSender.send(any()) }
             }
-            verify(exactly = 1) { analytics.send(any()) }
-            verify(exactly = 1) { onProvideInformation() }
-            verify(exactly = 0) { uiMessageSender.send(any()) }
-        }
     }
 
     private fun createNotice(accountType: AccountType = AccountType.PAYMENT) = KycAdditionalInfoNotice(
-        accountType = accountType,
+        account = KycAdditionalInfoAccount(userWalletId = userWalletId, accountType = accountType),
+        popupStore = popupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
         onProvideInformation = onProvideInformation,
         onContactSupport = onContactSupport,
     )
 
-    private fun showPopup(notice: KycAdditionalInfoNotice): MessageModalUM {
+    private suspend fun showPopup(notice: KycAdditionalInfoNotice): MessageModalUM {
         val message = slot<ModalMessage>()
         notice.onStatus(isRequired = true, isPopupAllowed = true)
         verify { uiMessageSender.send(capture(message)) }
