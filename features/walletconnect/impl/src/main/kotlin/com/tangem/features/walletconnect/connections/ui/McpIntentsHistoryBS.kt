@@ -1,11 +1,11 @@
 package com.tangem.features.walletconnect.connections.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -49,6 +49,12 @@ import com.tangem.features.walletconnect.connections.entity.McpIntentsHistoryUM
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
+/**
+ * Intents history of one MCP agent.
+ *
+ * [Show in Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=25303-383848&m=dev)
+ * [Loading in Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=32418-418763&m=dev)
+ */
 @Composable
 internal fun McpIntentsHistoryBS(state: McpIntentsHistoryUM) {
     TangemBottomSheet<McpIntentsHistoryUM>(
@@ -58,7 +64,6 @@ internal fun McpIntentsHistoryBS(state: McpIntentsHistoryUM) {
             content = state,
         ),
         type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
         title = {
             TangemTopNavigation(
                 title = resourceReference(R.string.mcp_intents_history_title),
@@ -83,16 +88,16 @@ private fun McpIntentsHistoryContent(state: McpIntentsHistoryUM.Content, modifie
 @Composable
 private fun DataContent(state: McpIntentsHistoryUM.Content.Data, modifier: Modifier = Modifier) {
     LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(vertical = 12.dp),
     ) {
         state.groups.forEach { group ->
             item(key = "title_${group.key}") {
                 Text(
-                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     text = group.title.resolveReference(),
-                    style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography3.subheading.medium,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
             items(items = group.rows, key = { it.key }) { row -> IntentRow(row = row) }
@@ -159,6 +164,7 @@ private fun IntentRow(row: McpIntentsHistoryUM.Row, modifier: Modifier = Modifie
                         McpIntentsHistoryUM.Status.New -> TangemBadge.Status.Info
                         McpIntentsHistoryUM.Status.Viewed -> TangemBadge.Status.Neutral
                     },
+                    size = TangemBadge.Size.X6,
                 )
             }
         },
@@ -168,10 +174,11 @@ private fun IntentRow(row: McpIntentsHistoryUM.Row, modifier: Modifier = Modifie
 
 @Composable
 private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            repeat(times = SHIMMER_ROWS) { ShimmerRow() }
-        }
+    Column(modifier = modifier.fillMaxSize().padding(vertical = 12.dp)) {
+        RectangleShimmer(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).size(width = 80.dp, height = 18.dp),
+        )
+        repeat(times = SHIMMER_ROWS) { ShimmerRow() }
     }
 }
 
