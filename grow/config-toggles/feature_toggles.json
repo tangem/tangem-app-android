@@ -24,6 +24,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1882_POLYMARKET_CRYPTO_UP_DOWN_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_18247_SOLANA_GASLESS_ENABLED",
         "version": "undefined"
     },

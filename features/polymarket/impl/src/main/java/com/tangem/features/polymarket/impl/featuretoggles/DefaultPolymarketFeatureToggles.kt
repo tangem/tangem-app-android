@@ -13,4 +13,9 @@ internal class DefaultPolymarketFeatureToggles @Inject constructor(
 
     override val isPolymarketFastOrdersEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1881_POLYMARKET_FAST_ORDERS_ENABLED)
+
+    override val isPolymarketCryptoUpDownEnabled: Boolean
+        get() = isPolymarketPhaseTwoEnabled &&
+            isPolymarketFastOrdersEnabled &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1882_POLYMARKET_CRYPTO_UP_DOWN_ENABLED)
 }
