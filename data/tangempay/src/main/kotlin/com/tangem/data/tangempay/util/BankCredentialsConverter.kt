@@ -4,14 +4,14 @@ import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.spend.datasource.tangempay.models.response.BankCredentialsResponse
 import com.tangem.spend.datasource.tangempay.models.response.FeesResponse
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 import java.util.Locale
 
-internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Result, BankCredentials> {
-
-    private const val LEGACY_FIXED_TYPE = "FLAT"
-    private const val LEGACY_PERCENTAGE_TYPE = "VARIABLE"
+internal class BankCredentialsConverter(
+    @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED") private val isDepositFeeRead: Boolean,
+) : Converter<BankCredentialsResponse.Result, BankCredentials> {
 
     override fun convert(value: BankCredentialsResponse.Result): BankCredentials {
         return BankCredentials(
@@ -24,7 +24,8 @@ internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Res
             routingNumber = value.routingNumber.orEmpty(),
             rail = value.rail?.takeIf(String::isNotBlank),
             transferMessage = value.transferMessage?.takeIf(String::isNotBlank),
-            depositFee = value.depositFee?.let(::convertDepositFee) ?: value.legacyFee()?.let(::convertLegacyFee),
+            depositFee = value.depositFee?.takeIf { isDepositFeeRead }?.let(::convertDepositFee)
+                ?: value.legacyFee()?.let(::convertLegacyFee),
             depositLimit = convertDepositLimit(value.depositLimit),
             exchangeRate = convertExchangeRate(value.exchangeRate),
             amountLimits = value.amountLimits?.let(AmountLimitsConverter::convert),
@@ -82,3 +83,6 @@ internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Res
         return BankCredentials.ExchangeRate(rate = rate, base = base, quote = quote)
     }
 }
+
+private const val LEGACY_FIXED_TYPE = "FLAT"
+private const val LEGACY_PERCENTAGE_TYPE = "VARIABLE"

@@ -24,6 +24,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_19454_MCP_INTENTS_HISTORY_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
         "version": "undefined"
     },
@@ -33,7 +37,7 @@
     },
     {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "TWI_1720_ALL_SERVICES_ENABLED",
@@ -41,7 +45,7 @@
     },
     {
         "name": "AND_19355_DISCOVER_DEEPLINK_FILTERS_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "TWI_1958_ADD_FUNDS_RECEIVE_STAGE_1_ENABLED",

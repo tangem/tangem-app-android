@@ -5,7 +5,7 @@
     },
     {
         "name": "TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "TWI_1858_TRON_CLIENT_ENERGY_ENABLED",
@@ -33,7 +33,7 @@
     },
     {
         "name": "TWI_1948_YIELD_CONTRIBUTION_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "TWI_1676_EARN_ENABLED",
@@ -41,7 +41,7 @@
     },
     {
         "name": "AND_18954_ONRAMP_COUNTRY_BY_IP_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED",
@@ -49,6 +49,6 @@
     },
     {
         "name": "AND_18953_EARN_UPDATE_ASSET_SELECTION",
-        "version": "undefined"
+        "version": "6.9"
     }
 ]

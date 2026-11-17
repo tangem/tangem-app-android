@@ -15,6 +15,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.dialog.Dialogs
@@ -26,6 +27,7 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
 import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
@@ -56,6 +58,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -76,6 +79,7 @@ internal class IntroductionSocialLoginHandlerTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
 
     private val getAvailableSocialLoginProvidersUseCase: GetAvailableSocialLoginProvidersUseCase = mockk()
 
@@ -90,6 +94,7 @@ internal class IntroductionSocialLoginHandlerTest {
         referral = referral,
         urlOpener = urlOpener,
         router = router,
+        errorMessages = SocialLoginErrorMessages(hotWalletFeatureToggles),
         uiMessageSender = uiMessageSender,
     )
 
@@ -106,8 +111,10 @@ internal class IntroductionSocialLoginHandlerTest {
             urlOpener,
             router,
             uiMessageSender,
+            hotWalletFeatureToggles,
         )
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns userWallet.right()
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
         host.reset()
     }
 
@@ -177,7 +184,7 @@ internal class IntroductionSocialLoginHandlerTest {
 
         // Assert
         verify { router wasNot Called }
-        verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+        verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
     }
 
     @Test
@@ -226,7 +233,7 @@ internal class IntroductionSocialLoginHandlerTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN a failure WHEN signIn THEN it is shown the way the spec puts it`(model: FailureModel) = runTest {
+    fun `GIVEN a failure WHEN signIn THEN it is shown in a titled dialog`(model: FailureModel) = runTest {
         // Arrange
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.error.left()
 
@@ -234,39 +241,202 @@ internal class IntroductionSocialLoginHandlerTest {
         handler.signIn(PROVIDER, host)
 
         // Assert
-        if (model.isSupportDialog) {
+        val message = slot<DialogMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        verify(exactly = 0) { uiMessageSender.send(any<SnackbarMessage>()) }
+        assertThat(message.captured.title).isNotNull()
+        val expectedActionId = if (model.isSupportDialog) {
+            CoreResR.string.social_login_error_support
+        } else {
+            CoreResR.string.common_got_it
+        }
+        assertThat(message.captured.firstAction.title).isEqualTo(resourceReference(expectedActionId))
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GenericFailures {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a failure with no wording of its own WHEN signIn THEN the generic dialog is shown`(
+            error: SocialLoginError,
+        ) = runTest {
+            // Arrange
+            coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns error.left()
+
+            // Act
+            handler.signIn(PROVIDER, host)
+
+            // Assert
             val message = slot<DialogMessage>()
             verify(exactly = 1) { uiMessageSender.send(capture(message)) }
-            assertThat(message.captured.firstAction).isNotNull()
-        } else {
-            verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
-            verify(exactly = 0) { uiMessageSender.send(any<DialogMessage>()) }
+            assertThat(message.captured.title).isEqualTo(resourceReference(CoreResR.string.common_something_went_wrong))
+            assertThat(message.captured.message).isEqualTo(resourceReference(CoreResR.string.social_login_error_generic_v2))
         }
+
+        private fun provideTestModels() = listOf(
+            SocialLoginError.SignInFailed(),
+            SocialLoginError.BindingConflict,
+            SocialLoginError.ProviderUnavailable,
+            SocialLoginError.ServerError(),
+            SocialLoginError.BackupWriteFailed(),
+        )
     }
 
-    @ParameterizedTest
-    @MethodSource("provideGenericFailures")
-    fun `GIVEN a failure with no wording of its own WHEN signIn THEN the generic snackbar is shown`(
-        error: SocialLoginError,
-    ) = runTest {
-        // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns error.left()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WordedFailures {
 
-        // Act
-        handler.signIn(PROVIDER, host)
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a failure with its own wording WHEN signIn THEN its title and text are shown`(
+            model: WordedFailureModel,
+        ) = runTest {
+            // Arrange
+            coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.error.left()
 
-        // Assert
-        val message = slot<SnackbarMessage>()
-        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
-        assertThat(message.captured.message).isEqualTo(resourceReference(CoreResR.string.social_login_error_generic))
+            // Act
+            handler.signIn(PROVIDER, host)
+
+            // Assert
+            val message = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.title).isEqualTo(model.expectedTitle)
+            assertThat(message.captured.message).isEqualTo(model.expectedMessage)
+        }
+
+        private fun provideTestModels() = listOf(
+            WordedFailureModel(
+                error = SocialLoginError.NetworkError,
+                expectedTitle = resourceReference(CoreResR.string.social_login_error_network_title),
+                expectedMessage = resourceReference(CoreResR.string.social_login_error_network_description),
+            ),
+            WordedFailureModel(
+                error = SocialLoginError.NoProviderAccount,
+                expectedTitle = resourceReference(
+                    id = CoreResR.string.social_login_error_no_account_title,
+                    formatArgs = wrappedList("Google"),
+                ),
+                expectedMessage = resourceReference(
+                    id = CoreResR.string.social_login_error_no_account,
+                    formatArgs = wrappedList("Google"),
+                ),
+            ),
+            WordedFailureModel(
+                error = SocialLoginError.WalletAlreadySaved,
+                expectedTitle = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved_title),
+                expectedMessage = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved),
+            ),
+        )
     }
 
-    private fun provideGenericFailures() = listOf(
-        SocialLoginError.BindingConflict,
-        SocialLoginError.NoProviderAccount,
-        SocialLoginError.ProviderUnavailable,
-        SocialLoginError.ServerError(),
-    )
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ToggleOff {
+
+        @BeforeEach
+        fun disableToggle() {
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN toggle off AND a failure WHEN signIn THEN it is shown in a snackbar as before`(
+            model: ToggleOffFailureModel,
+        ) = runTest {
+            // Arrange
+            coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.error.left()
+
+            // Act
+            handler.signIn(PROVIDER, host)
+
+            // Assert
+            val message = slot<SnackbarMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.message).isEqualTo(resourceReference(model.expectedMessageId))
+        }
+
+        @Test
+        fun `GIVEN toggle off AND the wallet is already on the device WHEN signIn THEN the untitled dialog is shown`() =
+            runTest {
+                // Arrange
+                coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
+                    SocialLoginError.WalletAlreadySaved.left()
+
+                // Act
+                handler.signIn(PROVIDER, host)
+
+                // Assert
+                val message = slot<DialogMessage>()
+                verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+                assertThat(message.captured.title).isNull()
+                assertThat(message.captured.message)
+                    .isEqualTo(resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved))
+            }
+
+        @Test
+        fun `GIVEN the backup write fails WHEN the retry is offered THEN the untitled dialog keeps the old text`() =
+            runTest {
+                // Arrange
+                val requestBackupRetry = slot<suspend () -> Boolean>()
+                val dialog = slot<DialogMessage>()
+                every { uiMessageSender.send(capture(dialog)) } just Runs
+                coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestBackupRetry), any()) } coAnswers {
+                    coroutineScope {
+                        val asked = async { requestBackupRetry.captured() }
+                        yield()
+                        dialog.captured.firstAction.onClick()
+                        asked.await()
+                    }
+                    SocialLoginError.ConsentDeclined.left()
+                }
+
+                // Act
+                handler.signIn(PROVIDER, host)
+
+                // Assert
+                assertThat(dialog.captured.title).isNull()
+                assertThat(dialog.captured.message)
+                    .isEqualTo(resourceReference(CoreResR.string.social_login_error_backup_not_saved))
+            }
+
+        @Test
+        fun `GIVEN the wallet cannot be selected WHEN signIn THEN the snackbar is shown as before`() = runTest {
+            // Arrange
+            coEvery {
+                socialLoginUseCase.signIn(PROVIDER, any(), any(), any())
+            } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+            coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
+
+            // Act
+            handler.signIn(PROVIDER, host)
+
+            // Assert
+            val message = slot<SnackbarMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.message).isEqualTo(resourceReference(CoreResR.string.common_unknown_error))
+        }
+
+        private fun provideTestModels() = listOf(
+            ToggleOffFailureModel(SocialLoginError.NetworkError, CoreResR.string.hw_cloud_backup_error_network),
+            ToggleOffFailureModel(SocialLoginError.BackupWriteFailed(), CoreResR.string.social_login_error_backup_not_saved),
+            ToggleOffFailureModel(SocialLoginError.NoProviderAccount, CoreResR.string.social_login_error_generic),
+            ToggleOffFailureModel(SocialLoginError.ServerError(), CoreResR.string.social_login_error_generic),
+        )
+    }
+
+    data class ToggleOffFailureModel(val error: SocialLoginError, val expectedMessageId: Int) {
+        override fun toString(): String = error.toString()
+    }
+
+    data class WordedFailureModel(
+        val error: SocialLoginError,
+        val expectedTitle: TextReference,
+        val expectedMessage: TextReference,
+    ) {
+        override fun toString(): String = error.toString()
+    }
 
     @Test
     fun `GIVEN two failed attempts WHEN support is contacted THEN each opens the chat under its own id`() = runTest {
@@ -416,8 +586,10 @@ internal class IntroductionSocialLoginHandlerTest {
 
         // Assert
         assertThat(answer).isTrue()
+        assertThat(dialog.captured.title)
+            .isEqualTo(resourceReference(CoreResR.string.social_login_error_backup_not_saved_title))
         assertThat(dialog.captured.message)
-            .isEqualTo(resourceReference(CoreResR.string.social_login_error_backup_not_saved))
+            .isEqualTo(resourceReference(CoreResR.string.social_login_error_backup_not_saved_description))
     }
 
     @ParameterizedTest
@@ -432,22 +604,6 @@ internal class IntroductionSocialLoginHandlerTest {
         // Assert
         verify(exactly = 0) { uiMessageSender.send(any()) }
         verify(exactly = 0) { analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.ErrorShown>()) }
-    }
-
-    @Test
-    fun `GIVEN the wallet is already on the device WHEN signIn THEN the already saved dialog is shown`() = runTest {
-        // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
-            SocialLoginError.WalletAlreadySaved.left()
-        val message = slot<DialogMessage>()
-        every { uiMessageSender.send(capture(message)) } just Runs
-
-        // Act
-        handler.signIn(PROVIDER, host)
-
-        // Assert
-        assertThat(message.captured.message)
-            .isEqualTo(resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved))
     }
 
     @Test
@@ -617,7 +773,7 @@ internal class IntroductionSocialLoginHandlerTest {
 
         // Assert
         assertThat(currentTime).isEqualTo(0)
-        verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+        verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
         assertThat(host.progress.last()).isNull()
     }
 

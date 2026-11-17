@@ -11,6 +11,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.cloudbackup.models.CloudBackupError
@@ -382,23 +383,48 @@ internal class ForgetWalletModelTest {
         }
 
     @Test
-    fun `GIVEN social deletion AND local deletion fails WHEN confirmed THEN the error is reported`() = runTest {
-        // Arrange
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(hotWallet)
-        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
-        coEvery { deleteWalletUseCase(walletId) } returns DeleteWalletError.UnableToDelete.left()
+    fun `GIVEN social deletion AND local deletion fails WHEN confirmed THEN the error is reported in a dialog`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(hotWallet)
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
+            coEvery { deleteWalletUseCase(walletId) } returns DeleteWalletError.UnableToDelete.left()
+            val model = createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true)
+            val sentMessages = mutableListOf<UiMessage>()
 
-        // Act
-        confirmForget(createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true))
+            // Act
+            confirmForget(model, sentMessages)
 
-        // Assert
-        verify(exactly = 1) {
-            analyticsEventHandler.send(
-                WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Local deletion error"),
-            )
+            // Assert
+            val dialog = sentMessages.filterIsInstance<DialogMessage>().last()
+            assertThat(dialog.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+            assertThat(dialog.message).isEqualTo(resourceReference(R.string.social_wallet_delete_error_description))
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Local deletion error"),
+                )
+            }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletDeleted>()) }
         }
-        verify(exactly = 0) { analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletDeleted>()) }
-    }
+
+    @Test
+    fun `GIVEN toggle off AND social deletion AND local deletion fails WHEN confirmed THEN the snackbar shows as before`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(hotWallet)
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery { deleteWalletUseCase(walletId) } returns DeleteWalletError.UnableToDelete.left()
+            val model = createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true)
+            val sentMessages = mutableListOf<UiMessage>()
+
+            // Act
+            confirmForget(model, sentMessages)
+
+            // Assert
+            assertThat(sentMessages.last()).isEqualTo(SnackbarMessage(resourceReference(R.string.common_unknown_error)))
+        }
 
     @Test
     fun `GIVEN social deletion WHEN delete clicked THEN the social login texts are shown`() = runTest {

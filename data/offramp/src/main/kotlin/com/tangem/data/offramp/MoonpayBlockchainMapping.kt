@@ -33,7 +33,7 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Solana -> MoonPaySupportedCurrency(networkCode = "solana", currencyCode = "sol")
         Stellar -> MoonPaySupportedCurrency(networkCode = "stellar", currencyCode = "xlm")
         Tezos -> MoonPaySupportedCurrency(networkCode = "tezos", currencyCode = "xtz")
-        TON -> MoonPaySupportedCurrency(networkCode = "ton", currencyCode = "ton")
+        TON -> MoonPaySupportedCurrency(networkCode = "ton", currencyCode = "gram")
         Tron -> MoonPaySupportedCurrency(networkCode = "tron", currencyCode = "trx")
         VeChain -> MoonPaySupportedCurrency(networkCode = "vechain", currencyCode = "vet")
         XRP -> MoonPaySupportedCurrency(networkCode = "ripple", currencyCode = "xrp")
