@@ -20,7 +20,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
 
     override fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
         return when (value) {
-            is MoneyAccountStatusValue.Empty -> MoneyAccountStatusValueDM.Empty
+            is MoneyAccountStatusValue.Empty,
+            is MoneyAccountStatusValue.Onboarding.NotStarted,
+            -> MoneyAccountStatusValueDM.Empty
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountStatusValueDM.Activating(
                 customerId = value.customerId,
                 step = value.step.toDM(),

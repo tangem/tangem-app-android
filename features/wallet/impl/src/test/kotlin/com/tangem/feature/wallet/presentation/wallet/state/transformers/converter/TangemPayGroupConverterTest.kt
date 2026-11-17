@@ -148,6 +148,29 @@ internal class TangemPayGroupConverterTest {
         assertThat(result.balance).isEqualTo(stringReference(DASH_SIGN))
     }
 
+    @Test
+    fun `GIVEN money not started and pay loaded WHEN convert THEN group with pay balance shown`() {
+        // Act
+        val result = converter(expandedAccounts = emptySet()).convert(
+            paymentStatus = paymentStatus(loadedValue(balance = BigDecimal("1545.35"))),
+            moneyStatus = moneyStatus(
+                MoneyAccountStatusValue.Onboarding.NotStarted(source = StatusSource.ACTUAL, customerId = "customer"),
+            ),
+            tangemPayMainUM = TangemPayMainUM.Loading,
+            moneyAccountMainUM = MoneyAccountMainUM.NotStarted(onDetailsClick = {}),
+        ) as TangemPayGroupUM.Content
+
+        // Assert
+        assertThat(result).isEqualTo(
+            expectedContent(
+                balance = usd(BigDecimal("1545.35")),
+                isBalanceFlickering = false,
+                isExpanded = false,
+                onClick = result.onClick,
+            ),
+        )
+    }
+
     private fun converter(expandedAccounts: Set<AccountId>) = TangemPayGroupConverter(
         expandedAccounts = expandedAccounts,
         clickIntents = clickIntents,
