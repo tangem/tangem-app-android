@@ -27,9 +27,7 @@ import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
 import com.tangem.features.earn.impl.analytics.EarnAnalyticsEvent
 import com.tangem.features.earn.impl.analytics.EarnInfoAnalyticsEvent
 import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
-import com.tangem.features.earn.impl.analytics.EarnUsdValuation
 import com.tangem.features.earn.impl.analytics.InfoAction
-import com.tangem.features.earn.impl.analytics.toAnalyticsApy
 import com.tangem.features.earn.impl.analytics.toAnalyticsValue
 import com.tangem.features.earn.impl.analytics.toInfoAction
 import com.tangem.features.earn.impl.info.EarnInfoChartConfig
@@ -42,6 +40,8 @@ import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
+import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler

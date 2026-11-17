@@ -2,6 +2,7 @@ package com.tangem.features.earn.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.features.earn.api.EarnEntrySource
+import com.tangem.features.earn.product.api.analytics.toAnalyticsValue
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction

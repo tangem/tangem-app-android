@@ -1,7 +1,6 @@
 package com.tangem.features.earn.impl.analytics
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.product.EarnHorizon
@@ -12,30 +11,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 internal class EarnAnalyticsValuesTest {
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class EntrySourceValue {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN entry source WHEN toAnalyticsValue THEN spec string`(model: ValueModel<EarnEntrySource>) {
-            // Act
-            val actual = model.input.toAnalyticsValue()
-
-            // Assert
-            assertThat(actual).isEqualTo(model.expected)
-        }
-
-        private fun provideTestModels() = listOf(
-            ValueModel(EarnEntrySource.TokenPage, "Token Page"),
-            ValueModel(EarnEntrySource.Markets, "Markets"),
-            ValueModel(EarnEntrySource.Deeplink, "Deeplink"),
-            ValueModel(EarnEntrySource.EarnBanner, "Earn Banner"),
-            ValueModel(EarnEntrySource.YieldSheet, "Yield Sheet"),
-            ValueModel(EarnEntrySource.ForYou, "For You"),
-        )
-    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

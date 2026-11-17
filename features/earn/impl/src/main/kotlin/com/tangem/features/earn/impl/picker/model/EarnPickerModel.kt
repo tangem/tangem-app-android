@@ -20,7 +20,6 @@ import com.tangem.features.earn.impl.InnerEarnNavigator
 import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
 import com.tangem.features.earn.impl.analytics.EarnNoFundsNoticeAnalytics
 import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
-import com.tangem.features.earn.impl.analytics.toAnalyticsApy
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.di.EarnHeroClip
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
@@ -35,6 +34,7 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
+import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
