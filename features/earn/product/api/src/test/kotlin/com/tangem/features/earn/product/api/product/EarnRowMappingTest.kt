@@ -184,6 +184,23 @@ internal class EarnRowMappingTest {
     }
 
     @Test
+    fun `GIVEN row with yearly fiat earnings WHEN toUM THEN the screen's earnings text is the value`() {
+        // Arrange
+        val row = createRow(value = EarnValue.YearlyFiatEarnings(BigDecimal("12.5")))
+
+        // Act
+        val actual = row.toUM(
+            onInfoClick = {},
+            amountText = { stringReference("amount") },
+            yearlyFiatEarningsText = { amount -> stringReference("~${amount.toPlainString()} USD per year") },
+        )
+
+        // Assert
+        assertThat(actual.value).isEqualTo(stringReference("~12.5 USD per year"))
+        assertThat(actual.onValueClick).isNull()
+    }
+
+    @Test
     fun `GIVEN how it works with a post WHEN toUM and learn more clicked THEN callback receives the post`() {
         // Arrange
         val howItWorks = EarnHowItWorks(

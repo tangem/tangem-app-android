@@ -32,6 +32,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -58,26 +59,26 @@ internal fun EventHeader(state: PolymarketEventDetailsUM.Content) {
             style = TangemTheme.typography3.heading.medium,
         )
         Spacer(modifier = Modifier.height(8.dp))
-        MetaRow(state = state)
+        EventMetaRow(state.categoryLabel, state.totalVolume, state.change24h)
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
-private fun MetaRow(state: PolymarketEventDetailsUM.Content) {
+internal fun EventMetaRow(categoryLabel: TextReference?, totalVolume: TextReference, change24h: PriceChangeState) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        state.categoryLabel?.let { category ->
+        categoryLabel?.let { category ->
             TangemBadge(text = category, size = TangemBadge.Size.X4)
         }
         MetaEntry(label = stringResourceSafe(R.string.prediction_event_total_volume)) {
-            MetaValue(value = state.totalVolume.resolveReference(), color = TangemTheme.colors3.text.accent.yellow)
+            MetaValue(value = totalVolume.resolveReference(), color = TangemTheme.colors3.text.accent.yellow)
         }
         MetaEntry(label = stringResourceSafe(R.string.prediction_details_24h_change)) {
-            when (val change = state.change24h) {
+            when (val change = change24h) {
                 is PriceChangeState.Content -> PriceChangeInPercent(
                     valueInPercent = change.valueInPercent,
                     type = change.type,

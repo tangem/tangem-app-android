@@ -2,8 +2,10 @@ package com.tangem.features.earn.impl.sheet.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -15,7 +17,6 @@ import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.overview.TestAction
 import com.tangem.features.earn.impl.overview.createSummary
-import com.tangem.features.earn.impl.sheet.EarnYieldSheetTexts
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
@@ -81,8 +82,8 @@ internal class EarnYieldSheetConverterTest {
             // Assert
             assertThat(actual.active.map { it.id.value }).containsExactly("lending")
             assertThat(actual.inactive.map { it.id.value }).containsExactly("staking", "vault").inOrder()
-            assertThat(actual.title).isEqualTo(EarnYieldSheetTexts.title)
-            assertThat(actual.inactiveTitle).isEqualTo(EarnYieldSheetTexts.inactiveTitle)
+            assertThat(actual.title).isEqualTo(resourceReference(R.string.eth_yield_title))
+            assertThat(actual.inactiveTitle).isEqualTo(resourceReference(R.string.eth_yield_not_active_yet))
         }
 
         @Test
@@ -119,8 +120,8 @@ internal class EarnYieldSheetConverterTest {
             // Assert
             assertThat(actual.active).isEmpty()
             assertThat(actual.inactive).isEmpty()
-            assertThat(actual.title).isEqualTo(EarnYieldSheetTexts.title)
-            assertThat(actual.inactiveTitle).isEqualTo(EarnYieldSheetTexts.inactiveTitle)
+            assertThat(actual.title).isEqualTo(resourceReference(R.string.eth_yield_title))
+            assertThat(actual.inactiveTitle).isEqualTo(resourceReference(R.string.eth_yield_not_active_yet))
         }
     }
 
@@ -226,7 +227,7 @@ internal class EarnYieldSheetConverterTest {
 
             // Assert
             assertThat(actual.isActive).isFalse()
-            assertThat(actual.caption).isEqualTo(EarnYieldSheetTexts.startEarning)
+            assertThat(actual.caption).isEqualTo(resourceReference(R.string.eth_yield_start_earning))
             assertThat(actual.amount).isNull()
             assertThat(actual.amountFiat).isNull()
         }
@@ -245,7 +246,7 @@ internal class EarnYieldSheetConverterTest {
             // Assert
             val expected = model.risk?.let {
                 TangemBadgeUM(
-                    text = EarnYieldSheetTexts.risk(it),
+                    text = resourceReference(requireNotNull(model.title)),
                     status = requireNotNull(model.status),
                     size = TangemBadge.Size.X4,
                 )
@@ -254,10 +255,10 @@ internal class EarnYieldSheetConverterTest {
         }
 
         private fun provideTestModels() = listOf(
-            RiskModel(risk = EarnRisk.Low, status = TangemBadge.Status.Success),
-            RiskModel(risk = EarnRisk.Medium, status = TangemBadge.Status.Warning),
-            RiskModel(risk = EarnRisk.High, status = TangemBadge.Status.Error),
-            RiskModel(risk = null, status = null),
+            RiskModel(risk = EarnRisk.Low, title = R.string.earn_risk_low, status = TangemBadge.Status.Success),
+            RiskModel(risk = EarnRisk.Medium, title = R.string.earn_risk_medium, status = TangemBadge.Status.Warning),
+            RiskModel(risk = EarnRisk.High, title = R.string.earn_risk_high, status = TangemBadge.Status.Error),
+            RiskModel(risk = null, title = null, status = null),
         )
     }
 
@@ -311,5 +312,5 @@ internal class EarnYieldSheetConverterTest {
         intents = intents,
     )
 
-    internal data class RiskModel(val risk: EarnRisk?, val status: TangemBadge.Status?)
+    internal data class RiskModel(val risk: EarnRisk?, val title: Int?, val status: TangemBadge.Status?)
 }

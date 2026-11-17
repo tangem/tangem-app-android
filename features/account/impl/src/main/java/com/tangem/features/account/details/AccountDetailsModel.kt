@@ -214,6 +214,7 @@ internal class AccountDetailsModel @Inject constructor(
             title = resourceReference(R.string.common_joint_account),
             accountName = account.accountName.toUM().value,
             accountSubtitle = value.membersCount() ?: resourceReference(R.string.common_joint_account),
+            isNameAboveSubtitle = true,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
             onAccountEditClick = null,

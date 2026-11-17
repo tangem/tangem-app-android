@@ -40,3 +40,43 @@ internal fun threeWayCard(key: PolymarketSoccerCard.Key = PolymarketSoccerCard.K
         }),
     )
 }
+
+internal fun soccerPickerCard(
+    key: PolymarketSoccerCard.Key = PolymarketSoccerCard.Key.SPREADS,
+    teamSide: PolymarketSoccerCard.TeamSide? = null,
+    defaultMarketId: String = "p2",
+): PolymarketSoccerCard {
+    val spreads = key == PolymarketSoccerCard.Key.SPREADS
+    val positions = listOf("p1", "p2").mapIndexed { index, id ->
+        val line = if (spreads) (if (index == 0) "1.5" else "-1.5") else (if (index == 0) "1.5" else "2.5")
+        val left = if (spreads) PolymarketSoccerCard.ButtonSide.LEFT else PolymarketSoccerCard.ButtonSide.OVER
+        val right = if (spreads) PolymarketSoccerCard.ButtonSide.RIGHT else PolymarketSoccerCard.ButtonSide.UNDER
+        PolymarketSoccerCard.Position(
+            marketId = id,
+            pickerLabel = if (spreads) "1.5" else line,
+            line = BigDecimal(line),
+            isDefault = id == defaultMarketId,
+            buttons = listOf(
+                PolymarketSoccerCard.Button(left, if (spreads) "HOM ${if (index == 0) "+" else ""}$line" else "provider over", id, "$id-left"),
+                PolymarketSoccerCard.Button(right, if (spreads) "AWY ${BigDecimal(line).negate()}" else "provider under", id, "$id-right"),
+            ),
+        )
+    }
+    return PolymarketSoccerCard(
+        key = key,
+        sportsMarketType = key.value,
+        markets = positions.map { position ->
+            createPolymarketMarket(
+                id = position.marketId,
+                eventId = "child-${position.marketId}",
+                description = "Rules ${position.marketId}",
+                outcomes = listOf(
+                    createPolymarketOutcome("${position.marketId}-right", probability = BigDecimal("0.7")),
+                    createPolymarketOutcome("${position.marketId}-left", probability = null),
+                ),
+            )
+        },
+        content = if (spreads) PolymarketSoccerCard.Content.SidePicker(positions)
+        else PolymarketSoccerCard.Content.OverUnderPicker(positions, teamSide),
+    )
+}

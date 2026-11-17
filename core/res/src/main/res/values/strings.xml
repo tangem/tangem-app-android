@@ -170,6 +170,8 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="all_services_header_description">Everything available to you in one place.\nAdd what you need, when you need it.</string>
+  <string name="all_services_header_title">All services</string>
   <string name="all_services_title">Services</string>
   <string name="app_settings_access_code_warning">Set an access code to enable biometrics</string>
   <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
@@ -801,6 +803,7 @@
   <string name="earn_calculator_axis_years">%dY</string>
   <string name="earn_calculator_decrease_accessibility">Decrease %s</string>
   <string name="earn_calculator_earned_in">%1$s earned in %2$s</string>
+  <string name="earn_calculator_earned_in_label">earned in</string>
   <string name="earn_calculator_increase_accessibility">Increase %s</string>
   <string name="earn_calculator_initial_balance">Initial balance</string>
   <string name="earn_calculator_month_accessibility">Month %d</string>
@@ -815,7 +818,14 @@
     <item quantity="one">%d Year</item>
     <item quantity="other">%d Years</item>
   </plurals>
+  <string name="earn_chart_average_apr">Average APR</string>
+  <string name="earn_chart_clear_selection_accessibility">Clear selection</string>
+  <string name="earn_chart_current_apr">Current APR</string>
+  <string name="earn_chart_history_accessibility">Rate history chart</string>
+  <string name="earn_chart_next_bar_accessibility">Next bar</string>
+  <string name="earn_chart_previous_bar_accessibility">Previous bar</string>
   <string name="earn_clear_filter">Clear filter</string>
+  <string name="earn_deposit_title">Deposit to %s</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
   <string name="earn_filter_all_networks">All networks</string>
   <string name="earn_filter_all_types">All types</string>
@@ -835,9 +845,11 @@
   <string name="earn_how_it_works_take_it_back_title">Take it back anytime</string>
   <string name="earn_how_it_works_title">How it works</string>
   <string name="earn_how_it_works_watch_it_grow_title">Watch it grow</string>
+  <string name="earn_incentive_sheet_service_fee">The displayed APY includes incentive rewards after Tangem’s %s%% service fee.</string>
   <string name="earn_mostly_used">Popular</string>
   <string name="earn_no_results">No results</string>
   <string name="earn_product_details_audits">Audits</string>
+  <string name="earn_product_details_lending_no_lockups_title">No lock-ups.</string>
   <string name="earn_product_details_lending_withdraw_anytime_subtitle">Aave\'s deep liquidity means your ETH is available on demand, subject to protocol liquidity</string>
   <string name="earn_product_details_lending_withdraw_anytime_title">Withdraw anytime.</string>
   <string name="earn_product_details_lending_withdrawals_info">Withdrawals are usually instant. They depend on the ETH available in Aave, so if liquidity is low, you can withdraw up to the available amount and the rest once liquidity returns.</string>
@@ -880,6 +892,7 @@
   <string name="email_subject_wc_error">WalletConnect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
+  <string name="eth_yield_manage">Manage</string>
   <string name="eth_yield_net_apy">%s net APY</string>
   <string name="eth_yield_not_active_yet">Not active yet</string>
   <string name="eth_yield_start_earning">Start earning</string>
@@ -1302,7 +1315,9 @@
   <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_compromised_message">The account address on your device doesn\'t match the one from our servers.</string>
+  <string name="joint_account_compromised_message_v2">We couldn’t confirm this account’s details are correct, so we paused it to keep your funds safe.</string>
   <string name="joint_account_compromised_title">Can\'t verify this account</string>
+  <string name="joint_account_compromised_title_v2">Account paused for safety</string>
   <string name="joint_account_confirm_account_subtitle">Before using your Joint Account, make sure every member sees exactly the same address.</string>
   <string name="joint_account_confirm_account_title">Confirm the account</string>
   <string name="joint_account_confirm_address_compare_subtitle">Contact all members outside Tangem by phone, messenger, or in person. Check that everyone sees the exact same address.</string>
@@ -1405,6 +1420,9 @@
     <item quantity="one">Waiting for %d member</item>
     <item quantity="other">Waiting for %d members</item>
   </plurals>
+  <string name="joint_account_members_access_loss_all">If all members lose access to the wallet, the funds will be permanently lost</string>
+  <string name="joint_account_members_access_loss_any">If any member loses access to the wallet, the funds will be permanently lost</string>
+  <string name="joint_account_members_access_loss_some">If %1$s of %2$s members lose access to the wallet, the funds will be permanently lost</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d member</item>
     <item quantity="other">%d members</item>
@@ -1790,6 +1808,7 @@
   <string name="money_account_balance_unavailable_title">Balance unavailable</string>
   <string name="money_account_banner_proceed">Proceed</string>
   <string name="money_account_close_account">Close account</string>
+  <string name="money_account_main_details_button">Details</string>
   <string name="money_account_main_name">USD account</string>
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
@@ -1805,6 +1824,9 @@
   <string name="money_account_main_status_dialog_failed_title">We couldn\'t activate your account</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
+  <string name="money_account_main_status_dialog_not_started_description">Receive ACH transfers with your own US bank details. Separate balance, your card stays as it is. Ready in up to 2 days.</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Pay Virtual Account Terms</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">By tapping Activate, you agree to the\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Sorry, we couldn\'t verify your identity based on the information provided</string>
   <string name="money_account_main_status_dialog_verification_declined_title">We couldn\'t verify your identity</string>
   <string name="money_account_main_status_dialog_verification_description">This usually takes a few minutes. You can check the status below</string>
@@ -1821,6 +1843,7 @@
   <string name="money_account_onboarding_fees_provider">Provider</string>
   <string name="money_account_onboarding_fees_title">Fees</string>
   <string name="money_account_onboarding_secondary_button">Terms and fees</string>
+  <string name="money_account_onboarding_success_title">USD account is activating</string>
   <string name="money_account_onboarding_terms_link">Terms of Service</string>
   <string name="money_account_onboarding_terms_notice">By using the service, you agree to the provider’s %1$s</string>
   <string name="money_account_onboarding_title">Get a USD account</string>
@@ -1845,7 +1868,7 @@
   <string name="native_survey_comment_placeholder">Type something</string>
   <string name="native_survey_done_description">It helps us make Tangem better.</string>
   <string name="native_survey_done_title">Thanks for your feedback</string>
-  <string name="native_survey_nps_scale_hint"> 0 is not at all likely, 10 is extremely likely</string>
+  <string name="native_survey_nps_scale_hint">0 is not at all likely, 10 is extremely likely</string>
   <string name="native_survey_optional">Optional</string>
   <string name="native_survey_send_feedback">Send feedback</string>
   <string name="news_all_news">All news</string>
@@ -2555,6 +2578,11 @@
   <string name="receive_bottom_sheet_warning_message_description">Sending any other currency will result in its irreversible loss.</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
   <string name="receive_bottom_sheet_warning_title">Send only %1$s on the %2$s network</string>
+  <string name="receive_network_subtitle">%1$s network • %2$s</string>
+  <string name="receive_network_with_label">%1$s (%2$s) network</string>
+  <string name="receive_no_tag_required">No tag required</string>
+  <string name="receive_send_only_on_network">Send only %1$s on %2$s network</string>
+  <string name="receive_send_only_on_network_with_label">Send only %1$s on %2$s (%3$s) network</string>
   <string name="receive_token_description">Transfer funds from any wallet or exchange</string>
   <string name="referral_address_for_rewards">Address for rewards</string>
   <string name="referral_button_participate">Participate</string>
@@ -3405,6 +3433,11 @@
   <string name="tangempay_kyc_rejected_button_text">Hide status</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="one">%d account</item>
+    <item quantity="other">%d accounts</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">Select plan</string>
   <string name="tangempay_maximum_cards_issued_description">Close one to add a new card</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade plan to have more cards</string>
@@ -4144,8 +4177,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have an unfinished transaction</string>
   <string name="warning_last_balance_updated_time">Last update was %s</string>
-  <string name="warning_link_wallet_cold_message">Sync your wallet with Tangem services to add an extra layer of security.</string>
-  <string name="warning_link_wallet_hot_message">Sync your wallet with Tangem services to add an extra layer of security.</string>
+  <string name="warning_link_wallet_cold_message">Use your card to add an extra layer of security when connecting to Tangem services</string>
+  <string name="warning_link_wallet_hot_message">Add an extra layer of security when connecting to Tangem services</string>
   <string name="warning_link_wallet_title">Secure your connection</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>

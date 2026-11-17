@@ -21,13 +21,14 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
+import com.tangem.features.polymarket.impl.navigation.createEventDetailsComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.navigation.settledUserWalletId
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -124,18 +125,10 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
-        is PolymarketRoute.FastTradingSettings -> createFastTradingSettings(configuration, factoryContext)
-        is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
-            appComponentContext = factoryContext,
-            params = PolymarketEventDetailsComponent.Params(
-                eventId = configuration.eventId,
-                // The route carries the wallet the feed was opened for; the feature's own params
-                // hold none until the entry gate picks one.
-                userWalletId = configuration.userWalletId,
-                marketId = configuration.marketId,
-                assetId = configuration.assetId,
-                categoryLabel = configuration.categoryLabel,
-            ),
+        is PolymarketRoute.FastTrading -> createFastTrading(configuration, factoryContext)
+        is PolymarketRoute.EventDetails -> configuration.createEventDetailsComponent(
+            context = factoryContext,
+            isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,
@@ -182,13 +175,22 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketCategoryComponent.Params(configuration.userWalletId, configuration.category),
         )
 
-    private fun createFastTradingSettings(
-        configuration: PolymarketRoute.FastTradingSettings,
+    private fun createFastTrading(
+        configuration: PolymarketRoute.FastTrading,
         factoryContext: AppComponentContext,
-    ) = PolymarketFastTradingSettingsComponent(
-        appComponentContext = factoryContext,
-        params = PolymarketFastTradingSettingsComponent.Params(userWalletId = configuration.userWalletId),
-    )
+    ): ComposableContentComponent = when (configuration) {
+        is PolymarketRoute.FastTradingActivation -> PolymarketFastTradingActivationComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketFastTradingActivationComponent.Params(
+                userWalletId = configuration.userWalletId,
+                action = configuration.action,
+            ),
+        )
+        is PolymarketRoute.FastTradingSettings -> PolymarketFastTradingSettingsComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketFastTradingSettingsComponent.Params(userWalletId = configuration.userWalletId),
+        )
+    }
 
     private fun onChildBack(onComplete: (Boolean) -> Unit) {
         stackNavigation.pop { isPopped -> if (isPopped) onComplete(true) else router.pop(onComplete) }

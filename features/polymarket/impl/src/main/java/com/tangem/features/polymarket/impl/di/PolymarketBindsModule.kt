@@ -20,8 +20,10 @@ import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
+import com.tangem.features.polymarket.impl.soccer.model.PolymarketSoccerModel
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
+import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketFastTradingActivationModel
 import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketFastTradingSettingsModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.history.model.PolymarketHistoryModel
@@ -102,6 +104,11 @@ internal interface PolymarketModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(PolymarketFastTradingActivationModel::class)
+    fun bindPolymarketFastTradingActivationModel(impl: PolymarketFastTradingActivationModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(PolymarketAddFundsModel::class)
     fun bindPolymarketAddFundsModel(impl: PolymarketAddFundsModel): Model
 
@@ -139,6 +146,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketEntryModel::class)
     fun bindPolymarketEntryModel(impl: PolymarketEntryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketSoccerModel::class)
+    fun bindPolymarketSoccerModel(impl: PolymarketSoccerModel): Model
 
     @Binds
     @IntoMap

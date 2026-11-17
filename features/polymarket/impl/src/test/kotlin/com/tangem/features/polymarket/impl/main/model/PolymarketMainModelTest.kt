@@ -4,6 +4,9 @@ import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketSportsState
@@ -52,9 +55,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
-import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketSessionKeyMessagesFactory
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -97,6 +98,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
@@ -152,10 +154,9 @@ internal class PolymarketMainModelTest {
     private val fastTradingBanner = MutableStateFlow<PolymarketFastTradingBanner?>(value = null)
     private val fastTradingRechecks = slot<Flow<Unit>>()
     private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
-        every { observe(any(), capture(fastTradingRechecks)) } returns fastTradingBanner
+        every { observe(any(), capture(fastTradingRechecks), any()) } returns fastTradingBanner
         coEvery { refresh(any()) } just Runs
         coEvery { dismiss(any(), any()) } just Runs
-        every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
@@ -660,7 +661,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent().copy(eventType = "soccer")))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -675,6 +676,7 @@ internal class PolymarketMainModelTest {
                     eventId = "event-1",
                     userWalletId = USER_WALLET_ID,
                     categoryLabel = "Trending",
+                    eventType = "soccer",
                 ),
                 any(),
             )
@@ -801,9 +803,10 @@ internal class PolymarketMainModelTest {
     }
 
     @ParameterizedTest
-    @MethodSource("startedBanners")
-    fun `GIVEN an actionable banner WHEN action clicked THEN its operation starts without navigation`(
+    @MethodSource("bannerActivationActions")
+    fun `GIVEN an actionable banner WHEN action clicked THEN activation screen opens with its action`(
         banner: PolymarketFastTradingBanner,
+        action: ActivationAction,
     ) = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -814,26 +817,8 @@ internal class PolymarketMainModelTest {
         model.uiState.value.fastTradingBanner!!.onActionClick()
 
         // Assert
-        verify(exactly = 1) { fastTradingBannerSource.start(USER_WALLET_ID, banner) }
-        verify(exactly = 0) { router.push(any(), any()) }
-        verify(exactly = 0) { messageSender.send(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN another operation runs WHEN banner action clicked THEN the busy toast is shown`() = runTest {
-        // Arrange
-        every { fastTradingBannerSource.start(USER_WALLET_ID, any()) } returns PolymarketSessionKeyOperationStart.Busy
-        val model = createModel(testScope = this)
-        fastTradingBanner.value = PolymarketFastTradingBanner.Extend(daysLeft = 3)
-        advanceUntilIdle()
-
-        // Act
-        model.uiState.value.fastTradingBanner!!.onActionClick()
-
-        // Assert
         verify(exactly = 1) {
-            messageSender.send(PolymarketSessionKeyMessagesFactory.create(PolymarketSessionKeyOperationStart.Busy)!!)
+            router.push(PolymarketRoute.FastTradingActivation(userWalletId = USER_WALLET_ID, action = action), any())
         }
         model.onDestroy()
     }
@@ -857,7 +842,7 @@ internal class PolymarketMainModelTest {
         }
 
     @ParameterizedTest
-    @MethodSource("startedBanners")
+    @MethodSource("dismissibleBanners")
     fun `GIVEN a dismissible banner WHEN closed THEN its dismissal is stored`(banner: PolymarketFastTradingBanner) =
         runTest {
             // Arrange
@@ -989,7 +974,7 @@ internal class PolymarketMainModelTest {
         runCurrent()
 
         // Assert
-        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any(), any()) }
         coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
         linkCheck.complete(true)
         model.onDestroy()
@@ -1058,7 +1043,7 @@ internal class PolymarketMainModelTest {
         // Assert
         coVerifyOrder {
             walletLinkGate.ensureLinked(USER_WALLET_ID)
-            fastTradingBannerSource.observe(USER_WALLET_ID, any())
+            fastTradingBannerSource.observe(USER_WALLET_ID, any(), includesUnknownSigners = true)
         }
         model.onDestroy()
     }
@@ -1074,7 +1059,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any(), any()) }
     }
 
     @Test
@@ -2517,7 +2502,24 @@ internal class PolymarketMainModelTest {
     private companion object {
 
         @JvmStatic
-        fun startedBanners() = listOf(
+        fun bannerActivationActions() = listOf(
+            Arguments.of(PolymarketFastTradingBanner.Activate, ActivationAction.Activate),
+            Arguments.of(
+                PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+                ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+            ),
+            Arguments.of(
+                PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+                ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+            ),
+            Arguments.of(
+                PolymarketFastTradingBanner.Extend(daysLeft = 12),
+                ActivationAction.Extend,
+            ),
+        )
+
+        @JvmStatic
+        fun dismissibleBanners() = listOf(
             PolymarketFastTradingBanner.Activate,
             PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
             PolymarketFastTradingBanner.Extend(daysLeft = 12),

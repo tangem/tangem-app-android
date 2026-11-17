@@ -4,9 +4,8 @@ import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.raise.option
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
@@ -15,12 +14,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class SellRedirectDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val offrampRepository: OfframpRepository,
@@ -74,7 +72,7 @@ internal class SellRedirectDeepLinkHandler @Inject constructor(
                             TangemLogger.e("Error on getting cryptoCurrency for SELL deeplink")
                             return@launch
                         }
-                        appRouter.push(
+                        request.router.push(
                             AppRoute.Send(
                                 currency = cryptoCurrency,
                                 userWalletId = userWallet.walletId,

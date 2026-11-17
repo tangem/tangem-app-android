@@ -2,13 +2,12 @@ package com.tangem.tap.routing.utils
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
-import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -46,11 +45,7 @@ internal class RootDeepLinkDispatcherTest {
         ).mapValues { (_, handler) -> Provider { handler } },
     )
 
-    private val deepLinkFactory = DeepLinkFactory(
-        marketingUidBindingRepository = mockk(),
-        appCoroutineScope = TestAppCoroutineScope(),
-        deepLinkHandlerRegistry = deepLinkHandlerRegistry,
-    )
+    private val deepLinkFactory = DeepLinkFactory()
 
     private val dispatcher = RootDeepLinkDispatcher(
         deepLinkFactory = deepLinkFactory,

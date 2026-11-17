@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.soccer.ui.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
+import com.tangem.features.polymarket.impl.common.ui.counter.PolymarketCounter
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -21,6 +22,11 @@ internal data class PolymarketSoccerCardUM(
     sealed interface Content {
         data class Buttons(val outcomes: ImmutableList<Outcome>) : Content
         data class Rows(val outcomes: ImmutableList<Outcome>) : Content
+        data class Picker(
+            val items: ImmutableList<PolymarketCounter.Item>,
+            val selectedId: String,
+            val outcomes: ImmutableList<Outcome>,
+        ) : Content
     }
 
     @Immutable

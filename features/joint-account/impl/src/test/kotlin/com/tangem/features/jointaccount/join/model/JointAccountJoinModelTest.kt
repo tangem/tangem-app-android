@@ -19,6 +19,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
@@ -29,6 +32,8 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -45,6 +50,9 @@ internal class JointAccountJoinModelTest {
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val selectWalletUseCase: SelectWalletUseCase = mockk()
     private val expandedAccountsHolder: MainExpandedAccountsHolder = mockk(relaxed = true)
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
+    private val userWallet: UserWallet = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
@@ -55,11 +63,15 @@ internal class JointAccountJoinModelTest {
             singleAccountListSupplier,
             selectWalletUseCase,
             expandedAccountsHolder,
+            getUserWalletUseCase,
+            ensureWalletLinkedUseCase,
             uiMessageSender,
             analyticsEventHandler,
         )
         coEvery { singleAccountListSupplier.getSyncOrNull(USER_WALLET_ID) } returns MockAccounts.onlyMainAccount
-        coEvery { selectWalletUseCase(USER_WALLET_ID) } returns mockk<UserWallet>().right()
+        coEvery { selectWalletUseCase(USER_WALLET_ID) } returns userWallet.right()
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns userWallet.right()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns true
     }
 
     @Test
@@ -215,6 +227,53 @@ internal class JointAccountJoinModelTest {
         }
     }
 
+    @Test
+    fun `GIVEN linked wallet WHEN join THEN the link is ensured before joining`() = runTest {
+        // Arrange
+        val model = createModelWithDraft()
+        coEvery { joinUseCase(any(), any(), any(), any()) } returns joinedAccount.right()
+
+        // Act
+        model.join(inviteId = INVITE_ID, memberName = NAME)
+
+        // Assert
+        coVerifyOrder {
+            ensureWalletLinkedUseCase(userWallet)
+            joinUseCase(USER_WALLET_ID, INVITE_ID, CONFIG, NAME)
+        }
+    }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN join THEN nothing is joined and nothing is shown`() = runTest {
+        // Arrange
+        val model = createModelWithDraft()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns false
+
+        // Act
+        val action = model.join(inviteId = INVITE_ID, memberName = NAME)
+
+        // Assert
+        assertThat(action).isEqualTo(JoinResultAction.None)
+        coVerify(exactly = 0) { joinUseCase(any(), any(), any(), any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN wallet not found WHEN join THEN the join goes on without the link check`() = runTest {
+        // Arrange
+        val model = createModelWithDraft()
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        coEvery { joinUseCase(any(), any(), any(), any()) } returns joinedAccount.right()
+
+        // Act
+        val action = model.join(inviteId = INVITE_ID, memberName = NAME)
+
+        // Assert
+        assertThat(action).isEqualTo(JoinResultAction.OpenMain(userWalletId = USER_WALLET_ID))
+        coVerify(exactly = 0) { ensureWalletLinkedUseCase(any()) }
+    }
+
     private fun createModelWithDraft(): JointAccountJoinModel {
         return createModel().apply {
             draftHolder.setSelectedWallet(walletId = USER_WALLET_ID)
@@ -228,6 +287,8 @@ internal class JointAccountJoinModelTest {
         singleAccountListSupplier = singleAccountListSupplier,
         selectWalletUseCase = selectWalletUseCase,
         expandedAccountsHolder = expandedAccountsHolder,
+        getUserWalletUseCase = getUserWalletUseCase,
+        ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
         uiMessageSender = uiMessageSender,
         analyticsEventHandler = analyticsEventHandler,
     )

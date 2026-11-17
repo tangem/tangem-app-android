@@ -30,7 +30,11 @@ import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
@@ -45,6 +49,7 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -89,6 +94,9 @@ internal class JointAccountMembersModelTest {
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val issueJointAccountInviteUseCase: IssueJointAccountInviteUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
+    private val userWallet: UserWallet = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val clock = FakeCurrentTimeProvider()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
@@ -111,6 +119,8 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher,
             pollingCoordinator,
             issueJointAccountInviteUseCase,
+            getUserWalletUseCase,
+            ensureWalletLinkedUseCase,
             ownerAddressResolver,
             singleAccountSupplier,
             compositionVerifier,
@@ -129,6 +139,8 @@ internal class JointAccountMembersModelTest {
         every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
         coEvery { ownerAddressResolver.resolve(userWalletId = any(), ownerKeyIndex = any()) } returns null.right()
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns userWallet.right()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns true
     }
 
     @Test
@@ -288,6 +300,87 @@ internal class JointAccountMembersModelTest {
         }
         assertThat(openedSheets).containsExactly(expected)
         verify(exactly = 0) { shareManager.shareTrackedText(text = any()) }
+    }
+
+    @Test
+    fun `GIVEN linked wallet WHEN invite clicked THEN the link is ensured before the invite is issued`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        coEvery { issueJointAccountInviteUseCase(accountId = any(), slot = any()) } returns ISSUED_INVITE.right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            ensureWalletLinkedUseCase(userWallet)
+            issueJointAccountInviteUseCase(accountId = any(), slot = 1)
+        }
+    }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN invite clicked THEN no invite is issued and the button is back`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns false
+        val model = createModel()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { issueJointAccountInviteUseCase(accountId = any(), slot = any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        assertThat(openedSheets).isEmpty()
+        assertThat(model.uiState.value.freeSlots.first().action?.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN wallet link sheet is open WHEN any slot is clicked again THEN it is ignored and the slot shows a loader`() =
+        runTest {
+            // Arrange
+            stub(account = pendingAccount(members = listOf(creator)))
+            stubAccountRecord()
+            val linking = CompletableDeferred<Boolean>()
+            coEvery { ensureWalletLinkedUseCase(userWallet) } coAnswers { linking.await() }
+            val model = createModel()
+            val (firstSlot, secondSlot) = model.uiState.value.freeSlots.map { it.action }
+
+            // Act
+            firstSlot.click()
+            runCurrent()
+            firstSlot.click()
+            secondSlot.click()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.freeSlots.map { it.action?.isLoading }).containsExactly(true, false).inOrder()
+            coVerify(exactly = 1) { ensureWalletLinkedUseCase(userWallet) }
+            linking.complete(false)
+        }
+
+    @Test
+    fun `GIVEN wallet not found WHEN invite clicked THEN the invite is issued without the link check`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        coEvery { issueJointAccountInviteUseCase(accountId = any(), slot = any()) } returns ISSUED_INVITE.right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { issueJointAccountInviteUseCase(accountId = any(), slot = 1) }
+        coVerify(exactly = 0) { ensureWalletLinkedUseCase(any()) }
     }
 
     @Test
@@ -862,6 +955,8 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher = jointAccountListFetcher,
             pollingCoordinator = pollingCoordinator,
             issueJointAccountInviteUseCase = issueJointAccountInviteUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
+            ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
             ownerAddressResolver = ownerAddressResolver,
             singleAccountSupplier = singleAccountSupplier,
             stateController = JointAccountMembersStateController(),

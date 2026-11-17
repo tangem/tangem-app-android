@@ -16,6 +16,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -54,6 +55,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
@@ -123,7 +125,6 @@ internal class EarnFlowModel @Inject constructor(
     private val amountInput = EarnAmountInput(clickIntents = this)
 
     private var feeJob: Job? = null
-    private var feeStatusJob: Job? = null
     private var prepareJob: Job? = null
     private var executeJob: Job? = null
 
@@ -146,7 +147,12 @@ internal class EarnFlowModel @Inject constructor(
             subscribeOnStatuses()
             if (amountSource != null) loadMaxAmount()
             val userWallet = wallet.userWallet(params.product)
-            state.update { it.copy(walletIcon = userWallet?.let(::walletInterationIcon)) }
+            state.update { flowState ->
+                flowState.copy(
+                    walletIcon = userWallet?.let(::walletInterationIcon),
+                    isHoldToConfirm = userWallet?.isHotWallet == true,
+                )
+            }
             if (amountSource == EarnActionInput.Amount.Source.Wallet) loadSource(userWallet)
         }
     }
@@ -242,7 +248,7 @@ internal class EarnFlowModel @Inject constructor(
             current.signing.isExecuting -> Unit
             current.step == EarnFlowStep.Confirm && amountSource != null -> {
                 prepareJob?.cancel()
-                state.update { it.copy(step = EarnFlowStep.Amount, plan = null, isPreparing = false) }
+                state.update { it.copy(step = EarnFlowStep.Amount, plan = null, sentPlan = null, isPreparing = false) }
                 navigation.pop()
             }
             else -> finish(EarnFlowExit.Done)
@@ -266,15 +272,10 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun subscribeOnStatuses() {
         statuses.currency(params.product)
-            .onEach { status ->
-                updateWithInitialAmount { it.copy(status = status) }
-                if (feeStatusJob == null && status.value !is CryptoCurrencyStatus.Loading) {
-                    feeStatusJob = modelScope.launch {
-                        val feeStatus = statuses.feeCurrency(params.product, status)
-                        state.update { it.copy(feeStatus = feeStatus) }
-                    }
-                }
-            }
+            .onEach { status -> updateWithInitialAmount { it.copy(status = status) } }
+            .launchIn(modelScope)
+        statuses.feeCurrency(params.product)
+            .onEach { feeStatus -> state.update { it.copy(feeStatus = feeStatus) } }
             .launchIn(modelScope)
         statuses.appCurrency()
             .onEach { appCurrency -> updateWithInitialAmount { it.copy(appCurrency = appCurrency) } }
@@ -321,23 +322,37 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
-    private fun enteredSessionAmount(): EarnAmount? = state.value.enteredAmount?.let(EarnAmount::Exact)
+    private fun enteredSessionAmount(): EarnAmount? {
+        val current = state.value
+        return current.enteredAmount?.let { current.toSessionAmount(it) }
+    }
+
+    /**
+     * A position keeps accruing interest after [EarnFlowState.maxAmount] was read, so an exact max would fall short of
+     * it by the time the transaction is built and leave dust behind. The session resolves [EarnAmount.Entire] from
+     * its fresh state instead. A wallet max stays exact: the flow deducts the fee from it, the session does not.
+     */
+    private fun EarnFlowState.toSessionAmount(amount: BigDecimal): EarnAmount {
+        val max = maxAmount
+        val isEntirePosition = amountSource == EarnActionInput.Amount.Source.Position && max != null && amount >= max
+        return if (isEntirePosition) EarnAmount.Entire else EarnAmount.Exact(amount)
+    }
 
     private fun prepare(onPrepared: () -> Unit = {}) {
         val current = state.value
         val selection = current.feeSelection ?: return
-        val amount = if (amountSource != null) EarnAmount.Exact(current.sendingAmount ?: return) else null
+        val amount = if (amountSource != null) current.toSessionAmount(current.sendingAmount ?: return) else null
 
         prepareJob?.cancel()
         state.update { it.copy(isPreparing = true) }
         prepareJob = modelScope.launch {
             session.prepare(action, amount, selection).fold(
                 ifLeft = { error ->
-                    state.update { it.copy(plan = null, planFee = null, isPreparing = false) }
+                    state.update { it.copy(plan = null, planFee = null, sentPlan = null, isPreparing = false) }
                     onPrepareFailed(error)
                 },
                 ifRight = { plan ->
-                    state.update { it.copy(plan = plan, planFee = selection, isPreparing = false) }
+                    state.update { it.copy(plan = plan, planFee = selection, sentPlan = null, isPreparing = false) }
                     onPrepared()
                 },
             )
@@ -385,7 +400,7 @@ internal class EarnFlowModel @Inject constructor(
                     }
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
                     is EarnSigningStep.Sent -> state.update {
-                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount)
+                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount, sentPlan = plan.plan)
                     }
                     is EarnSigningStep.Done -> showResult(step)
                     is EarnSigningStep.Failed -> onSigningFailed(step.error)

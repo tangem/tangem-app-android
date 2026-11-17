@@ -90,10 +90,8 @@ class PolymarketSessionKeyOperationRunner(
             log(operation.request, result)
             if (result.isRight() && operation.request.isAuthorization) bannerStore.clear(userWalletId)
             stateService.refreshAndAwait(userWalletId)
-            state.value = PolymarketSessionKeyOperationState(
-                running = null,
-                finished = PolymarketSessionKeyOperationOutcome(operation.id, operation.request, result),
-            )
+            val outcome = PolymarketSessionKeyOperationOutcome(operation.id, operation.request, result)
+            state.value = PolymarketSessionKeyOperationState(running = null, finished = outcome, lastOutcome = outcome)
         } finally {
             state.update { current ->
                 if (current.running?.id == operation.id) current.copy(running = null) else current

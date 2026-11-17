@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.interactor.PredictionClaimFailure
@@ -195,6 +196,36 @@ internal class PolymarketPositionResultModelTest {
             verify(exactly = 0) { positionsUpdateEmitter.triggerUpdate(any()) }
             verify(exactly = 1) { messageSender.send(any()) }
             verify(exactly = 0) { router.pop() }
+        }
+
+    @Test
+    fun `GIVEN a session key operation holds the wallet WHEN the claim returns THEN the wallet busy alert is shown`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            coEvery { claimInteractor.claim(any()) } returns PredictionClaimFailure.WalletBusy.left()
+
+            // Act
+            model.onActionClick()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) {
+                messageSender.send(
+                    match { message ->
+                        message is DialogMessage &&
+                            message.message == resourceReference(R.string.prediction_session_key_wallet_busy)
+                    },
+                )
+            }
+            verify(exactly = 0) { positionsUpdateEmitter.triggerUpdate(any()) }
+            verify(exactly = 0) { router.pop() }
+            assertThat(model.uiState.value.action).isEqualTo(
+                PolymarketPositionResultUM.Action.Claim(
+                    isInProgress = false,
+                    label = resourceReference(R.string.prediction_position_result_claim_action),
+                ),
+            )
         }
 
     @Test

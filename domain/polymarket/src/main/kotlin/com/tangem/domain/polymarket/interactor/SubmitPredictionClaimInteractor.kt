@@ -22,6 +22,7 @@ import com.tangem.domain.polymarket.redeem.PredictionRedeemCallValidator
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketRelayerDeadline
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -33,6 +34,8 @@ sealed interface PredictionClaimFailure {
     data class NothingToRedeem(val detail: String?) : PredictionClaimFailure
 
     data object NonceUnavailable : PredictionClaimFailure
+
+    data object WalletBusy : PredictionClaimFailure
 
     /** The position's market version could not be learned, so the redeem calls cannot be checked. Retryable. */
     data class VersionUnavailable(val detail: String?) : PredictionClaimFailure
@@ -70,7 +73,12 @@ class SubmitPredictionClaimInteractor(
      *  screen or a repeated tap converges on the claim already in flight rather than relaying a second one
      */
     suspend fun claim(params: Params): Either<PredictionClaimFailure, PredictionClaimReceipt> = either {
-        settle(params, depositWalletLock.withLock(params.userWalletId) { submit(params) })
+        val submitted = depositWalletLock.withBatchOrBusy(params.userWalletId) { submit(params) }
+            .getOrElse {
+                TangemLogger.i("Polymarket claim refused: a session key operation holds the deposit wallet")
+                raise(PredictionClaimFailure.WalletBusy)
+            }
+        settle(params, submitted)
     }
 
     private suspend fun Raise<PredictionClaimFailure>.submit(params: Params): PredictionClaimReceipt {

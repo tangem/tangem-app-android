@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
@@ -511,10 +512,70 @@ internal class PolymarketEventDetailsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN unknown soccer type WHEN loaded while paused THEN redirect waits for resume and preserves route context`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), any()) } returns createEvent().copy(eventType = "soccer").right()
+        val model = createModel(this, phaseTwoEnabled = true)
+        runCurrent()
+        verify(exactly = 0) { router.navigate(any(), any()) }
+        val transform = slot<(List<Route>) -> List<Route>>()
+        every { router.navigate(capture(transform), any()) } returns Unit
+        val original = PolymarketRoute.EventDetails("event-1", UserWalletId("011"), "market", "token", "Sports")
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(transform.captured(listOf(original))).containsExactly(original.copy(eventType = "soccer"))
+        advanceTimeBy(30_000)
+        runCurrent()
+        coVerify(exactly = 1) { getEventUseCase(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN delayed soccer redirect WHEN another screen is on top THEN stack is unchanged`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), any()) } returns createEvent().copy(eventType = "soccer").right()
+        val transform = slot<(List<Route>) -> List<Route>>()
+        every { router.navigate(capture(transform), any()) } returns Unit
+        val model = createModel(this, phaseTwoEnabled = true)
+        model.onResume()
+        runCurrent()
+        val order = PolymarketRoute.PlacePrediction(UserWalletId("011"), "event-1", "market", "token")
+        val otherWallet = PolymarketRoute.EventDetails("event-1", UserWalletId("022"))
+        val otherEvent = PolymarketRoute.EventDetails("event-2", UserWalletId("011"))
+
+        // Act & Assert
+        assertThat(transform.captured(listOf(order))).containsExactly(order)
+        assertThat(transform.captured(listOf(otherWallet))).containsExactly(otherWallet)
+        assertThat(transform.captured(listOf(otherEvent))).containsExactly(otherEvent)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN disabled D2 WHEN soccer type is loaded THEN generic content is retained`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), any()) } returns createEvent().copy(eventType = "soccer").right()
+        val model = createModel(this, phaseTwoEnabled = false)
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        verify(exactly = 0) { router.navigate(any(), any()) }
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         regionAccess: PredictionRegionAccess = createPredictionRegionAccess(),
         categoryLabel: String? = null,
+        phaseTwoEnabled: Boolean = false,
     ): PolymarketEventDetailsModel {
         return PolymarketEventDetailsModel(
             paramsContainer = MutableParamsContainer(
@@ -531,7 +592,7 @@ internal class PolymarketEventDetailsModelTest {
             messageSender = messageSender,
             regionAccess = regionAccess,
             urlOpener = urlOpener,
-            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns phaseTwoEnabled },
             getPriceHistoryUseCase = mockk(),
             currentTimeProvider = { testScope.testScheduler.currentTime },
         ).also { model = it }

@@ -57,6 +57,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationStateUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
@@ -592,6 +593,13 @@ internal object PolymarketDomainModule {
     fun provideObservePolymarketSessionKeyOutcomeUseCase(
         runner: PolymarketSessionKeyOperationRunner,
     ): ObservePolymarketSessionKeyOutcomeUseCase = ObservePolymarketSessionKeyOutcomeUseCase(runner = runner)
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketSessionKeyOperationStateUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): ObservePolymarketSessionKeyOperationStateUseCase =
+        ObservePolymarketSessionKeyOperationStateUseCase(runner = runner)
 
     @Provides
     @Singleton

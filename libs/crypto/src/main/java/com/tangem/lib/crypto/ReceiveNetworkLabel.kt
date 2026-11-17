@@ -5,9 +5,6 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 
-private const val OPTIMISM_LABEL = "Optimism"
-private const val AVALANCHE_C_CHAIN_LABEL = "AVAXC"
-
 fun CryptoCurrency.receiveNetworkLabel(): String? {
     network.exchangeAlias()?.let { return it }
 
@@ -18,7 +15,7 @@ fun CryptoCurrency.receiveNetworkLabel(): String? {
 }
 
 private fun Network.exchangeAlias(): String? = when (toBlockchain()) {
-    Blockchain.Optimism, Blockchain.OptimismTestnet -> OPTIMISM_LABEL
-    Blockchain.Avalanche, Blockchain.AvalancheTestnet -> AVALANCHE_C_CHAIN_LABEL
+    Blockchain.Optimism, Blockchain.OptimismTestnet -> "Optimism"
+    Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "AVAXC"
     else -> null
 }

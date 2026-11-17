@@ -1,5 +1,6 @@
 package com.tangem.domain.polymarket.model
 
+import com.tangem.domain.polymarket.sports.PolymarketScoreParser
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -35,6 +36,12 @@ data class PolymarketSoccerEvent(
     val teams: List<PolymarketTeam>,
     val tabs: List<PolymarketSoccerTab>,
 ) {
+    /** Scores follow the same BFF display order as [teams]. */
+    val displayScore: Score?
+        get() = PolymarketScoreParser.parse(score)?.let { Score(left = it.first, right = it.second) }
+
+    data class Score(val left: Int, val right: Int)
+
     data class League(val slug: String, val name: String, val imageUrl: String?)
 }
 

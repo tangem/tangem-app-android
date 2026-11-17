@@ -1,24 +1,23 @@
 package com.tangem.features.earn.lending.impl.product
 
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.earn.product.api.product.EarnProvider
+import com.tangem.core.ui.extensions.wrappedList
+import java.math.BigInteger
 
-// Temporary plain text in this file: replace with localized string resources.
 internal object LendingTexts {
 
-    val pendingTransaction: TextReference = stringReference("Wait for the previous transaction to complete.")
+    val title: TextReference = resourceReference(R.string.earn_product_lending_on_aave)
 
-    val gasLimitTooLow: TextReference = stringReference("The gas limit is too low for this transaction.")
+    val pendingTransaction: TextReference = resourceReference(R.string.lending_error_previous_transaction_processing)
 
+    val updateRequired: TextReference = resourceReference(R.string.lending_update_app_message)
+
+    // Temporary plain text, no Lokalise key: neither the PRD nor the iOS app has this state.
     val depositsPaused: TextReference = stringReference("Deposits are paused by the provider.")
 
-    fun title(provider: EarnProvider): TextReference = combinedReference(stringReference("Lending on "), provider.title)
-
-    fun updateRequired(provider: EarnProvider): TextReference = combinedReference(
-        stringReference("Update Tangem to the latest version to use Lending on "),
-        provider.title,
-        stringReference("."),
-    )
+    fun gasLimitTooLow(required: BigInteger): TextReference =
+        resourceReference(R.string.lending_error_gas_limit_too_low, wrappedList(required.toString()))
 }

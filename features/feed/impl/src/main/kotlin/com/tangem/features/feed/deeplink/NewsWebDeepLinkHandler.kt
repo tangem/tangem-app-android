@@ -2,10 +2,8 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
-import kotlinx.coroutines.launch
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import javax.inject.Inject
 
 /**
@@ -14,15 +12,12 @@ import javax.inject.Inject
  */
 internal class NewsWebDeepLinkHandler @Inject constructor(
     private val newsDeepLinkHandler: NewsDeepLinkHandler,
-    private val appRouter: AppRouter,
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
         val articleId = extractArticleIdFromUri(request.uri)
         if (articleId != null) {
-            request.scope.launch {
-                appRouter.push(AppRoute.NewsDetails(newsId = articleId))
-            }
+            request.router.push(AppRoute.NewsDetails(newsId = articleId))
         } else {
             newsDeepLinkHandler.handle(request)
         }

@@ -58,4 +58,5 @@ data class PolymarketEvent(
     val dataFetchedAt: Instant? = null,
     val teams: List<PolymarketTeam>? = null,
     val resolutionSource: String? = null,
+    val eventType: String? = null,
 )

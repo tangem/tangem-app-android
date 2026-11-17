@@ -85,6 +85,8 @@ internal interface WalletContentClickIntents {
 
     fun onAccountCollapseClick(account: Account)
 
+    fun onTangemPayGroupClick(accountId: AccountId, isExpanded: Boolean)
+
     fun onManageTokensClick(accountId: AccountId)
 
     fun onJointAccountClick(userWalletId: UserWalletId, cryptoAccountId: String)
@@ -300,6 +302,15 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onAccountCollapseClick(account: Account) {
         analyticsEventHandler.send(MainScreenAnalyticsEvent.AccountHideTokens())
         accountDependencies.expandedAccountsHolder.collapseAccount(account.accountId)
+    }
+
+    override fun onTangemPayGroupClick(accountId: AccountId, isExpanded: Boolean) {
+        if (isExpanded) {
+            accountDependencies.expandedAccountsHolder.collapseAccount(accountId)
+        } else {
+            accountDependencies.expandedAccountsHolder.expandAccount(accountId)
+            walletEventSender.send(WalletEvent.CollapseBalance)
+        }
     }
 
     override fun onManageTokensClick(accountId: AccountId) {

@@ -27,6 +27,7 @@ dependencies {
     /** Domain */
     api(projects.domain.account)
     api(projects.domain.account.status)
+    implementation(projects.domain.common)
     api(projects.domain.models)
     api(projects.domain.wallets)
     implementation(projects.domain.core)
@@ -39,6 +40,7 @@ dependencies {
     implementation(projects.common.routing)
 
     /** Features */
+    implementation(projects.features.commonFeatures.api)
     implementation(projects.features.jointAccount.api)
 
     /** AndroidX libraries */

@@ -24,6 +24,9 @@ internal class MoneyAccountMainBlockConverter(
             is MoneyAccountStatusValue.Empty,
             is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.Onboarding.NotStarted -> MoneyAccountMainUM.NotStarted(
+                onDetailsClick = { moneyAccountIntents.onMoneyAccountNotStartedClicked(userWalletId = userWalletId) },
+            )
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountMainUM.Onboarding(
                 subtitle = resourceReference(statusValue.step.subtitleRes()),
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,

@@ -12,12 +12,16 @@ internal data class EarnGetTokenSheetUM(
     val onDismiss: () -> Unit,
 ) {
 
-    /** @property isEnabled the look only: a tap on a disabled row still reaches [onClick] to explain the reason. */
+    /**
+     * @property isLoading the action is not known yet: the row takes no taps until it is.
+     * @property isEnabled the look only: a tap on a disabled row still reaches [onClick] to explain the reason.
+     */
     @Immutable
     data class Row(
         val icon: ImageVector,
         val title: TextReference,
         val subtitle: TextReference,
+        val isLoading: Boolean,
         val isEnabled: Boolean,
         val onClick: () -> Unit,
     )

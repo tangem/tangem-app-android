@@ -166,17 +166,8 @@ internal object GrowDatasourceModule {
     @Provides
     @IntoMap
     @StringKey(Express.KEY)
-    fun provideExpressConfig(
-        growEnvironmentConfig: GrowEnvironmentConfig,
-        expressAuthProvider: ExpressAuthProvider,
-        appInfoProvider: AppInfoProvider,
-    ): ApiConfig {
-        return Express(
-            growEnvironmentConfig = growEnvironmentConfig,
-            expressAuthProvider = expressAuthProvider,
-            appInfoProvider = appInfoProvider,
-            isV2Enabled = true,
-        )
+    fun provideExpressConfig(expressAuthProvider: ExpressAuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
+        return Express(expressAuthProvider = expressAuthProvider, appInfoProvider = appInfoProvider)
     }
 
     @Provides
@@ -191,7 +182,6 @@ internal object GrowDatasourceModule {
         return factory.build(expressApiSpec())
     }
 
-    // Express /v2 requires the session JWT
     private fun expressApiSpec() = RetrofitApiSpec(
         apiConfigId = Express.ID,
         shouldApplyTimeoutAnnotations = false,

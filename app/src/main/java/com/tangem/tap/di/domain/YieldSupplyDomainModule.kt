@@ -11,6 +11,7 @@ import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.promo.YieldPromoRepository
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
@@ -144,9 +145,13 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyIsAvailableUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
+        wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): YieldSupplyIsAvailableUseCase {
         return YieldSupplyIsAvailableUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
+            wrappedNativeFactory = wrappedNativeFactory,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 

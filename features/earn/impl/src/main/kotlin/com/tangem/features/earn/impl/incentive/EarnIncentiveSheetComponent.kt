@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.res.R
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.earn.impl.incentive.ui.EarnIncentiveSheetContent
 import com.tangem.features.earn.impl.incentive.ui.state.EarnIncentiveSheetUM
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
@@ -36,9 +38,9 @@ internal class EarnIncentiveSheetComponent @AssistedInject constructor(
     }
 
     private val state = EarnIncentiveSheetUM(
-        title = EarnIncentiveSheetTexts.title,
-        footerTitle = EarnIncentiveSheetTexts.poweredByTitle,
-        footerDescription = EarnIncentiveSheetTexts.poweredByDescription,
+        title = resourceReference(R.string.yield_module_incentive_chart_sheet_title),
+        footerTitle = resourceReference(R.string.yield_module_incentive_chart_powered_by_title),
+        footerDescription = resourceReference(R.string.yield_module_incentive_chart_powered_by_description),
         onDismiss = params.callback::onDismiss,
     )
 

@@ -28,6 +28,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
@@ -492,6 +493,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 buttonText = resourceReference(id = R.string.tangempay_sync_needed_button),
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
+                isColdWallet = userWallet.isColdWallet,
             )
             is PaymentAccountStatusValue.NotCreated -> if (isPromoHidden) {
                 null

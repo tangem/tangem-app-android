@@ -6,6 +6,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.backup.BackupErrorWarningSender
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.ManageFundsAnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -16,6 +20,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -28,6 +33,7 @@ import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
@@ -51,6 +57,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -64,6 +71,7 @@ internal class EarnGetTokenSheetModelTest {
     private val backupErrorWarningSender: BackupErrorWarningSender = mockk()
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val userWallet: UserWallet = mockk()
     private val status: CryptoCurrencyStatus = mockk()
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
@@ -83,6 +91,7 @@ internal class EarnGetTokenSheetModelTest {
             backupErrorWarningSender,
             router,
             uiMessageSender,
+            analyticsEventHandler,
             userWallet,
             status,
             receiveConfig,
@@ -95,6 +104,7 @@ internal class EarnGetTokenSheetModelTest {
         every { userWallet.walletId } returns USER_WALLET_ID
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
         every { status.currency } returns currency
+        stubNetworkSource(StatusSource.ACTUAL)
         stubActions(allActions())
         stubBackupPasses(passes = true)
         coEvery { receiveAddressesFactory.create(any(), any(), any()) } returns receiveConfig
@@ -211,6 +221,23 @@ internal class EarnGetTokenSheetModelTest {
             }
 
         @Test
+        fun `GIVEN a joint account WHEN the Swap row is clicked THEN the swap screen opens without a dialog`() =
+            runTest {
+                // Arrange
+                stubActions(allActions(swap = ScenarioUnavailabilityReason.JointAccount))
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                requireNotNull(model.uiState.value).rows[1].onClick()
+
+                // Assert
+                verify(exactly = 0) { uiMessageSender.send(any()) }
+                verify(exactly = 1) { router.push(match { it is AppRoute.Swap }, any()) }
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN Swap is unavailable WHEN its row is clicked THEN the reason dialog is sent and nothing opens`() =
             runTest {
                 // Arrange
@@ -224,6 +251,7 @@ internal class EarnGetTokenSheetModelTest {
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(match<DialogMessage> { true }) }
                 verify(exactly = 0) { router.push(any(), any()) }
+                verify(exactly = 0) { analyticsEventHandler.send(match { it is ManageFundsAnalyticsEvent.ButtonSwap }) }
                 assertThat(dismissals).isEqualTo(0)
                 model.onDestroy()
             }
@@ -265,7 +293,25 @@ internal class EarnGetTokenSheetModelTest {
 
                 // Assert
                 verify(exactly = 0) { router.push(any(), any()) }
+                verify(exactly = 0) { analyticsEventHandler.send(match { it is ManageFundsAnalyticsEvent.ButtonBuy }) }
                 assertThat(dismissals).isEqualTo(0)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a joint account WHEN the Buy row is clicked THEN the reason dialog is sent and nothing opens`() =
+            runTest {
+                // Arrange
+                stubActions(allActions(buy = ScenarioUnavailabilityReason.JointAccount))
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                requireNotNull(model.uiState.value).rows[2].onClick()
+
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(match<DialogMessage> { true }) }
+                verify(exactly = 0) { router.push(any(), any()) }
                 model.onDestroy()
             }
 
@@ -354,6 +400,79 @@ internal class EarnGetTokenSheetModelTest {
             }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN the actions emitted twice WHEN the sheet is shown THEN the method screen event is sent once`() =
+            runTest {
+                // Arrange
+                val actions = MutableStateFlow(allActions())
+                every { actionsUseCase(any(), any(), any()) } returns flow {
+                    actions.collect { emit(TokenActionsState(USER_WALLET_ID, status, it)) }
+                }
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                actions.value = allActions(swap = ScenarioUnavailabilityReason.NotExchangeable("Ethereum"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        ManageFundsAnalyticsEvent.MethodScreenOpened(AnalyticsParam.ScreensSources.Earn),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an available row WHEN clicked THEN its button event is sent`(model: ButtonModel) = runTest {
+            // Arrange
+            val sheetModel = createModel()
+            advanceUntilIdle()
+
+            // Act
+            requireNotNull(sheetModel.uiState.value).rows[model.rowIndex].onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(model.expected) }
+            sheetModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            ButtonModel(rowIndex = 0, expected = ManageFundsAnalyticsEvent.ButtonReceive()),
+            ButtonModel(rowIndex = 1, expected = ManageFundsAnalyticsEvent.ButtonSwap()),
+            ButtonModel(rowIndex = 2, expected = ManageFundsAnalyticsEvent.ButtonBuy()),
+        )
+    }
+
+    @Nested
+    inner class Loading {
+
+        @Test
+        fun `GIVEN the network status is cached WHEN the sheet is shown THEN only the Deposit row is loading`() =
+            runTest {
+                // Arrange
+                stubNetworkSource(StatusSource.CACHE)
+                val model = createModel()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(requireNotNull(model.uiState.value).rows.map { it.isLoading })
+                    .containsExactly(true, false, false).inOrder()
+                model.onDestroy()
+            }
+    }
+
+    data class ButtonModel(val rowIndex: Int, val expected: AnalyticsEvent)
+
     private fun TestScope.createModel() = EarnGetTokenSheetModel(
         paramsContainer = MutableParamsContainer(
             EarnGetTokenSheetComponent.Params(request = request, onDismiss = { dismissals++ }),
@@ -366,7 +485,12 @@ internal class EarnGetTokenSheetModelTest {
         backupErrorWarningSender = backupErrorWarningSender,
         router = router,
         uiMessageSender = uiMessageSender,
+        analyticsEventHandler = analyticsEventHandler,
     )
+
+    private fun stubNetworkSource(source: StatusSource) {
+        every { status.value.sources.networkSource } returns source
+    }
 
     private fun stubStatus(found: Boolean) {
         every {

@@ -61,8 +61,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 ## Session key lifecycle
 
 - Every relayer batch takes the next deposit-wallet nonce → claim, withdrawal and lifecycle share
-  `PolymarketDepositWalletLock`. A withdrawal reads its nonce outside it (a lifecycle op in between →
-  `RelayerRejected`).
+  `PolymarketDepositWalletLock`, each reading its nonce under it. Renew / replace hold it from signing to the
+  accepted authorization (revoke `n`, authorize `n+1`), never past the authorization's deadline. A claim or
+  withdrawal never waits for a lifecycle op: it fails at once with `WalletBusy` (iOS parity); the withdrawal
+  tracker retries its resend.
 - One lifecycle operation per wallet; the UI starts them only through `PolymarketSessionKeyOperationRunner` (app
   scope — leaving the screen must not drop a pre-signed authorization). `Activate` picks enable / renew / replace.
 - Nothing is signed twice without the user: a refused or expired signature → `StaleSignature`. Only an unanswered or

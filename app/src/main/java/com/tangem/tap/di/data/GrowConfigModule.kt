@@ -34,10 +34,7 @@ internal object GrowConfigModule {
     }
 
     private fun ExpressModel.toGrowExpressModel(): GrowEnvironmentConfig.ExpressModel {
-        return GrowEnvironmentConfig.ExpressModel(
-            apiKey = apiKey,
-            signVerifierPublicKey = signVerifierPublicKey,
-        )
+        return GrowEnvironmentConfig.ExpressModel(signVerifierPublicKey = signVerifierPublicKey)
     }
 
     private fun P2PKeys.toGrowP2PKeys(): GrowEnvironmentConfig.P2PKeys {

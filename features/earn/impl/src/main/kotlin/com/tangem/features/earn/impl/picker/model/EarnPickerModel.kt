@@ -27,9 +27,11 @@ import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.picker.EarnPickerHeroVideo
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
+import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
+import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
@@ -213,7 +215,10 @@ internal class EarnPickerModel @Inject constructor(
 
         val best = headlineSelector.bestActive(currencySummaries) ?: return
         if (isRedirected.compareAndSet(false, true)) {
-            router.replaceCurrent(EarnInfoRoute(best.productId))
+            router.redirect(
+                current = EarnPickerRoute(preselected = params.preselected, shouldRedirectToActive = true),
+                replacement = EarnInfoRoute(best.productId),
+            )
         }
     }
 

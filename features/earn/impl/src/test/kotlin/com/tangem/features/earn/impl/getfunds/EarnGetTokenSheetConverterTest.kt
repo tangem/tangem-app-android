@@ -194,6 +194,45 @@ internal class EarnGetTokenSheetConverterTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RowLoading {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a reason and a network source WHEN converted THEN the row loads only while the action is unknown`(
+            model: LoadingModel,
+        ) {
+            // Arrange
+            val actions = actions(reasons = mapOf(model.action to model.reason))
+
+            // Act
+            val row = convert(actions, isReceiveCached = model.isReceiveCached).rows[model.action.ordinal]
+
+            // Assert
+            assertThat(row.isLoading).isEqualTo(model.expectedLoading)
+        }
+
+        private fun provideTestModels() = listOf(
+            LoadingModel(EarnGetTokenAction.Swap, ScenarioUnavailabilityReason.None, false, expectedLoading = false),
+            LoadingModel(
+                EarnGetTokenAction.Swap,
+                ScenarioUnavailabilityReason.ExpressLoading(cryptoCurrencyName = "Ethereum"),
+                isReceiveCached = false,
+                expectedLoading = true,
+            ),
+            LoadingModel(
+                EarnGetTokenAction.Buy,
+                ScenarioUnavailabilityReason.DataLoading,
+                isReceiveCached = false,
+                expectedLoading = true,
+            ),
+            LoadingModel(EarnGetTokenAction.Buy, ScenarioUnavailabilityReason.None, true, expectedLoading = false),
+            LoadingModel(EarnGetTokenAction.Deposit, ScenarioUnavailabilityReason.None, true, expectedLoading = true),
+            LoadingModel(EarnGetTokenAction.Deposit, ScenarioUnavailabilityReason.None, false, expectedLoading = false),
+        )
+    }
+
+    @Nested
     inner class ReasonIn {
 
         @Test
@@ -224,9 +263,16 @@ internal class EarnGetTokenSheetConverterTest {
 
     private fun convert(
         actions: List<ActionState>,
+        isReceiveCached: Boolean = false,
         onActionClick: (EarnGetTokenAction) -> Unit = {},
         onDismiss: () -> Unit = {},
-    ) = EarnGetTokenSheetConverter.convert(currency, actions, onActionClick, onDismiss)
+    ) = EarnGetTokenSheetConverter.convert(
+        currency = currency,
+        actions = actions,
+        isReceiveCached = isReceiveCached,
+        onActionClick = onActionClick,
+        onDismiss = onDismiss,
+    )
 
     private fun actions(reasons: Map<EarnGetTokenAction, ScenarioUnavailabilityReason> = emptyMap()) = listOf(
         ActionState.Receive(reasons[EarnGetTokenAction.Deposit] ?: ScenarioUnavailabilityReason.None),
@@ -242,6 +288,13 @@ internal class EarnGetTokenSheetConverterTest {
         val icon: ImageVector,
         val titleRes: Int,
         val subtitleRes: Int,
+    )
+
+    internal data class LoadingModel(
+        val action: EarnGetTokenAction,
+        val reason: ScenarioUnavailabilityReason,
+        val isReceiveCached: Boolean,
+        val expectedLoading: Boolean,
     )
 
     internal data class EnabledModel(
