@@ -56,10 +56,11 @@ internal class TokenActionsUiBuilder @Inject constructor(
         input: TokenActionsBuildInput,
         tokenActionsHandler: TokenActionsHandler,
         appCurrency: AppCurrency,
+        canBuy: () -> Boolean,
     ): TokenActionsUM {
         val cryptoCurrencyData = input.cryptoCurrencyData
         val bottomAction = input.bottomAction
-        val onrampRestrictedRegionName = input.onrampRestrictedRegionName
+        val region = input.onrampRegion
         val status = cryptoCurrencyData.status
         val tokenUM = TokenItemState.Content(
             id = status.currency.id.value,
@@ -79,7 +80,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
 
         return TokenActionsUM(
             token = tokenUM,
-            quickActions = actions.withRegionRestriction().withOnrampRestriction(onrampRestrictedRegionName),
+            quickActions = actions.withRegionRestriction(region, canBuy),
             bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {
                 params.callbacks.onBottomActionClick(bottomAction)
@@ -87,33 +88,31 @@ internal class TokenActionsUiBuilder @Inject constructor(
             isBalancesHidden = input.isBalanceHidden,
             portfolioBadge = createPortfolioBadge(cryptoCurrencyData = cryptoCurrencyData),
             isCompact = params.isCompact,
-            regionRestriction = regionRestrictionBanner() ?: onrampRestrictedRegionName?.let {
-                TokenActionsRegionRestriction.onrampBanner(regionName = it)
+            regionRestriction = regionRestrictionBanner(region),
+        )
+    }
+
+    private fun QuickActions.withRegionRestriction(region: OnrampRegionState, canBuy: () -> Boolean): QuickActions {
+        val blocked = when {
+            params.isRegionRestricted -> actions.filter { it.isTrading() }
+            region != OnrampRegionState.Allowed -> actions.filter { it.isBuy() }
+            else -> emptyList()
+        }
+        val disabled = (disabledActions + blocked).toImmutableSet()
+        return copy(
+            disabledActions = disabled,
+            onQuickActionClick = { action ->
+                if (action !in disabled && (!action.isBuy() || canBuy())) onQuickActionClick(action)
             },
         )
     }
 
-    /** A blocked region closes buying and swapping; receiving the asset and holding it stay untouched. */
-    private fun QuickActions.withRegionRestriction(): QuickActions {
-        if (!params.isRegionRestricted) return this
-
-        val blocked = actions.filter { it.isTrading() }
-
-        return copy(disabledActions = (disabledActions + blocked).toImmutableSet())
-    }
-
-    /** A region without onramp closes only buying: swapping, receiving and holding the asset stay untouched. */
-    private fun QuickActions.withOnrampRestriction(restrictedRegionName: String?): QuickActions {
-        if (restrictedRegionName == null) return this
-
-        val blocked = actions.filter { it is QuickActionUM.V1.Buy || it is QuickActionUM.V2.Buy }
-
-        return copy(disabledActions = (disabledActions + blocked).toImmutableSet())
-    }
-
-    private fun regionRestrictionBanner(): TangemMessageBanner.State? {
-        if (!params.isRegionRestricted) return null
-
+    private fun regionRestrictionBanner(region: OnrampRegionState): TangemMessageBanner.State? {
+        if (!params.isRegionRestricted) {
+            return (region as? OnrampRegionState.Restricted)?.let {
+                TokenActionsRegionRestriction.onrampBanner(regionName = it.countryName)
+            }
+        }
         return TokenActionsRegionRestriction.banner(
             countryCode = getUserCountryUseCase.invokeSync().getOrNull()?.code,
         )
@@ -234,8 +233,10 @@ internal data class TokenActionsBuildInput(
     val cryptoCurrencyData: CryptoCurrencyData,
     val isBalanceHidden: Boolean,
     val bottomAction: BottomAction,
-    val onrampRestrictedRegionName: String?,
+    val onrampRegion: OnrampRegionState,
 )
+
+private fun QuickActionUM.isBuy(): Boolean = this == QuickActionUM.V1.Buy || this == QuickActionUM.V2.Buy
 
 /** Rows that trade the asset, as opposed to receiving or holding it. */
 private fun QuickActionUM.isTrading(): Boolean = when (this) {

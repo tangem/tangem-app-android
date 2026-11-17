@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.impl.tokenactions.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.common.ui.markets.action.TokenActionsContext
@@ -18,8 +19,7 @@ import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponen
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,52 +57,26 @@ internal class TokenActionsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
 
-    private val regionRefreshRequests = MutableSharedFlow<Unit>(
-        replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    ).apply { tryEmit(Unit) }
+    private val selectedToken = MutableStateFlow<SelectedToken?>(null)
+    private var lookupJob: Job? = null
     private var hasStarted = false
 
-    private val cryptoCurrencyData: SharedFlow<CryptoCurrencyData> = params.data
-        .flowOn(dispatchers.default)
-        .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val onrampRestrictedRegionName: Flow<String?> = if (params.context == TokenActionsContext.AddFunds) {
-        combine(
-            cryptoCurrencyData.distinctUntilChangedBy { it.userWallet.walletId to it.status.currency.id },
-            regionRefreshRequests,
-        ) { data, _ -> data.userWallet }
-            .mapLatest { onrampRegionRestrictionResolver.resolveRestrictedRegionName(it) }
-            .flowOn(dispatchers.io)
-            .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
-    } else {
-        flowOf(null)
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<TokenActionsUM?> =
         combine(
-            flow = cryptoCurrencyData,
-            flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-            flow3 = params.bottomAction,
-            flow4 = onrampRestrictedRegionName,
-            transform = { cryptoCurrencyData, isBalanceHidden, bottomAction, restrictedRegionName ->
-                TokenActionsBuildInput(
-                    cryptoCurrencyData = cryptoCurrencyData,
-                    isBalanceHidden = isBalanceHidden,
-                    bottomAction = bottomAction,
-                    onrampRestrictedRegionName = restrictedRegionName,
-                )
-            },
-        )
-            .mapLatest { input ->
-                uiBuilder.build(
-                    input = input,
-                    tokenActionsHandler = tokenActionsHandler,
-                    appCurrency = currentAppCurrency.value,
-                )
-            }
+            selectedToken.filterNotNull(),
+            getBalanceHidingSettingsUseCase.isBalanceHidden(),
+            params.bottomAction,
+        ) { token, isBalanceHidden, bottomAction ->
+            uiBuilder.build(
+                input = TokenActionsBuildInput(token.data, isBalanceHidden, bottomAction, token.region),
+                tokenActionsHandler = tokenActionsHandler,
+                appCurrency = currentAppCurrency.value,
+                canBuy = {
+                    val current = selectedToken.value
+                    current?.region == OnrampRegionState.Allowed && current.matches(token.data)
+                },
+            )
+        }
             .flowOn(dispatchers.default)
             .stateIn(
                 scope = modelScope,
@@ -111,8 +85,41 @@ internal class TokenActionsModel @Inject constructor(
             )
 
     fun onStart() {
-        if (hasStarted) regionRefreshRequests.tryEmit(Unit)
-        hasStarted = true
+        if (hasStarted) {
+            selectedToken.value?.let { refreshRegion(it.data) }
+        } else {
+            hasStarted = true
+            params.data.flowOn(dispatchers.default).onEach(::onTokenChanged).launchIn(modelScope)
+        }
+    }
+
+    fun dismissReceive() {
+        bottomSheetNavigation.dismiss { dismissed ->
+            if (dismissed) selectedToken.value?.let { refreshRegion(it.data) }
+        }
+    }
+
+    private fun onTokenChanged(data: CryptoCurrencyData) {
+        val previous = selectedToken.value
+        if (previous != null && previous.matches(data)) {
+            selectedToken.value = previous.copy(data = data)
+        } else {
+            refreshRegion(data)
+        }
+    }
+
+    private fun refreshRegion(data: CryptoCurrencyData) {
+        lookupJob?.cancel()
+        if (params.context != TokenActionsContext.AddFunds || !onrampRegionRestrictionResolver.isEnabled) {
+            selectedToken.value = SelectedToken(data, OnrampRegionState.Allowed)
+            return
+        }
+
+        selectedToken.value = SelectedToken(data, OnrampRegionState.Checking)
+        lookupJob = modelScope.launch {
+            val result = withContext(dispatchers.io) { onrampRegionRestrictionResolver.resolve(data.userWallet) }
+            selectedToken.update { it?.copy(region = result) }
+        }
     }
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction, shouldDismiss: Boolean) =
@@ -129,4 +136,9 @@ internal class TokenActionsModel @Inject constructor(
             }
             params.callbacks.onQuickActionClick(handledAction.action, shouldDismiss)
         }
+
+    private data class SelectedToken(val data: CryptoCurrencyData, val region: OnrampRegionState) {
+        fun matches(other: CryptoCurrencyData): Boolean =
+            data.userWallet.walletId == other.userWallet.walletId && data.status.currency.id == other.status.currency.id
+    }
 }

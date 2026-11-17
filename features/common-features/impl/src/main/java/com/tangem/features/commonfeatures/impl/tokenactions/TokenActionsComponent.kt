@@ -9,7 +9,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.common.ui.markets.action.TokenActionsContext
@@ -64,7 +63,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
         context = childByContext(componentContext),
         params = TokenReceiveComponent.Params(
             config = config,
-            onDismiss = model.bottomSheetNavigation::dismiss,
+            onDismiss = model::dismissReceive,
         ),
     )
 

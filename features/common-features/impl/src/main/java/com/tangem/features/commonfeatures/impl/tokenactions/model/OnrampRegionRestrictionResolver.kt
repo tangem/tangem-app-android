@@ -10,12 +10,17 @@ internal class OnrampRegionRestrictionResolver @Inject constructor(
     private val onrampFeatureToggles: OnrampFeatureToggles,
 ) {
 
-    /** Name of the country detected by IP when onramp is unavailable there; `null` when it is available or unknown. */
-    suspend fun resolveRestrictedRegionName(userWallet: UserWallet): String? {
-        if (!onrampFeatureToggles.isCountryByIpEnabled) {
-            return null
-        }
-        val country = getOnrampCountryByIpUseCase(userWallet).getOrNull() ?: return null
-        return country.name.takeUnless { country.isOnrampAvailable }
+    val isEnabled: Boolean get() = onrampFeatureToggles.isCountryByIpEnabled
+
+    suspend fun resolve(userWallet: UserWallet): OnrampRegionState {
+        val country = getOnrampCountryByIpUseCase(userWallet).getOrNull() ?: return OnrampRegionState.Unknown
+        return if (country.isOnrampAvailable) OnrampRegionState.Allowed else OnrampRegionState.Restricted(country.name)
     }
+}
+
+internal sealed interface OnrampRegionState {
+    data object Checking : OnrampRegionState
+    data object Allowed : OnrampRegionState
+    data class Restricted(val countryName: String) : OnrampRegionState
+    data object Unknown : OnrampRegionState
 }

@@ -12,8 +12,6 @@ import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -30,19 +28,18 @@ internal class OnrampRegionRestrictionResolverTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(getOnrampCountryByIpUseCase, onrampFeatureToggles)
-        every { onrampFeatureToggles.isCountryByIpEnabled } returns true
     }
 
     @Test
-    fun `GIVEN IP country without onramp WHEN resolve THEN its name is returned`() = runTest {
+    fun `GIVEN IP country without onramp WHEN resolve THEN restriction names the country`() = runTest {
         // Arrange
         coEvery { getOnrampCountryByIpUseCase(userWallet) } returns createCountry(isOnrampAvailable = false).right()
 
         // Act
-        val actual = resolver.resolveRestrictedRegionName(userWallet)
+        val actual = resolver.resolve(userWallet)
 
         // Assert
-        assertThat(actual).isEqualTo("United Kingdom")
+        assertThat(actual).isEqualTo(OnrampRegionState.Restricted("United Kingdom"))
     }
 
     @Test
@@ -51,36 +48,23 @@ internal class OnrampRegionRestrictionResolverTest {
         coEvery { getOnrampCountryByIpUseCase(userWallet) } returns createCountry(isOnrampAvailable = true).right()
 
         // Act
-        val actual = resolver.resolveRestrictedRegionName(userWallet)
+        val actual = resolver.resolve(userWallet)
 
         // Assert
-        assertThat(actual).isNull()
+        assertThat(actual).isEqualTo(OnrampRegionState.Allowed)
     }
 
     @Test
-    fun `GIVEN country lookup failed WHEN resolve THEN no restriction`() = runTest {
+    fun `GIVEN country lookup failed WHEN resolve THEN region stays unknown`() = runTest {
         // Arrange
         val error: Either<OnrampError, OnrampCountry> = OnrampError.DomainError("error").left()
         coEvery { getOnrampCountryByIpUseCase(userWallet) } returns error
 
         // Act
-        val actual = resolver.resolveRestrictedRegionName(userWallet)
+        val actual = resolver.resolve(userWallet)
 
         // Assert
-        assertThat(actual).isNull()
-    }
-
-    @Test
-    fun `GIVEN toggle disabled WHEN resolve THEN country is not requested`() = runTest {
-        // Arrange
-        every { onrampFeatureToggles.isCountryByIpEnabled } returns false
-
-        // Act
-        val actual = resolver.resolveRestrictedRegionName(userWallet)
-
-        // Assert
-        assertThat(actual).isNull()
-        coVerify(exactly = 0) { getOnrampCountryByIpUseCase(any()) }
+        assertThat(actual).isEqualTo(OnrampRegionState.Unknown)
     }
 
     private fun createCountry(isOnrampAvailable: Boolean) = OnrampCountry(
