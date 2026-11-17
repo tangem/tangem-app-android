@@ -1,6 +1,8 @@
 package com.tangem.features.moneyaccount.main.di
 
+import com.tangem.features.moneyaccount.main.component.DefaultMoneyAccountActivationComponent
 import com.tangem.features.moneyaccount.main.component.DefaultMoneyAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.component.MoneyAccountActivationComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import dagger.Binds
 import dagger.Module
@@ -14,4 +16,9 @@ internal interface MoneyAccountMainModule {
     fun bindMoneyAccountMainBlockComponent(
         factory: DefaultMoneyAccountMainBlockComponent.Factory,
     ): MoneyAccountMainBlockComponent.Factory
+
+    @Binds
+    fun bindMoneyAccountActivationComponent(
+        factory: DefaultMoneyAccountActivationComponent.Factory,
+    ): MoneyAccountActivationComponent.Factory
 }

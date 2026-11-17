@@ -42,7 +42,9 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     private val tangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
 ) : BaseWalletClickIntents(), MoneyAccountIntents {
 
-    override fun onMoneyAccountNotStartedClicked(userWalletId: UserWalletId) = Unit
+    override fun onMoneyAccountNotStartedClicked(userWalletId: UserWalletId) {
+        router.openMoneyAccountActivation(userWalletId = userWalletId)
+    }
 
     override fun onMoneyAccountActivatingClicked() {
         val bottomSheet = bottomSheetMessage {

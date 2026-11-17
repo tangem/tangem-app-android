@@ -35,6 +35,7 @@ import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.order.TangemPayOrderRepository
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.usecase.ProduceTangemPayInitialDataUseCase
@@ -45,6 +46,7 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseC
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.IsMoneyAccountPathOccupiedUseCase
+import com.tangem.domain.moneyaccount.usecase.IssueMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
@@ -144,6 +146,22 @@ internal interface MoneyAccountDataModule {
             repository: MoneyAccountActivationRepository,
         ): ActivateMoneyAccountUseCase {
             return ActivateMoneyAccountUseCase(repository = repository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideIssueMoneyAccountUseCase(
+            activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
+            orderRepository: TangemPayOrderRepository,
+            pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): IssueMoneyAccountUseCase {
+            return IssueMoneyAccountUseCase(
+                activateMoneyAccountUseCase = activateMoneyAccountUseCase,
+                orderRepository = orderRepository,
+                pollTangemPayAccountStatusesUseCase = pollTangemPayAccountStatusesUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
         }
 
         @Provides

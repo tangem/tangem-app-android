@@ -117,7 +117,12 @@ internal class TangemPayVerifiedModel @Inject constructor(
                     showErrorDialog()
                 }
             }.onRight {
-                router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess)
+                router.replaceAll(
+                    AppRoute.Wallet,
+                    AppRoute.TangemPayOnboardingSuccess(
+                        product = AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY,
+                    ),
+                )
             }
         }.saveIn(createOrderJobHolder)
     }
