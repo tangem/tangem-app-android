@@ -55,7 +55,7 @@ internal object CollectiblesInventoryPreviewData {
 
     val refreshing = buyback.copy(isRefreshing = true)
 
-    val loading = createState(isBuybackSelected = true, content = ContentUM.Loading)
+    val loading = createState(isBuybackSelected = true, content = ContentUM.Loading(info = info))
 
     val buybackEmpty = createState(
         isBuybackSelected = true,

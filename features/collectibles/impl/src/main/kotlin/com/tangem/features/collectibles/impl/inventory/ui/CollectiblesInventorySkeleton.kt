@@ -19,9 +19,15 @@ import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.collectibles.impl.inventory.ui.preview.CollectiblesInventoryPreviewData
+import com.tangem.features.collectibles.impl.inventory.ui.state.CollectiblesInventoryUM.ItemUM
 
 @Composable
-internal fun CollectiblesInventorySkeleton(contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+internal fun CollectiblesInventorySkeleton(
+    info: ItemUM.Info?,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     ProvideTangemShimmer {
         Column(
             modifier = modifier
@@ -29,6 +35,9 @@ internal fun CollectiblesInventorySkeleton(contentPadding: PaddingValues, modifi
                 .padding(top = contentPadding.calculateTopPadding() + 12.dp, start = 16.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            if (info != null) {
+                CollectiblesInventoryInfoBanner(state = info, modifier = Modifier.padding(vertical = 4.dp))
+            }
             repeat(times = 3) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CardSkeleton(modifier = Modifier.weight(1f))
@@ -61,6 +70,7 @@ private fun CardSkeleton(modifier: Modifier = Modifier) {
 private fun CollectiblesInventorySkeletonPreview() {
     TangemThemePreviewRedesign {
         CollectiblesInventorySkeleton(
+            info = CollectiblesInventoryPreviewData.info,
             contentPadding = PaddingValues(),
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )

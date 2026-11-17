@@ -36,7 +36,7 @@ internal class CollectiblesInventoryContentConverter(
                     ContentUM.Items(items = convertItems(tab = tab, cards = loadedCards))
                 }
             },
-        ) ?: ContentUM.Loading
+        ) ?: ContentUM.Loading(info = convertInfo(tab))
     }
 
     fun convertSearch(cards: List<CollectiblesInventoryMockSource.Card>): ContentUM {
@@ -56,14 +56,14 @@ internal class CollectiblesInventoryContentConverter(
         tab: CollectiblesInventoryTab,
         cards: List<CollectiblesInventoryMockSource.Card>,
     ): ImmutableList<ItemUM> {
-        val info = when (tab) {
-            CollectiblesInventoryTab.Buyback -> ItemUM.Info(
-                text = resourceReference(R.string.collectibles_inventory_buyback_description),
-            )
-            CollectiblesInventoryTab.Collection -> null
-        }
+        return (listOfNotNull(convertInfo(tab)) + cards.map(::convertCard)).toImmutableList()
+    }
 
-        return (listOfNotNull(info) + cards.map(::convertCard)).toImmutableList()
+    private fun convertInfo(tab: CollectiblesInventoryTab) = when (tab) {
+        CollectiblesInventoryTab.Buyback -> ItemUM.Info(
+            text = resourceReference(R.string.collectibles_inventory_buyback_description),
+        )
+        CollectiblesInventoryTab.Collection -> null
     }
 
     private fun convertCard(card: CollectiblesInventoryMockSource.Card) = ItemUM.Card(

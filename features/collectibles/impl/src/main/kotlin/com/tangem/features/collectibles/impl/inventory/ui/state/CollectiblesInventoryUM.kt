@@ -23,7 +23,7 @@ internal data class CollectiblesInventoryUM(
     @Immutable
     sealed interface ContentUM {
 
-        data object Loading : ContentUM
+        data class Loading(val info: ItemUM.Info?) : ContentUM
 
         data class Items(val items: ImmutableList<ItemUM>) : ContentUM
 
