@@ -26,6 +26,7 @@ import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCas
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -58,6 +59,7 @@ internal abstract class YieldSupplyActionModelTestBase {
     protected val pendingTracker: YieldSupplyPendingTracker = mockk(relaxed = true)
     protected val yieldSupplyRepository: YieldSupplyRepository = mockk(relaxed = true)
     protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
+    protected val currencyStatusResolver: YieldSupplyCurrencyStatusResolver = mockk()
 
     protected val userWalletId = UserWalletId("abcdef012345")
     protected val userWallet: UserWallet = mockk(relaxed = true) {
@@ -74,6 +76,7 @@ internal abstract class YieldSupplyActionModelTestBase {
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         every { notificationsUpdateTrigger.hasErrorFlow } returns MutableStateFlow(false)
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns cryptoCurrencyStatus.right()
+        coEvery { currencyStatusResolver.isHeldOutsidePortfolio(any(), any()) } returns false
         coEvery {
             getAvailableFeeTokensUseCase(
                 userWallet = any(),

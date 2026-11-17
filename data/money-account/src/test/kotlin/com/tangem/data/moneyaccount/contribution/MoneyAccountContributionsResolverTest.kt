@@ -17,7 +17,6 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -37,7 +36,6 @@ internal class MoneyAccountContributionsResolverTest {
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
-    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
 
     private val userWallet: UserWallet = mockk { every { walletId } returns USER_WALLET_ID }
     private val currencyId: CryptoCurrency.ID = mockk()
@@ -56,17 +54,13 @@ internal class MoneyAccountContributionsResolverTest {
         contributionProviders = listOf(yieldProvider),
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         userWalletsListRepository = userWalletsListRepository,
-        policy = MoneyAccountContributionPolicy(
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
-            tokensFeatureToggles = tokensFeatureToggles,
-        ),
+        policy = MoneyAccountContributionPolicy(moneyAccountFeatureToggles = moneyAccountFeatureToggles),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(multiNetworkStatusSupplier, userWalletsListRepository, moneyAccountFeatureToggles, tokensFeatureToggles)
+        clearMocks(multiNetworkStatusSupplier, userWalletsListRepository, moneyAccountFeatureToggles)
         every { moneyAccountFeatureToggles.isYieldModeEnabled } returns true
-        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
         every { networkStatus.value } returns verified(amount = WALLET_AMOUNT)
         every {
@@ -201,18 +195,6 @@ internal class MoneyAccountContributionsResolverTest {
         fun `GIVEN yield mode disabled WHEN withContributions THEN the value as stored`() = runTest {
             // Arrange
             every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
-
-            // Act
-            val actual = contributions.withContributions(USER_WALLET_ID, account()).first()
-
-            // Assert
-            assertThat(actual).isEqualTo(account())
-        }
-
-        @Test
-        fun `GIVEN contribution mode disabled WHEN withContributions THEN the value as stored`() = runTest {
-            // Arrange
-            every { tokensFeatureToggles.isYieldContributionEnabled } returns false
 
             // Act
             val actual = contributions.withContributions(USER_WALLET_ID, account()).first()

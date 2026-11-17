@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.domain.tokens.TokensFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -19,24 +18,19 @@ import org.junit.jupiter.api.Test
 internal class MoneyAccountContributionsFetcherTest {
 
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
-    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
 
     private val currency: CryptoCurrency.Token = mockk()
     private val yieldFetcher = FakeFetcher()
 
     private val fetcher = MoneyAccountContributionsFetcher(
         contributionFetchers = listOf(yieldFetcher),
-        policy = MoneyAccountContributionPolicy(
-            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
-            tokensFeatureToggles = tokensFeatureToggles,
-        ),
+        policy = MoneyAccountContributionPolicy(moneyAccountFeatureToggles = moneyAccountFeatureToggles),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(moneyAccountFeatureToggles, tokensFeatureToggles)
+        clearMocks(moneyAccountFeatureToggles)
         every { moneyAccountFeatureToggles.isYieldModeEnabled } returns true
-        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
         yieldFetcher.calls.clear()
         yieldFetcher.result = Unit.right()
     }
@@ -60,18 +54,6 @@ internal class MoneyAccountContributionsFetcherTest {
 
         // Assert
         assertThat(actual.isSuccess).isTrue()
-    }
-
-    @Test
-    fun `GIVEN contribution mode disabled WHEN fetch THEN nothing runs`() = runTest {
-        // Arrange
-        every { tokensFeatureToggles.isYieldContributionEnabled } returns false
-
-        // Act
-        fetcher.fetch(USER_WALLET_ID, currency)
-
-        // Assert
-        assertThat(yieldFetcher.calls).isEmpty()
     }
 
     @Test
