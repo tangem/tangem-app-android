@@ -1,6 +1,11 @@
 package com.tangem.data.transaction
 
 import com.squareup.moshi.JsonAdapter
+import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
@@ -17,6 +22,7 @@ import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
 import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessToken
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,6 +33,7 @@ import java.time.Instant
 
 internal class DefaultTronGaslessTransactionRepository(
     private val api: TronGaslessApi,
+    private val walletManagersFacade: WalletManagersFacade,
     private val errorAdapter: JsonAdapter<GaslessErrorResponse>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TronGaslessTransactionRepository {
@@ -146,6 +153,21 @@ internal class DefaultTronGaslessTransactionRepository(
             originalTxHash = res.originalTxHash,
             status = res.status,
         )
+    }
+
+    override suspend fun sign(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionDataList: List<TransactionData>,
+        signer: TransactionSigner,
+    ): List<String>? = withContext(dispatchers.io) {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        if (walletManager !is TronGaslessTransactionSigner) return@withContext null
+
+        when (val result = walletManager.signGaslessTransactions(transactionDataList, signer)) {
+            is Result.Success -> result.data
+            is Result.Failure -> null
+        }
     }
 
     private companion object {

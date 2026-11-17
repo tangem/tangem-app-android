@@ -1,8 +1,8 @@
 package com.tangem.features.marketing.impl.model
 
-import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.OnrampDeeplinkTarget
 import com.tangem.common.routing.deeplink.resolveOnrampDeeplinkTarget
+import com.tangem.core.navigation.deeplink.DeepLinkScheme
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.utils.extensions.uriValidate
 import java.net.URI

@@ -4,6 +4,9 @@ import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketSportsState
@@ -52,9 +55,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedScrollPosition
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -153,10 +154,9 @@ internal class PolymarketMainModelTest {
     private val fastTradingBanner = MutableStateFlow<PolymarketFastTradingBanner?>(value = null)
     private val fastTradingRechecks = slot<Flow<Unit>>()
     private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
-        every { observe(any(), capture(fastTradingRechecks)) } returns fastTradingBanner
+        every { observe(any(), capture(fastTradingRechecks), any()) } returns fastTradingBanner
         coEvery { refresh(any()) } just Runs
         coEvery { dismiss(any(), any()) } just Runs
-        every { start(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
@@ -820,7 +820,6 @@ internal class PolymarketMainModelTest {
         verify(exactly = 1) {
             router.push(PolymarketRoute.FastTradingActivation(userWalletId = USER_WALLET_ID, action = action), any())
         }
-        verify(exactly = 0) { fastTradingBannerSource.start(any(), any()) }
         model.onDestroy()
     }
 
@@ -975,7 +974,7 @@ internal class PolymarketMainModelTest {
         runCurrent()
 
         // Assert
-        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any(), any()) }
         coVerify(exactly = 0) { fastTradingBannerSource.refresh(any()) }
         linkCheck.complete(true)
         model.onDestroy()
@@ -1044,7 +1043,7 @@ internal class PolymarketMainModelTest {
         // Assert
         coVerifyOrder {
             walletLinkGate.ensureLinked(USER_WALLET_ID)
-            fastTradingBannerSource.observe(USER_WALLET_ID, any())
+            fastTradingBannerSource.observe(USER_WALLET_ID, any(), includesUnknownSigners = true)
         }
         model.onDestroy()
     }
@@ -1060,7 +1059,7 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any()) }
+        verify(exactly = 0) { fastTradingBannerSource.observe(any(), any(), any()) }
     }
 
     @Test

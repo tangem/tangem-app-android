@@ -4,7 +4,6 @@ import android.net.Uri
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -15,6 +14,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher

@@ -614,7 +614,12 @@ internal class DefaultUserWalletsListRepository(
                 val decrypted = block(result.password.value)
                 if (decrypted == null) {
                     passwordRequester.wrongPassword(attemptRequest)
-                    requestPasswordRecursive(hotWalletId, block, biometryFallback)
+                    // Too many wrong codes delete the wallet; re-requesting would dismiss another wallet's dialog
+                    if (isHotWalletDeleted(hotWalletId)) {
+                        UnlockWalletError.UserCancelled.left()
+                    } else {
+                        requestPasswordRecursive(hotWalletId, block, biometryFallback)
+                    }
                 } else {
                     passwordRequester.successfulAuthentication(attemptRequest)
                     passwordRequester.dismiss()
@@ -631,6 +636,9 @@ internal class DefaultUserWalletsListRepository(
             }
         }
     }
+
+    private suspend fun isHotWalletDeleted(hotWalletId: HotWalletId): Boolean =
+        userWalletsSync().none { it is UserWallet.Hot && it.hotWalletId == hotWalletId }
 
     private suspend fun removePasswordAttempts(userWallet: UserWallet) {
         if (userWallet is UserWallet.Hot) {

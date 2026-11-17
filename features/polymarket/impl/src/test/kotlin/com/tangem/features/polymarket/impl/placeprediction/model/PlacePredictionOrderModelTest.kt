@@ -228,6 +228,28 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN no answer from the exchange WHEN close is tapped on the failure dialog THEN the order stays open`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.secondAction?.onClick()
+
+                // Assert
+                assertThat(dialog.captured.secondAction?.title).isEqualTo(resourceReference(R.string.common_close))
+                assertThat(dialog.captured.isDismissable).isTrue()
+                verify(exactly = 0) { router.pop(onComplete = any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            }
+
+        @Test
         fun `GIVEN the screen leaves on success WHEN the order is placed THEN no quote is requested after it`() =
             runOrderTest {
                 // Arrange
@@ -1088,6 +1110,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                         placedAt = status.captured.result.placedAt,
                         collateralAmount = BigDecimal("11.01"),
                         shares = HELD,
+                        fee = BigDecimal("0.4"),
+                        total = BigDecimal("10.61"),
                     ),
                     market = model.uiState.value.market,
                     side = PredictionOrderSide.SELL,

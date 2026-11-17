@@ -1,8 +1,11 @@
 package com.tangem.features.earn.impl.sheet.model
 
+import androidx.annotation.StringRes
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -10,7 +13,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.sheet.EarnYieldSheetTexts
 import com.tangem.features.earn.impl.sheet.ui.state.EarnYieldRowUM
 import com.tangem.features.earn.impl.sheet.ui.state.EarnYieldSheetUM
 import com.tangem.features.earn.product.api.product.EarnProductSummary
@@ -46,8 +48,8 @@ internal class EarnYieldSheetConverter @Inject constructor(
         }
 
         return EarnYieldSheetUM(
-            title = EarnYieldSheetTexts.title,
-            inactiveTitle = EarnYieldSheetTexts.inactiveTitle,
+            title = resourceReference(R.string.eth_yield_title),
+            inactiveTitle = resourceReference(R.string.eth_yield_not_active_yet),
             active = active.mapNotNull(toRow).toImmutableList(),
             inactive = inactive.mapNotNull(toRow).toImmutableList(),
             onDismiss = intents::onDismissClick,
@@ -55,8 +57,8 @@ internal class EarnYieldSheetConverter @Inject constructor(
     }
 
     fun empty(intents: EarnYieldSheetClickIntents): EarnYieldSheetUM = EarnYieldSheetUM(
-        title = EarnYieldSheetTexts.title,
-        inactiveTitle = EarnYieldSheetTexts.inactiveTitle,
+        title = resourceReference(R.string.eth_yield_title),
+        inactiveTitle = resourceReference(R.string.eth_yield_not_active_yet),
         active = persistentListOf(),
         inactive = persistentListOf(),
         onDismiss = intents::onDismissClick,
@@ -90,19 +92,21 @@ internal class EarnYieldSheetConverter @Inject constructor(
             } else {
                 null
             },
-            caption = EarnYieldSheetTexts.startEarning.takeIf { position == null },
+            caption = resourceReference(R.string.eth_yield_start_earning).takeIf { position == null },
             risk = summary.risk?.toBadge(),
             onClick = { intents.onActionClick(summary.productId, summary.onClickAction) },
         )
     }
 
-    private fun EarnRisk.toBadge() = TangemBadgeUM(
-        text = EarnYieldSheetTexts.risk(this),
-        status = when (this) {
-            EarnRisk.Low -> TangemBadge.Status.Success
-            EarnRisk.Medium -> TangemBadge.Status.Warning
-            EarnRisk.High -> TangemBadge.Status.Error
-        },
+    private fun EarnRisk.toBadge() = when (this) {
+        EarnRisk.Low -> riskBadge(R.string.earn_risk_low, TangemBadge.Status.Success)
+        EarnRisk.Medium -> riskBadge(R.string.earn_risk_medium, TangemBadge.Status.Warning)
+        EarnRisk.High -> riskBadge(R.string.earn_risk_high, TangemBadge.Status.Error)
+    }
+
+    private fun riskBadge(@StringRes title: Int, status: TangemBadge.Status) = TangemBadgeUM(
+        text = resourceReference(title),
+        status = status,
         size = TangemBadge.Size.X4,
     )
 }

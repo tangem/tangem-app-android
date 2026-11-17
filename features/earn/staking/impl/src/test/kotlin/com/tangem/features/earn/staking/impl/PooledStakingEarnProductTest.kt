@@ -6,8 +6,10 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.res.R as ResR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.ImageReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -108,7 +110,7 @@ internal class PooledStakingEarnProductTest {
         // Assert
         assertThat(product.id).isEqualTo(EarnProductId("staking"))
         assertThat(product.rank).isEqualTo(1)
-        assertThat(product.title).isEqualTo(stringReference("Pooled staking"))
+        assertThat(product.title).isEqualTo(resourceReference(ResR.string.earn_product_pooled_staking))
         assertThat(product.provider).isEqualTo(
             EarnProvider(title = stringReference("P2P.org"), icon = ImageReference.Res(R.drawable.ic_p2p_logo)),
         )
@@ -279,7 +281,7 @@ internal class PooledStakingEarnProductTest {
         val params = EarnProduct.Params(userWalletId, ethereum)
         val first: EarnNavigator = mockk(relaxed = true)
         val second: EarnNavigator = mockk(relaxed = true)
-        val action = PooledStakingAction(stringReference("Manage"))
+        val action = PooledStakingAction(resourceReference(ResR.string.eth_yield_manage))
         val firstHandler = product.actionHandler(params, first)
         val secondHandler = product.actionHandler(params, second)
 
@@ -433,8 +435,8 @@ internal class PooledStakingEarnProductTest {
         private val params = EarnProduct.Params(userWalletId, ethereum)
         private val poolStakingId = StakingID(integrationId = MockStaking.P2P_ID, address = STATUS_ADDRESS)
         private val failure = StakingBalance.Error(poolStakingId)
-        private val manage = PooledStakingAction(stringReference("Manage"))
-        private val startEarning = PooledStakingAction(stringReference("Start earning"))
+        private val manage = PooledStakingAction(resourceReference(ResR.string.eth_yield_manage))
+        private val startEarning = PooledStakingAction(resourceReference(ResR.string.eth_yield_start_earning))
 
         @BeforeEach
         fun arrangeCurrency() {

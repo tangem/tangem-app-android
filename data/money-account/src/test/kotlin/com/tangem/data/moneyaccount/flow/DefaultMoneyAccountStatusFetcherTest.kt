@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.connection.NetworkConnectionManager
+import com.tangem.data.moneyaccount.contribution.MoneyAccountContributionsFetcher
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -61,6 +62,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val summary: CustomerSummary = mockk()
     private val networkConnectionManager: NetworkConnectionManager = mockk()
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val contributionsFetcher: MoneyAccountContributionsFetcher = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
@@ -73,6 +75,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         networkConnectionManager = networkConnectionManager,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
+        contributionsFetcher = contributionsFetcher,
     )
 
     @BeforeEach
@@ -87,11 +90,13 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             summary,
             networkConnectionManager,
             tangemPayFeatureToggles,
+            contributionsFetcher,
         )
         every { networkConnectionManager.isOnlineSync } returns true
         every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         every { summary.customerStatus } returns CustomerSummary.CustomerStatus.ACTIVE
         every { summary.kycStatus } returns CustomerSummary.KycStatus.APPROVED
+        coEvery { contributionsFetcher.fetch(USER_WALLET_ID, cryptoCurrency) } returns Unit
         every { deviceSecurity.isRooted } returns false
         coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns null
         every { moneyAccountCurrencyFactory.create(USER_WALLET_ID) } returns cryptoCurrency
@@ -279,6 +284,20 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 isKycAdditionalInfoRequired = false,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN active product instance WHEN invoke THEN contributions of the account currency are fetched`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+        ).right()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        coVerify(exactly = 1) { contributionsFetcher.fetch(USER_WALLET_ID, cryptoCurrency) }
     }
 
     @Test

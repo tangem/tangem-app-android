@@ -10,7 +10,6 @@ import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.fakeReadyState
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnFreshness
 import com.tangem.features.earn.product.api.product.EarnProductState
@@ -63,6 +62,7 @@ internal class EarnPickerCtaTest {
         val stale = ready.copy(freshness = STALE)
         val staleAndProductBlocked = productBlocked.copy(freshness = STALE)
         val staked = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
+        val noMinimum = ready.copy(limits = ready.limits.copy(minDeposit = BigDecimal.ZERO))
 
         return listOf(
             idle(state = EarnProductState.Loading),
@@ -80,6 +80,8 @@ internal class EarnPickerCtaTest {
             blocked(state = productBlocked, ethBalance = BigDecimal.ZERO, block = PRODUCT_BLOCK, label = label),
             addFunds(state = ready, ethBalance = BigDecimal.ZERO),
             addFunds(state = ready, ethBalance = BigDecimal("0.005")),
+            addFunds(state = noMinimum, ethBalance = BigDecimal.ZERO),
+            start(state = noMinimum, ethBalance = BigDecimal("0.001"), label = label, action = action),
             start(state = ready, ethBalance = minDeposit, label = label, action = action),
             start(state = ready, ethBalance = BigDecimal("5"), label = label, action = action),
             start(
@@ -94,7 +96,7 @@ internal class EarnPickerCtaTest {
     private fun idle(state: EarnProductState) = ResolveModel(
         state = state,
         ethBalance = BigDecimal.ONE,
-        text = EarnPickerTexts.startEarning,
+        text = resourceReference(R.string.eth_yield_start_earning),
         isEnabled = false,
         isDimmed = false,
     )
@@ -112,7 +114,7 @@ internal class EarnPickerCtaTest {
     private fun addFunds(state: EarnProductState, ethBalance: BigDecimal) = ResolveModel(
         state = state,
         ethBalance = ethBalance,
-        text = EarnPickerTexts.addFunds,
+        text = resourceReference(R.string.common_add_funds),
         isEnabled = true,
         isDimmed = false,
         expectedCalls = listOf(Call.AddFunds),

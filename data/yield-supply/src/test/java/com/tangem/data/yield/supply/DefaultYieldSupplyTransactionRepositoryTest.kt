@@ -1119,6 +1119,27 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
         @ParameterizedTest
         @ProvideTestModels
+        fun `GIVEN zero max network fee WHEN createNativePreparationTransaction THEN call passes SDK validation`(
+            model: PreparationModel,
+        ) = runTest {
+            // Arrange
+            coEvery { nativeWalletManager.checkModuleVersionStatus() } returns upgradeAvailable()
+
+            // Act
+            val actual = nativeRepository.createNativePreparationTransaction(
+                userWalletId = userWalletId,
+                network = ethereum,
+                wrappedToken = nativeWeth,
+                preparation = model.preparation,
+            )
+
+            // Assert
+            val callData = (actual.extras as EthereumTransactionExtras).callData
+            Truth.assertThat(callData?.validate(Blockchain.Ethereum)).isTrue()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
         fun `GIVEN outdated module WHEN createNativePreparationTransaction THEN only module calls go inside upgrade`(
             model: PreparationModel,
         ) = runTest {

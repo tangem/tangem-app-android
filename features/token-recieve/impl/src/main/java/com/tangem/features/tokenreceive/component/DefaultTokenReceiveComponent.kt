@@ -17,6 +17,7 @@ import com.tangem.features.tokenreceive.model.TokenReceiveModel
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.TokenReceiveContentModal
 import com.tangem.features.tokenreceive.ui.TokenReceiveContentSheet
+import com.tangem.lib.crypto.receiveNetworkLabel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -49,6 +50,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
         if (isModalPresentation) {
             TokenReceiveContentModal(
                 contentStack = content,
+                onShareClick = ::onShareClick,
                 onCloseClick = ::dismiss,
                 onBackClick = ::onChildBack,
             )
@@ -63,6 +65,10 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
     }
 
     override fun dismiss() = model.params.onDismiss()
+
+    private fun onShareClick() {
+        (contentStack.value.active.instance as? TokenReceiveScreenComponent)?.onShareClick()
+    }
 
     private fun onChildBack() {
         when (contentStack.value.active.configuration) {
@@ -95,19 +101,32 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     onDismiss = ::dismiss,
                 ),
             )
-            TokenReceiveRoutes.ReceiveAssets -> TokenReceiveAssetsComponent(
-                appComponentContext = appComponentContext,
-                params = TokenReceiveAssetsComponent.TokenReceiveAssetsParams(
-                    addresses = model.state.value.addresses,
-                    callback = model,
-                    onDismiss = ::dismiss,
-                    notificationConfigs = model.state.value.notificationConfigs,
-                    shouldShowMemoDisclaimer = params.config.shouldShowMemoDisclaimer,
-                    fullName = params.config.cryptoCurrency.network.name,
-                    tokenName = model.getTokenName(),
-                    currencyIconState = model.state.value.iconState,
-                ),
-            )
+            TokenReceiveRoutes.ReceiveAssets -> if (isModalPresentation) {
+                TokenReceiveScreenComponent(
+                    appComponentContext = appComponentContext,
+                    params = TokenReceiveScreenComponent.Params(
+                        config = params.config,
+                        tokenName = model.getTokenName(),
+                        receiveState = model.state,
+                        warnings = model.warnings,
+                        callback = model,
+                    ),
+                )
+            } else {
+                TokenReceiveAssetsComponent(
+                    appComponentContext = appComponentContext,
+                    params = TokenReceiveAssetsComponent.TokenReceiveAssetsParams(
+                        addresses = model.state.value.addresses,
+                        callback = model,
+                        onDismiss = ::dismiss,
+                        notificationConfigs = model.state.value.notificationConfigs,
+                        shouldShowMemoDisclaimer = params.config.shouldShowMemoDisclaimer,
+                        fullName = params.config.cryptoCurrency.network.name,
+                        tokenName = model.getTokenName(),
+                        currencyIconState = model.state.value.iconState,
+                    ),
+                )
+            }
             TokenReceiveRoutes.Warning -> TokenReceiveWarningComponent(
                 appComponentContext = appComponentContext,
                 params = TokenReceiveWarningComponent.TokenReceiveWarningParams(
@@ -115,6 +134,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     callback = model,
                     onDismiss = ::dismiss,
                     network = params.config.cryptoCurrency.network,
+                    networkLabel = params.config.cryptoCurrency.receiveNetworkLabel().takeIf { isModalPresentation },
                 ),
             )
         }
@@ -139,5 +159,6 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
 
 internal interface TokenReceiveModelCallback :
     TokenReceiveAssetsComponent.TokenReceiveAssetsModelCallback,
+    TokenReceiveScreenComponent.ModelCallback,
     TokenReceiveQrCodeComponent.TokenReceiveQrCodeModelCallback,
     TokenReceiveWarningComponent.TokenReceiveWarningModelCallback

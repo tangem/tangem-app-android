@@ -15,12 +15,14 @@ import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.decorations.ProvideRoundedItemGroups
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayGroupUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollections2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.polymarketWalletBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
+import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPayGroup
 import com.tangem.feature.wallet.presentation.wallet.ui.components.moneyAccount
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -79,19 +81,32 @@ internal fun WalletListContent(
                 }
             }
 
-            tangemPay(
-                tangemPayComponent = tangemPayComponent,
-                tangemPayUM = currentWallet.tangemPayMainUM,
-                isBalanceHidden = isBalanceHidden,
-                modifier = itemModifier,
-            )
+            when (val tangemPayGroupUM = currentWallet.tangemPayGroupUM) {
+                is TangemPayGroupUM.Content -> tangemPayGroup(
+                    groupUM = tangemPayGroupUM,
+                    tangemPayComponent = tangemPayComponent,
+                    tangemPayUM = currentWallet.tangemPayMainUM,
+                    moneyAccountComponent = moneyAccountComponent,
+                    moneyAccountUM = currentWallet.moneyAccountMainUM,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = movableItemModifier,
+                )
+                TangemPayGroupUM.Hidden -> {
+                    tangemPay(
+                        tangemPayComponent = tangemPayComponent,
+                        tangemPayUM = currentWallet.tangemPayMainUM,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = itemModifier,
+                    )
 
-            moneyAccount(
-                moneyAccountComponent = moneyAccountComponent,
-                moneyAccountUM = currentWallet.moneyAccountMainUM,
-                isBalanceHidden = isBalanceHidden,
-                modifier = itemModifier,
-            )
+                    moneyAccount(
+                        moneyAccountComponent = moneyAccountComponent,
+                        moneyAccountUM = currentWallet.moneyAccountMainUM,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = itemModifier,
+                    )
+                }
+            }
 
             polymarketWalletBlock(
                 polymarketComponent = polymarketComponent,

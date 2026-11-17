@@ -1,7 +1,7 @@
 package com.tangem.features.mcp.impl.deeplink
 
 import android.net.Uri
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.test.core.ProvideTestModels
@@ -21,7 +21,6 @@ internal class DefaultMcpDeepLinkHandlerTest {
 
     private val handler = DefaultMcpDeepLinkHandler(
         mcpRequestService = mcpRequestService,
-        mcpFeatureToggles = mockk(),
     )
 
     @BeforeEach

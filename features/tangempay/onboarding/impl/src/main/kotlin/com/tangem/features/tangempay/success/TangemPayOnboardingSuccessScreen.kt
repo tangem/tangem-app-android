@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
@@ -19,13 +20,21 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
 internal fun TangemPayOnboardingSuccessScreen(
+    product: AppRoute.TangemPayOnboardingSuccess.Product,
     onCloseClick: () -> Unit,
     animated: Boolean,
     modifier: Modifier = Modifier,
 ) {
     TangemStatusScreen(
         variant = TangemStatusScreen.Variant.Info,
-        title = resourceReference(R.string.tangempay_onboarding_success_title),
+        title = when (product) {
+            AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY -> {
+                resourceReference(R.string.tangempay_onboarding_success_title)
+            }
+            AppRoute.TangemPayOnboardingSuccess.Product.MONEY_ACCOUNT -> {
+                resourceReference(R.string.money_account_onboarding_success_title)
+            }
+        },
         description = resourceReference(R.string.tangempay_onboarding_success_description),
         animated = animated,
         modifier = modifier,
@@ -59,6 +68,10 @@ internal fun TangemPayOnboardingSuccessScreen(
 @Composable
 private fun TangemPayOnboardingSuccessScreenPreview() {
     TangemThemePreviewRedesign {
-        TangemPayOnboardingSuccessScreen(onCloseClick = {}, animated = false)
+        TangemPayOnboardingSuccessScreen(
+            product = AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY,
+            onCloseClick = {},
+            animated = false,
+        )
     }
 }

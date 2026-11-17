@@ -1247,6 +1247,7 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
             analytics = analytics,
             getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
             networkFeeLoader = networkFeeLoader,
+            moneyAccountFeatureToggles = mockk { every { isMxnEnabled } returns true },
         ).destroyAfterTest()
     }
 

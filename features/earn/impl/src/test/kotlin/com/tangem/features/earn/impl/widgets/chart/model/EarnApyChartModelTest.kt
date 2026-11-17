@@ -5,11 +5,12 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
-import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnApyPoint
 import com.tangem.features.earn.product.api.product.EarnPeriod
@@ -444,8 +445,8 @@ internal class EarnApyChartModelTest {
 
         // Assert
         val actual = model.uiState.value
-        assertThat(actual.rateTitle).isEqualTo(EarnApyChartTexts.currentApr)
-        assertThat(actual.average?.title).isEqualTo(EarnApyChartTexts.averageApr)
+        assertThat(actual.rateTitle).isEqualTo(resourceReference(R.string.earn_chart_current_apr))
+        assertThat(actual.average?.title).isEqualTo(resourceReference(R.string.earn_chart_average_apr))
         model.onDestroy()
     }
 

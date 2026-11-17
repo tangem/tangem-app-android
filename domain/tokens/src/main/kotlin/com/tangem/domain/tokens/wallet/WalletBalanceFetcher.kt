@@ -21,11 +21,8 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.FetchErrorFormatter
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
@@ -33,7 +30,6 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -83,11 +79,6 @@ class WalletBalanceFetcher internal constructor(
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         balanceContributionFetchers: Set<BalanceContributionFetcher>,
-        tokensFeatureToggles: TokensFeatureToggles,
-        @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
-        @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-        stakingIdFactory: StakingIdFactory,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
@@ -104,9 +95,6 @@ class WalletBalanceFetcher internal constructor(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             contributionFetchers = balanceContributionFetchers,
-            tokensFeatureToggles = tokensFeatureToggles,
-            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-            stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
@@ -126,11 +114,6 @@ class WalletBalanceFetcher internal constructor(
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         balanceContributionFetchers: Set<BalanceContributionFetcher>,
-        tokensFeatureToggles: TokensFeatureToggles,
-        @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
-        @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-        stakingIdFactory: StakingIdFactory,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
@@ -154,9 +137,6 @@ class WalletBalanceFetcher internal constructor(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             contributionFetchers = balanceContributionFetchers,
-            tokensFeatureToggles = tokensFeatureToggles,
-            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-            stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,

@@ -1,8 +1,10 @@
 package com.tangem.features.earn.impl.picker.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
@@ -15,7 +17,6 @@ import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeReadyState
 import com.tangem.features.earn.impl.fake.fakeSummary
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
@@ -326,8 +327,8 @@ internal class EarnPickerConverterTest {
             actual.onClose()
 
             // Assert
-            assertThat(actual.title).isEqualTo(EarnPickerTexts.title)
-            assertThat(actual.subtitle).isEqualTo(EarnPickerTexts.subtitle)
+            assertThat(actual.title).isEqualTo(resourceReference(R.string.earn_yield_picker_title))
+            assertThat(actual.subtitle).isEqualTo(resourceReference(R.string.earn_yield_picker_subtitle))
             assertThat(actual.barTitle).isEqualTo(lending.title)
             assertThat(actual.readyContent().description).isEqualTo(ready.description)
             assertThat(actual.cta.text).isEqualTo(ready.primary.label)
@@ -369,12 +370,12 @@ internal class EarnPickerConverterTest {
             actual.onClose()
 
             // Assert
-            assertThat(actual.title).isEqualTo(EarnPickerTexts.title)
-            assertThat(actual.subtitle).isEqualTo(EarnPickerTexts.subtitle)
-            assertThat(actual.barTitle).isEqualTo(EarnPickerTexts.title)
+            assertThat(actual.title).isEqualTo(resourceReference(R.string.earn_yield_picker_title))
+            assertThat(actual.subtitle).isEqualTo(resourceReference(R.string.earn_yield_picker_subtitle))
+            assertThat(actual.barTitle).isEqualTo(resourceReference(R.string.earn_yield_picker_title))
             assertThat(actual.products).isEmpty()
             assertThat(actual.content).isEqualTo(ContentUM.Loading)
-            assertThat(actual.cta.text).isEqualTo(EarnPickerTexts.startEarning)
+            assertThat(actual.cta.text).isEqualTo(resourceReference(R.string.eth_yield_start_earning))
             assertThat(actual.cta.isEnabled).isFalse()
             assertThat(calls).containsExactly(Call.Close)
         }
@@ -389,7 +390,7 @@ internal class EarnPickerConverterTest {
 
             // Assert
             assertThat(actual.products).isEmpty()
-            assertThat(actual.cta.text).isEqualTo(EarnPickerTexts.startEarning)
+            assertThat(actual.cta.text).isEqualTo(resourceReference(R.string.eth_yield_start_earning))
             assertThat(actual.cta.isEnabled).isFalse()
             assertThat(calls).containsExactly(Call.OverviewRetry)
         }

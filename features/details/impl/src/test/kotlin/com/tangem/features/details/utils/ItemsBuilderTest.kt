@@ -11,7 +11,6 @@ import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
@@ -31,21 +30,18 @@ internal class ItemsBuilderTest {
 
     private val router: Router = mockk(relaxUnitFun = true)
     private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
-    private val mcpFeatureToggles: McpFeatureToggles = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     private val itemsBuilder = ItemsBuilder(
         router = router,
         hotWalletFeatureToggles = hotWalletFeatureToggles,
-        mcpFeatureToggles = mcpFeatureToggles,
         analyticsEventHandler = analyticsEventHandler,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, hotWalletFeatureToggles, mcpFeatureToggles, analyticsEventHandler)
+        clearMocks(router, hotWalletFeatureToggles, analyticsEventHandler)
         every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
-        every { mcpFeatureToggles.isMcpEnabled } returns false
     }
 
     @Test
@@ -105,13 +101,9 @@ internal class ItemsBuilderTest {
         verify(exactly = 1) { router.push(route = AppRoute.WalletConnectSessions(USER_WALLET_ID), onComplete = any()) }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `GIVEN mcp toggle WHEN walletConnect item clicked THEN connections button is sent only with mcp`(
-        isMcpEnabled: Boolean,
-    ) {
+    @Test
+    fun `GIVEN walletConnect item WHEN clicked THEN connections button event is sent`() {
         // Arrange
-        every { mcpFeatureToggles.isMcpEnabled } returns isMcpEnabled
         val block = buildAll(isWalletConnectAvailable = true).first() as DetailsItemUM.WalletActionBlock
         val walletConnect = block.items
             .filterIsInstance<DetailsItemUM.WalletActionBlock.Item.WalletConnect>()
@@ -121,7 +113,7 @@ internal class ItemsBuilderTest {
         walletConnect.onClick()
 
         // Assert
-        verify(exactly = if (isMcpEnabled) 1 else 0) { analyticsEventHandler.send(Settings.ButtonConnections()) }
+        verify(exactly = 1) { analyticsEventHandler.send(Settings.ButtonConnections()) }
     }
 
     @Test

@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import javax.inject.Inject
 
 internal class DefaultTangemPayOnboardDeepLinkHandler @Inject constructor() : TangemPayOnboardDeepLinkHandler {

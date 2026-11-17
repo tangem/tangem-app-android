@@ -9,7 +9,6 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
-import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyAverageUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyBarUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyChartUM
@@ -143,13 +142,13 @@ internal class EarnApyChartConverter @Inject constructor() {
         stringReference("${rate.fraction.formatEarnRate(locale)}%")
 
     private fun rateTitle(type: EarnRateType): TextReference = when (type) {
-        EarnRateType.APY -> EarnApyChartTexts.currentApy
-        EarnRateType.APR -> EarnApyChartTexts.currentApr
+        EarnRateType.APY -> resourceReference(R.string.yield_module_earn_sheet_current_apy_title)
+        EarnRateType.APR -> resourceReference(R.string.earn_chart_current_apr)
     }
 
     private fun averageTitle(type: EarnRateType): TextReference = when (type) {
-        EarnRateType.APY -> EarnApyChartTexts.averageApy
-        EarnRateType.APR -> EarnApyChartTexts.averageApr
+        EarnRateType.APY -> resourceReference(R.string.yield_module_incentive_chart_average_apy)
+        EarnRateType.APR -> resourceReference(R.string.earn_chart_average_apr)
     }
 
     private fun average(fraction: BigDecimal, type: EarnRateType, locale: Locale): EarnApyAverageUM {

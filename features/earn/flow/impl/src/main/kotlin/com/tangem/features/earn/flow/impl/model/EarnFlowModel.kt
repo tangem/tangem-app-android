@@ -55,6 +55,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
@@ -183,18 +184,26 @@ internal class EarnFlowModel @Inject constructor(
         feeJob = modelScope.launch {
             val isSubtractAvailable = amountSource == EarnActionInput.Amount.Source.Wallet &&
                 statuses.isAmountSubtractAvailable(params.product, selection)
-            state.update { it.copy(isAmountSubtractAvailable = isSubtractAvailable) }
+            val deduction = selection.fee.amount.value?.takeIf { isSubtractAvailable } ?: BigDecimal.ZERO
+            val enteredBefore = state.value.enteredAmount
+            state.update { current ->
+                val withSubtract = current.copy(isAmountSubtractAvailable = isSubtractAvailable)
+                if (amountSource != null) amountInput.withFeeDeduction(withSubtract, deduction) else withSubtract
+            }
 
             val current = state.value
+            if (!isSameAmount(current.enteredAmount, enteredBefore)) refreshFeeEstimate()
             if (current.step == EarnFlowStep.Confirm && !current.signing.isExecuting) prepare()
         }
     }
 
     override fun onAmountValueChange(value: String) {
+        state.update { it.copy(pendingSharePercent = null) }
         amountInput.change(state.value, value)?.let(::updateAmount)
     }
 
     override fun onMaxValueClick() {
+        if (deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) return
         amountInput.max(state.value)?.let(::updateAmount)
     }
 
@@ -212,7 +221,21 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onPercentClick(percent: Int) {
+        if (deferShareUntilFee(percent)) return
         amountInput.percent(state.value, percent)?.let(::updateAmount)
+    }
+
+    private fun isSameAmount(first: BigDecimal?, second: BigDecimal?): Boolean =
+        if (first == null || second == null) first == second else first.compareTo(second) == 0
+
+    /**
+     * A wallet Max leaves room for the fee, so a tap before the first fee estimate, the Max or the card is set once all
+     * of them are there.
+     */
+    private fun deferShareUntilFee(percent: Int): Boolean {
+        val isWaiting = amountSource == EarnActionInput.Amount.Source.Wallet && !amountInput.isShareReady(state.value)
+        if (isWaiting) state.update { it.copy(pendingSharePercent = percent) }
+        return isWaiting
     }
 
     fun onSubmit() {
@@ -226,6 +249,7 @@ internal class EarnFlowModel @Inject constructor(
     fun onConfirmClick() {
         val current = state.value
         if (current.signing.isExecuting || current.isPreparing || feeJob?.isActive == true) return
+        if (current.isAmountInvalid) return
         val plan = current.plan?.takeIf { current.isPlanCurrent } ?: return prepare()
 
         state.update { it.copy(signing = EarnSigningState(stepLabel = null, isExecuting = true)) }
@@ -301,17 +325,28 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     /** The amount card leaves its shimmer once balance, currency status and app currency are all known. */
+    /** A Max or percent tap waiting for the card is set here, so the fee is estimated again for that amount. */
     private fun updateWithInitialAmount(transform: (EarnFlowState) -> EarnFlowState) {
+        val enteredBefore = state.value.enteredAmount
         state.update { current ->
             val updated = transform(current)
             if (amountSource != null) amountInput.withInitial(updated) else updated
         }
+        if (!isSameAmount(state.value.enteredAmount, enteredBefore)) refreshFeeEstimate()
     }
 
     private fun updateAmount(amountState: AmountState) {
         prepareJob?.cancel()
         state.update { it.copy(amountState = amountState, isPreparing = false) }
         reloadFee()
+    }
+
+    /**
+     * The fee moved the amount, and the estimate follows it. Without the loading state the selector keeps the picked
+     * speed, custom fee and nonce; the amount already fits with the selected fee, so nothing waits for the estimate.
+     */
+    private fun refreshFeeEstimate() {
+        modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
     }
 
     private fun reloadFee() {
@@ -321,12 +356,31 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
-    private fun enteredSessionAmount(): EarnAmount? = state.value.enteredAmount?.let(EarnAmount::Exact)
+    private fun enteredSessionAmount(): EarnAmount? {
+        val current = state.value
+        return current.enteredAmount?.let { current.toSessionAmount(it) }
+    }
 
+    /**
+     * A position keeps accruing interest after [EarnFlowState.maxAmount] was read, so an exact max would fall short of
+     * it by the time the transaction is built and leave dust behind. The session resolves [EarnAmount.Entire] from
+     * its fresh state instead. A wallet max stays exact: the flow deducts the fee from it, the session does not.
+     */
+    private fun EarnFlowState.toSessionAmount(amount: BigDecimal): EarnAmount {
+        val max = maxAmount
+        val isEntirePosition = amountSource == EarnActionInput.Amount.Source.Position && max != null && amount >= max
+        return if (isEntirePosition) EarnAmount.Entire else EarnAmount.Exact(amount)
+    }
+
+    /** A fee that moved the amount out of its limits leaves nothing to prepare: the amount step fixes it */
     private fun prepare(onPrepared: () -> Unit = {}) {
         val current = state.value
+        if (current.isAmountInvalid) {
+            state.update { it.copy(isPreparing = false) }
+            return
+        }
         val selection = current.feeSelection ?: return
-        val amount = if (amountSource != null) EarnAmount.Exact(current.sendingAmount ?: return) else null
+        val amount = if (amountSource != null) current.toSessionAmount(current.sendingAmount ?: return) else null
 
         prepareJob?.cancel()
         state.update { it.copy(isPreparing = true) }

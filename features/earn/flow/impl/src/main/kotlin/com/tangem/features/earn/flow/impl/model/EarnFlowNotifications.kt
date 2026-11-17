@@ -35,16 +35,31 @@ internal object EarnFlowNotifications {
         )
     }
 
+    /**
+     * A wallet deposit paying the fee from its own balance has a Max of zero once that balance does not cover the fee,
+     * so the card names the fee rather than the total.
+     */
     private fun MutableList<NotificationUM>.addExceedBalance(state: EarnFlowState, isFromPosition: Boolean) {
-        if (isFromPosition) addFeeExceedsBalance(state) else addTotalExceedsBalance(state)
+        when {
+            isFromPosition -> addFeeExceedsBalance(state, isNothingLeftEnough = true)
+            !addFeeExceedsBalance(state, isNothingLeftEnough = !state.isAmountSubtractAvailable) ->
+                addTotalExceedsBalance(state)
+        }
     }
 
-    /** The amount leaves the position and arrives with the transaction, so only the fee is paid from the wallet */
-    private fun MutableList<NotificationUM>.addFeeExceedsBalance(state: EarnFlowState) {
-        val feeAmount = state.feeSelection?.fee?.amount?.value ?: return
-        val feeStatus = state.feeStatus ?: return
-        val balance = feeStatus.value.amount ?: return
-        if (feeAmount <= balance) return
+    /**
+     * The amount of a withdrawal leaves the position and arrives with the transaction, so only the fee is paid from the
+     * wallet and may take all of it. A deposit sharing the balance with the fee needs something left after it.
+     */
+    private fun MutableList<NotificationUM>.addFeeExceedsBalance(
+        state: EarnFlowState,
+        isNothingLeftEnough: Boolean,
+    ): Boolean {
+        val feeAmount = state.feeSelection?.fee?.amount?.value ?: return false
+        val feeStatus = state.feeStatus ?: return false
+        val balance = feeStatus.value.amount ?: return false
+        val isCovered = if (isNothingLeftEnough) feeAmount <= balance else feeAmount < balance
+        if (isCovered) return false
         with(feeStatus.currency) {
             add(
                 NotificationUM.Error.ExceedsBalance(
@@ -56,6 +71,7 @@ internal object EarnFlowNotifications {
                 ),
             )
         }
+        return true
     }
 
     private fun MutableList<NotificationUM>.addTotalExceedsBalance(state: EarnFlowState) {

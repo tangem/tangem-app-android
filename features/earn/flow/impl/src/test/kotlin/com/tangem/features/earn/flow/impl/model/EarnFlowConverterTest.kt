@@ -3,12 +3,7 @@ package com.tangem.features.earn.flow.impl.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
-import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
-import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.button.TangemButtonIconPosition
@@ -50,6 +45,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
@@ -384,6 +380,16 @@ internal class EarnFlowConverterTest {
             assertThat(actual.primary.isLoading).isTrue()
         }
 
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN amount validity WHEN confirm THEN primary is enabled only for a valid amount`(isValid: Boolean) {
+            // Act
+            val actual = confirm(isAmountValid = isValid)
+
+            // Assert
+            assertThat(actual.primary.isEnabled).isEqualTo(isValid)
+        }
+
         @Test
         fun `GIVEN action without amount WHEN confirm THEN button label comes from the action`() {
             // Act
@@ -453,12 +459,16 @@ internal class EarnFlowConverterTest {
 
         @ParameterizedTest
         @MethodSource("provideWalletModels")
-        fun `GIVEN wallet type WHEN confirm THEN mobile holds to confirm and card taps with its icon`(model: WalletModel) {
+        fun `GIVEN wallet type WHEN confirm THEN mobile holds to confirm and card taps with its icon`(
+            model: WalletModel,
+        ) {
             // Act
             val actual = confirm(walletIcon = model.walletIcon, isHoldToConfirm = model.isHoldToConfirm)
 
             // Assert
-            assertThat(ConfirmButtonModel(actual.isHoldToConfirm, actual.primary.tangemIconUM)).isEqualTo(model.expected)
+            assertThat(
+                ConfirmButtonModel(actual.isHoldToConfirm, actual.primary.tangemIconUM),
+            ).isEqualTo(model.expected)
         }
 
         private fun provideWalletModels() = listOf(
@@ -566,6 +576,7 @@ internal class EarnFlowConverterTest {
             isHoldToConfirm: Boolean = false,
             onLegalClick: (String) -> Unit = {},
             appCurrency: AppCurrency? = AppCurrency.Default,
+            isAmountValid: Boolean = true,
         ) = converter.confirm(
             action = action,
             product = product,
@@ -574,6 +585,7 @@ internal class EarnFlowConverterTest {
             appCurrency = appCurrency,
             signing = signing,
             isFeeReady = true,
+            isAmountValid = isAmountValid,
             isPreparing = false,
             notifications = persistentListOf(),
             walletIcon = walletIcon,

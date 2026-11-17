@@ -15,9 +15,9 @@ internal class AccountFeeConverterTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN fee WHEN convert THEN the fixed part travels with the percentage`(model: FeeModel) {
+    fun `GIVEN fee WHEN convert THEN the fixed part travels with the percentage only with MXN`(model: FeeModel) {
         // Act
-        val actual = AccountFeeConverter.convert(model.response)
+        val actual = AccountFeeConverter(isFixedAmountRead = model.isMxnEnabled).convert(model.response)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
@@ -35,6 +35,11 @@ internal class AccountFeeConverterTest {
         FeeModel(
             response = response(calculationType = "FIXED", amount = "14.00", fixedAmount = null),
             expected = fee(calculationType = FeeCalculationType.FIXED, amount = "14.00", fixedAmount = null),
+        ),
+        FeeModel(
+            response = response(calculationType = "PERCENTAGE", amount = "1", fixedAmount = "0.50"),
+            expected = fee(calculationType = FeeCalculationType.PERCENTAGE, amount = "1", fixedAmount = null),
+            isMxnEnabled = false,
         ),
     )
 
@@ -61,5 +66,5 @@ internal class AccountFeeConverterTest {
         fixedAmount = fixedAmount?.let(::BigDecimal),
     )
 
-    data class FeeModel(val response: FeesResponse.Fee, val expected: AccountFee?)
+    data class FeeModel(val response: FeesResponse.Fee, val expected: AccountFee?, val isMxnEnabled: Boolean = true)
 }

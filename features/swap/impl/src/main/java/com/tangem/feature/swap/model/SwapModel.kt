@@ -103,6 +103,7 @@ import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.swap.SwapProviderHidingPolicy
+import com.tangem.domain.swap.SwapProviderCollectiblesPolicy
 import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.usecase.CalculateAmountUseCase
@@ -984,10 +985,12 @@ internal class SwapModel @Inject constructor(
                     TangemLogger.e("Error getting swap pair", error)
                 },
                 ifRight = { pairsRaw ->
-                    val pairs = pairsRaw.filterTangemPayProviders(
-                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
-                    )
+                    val pairs = pairsRaw
+                        .filterTangemPayProviders(
+                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                            toSwapCurrencyStatus = toSwapCurrencyStatus,
+                        )
+                        .filterCollectiblesProviders()
                     val providerList = swapInteractor.findProvidersForPairWithCheck(
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -3327,6 +3330,19 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    private fun List<SwapPairLeast>.filterCollectiblesProviders(): List<SwapPairLeast> {
+        if (!isCollectiblesTopUpFlow) return this
+
+        return map { pair ->
+            pair.copy(
+                providers = pair.providers.filter { provider ->
+                    provider.type != ExchangeProviderType.CEX ||
+                        SwapProviderCollectiblesPolicy.isCexAllowed(provider.providerId)
+                },
+            )
+        }
+    }
+
     private fun sendNoticePermissionNeededEvent() {
         val sendTokenSymbol = dataState.fromSwapCurrencyStatus?.currency?.symbol ?: return
         val receiveTokenSymbol = dataState.toSwapCurrencyStatus?.currency?.symbol ?: return
@@ -3894,8 +3910,7 @@ internal class SwapModel @Inject constructor(
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
 
     private fun isEvmGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
-        swapFeatureToggles.isEvmGaslessDexSwapEnabled &&
-            isEvmGaslessFeeSupportedForNetwork(fromSwapCurrencyStatus.currency.network)
+        isEvmGaslessFeeSupportedForNetwork(fromSwapCurrencyStatus.currency.network)
 
     /**
      * Loads the approval transaction + its fee, stores both on the current

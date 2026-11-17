@@ -1169,7 +1169,7 @@
   <string name="hw_upgrade_start_description">Du stehst kurz vor dem Upgrade auf unsere Hardware-Wallet. Deine Vermögenswerte werden darin sicher im Offline-Speicher aufbewahrt.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade auf Hardware Wallet</string>
-  <string name="hw_upgrade_to_cold_badge">Wechseln Sie zu einer Cold Wallet</string>
+  <string name="hw_upgrade_to_cold_badge">Upgrade auf Cold Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Schütze Deine Kryptowährungen mit Tangems erstklassiger Hardware-Wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Rüste Deine Wallet auf Hardware-Sicherheit auf.</string>
   <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um ein weiteres hinzuzufügen, müssen Sie zunächst eines Ihrer bestehenden mobilen Wallets entfernen.</string>
@@ -1646,7 +1646,7 @@
   <string name="mcp_swap_intent_processed_subtitle">%1$s durch %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Du musst auf die folgende Version aktualisieren: %1$s um eine mobile Wallet zu erstellen</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet erfordert %1$s oder später</string>
-  <string name="money_account_add_funds_bank_description">USD von einem Bankkonto per ACH/Überweisung oder SPEI empfangen</string>
+  <string name="money_account_add_funds_bank_description">USD von US-Banken per ACH oder MXN von mexikanischen Banken per SPEI empfangen</string>
   <string name="money_account_add_funds_receive_description">Senden Sie USDC über Polygon an Ihre Kontoadresse</string>
   <string name="money_account_add_funds_swap_description">Nutzen Sie Krypto aus Ihrer Wallet, um Ihr USD-Konto aufzuladen</string>
   <string name="money_account_balance_unavailable_description">Wir haben Probleme beim Abrufen Ihres Guthabens. Bitte versuchen Sie es später erneut.</string>
@@ -1660,7 +1660,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">Wird nach Ihrer Einzahlung freigeschaltet</string>
   <string name="money_account_main_status_dialog_activating_description">Wir richten gerade Ihr Konto ein. Das kann einen Moment dauern.</string>
-  <string name="money_account_main_status_dialog_activating_title">Ein Bankkonto eröffnen</string>
+  <string name="money_account_main_status_dialog_activating_title">Ihr USD-Konto wird eröffnet</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Wir arbeiten daran, in weitere Regionen zu expandieren. Brauchst du Hilfe?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Wir erweitern die Verfügbarkeit auf weitere Regionen. Benötigen Sie Hilfe? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">In Ihrer Region noch nicht verfügbar</string>
@@ -1677,7 +1677,7 @@
   <string name="money_account_main_status_verification">Überprüfung läuft…</string>
   <string name="money_account_onboarding_currency_card_caption">Kontowährung</string>
   <string name="money_account_onboarding_description">Funktioniert genau wie ein normales Bankkonto. Aber auf Krypto-Basis und vollständig unter Ihrer Kontrolle.</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay ist ein Fintech-Unternehmen und keine Bank. Bankdienstleistungen werden von der SSB, einem Mitglied der FDIC, erbracht. Bei der SSB eingezahlte Gelder sind bis zu einer Höhe von 250.000 US-Dollar pro Einleger und versicherter Bank im Rahmen der geltenden Beschränkungen und FDIC-Vorschriften durch die FDIC versichert.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay ist keine Bank. Die Kontodaten stellt die SSB Bank bereit. Gelder werden als USDC gehalten, nicht als Einlagen bei der SSB Bank. USDC ist nicht durch die FDIC versichert.</string>
   <string name="money_account_onboarding_earn_card_caption">Verdienen</string>
   <string name="money_account_onboarding_fees_error">Die Gebühreninformationen konnten nicht geladen werden.\nZum erneuten Laden bitte antippen</string>
   <string name="money_account_onboarding_fees_notice">SWIFT-Überweisungen werden nicht unterstützt. Wenn Sie eine solche Überweisung vornehmen, wird sie zurückgebucht.</string>
@@ -3372,7 +3372,7 @@
   <string name="tangempay_tangem_visa_card">Krypto ganz einfach im Alltag ausgeben</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">USD per ACH/Wire von einem Bankkonto empfangen</string>
+  <string name="tangempay_topup_bank_transfer_body">USD per ACH von einem US-Bankkonto empfangen</string>
   <string name="tangempay_topup_bank_transfer_pending_body">Erstellen Ihrer Bankdaten...</string>
   <string name="tangempay_topup_bank_transfer_title">Von einem Bankkonto</string>
   <string name="tangempay_topup_receive_body_multichain">USDC oder USDT an Ihre Kontoadresse senden</string>
@@ -3400,7 +3400,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Zahlungen</string>
-  <string name="tangempay_unified_onboarding_payments_title">ACH- und Banküberweisungen für den Alltag</string>
+  <string name="tangempay_unified_onboarding_payments_title">Banküberweisungen für den Alltag</string>
   <string name="tangempay_unified_onboarding_plan_caption">Ein Plan</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic ist kostenlos.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus deckt beides ab und bietet noch viel mehr</string>
@@ -3943,8 +3943,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Du hast eine nicht abgeschlossene Transaktion</string>
   <string name="warning_last_balance_updated_time">Letzte Aktualisierung war %s</string>
-  <string name="warning_link_wallet_cold_message">Synchronisiere deine Wallet mit den Tangem-Diensten, um eine zusätzliche Sicherheitsebene hinzuzufügen.</string>
-  <string name="warning_link_wallet_hot_message">Synchronisiere deine Wallet mit den Tangem-Diensten für zusätzliche Sicherheit.</string>
+  <string name="warning_link_wallet_cold_message">Nutze deine Karte für zusätzliche Sicherheit bei der Verbindung mit Tangem-Diensten.</string>
+  <string name="warning_link_wallet_hot_message">Sorge für zusätzliche Sicherheit bei der Verbindung mit Tangem-Diensten.</string>
   <string name="warning_link_wallet_title">Sichere deine Verbindung</string>
   <string name="warning_low_signatures_message">Auf dieser Karte oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
   <string name="warning_low_signatures_title">Geringe Anzahl von Unterschriften</string>

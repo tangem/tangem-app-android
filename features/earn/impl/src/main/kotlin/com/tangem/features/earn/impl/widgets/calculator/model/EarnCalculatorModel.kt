@@ -47,7 +47,11 @@ internal class EarnCalculatorModel @Inject constructor(
             }
         }
             .flowOn(dispatchers.default)
-            .onEach { uiState.value = it }
+            .onEach { rebuilt ->
+                uiState.update { current ->
+                    rebuilt?.copy(selectedBar = current?.selectedBar?.takeIf { current.bars == rebuilt.bars })
+                }
+            }
             .launchIn(modelScope)
     }
 
@@ -61,6 +65,10 @@ internal class EarnCalculatorModel @Inject constructor(
 
     fun onHorizonSelect(horizon: EarnHorizon) {
         input.update { it.copy(horizon = horizon) }
+    }
+
+    fun onBarSelected(index: Int?) {
+        uiState.update { state -> state?.copy(selectedBar = index?.takeIf { it in state.bars.indices }) }
     }
 
     private fun createUiState(
@@ -77,5 +85,6 @@ internal class EarnCalculatorModel @Inject constructor(
         onInitialStep = ::onInitialStep,
         onTopUpStep = ::onTopUpStep,
         onHorizonSelect = ::onHorizonSelect,
+        onBarSelected = ::onBarSelected,
     )
 }

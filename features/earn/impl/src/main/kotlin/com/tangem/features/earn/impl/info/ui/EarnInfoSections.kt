@@ -20,15 +20,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.inputrow.inner.InputRowAsyncImage
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
 import com.tangem.features.earn.api.ui.EarnRowUM
-import com.tangem.features.earn.impl.info.EarnInfoTexts
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.EarnBenefitRow
 import com.tangem.features.earn.impl.picker.ui.PAGE_MARGIN
@@ -38,7 +40,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun MyFundsSection(state: EarnInfoUM.MyFundsUM, modifier: Modifier = Modifier) {
-    Section(title = EarnInfoTexts.myFundsSection, modifier = modifier) {
+    Section(title = resourceReference(R.string.yield_module_earn_sheet_my_funds_title), modifier = modifier) {
         ProviderRow(
             title = state.provider,
             icon = state.providerIcon,
@@ -61,7 +63,7 @@ internal fun MyFundsSection(state: EarnInfoUM.MyFundsUM, modifier: Modifier = Mo
 
 @Composable
 internal fun BenefitsSection(benefits: ImmutableList<EarnBenefitUM>, modifier: Modifier = Modifier) {
-    Section(title = EarnInfoTexts.benefitsSection, modifier = modifier) {
+    Section(title = resourceReference(R.string.lending_position_benefits), modifier = modifier) {
         Column(
             modifier = Modifier.padding(horizontal = PAGE_MARGIN, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -73,7 +75,7 @@ internal fun BenefitsSection(benefits: ImmutableList<EarnBenefitUM>, modifier: M
 
 @Composable
 internal fun DetailsSection(details: ImmutableList<EarnRowUM>, modifier: Modifier = Modifier) {
-    Section(title = EarnInfoTexts.detailsSection, modifier = modifier) {
+    Section(title = resourceReference(R.string.earn_product_details_more_details), modifier = modifier) {
         DetailRows(rows = details)
     }
 }
@@ -153,7 +155,7 @@ private fun HowItWorksLink(onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = EarnInfoTexts.howItWorks.resolveReference(),
+            text = stringResourceSafe(R.string.earn_how_it_works_title),
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
         )

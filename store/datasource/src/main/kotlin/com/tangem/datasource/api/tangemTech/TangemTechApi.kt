@@ -220,6 +220,9 @@ interface TangemTechApi {
      * and counts the wallet's own accounts as `totalCryptoAccounts` where `v1` says `totalAccounts` — hence a
      * document shape per version. The archived document is the same in both, so [version] — `v1` or `api/v2` — is
      * a path prefix chosen by the caller.
+     *
+     * `supportedAccountTypes` (`api/v2` only) is a comma-separated list of record types: the backend answers with
+     * these types alone, and a `PUT` neither changes nor archives the accounts of any other type.
      */
     @GET("/v1/wallets/{walletId}/accounts")
     suspend fun getWalletAccountsV1(
@@ -231,6 +234,7 @@ interface TangemTechApi {
     suspend fun getWalletAccountsV2(
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
+        @Query("supportedAccountTypes", encoded = true) supportedAccountTypes: String? = null,
     ): ApiResponse<GetWalletAccountsV2Response>
 
     /** `v1` accepts no record type, so its body is a separate shape; goes away with `v1` itself. */
@@ -246,6 +250,7 @@ interface TangemTechApi {
         @Path("walletId") walletId: String,
         @Header("If-Match") eTag: String,
         @Body body: SaveWalletAccountsResponse,
+        @Query("supportedAccountTypes", encoded = true) supportedAccountTypes: String? = null,
     ): ApiResponse<GetWalletAccountsV2Response>
 
     @GET("/{version}/wallets/{walletId}/accounts/archived")
@@ -253,6 +258,7 @@ interface TangemTechApi {
         @Path(value = "version", encoded = true) version: String,
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
+        @Query("supportedAccountTypes", encoded = true) supportedAccountTypes: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>
     // endregion
 

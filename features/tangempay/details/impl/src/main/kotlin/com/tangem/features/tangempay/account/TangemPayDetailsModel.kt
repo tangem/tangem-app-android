@@ -33,6 +33,7 @@ import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
@@ -43,6 +44,7 @@ import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Acc
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -93,6 +95,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     tangemPayFeatureToggles: TangemPayFeatureToggles,
+    kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -147,7 +150,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val isInitialRouteHandled = MutableStateFlow(false)
 
     private val kycAdditionalInfoNotice = KycAdditionalInfoNotice(
-        accountType = AccountType.PAYMENT,
+        account = KycAdditionalInfoAccount(userWalletId = userWalletId, accountType = AccountType.PAYMENT),
+        popupStore = kycAdditionalInfoPopupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
         onProvideInformation = ::openKyc,
@@ -198,7 +202,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun isInitialKycAdditionalInfoRequired(): Boolean =
         (params.initialStatus.value as? PaymentAccountStatusValue.Loaded)?.isKycAdditionalInfoActionRequired == true
 
-    private fun handleKycAdditionalInfo(state: PaymentAccountStatusValue) {
+    private suspend fun handleKycAdditionalInfo(state: PaymentAccountStatusValue) {
         val isRequired = when (state) {
             is PaymentAccountStatusValue.Loaded -> state.isKycAdditionalInfoActionRequired
             is PaymentAccountStatusValue.Deactivated,

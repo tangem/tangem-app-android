@@ -1,12 +1,9 @@
 package com.tangem.tap.di.data
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.datasource.local.config.environment.models.P2PKeys
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
-import com.tangem.grow.datasource.express.ExpressFeatureToggles
-import com.tangem.tap.network.express.DefaultExpressFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,17 +33,8 @@ internal object GrowConfigModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideExpressFeatureToggles(featureTogglesManager: FeatureTogglesManager): ExpressFeatureToggles {
-        return DefaultExpressFeatureToggles(featureTogglesManager)
-    }
-
     private fun ExpressModel.toGrowExpressModel(): GrowEnvironmentConfig.ExpressModel {
-        return GrowEnvironmentConfig.ExpressModel(
-            apiKey = apiKey,
-            signVerifierPublicKey = signVerifierPublicKey,
-        )
+        return GrowEnvironmentConfig.ExpressModel(signVerifierPublicKey = signVerifierPublicKey)
     }
 
     private fun P2PKeys.toGrowP2PKeys(): GrowEnvironmentConfig.P2PKeys {

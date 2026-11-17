@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayMainDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayOnboardDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler

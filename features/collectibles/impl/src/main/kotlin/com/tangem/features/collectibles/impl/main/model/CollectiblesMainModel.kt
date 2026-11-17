@@ -348,9 +348,8 @@ internal class CollectiblesMainModel @Inject constructor(
         )
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onCollectionClick() {
-        // TODO([REDACTED_TASK_KEY]): the collection screen is not built yet.
+        router.push(CollectiblesRoute.Inventory)
     }
 
     @Suppress("EmptyFunctionBlock")

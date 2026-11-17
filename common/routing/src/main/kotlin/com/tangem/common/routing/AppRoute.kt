@@ -31,6 +31,7 @@ import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -620,7 +621,19 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_verified")
 
     @Serializable
-    data object TangemPayOnboardingSuccess : AppRoute(path = "/tangem_pay_onboarding_success")
+    data class TangemPayOnboardingSuccess(
+        @SerialName("product") val product: Product,
+    ) : AppRoute(path = "/tangem_pay_onboarding_success") {
+
+        @Serializable
+        enum class Product {
+            @SerialName("tangem_pay")
+            TANGEM_PAY,
+
+            @SerialName("money_account")
+            MONEY_ACCOUNT,
+        }
+    }
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")

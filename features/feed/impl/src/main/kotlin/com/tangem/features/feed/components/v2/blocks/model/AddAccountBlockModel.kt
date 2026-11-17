@@ -6,16 +6,13 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.accountLimitReachedDialog
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.pushZooming
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -28,7 +25,6 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.feed.components.v2.blocks.AddAccountBlockComponent
-import com.tangem.features.feed.impl.R
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
@@ -143,7 +139,7 @@ internal class AddAccountBlockModel @Inject constructor(
         when (walletsWithRoom.size) {
             0 -> {
                 if (jointAccountFeatureToggles.isJointAccountEnabled) sendJointLimitReached()
-                messageSender.send(accountLimitReachedDialog())
+                messageSender.send(accountLimitReachedDialog(limit = AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT))
             }
             1 -> openAccountTypeChoice(walletsWithRoom.single().first.walletId)
             else -> openWalletChooser(eligibleWallets = walletsWithRoom.mapTo(mutableSetOf()) { it.first.walletId })
@@ -187,7 +183,7 @@ internal class AddAccountBlockModel @Inject constructor(
     fun onCryptoAccountClick(config: AddAccountBlockComponent.BottomSheetConfig.AccountType) {
         bottomSheetNavigation.dismiss()
         if (config.isCryptoAccountLimitReached) {
-            messageSender.send(accountLimitReachedDialog())
+            messageSender.send(accountLimitReachedDialog(limit = AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT))
         } else {
             openCryptoAccountCreation(config.userWalletId)
         }
@@ -199,7 +195,7 @@ internal class AddAccountBlockModel @Inject constructor(
         bottomSheetNavigation.dismiss()
         if (config.isJointAccountLimitReached) {
             sendJointLimitReached()
-            messageSender.send(jointAccountLimitReachedDialog())
+            messageSender.send(accountLimitReachedDialog(limit = AccountList.MAX_JOINT_ACCOUNTS_COUNT))
         } else {
             openWhenSheetsClosed(AppRoute.JointAccountCreation(userWalletId = config.userWalletId, source = source))
         }
@@ -230,21 +226,4 @@ internal class AddAccountBlockModel @Inject constructor(
     private fun openCryptoAccountCreation(walletId: UserWalletId) {
         openWhenSheetsClosed(AppRoute.CreateAccount(userWalletId = walletId))
     }
-
-    private fun accountLimitReachedDialog(): DialogMessage =
-        limitReachedDialog(limit = AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT)
-
-    private fun jointAccountLimitReachedDialog(): DialogMessage =
-        limitReachedDialog(limit = AccountList.MAX_JOINT_ACCOUNTS_COUNT)
-
-    private fun limitReachedDialog(limit: Int): DialogMessage = DialogMessage(
-        title = resourceReference(R.string.account_add_limit_dialog_title),
-        message = resourceReference(
-            id = R.string.account_add_limit_dialog_description,
-            formatArgs = wrappedList(limit.toString()),
-        ),
-        firstActionBuilder = {
-            EventMessageAction(title = resourceReference(R.string.common_got_it), onClick = {})
-        },
-    )
 }

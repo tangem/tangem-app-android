@@ -2,6 +2,7 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,6 +28,7 @@ class YieldSupplyPendingTrackerTest {
     private val yieldSupplyRepository: YieldSupplyRepository = mockk()
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
+    private val nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher = mockk()
     private val yieldModuleStatusFetcher: YieldModuleStatusFetcher = mockk()
     private val tokensFeatureToggles: TokensFeatureToggles = mockk()
 
@@ -42,12 +44,53 @@ class YieldSupplyPendingTrackerTest {
             yieldSupplyRepository = yieldSupplyRepository,
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            nonPortfolioCurrenciesFetcher = nonPortfolioCurrenciesFetcher,
             yieldModuleStatusFetcher = yieldModuleStatusFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
             coroutineScope = TestAppCoroutineScope(testScope),
         )
         every { tokensFeatureToggles.isYieldContributionEnabled } returns false
         coEvery { yieldModuleStatusFetcher(any()) } returns Either.Right(Unit)
+        coEvery { nonPortfolioCurrenciesFetcher.fetch(any(), any()) } returns Unit
+    }
+
+    @Test
+    fun `GIVEN a portfolio tx settles WHEN checked THEN only the portfolio network is refreshed`() = runTest {
+        // Arrange
+        val token = createToken()
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns emptyList()
+        coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+
+        // Act
+        useCase.addPending(userWalletId, token, listOf("0xconfirmed"))
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 1) {
+            singleNetworkStatusFetcher.invoke(
+                SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = token.network),
+            )
+        }
+        coVerify(exactly = 0) { nonPortfolioCurrenciesFetcher.fetch(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a Money tx settles WHEN checked THEN only the Money account is refreshed`() = runTest {
+        // Arrange
+        val token = createToken()
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns emptyList()
+
+        // Act
+        useCase.addPending(userWalletId, token, listOf("0xconfirmed"), isHeldOutsidePortfolio = true)
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 1) {
+            nonPortfolioCurrenciesFetcher.fetch(userWalletId = userWalletId, network = token.network)
+        }
+        coVerify(exactly = 0) { singleNetworkStatusFetcher.invoke(any()) }
+        coVerify(exactly = 0) { yieldModuleStatusFetcher(any()) }
     }
 
     @Test

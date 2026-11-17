@@ -7,56 +7,39 @@ import com.tangem.core.remote.header.RequestHeader
 import com.tangem.grow.datasource.BuildConfig
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.utils.ProviderSuspend
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.info.AppInfoProvider
 
 /**
- * Express [ApiConfig]
+ * Express [ApiConfig].
  *
- * @property growEnvironmentConfig      grow environment config slice
- * @property expressAuthProvider        express auth provider
- * @property appInfoProvider            app info provider
- * @param isV2Enabled                   whether base urls point to `/v2` (session-authorized) instead of `/v1`
+ * Carries no api key: Express `/v2` is authorized per method with a DPoP-bound session via
+ * `com.tangem.lib.auth.api.RequiresSessionAuth`.
  */
 class Express(
-    private val growEnvironmentConfig: GrowEnvironmentConfig,
     private val expressAuthProvider: ExpressAuthProvider,
     private val appInfoProvider: AppInfoProvider,
-    @RemoveWithToggle(toggleName = "TWI_1906_EXPRESS_V2_ENABLED") isV2Enabled: Boolean,
 ) : ApiConfig() {
-
-    // Declared before environmentConfigs: property initializers run in order and the urls read it
-    @RemoveWithToggle(toggleName = "TWI_1906_EXPRESS_V2_ENABLED")
-    private val apiVersion: String = if (isV2Enabled) "v2" else "v1"
 
     override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
-        createDevEnvironment(),
-        createDev2Environment(),
-        createDev3Environment(),
-        createStageEnvironment(),
-        createStage2Environment(),
-        createStage3Environment(),
-        createMockedEnvironment(),
-        createProdEnvironment(),
-        createNewEnvironment(ApiEnvironment.DEV_NEW, host = "express-dev1.tests-d.com"),
-        createNewEnvironment(ApiEnvironment.DEV_2_NEW, host = "express-dev2.tests-d.com"),
-        createNewEnvironment(ApiEnvironment.DEV_3_NEW, host = "express-dev3.tests-d.com"),
-        createNewEnvironment(ApiEnvironment.DEV_4_NEW, host = "express-dev4.tests-d.com"),
-        createNewEnvironment(ApiEnvironment.DEV_5_NEW, host = "express-dev5.tests-d.com"),
-        createNewEnvironment(ApiEnvironment.DEV_6_NEW, host = "express-dev6.tests-d.com"),
-        createNewEnvironment(ApiEnvironment.PROD_NEW, host = "express-new.tangem.com", isProd = true),
+        createEnvironment(ApiEnvironment.MOCK, host = "wiremock.tests-d.com"),
+        createEnvironment(ApiEnvironment.PROD, host = "express.tangem.com"),
+        createEnvironment(ApiEnvironment.DEV, host = "express-dev1.tests-d.com"),
+        createEnvironment(ApiEnvironment.DEV_2, host = "express-dev2.tests-d.com"),
+        createEnvironment(ApiEnvironment.DEV_3, host = "express-dev3.tests-d.com"),
+        createEnvironment(ApiEnvironment.DEV_4, host = "express-dev4.tests-d.com"),
+        createEnvironment(ApiEnvironment.DEV_5, host = "express-dev5.tests-d.com"),
+        createEnvironment(ApiEnvironment.DEV_6, host = "express-dev6.tests-d.com"),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
             DEBUG_BUILD_TYPE,
-            -> ApiEnvironment.DEV
             INTERNAL_BUILD_TYPE,
-            -> ApiEnvironment.PROD
+            -> ApiEnvironment.DEV_6
             MOCKED_BUILD_TYPE,
             -> ApiEnvironment.MOCK
             EXTERNAL_BUILD_TYPE,
@@ -66,78 +49,17 @@ class Express(
         }
     }
 
-    private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.DEV,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createDev2Environment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.DEV_2,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createDev3Environment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.DEV_3,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.STAGE,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createStage2Environment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.STAGE_2,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createStage3Environment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.STAGE_3,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.MOCK,
-        baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(isProd = false),
-    )
-
-    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.PROD,
-        baseUrl = "https://express.tangem.com/$apiVersion/",
-        headers = createHeaders(isProd = true),
-    )
-
-    private fun createNewEnvironment(
-        environment: ApiEnvironment,
-        host: String,
-        isProd: Boolean = false,
-    ): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = environment,
-        baseUrl = "https://$host/$apiVersion/",
-        headers = createHeaders(isProd = isProd),
-    )
-
-    private fun createHeaders(isProd: Boolean) = buildMap {
-        put(key = "api-key", value = ProviderSuspend { getApiKey(isProd) })
-        put(key = "session-id", value = ProviderSuspend(expressAuthProvider::getSessionId))
-        putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
+    private fun createEnvironment(environment: ApiEnvironment, host: String): ApiEnvironmentConfig {
+        return ApiEnvironmentConfig(
+            environment = environment,
+            baseUrl = "https://$host/v2/",
+            headers = createHeaders(),
+        )
     }
 
-    private fun getApiKey(isProd: Boolean): String {
-        return if (isProd) {
-            growEnvironmentConfig.express
-        } else {
-            growEnvironmentConfig.devExpress
-        }
-            ?.apiKey
-            ?: error("No express config provided")
+    private fun createHeaders() = buildMap {
+        put(key = "session-id", value = ProviderSuspend(expressAuthProvider::getSessionId))
+        putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
     }
 
     companion object {

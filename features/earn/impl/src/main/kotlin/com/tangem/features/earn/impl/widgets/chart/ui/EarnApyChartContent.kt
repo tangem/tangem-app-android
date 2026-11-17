@@ -20,18 +20,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_calculator_20
 import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
-import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.impl.widgets.chart.model.EarnApyChartAxis
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyAverageUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyBarUM
@@ -55,7 +57,7 @@ internal fun EarnApyChartContent(state: EarnApyChartUM, modifier: Modifier = Mod
                     variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X10,
                     iconStart = TangemIconUM.Icon(Icons.ic_calculator_20),
-                    contentDescription = EarnApyChartTexts.calculator.resolveReference(),
+                    contentDescription = stringResourceSafe(R.string.earn_yield_picker_calculator),
                     onClick = onClick,
                 )
             }
@@ -198,7 +200,7 @@ private fun previewState(
                 )
             }
             .toImmutableList(),
-        rateTitle = EarnApyChartTexts.currentApy,
+        rateTitle = resourceReference(R.string.yield_module_earn_sheet_current_apy_title),
         currentRate = stringReference("4.49%"),
         bars = values.map { EarnApyBarUM(value = it, tooltip = stringReference("%.2f%% · Mar 12, 2026".format(it))) }
             .toImmutableList(),
@@ -206,7 +208,7 @@ private fun previewState(
         average = EarnApyAverageUM(
             value = 5.12,
             text = stringReference("Avg 5.12%"),
-            title = EarnApyChartTexts.averageApy,
+            title = resourceReference(R.string.yield_module_incentive_chart_average_apy),
             rate = stringReference("5.12%"),
         ).takeIf { values.isNotEmpty() },
         xLabels = persistentListOf("Jan", "Feb", "Mar", "Apr").takeIf { values.isNotEmpty() } ?: persistentListOf(),

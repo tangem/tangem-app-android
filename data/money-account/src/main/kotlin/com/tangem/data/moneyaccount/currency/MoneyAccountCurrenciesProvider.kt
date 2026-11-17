@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
@@ -25,7 +24,6 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class MoneyAccountCurrenciesProvider @Inject constructor(
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
-    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val getMoneyAccountCryptoCurrencyStatusUseCase: GetMoneyAccountCryptoCurrencyStatusUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val walletManagersFacade: WalletManagersFacade,
@@ -62,13 +60,6 @@ internal class MoneyAccountCurrenciesProvider @Inject constructor(
 
     override suspend fun findCurrency(userWalletId: UserWalletId, currencyId: CryptoCurrency.ID): CryptoCurrency? {
         return getAccount(userWalletId)?.cryptoCurrency?.takeIf { it.id == currencyId }
-    }
-
-    override suspend fun refresh(userWalletId: UserWalletId, network: Network) {
-        if (getAccount(userWalletId)?.cryptoCurrency?.network?.id != network.id) return
-
-        moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId))
-            .onLeft { TangemLogger.e("Unable to refresh the Money account status", it) }
     }
 
     private suspend fun getAccount(userWalletId: UserWalletId): MoneyAccountStatusValue.Account? {

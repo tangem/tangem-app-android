@@ -2,8 +2,8 @@ package com.tangem.features.send.deeplink
 
 import android.net.Uri
 import arrow.core.right
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId

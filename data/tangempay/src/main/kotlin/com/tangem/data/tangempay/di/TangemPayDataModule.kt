@@ -18,6 +18,7 @@ import com.tangem.data.tangempay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.tangempay.repository.*
 import com.tangem.data.tangempay.store.CashbackSummaryStore
 import com.tangem.data.tangempay.store.DefaultAccountRecentsStore
+import com.tangem.data.tangempay.store.DefaultKycAdditionalInfoPopupStore
 import com.tangem.data.tangempay.store.PaymentAccountStatusesStore
 import com.tangem.data.tangempay.store.TangemPayStorage
 import com.tangem.data.tangempay.usecase.DefaultGetTangemPayCustomerIdUseCase
@@ -150,6 +151,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPayAuthDataSource(repository: DefaultTangemPayAuthDataSource): TangemPayAuthDataSource
+
+    @Binds
+    @Singleton
+    fun bindKycAdditionalInfoPopupStore(store: DefaultKycAdditionalInfoPopupStore): KycAdditionalInfoPopupStore
 
     @Suppress("TooManyFunctions", "LargeClass")
     companion object {

@@ -156,10 +156,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Buy' button") {
                 onTokenActionsBottomSheet { buyButton.performClick() }
             }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                waitForIdle()
-                onDialog { confirmButton.clickWithAssertion() }
-            }
             step("Assert top app bar title contains '$tokenTitle'") {
                 onBuyTokenDetailsScreen { topBarTitle.assertTextContains("Buy $tokenTitle") }
             }
@@ -395,10 +391,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             }
             step("Click on 'Buy' button in bottom sheet") {
                 onGetTokenBottomSheet { buyButton.performClick() }
-            }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                waitForIdle()
-                onDialog { confirmButton.clickWithAssertion() }
             }
             step("Assert top app bar title contains '$tokenTitle'") {
                 onBuyTokenDetailsScreen { topBarTitle.assertTextContains("Buy $tokenTitle") }

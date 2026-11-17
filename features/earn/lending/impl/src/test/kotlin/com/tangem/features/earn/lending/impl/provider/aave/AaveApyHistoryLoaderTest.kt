@@ -5,10 +5,9 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
-import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
-import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
+import com.tangem.domain.yield.supply.models.YieldChartWindow
+import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
@@ -34,109 +33,138 @@ import java.math.BigDecimal
 internal class AaveApyHistoryLoaderTest {
 
     private val currencies = MockCryptoCurrencyFactory()
-    private val asset = LendingAsset(
-        currency = currencies.createCoin(Blockchain.Ethereum),
-        wrappedToken = currencies.createToken(Blockchain.Ethereum, contractAddress = WETH, symbol = "WETH"),
-    )
-    private val market = YieldMarketToken(
-        tokenAddress = WETH,
-        chainId = CHAIN_ID,
-        apy = BigDecimal("3"),
-        isActive = true,
-        maxFeeNative = BigDecimal.ONE,
-        maxFeeUSD = BigDecimal.ONE,
-    )
+    private val weth = currencies.createToken(Blockchain.Ethereum, contractAddress = WETH, symbol = "WETH")
+    private val asset = LendingAsset(currency = currencies.createCoin(Blockchain.Ethereum), wrappedToken = weth)
 
-    private val markets: AaveMarkets = mockk()
-    private val getAprHistory: GetYieldAprHistoryUseCase = mockk()
-    private val loader = AaveApyHistoryLoader(markets = markets, getAprHistory = getAprHistory)
+    private val getChart: YieldSupplyGetChartUseCase = mockk()
+    private val loader = AaveApyHistoryLoader(getChart = getChart)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(markets, getAprHistory)
-        coEvery { markets.current(asset) } returns market
-        coEvery { getAprHistory(any(), any(), any()) } returns emptyHistory().right()
+        clearMocks(getChart)
+        coEvery { getChart(cryptoCurrency = any(), window = any(), bucketSizeDays = any()) } returns
+            chart(y = emptyList(), starts = emptyList()).right()
+    }
+
+    @Test
+    fun `GIVEN periods WHEN listed THEN 1M, 3M and 6M`() {
+        // Act
+        val actual = AaveApyPeriods.All.map(EarnPeriod::id)
+
+        // Assert
+        assertThat(actual).containsExactly("1M", "3M", "6M").inOrder()
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN period WHEN load THEN history is requested for its depth in days`(model: PeriodModel) = runTest {
-        // Act
-        loader.load(asset, model.period)
+    fun `GIVEN period WHEN load THEN the WETH chart is requested for its window and bar size`(model: PeriodModel) =
+        runTest {
+            // Act
+            loader.load(asset, period(model.id))
 
-        // Assert
-        coVerify(exactly = 1) { getAprHistory(chainId = CHAIN_ID, tokenAddress = WETH, days = model.expectedDays) }
-    }
-
-    data class PeriodModel(val period: EarnPeriod, val expectedDays: Int)
+            // Assert
+            coVerify(exactly = 1) {
+                getChart(cryptoCurrency = weth, window = model.window, bucketSizeDays = model.bucketSizeDays)
+            }
+        }
 
     private fun provideTestModels() = listOf(
-        PeriodModel(period = AaveApyPeriods.Month, expectedDays = 30),
-        PeriodModel(period = AaveApyPeriods.ThreeMonths, expectedDays = 90),
+        PeriodModel(id = "1M", window = YieldChartWindow.LastMonth, bucketSizeDays = 1),
+        PeriodModel(id = "3M", window = YieldChartWindow.LastYear, bucketSizeDays = 3),
+        PeriodModel(id = "6M", window = YieldChartWindow.LastYear, bucketSizeDays = 6),
     )
 
     @Test
-    fun `GIVEN points with rewards WHEN load THEN rates come from total APY estimate`() = runTest {
+    fun `GIVEN month chart WHEN load THEN every bar with the backend average`() = runTest {
         // Arrange
-        val history = emptyHistory().copy(
-            points = listOf(point(day = 1, totalApyEst = "5.5"), point(day = 2, totalApyEst = "4.5")),
-        )
-        coEvery { getAprHistory(any(), any(), any()) } returns history.right()
+        coEvery { getChart(cryptoCurrency = any(), window = any(), bucketSizeDays = any()) } returns chart(
+            y = listOf(2.0, 4.0),
+            starts = listOf(LocalDate(2026, 11, 1), LocalDate(2026, 11, 2)),
+            avr = 3.5,
+        ).right()
 
         // Act
-        val actual = loader.load(asset, AaveApyPeriods.Month)
+        val actual = loader.load(asset, period("1M"))
 
         // Assert
-        val expected = EarnApyHistory(
-            points = listOf(
-                EarnApyPoint(at = Instant.parse("2026-11-01T00:00:00Z"), rate = apy("0.055")),
-                EarnApyPoint(at = Instant.parse("2026-11-02T00:00:00Z"), rate = apy("0.045")),
+        assertThat(actual.getOrNull()).isEqualTo(
+            EarnApyHistory(
+                points = listOf(
+                    point(at = "2026-11-01T00:00:00Z", rate = "0.02"),
+                    point(at = "2026-11-02T00:00:00Z", rate = "0.04"),
+                ),
+                average = BigDecimal("0.035"),
             ),
-            average = BigDecimal("0.050"),
         )
-        assertThat(actual).isEqualTo(expected.right())
     }
 
     @Test
-    fun `GIVEN no WETH market WHEN load THEN empty history without request`() = runTest {
+    fun `GIVEN year chart WHEN load 3M THEN only the last three months and their mean`() = runTest {
         // Arrange
-        coEvery { markets.current(asset) } returns null
+        coEvery { getChart(cryptoCurrency = any(), window = any(), bucketSizeDays = any()) } returns chart(
+            y = listOf(10.0, 2.0, 4.0),
+            starts = listOf(LocalDate(2026, 5, 1), LocalDate(2026, 9, 1), LocalDate(2026, 11, 1)),
+            avr = 9.0,
+        ).right()
 
         // Act
-        val actual = loader.load(asset, AaveApyPeriods.Month)
+        val actual = loader.load(asset, period("3M"))
 
         // Assert
-        assertThat(actual).isEqualTo(EarnApyHistory(points = emptyList(), average = null).right())
-        coVerify(exactly = 0) { getAprHistory(any(), any(), any()) }
+        assertThat(actual.getOrNull()).isEqualTo(
+            EarnApyHistory(
+                points = listOf(
+                    point(at = "2026-09-01T00:00:00Z", rate = "0.02"),
+                    point(at = "2026-11-01T00:00:00Z", rate = "0.04"),
+                ),
+                average = BigDecimal("0.03"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN bars without dates WHEN load THEN empty history`() = runTest {
+        // Arrange
+        coEvery { getChart(cryptoCurrency = any(), window = any(), bucketSizeDays = any()) } returns
+            chart(y = listOf(2.0), starts = emptyList()).right()
+
+        // Act
+        val actual = loader.load(asset, period("1M"))
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(EarnApyHistory(points = emptyList(), average = null))
     }
 
     @Test
     fun `GIVEN request fails WHEN load THEN Left`() = runTest {
         // Arrange
-        coEvery { getAprHistory(any(), any(), any()) } returns YieldIncentivesError.FeatureAbsent.left()
+        val error = IllegalStateException("backend")
+        coEvery { getChart(cryptoCurrency = any(), window = any(), bucketSizeDays = any()) } returns error.left()
 
         // Act
-        val actual = loader.load(asset, AaveApyPeriods.Month)
+        val actual = loader.load(asset, period("1M"))
 
         // Assert
-        val expected = IllegalStateException("Aave APY history failed: ${YieldIncentivesError.FeatureAbsent}")
-        assertEitherLeft(actual, expected)
+        assertEitherLeft(actual, error)
     }
 
-    private fun emptyHistory() = YieldAprHistory(chainId = CHAIN_ID, tokenAddress = WETH, points = emptyList())
+    data class PeriodModel(val id: String, val window: YieldChartWindow, val bucketSizeDays: Int)
 
-    private fun point(day: Int, totalApyEst: String) = YieldAprHistory.Point(
-        date = LocalDate(year = 2026, monthNumber = 11, dayOfMonth = day),
-        baseApy = BigDecimal("3"),
-        rewardsApy = BigDecimal("1"),
-        totalApyEst = BigDecimal(totalApyEst),
-        isCarriedForward = false,
+    private fun period(id: String) = AaveApyPeriods.All.single { it.id == id }
+
+    private fun chart(y: List<Double>, starts: List<LocalDate>, avr: Double = 0.0) = YieldSupplyMarketChartData(
+        y = y,
+        x = y.indices.map(Int::toDouble),
+        avr = avr,
+        bucketStarts = starts,
     )
 
-    private fun apy(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)
+    private fun point(at: String, rate: String) = EarnApyPoint(
+        at = Instant.parse(at),
+        rate = EarnProductRate(fraction = BigDecimal(rate), type = EarnRateType.APY),
+    )
 
     private companion object {
-        const val CHAIN_ID = 1
         const val WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     }
 }

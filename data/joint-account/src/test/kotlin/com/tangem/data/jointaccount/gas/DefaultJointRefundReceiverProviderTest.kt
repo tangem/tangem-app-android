@@ -42,7 +42,7 @@ internal class DefaultJointRefundReceiverProviderTest {
         }
 
     private fun provideTestModels(): List<RefundReceiverModel> = ApiEnvironment.entries.map { environment ->
-        val isProd = environment == ApiEnvironment.PROD || environment == ApiEnvironment.PROD_NEW
+        val isProd = environment == ApiEnvironment.PROD
         RefundReceiverModel(
             environment = environment,
             expected = if (isProd) {

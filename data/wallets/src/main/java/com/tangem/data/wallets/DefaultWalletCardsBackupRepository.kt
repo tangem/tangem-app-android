@@ -26,7 +26,6 @@ import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -42,7 +41,6 @@ internal class DefaultWalletCardsBackupRepository(
     private val pendingStore: PendingWalletCardsBackupStore,
     private val registryStore: WalletCardsRegistryStore,
     private val appPreferencesStore: AppPreferencesStore,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val deliveryScheduler: WalletCardsBackupDeliveryScheduler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletCardsBackupRepository {
@@ -66,11 +64,6 @@ internal class DefaultWalletCardsBackupRepository(
         cards: List<WalletCardBackup>,
         usedSeed: Boolean,
     ): Either<WalletCardsBackupError, Unit> = withContext(dispatchers.io) {
-        if (!onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled) {
-            val reportedCards = PendingWalletCardsBackupConverter.convert(WalletCardDTOConverter.convertList(cards))
-            return@withContext enqueue(userWalletId, reportedCards, usedSeed).flatMap { sendQueued() }
-        }
-
         queueMutex.withLock {
             val registration = register(userWalletId, cards).getOrElse { return@withContext it.left() }
             enqueue(userWalletId, registration.walletCards, usedSeed)
