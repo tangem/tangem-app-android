@@ -40,9 +40,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -308,6 +310,113 @@ internal class SignJointOperationUseCaseTest {
         assertThat(actual).isEqualTo(JointOperationSignError.Malicious.left())
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { repository.signOperation(any(), any(), any(), any()) }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LostAnswer {
+
+        private val lostAnswer = JointOperationSignError.Failed(cause = IllegalStateException("503"))
+        private val ownSignature = JointOperation.MemberSignature(
+            address = ALICE.uppercase(),
+            state = JointOperation.MemberSignature.State.SIGNED,
+            at = null,
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun submit(model: LostAnswerModel) = runTest {
+            // Arrange
+            coEvery { repository.signOperation(any(), any(), any(), any()) } returns lostAnswer.left()
+            coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
+                flowOf(listOf(jointAccount(inFlightOperations = model.refreshedSlot)))
+
+            // Act
+            val actual = useCase.submit(prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe))
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+            coVerify(exactly = 1) { fetcher.invoke(params = any()) }
+        }
+
+        private fun provideTestModels(): List<LostAnswerModel> {
+            val counted = operation().copy(signatures = listOf(ownSignature))
+            val otherMemberOnly = operation().copy(signatures = listOf(ownSignature.copy(address = RECIPIENT)))
+            val declined = operation().copy(
+                signatures = listOf(ownSignature.copy(state = JointOperation.MemberSignature.State.DECLINED)),
+            )
+
+            return listOf(
+                LostAnswerModel(
+                    name = "the operation carries this member's signature",
+                    refreshedSlot = mapOf(CHAIN_ID to counted),
+                    expected = counted.right(),
+                ),
+                LostAnswerModel(
+                    name = "the operation already left the slot",
+                    refreshedSlot = emptyMap(),
+                    expected = null.right(),
+                ),
+                LostAnswerModel(
+                    name = "another operation took the slot",
+                    refreshedSlot = mapOf(CHAIN_ID to counted.copy(operationId = "another")),
+                    expected = null.right(),
+                ),
+                LostAnswerModel(
+                    name = "the operation still waits without this member's signature",
+                    refreshedSlot = mapOf(CHAIN_ID to otherMemberOnly),
+                    expected = lostAnswer.left(),
+                ),
+                LostAnswerModel(
+                    name = "this member's vote is a decline",
+                    refreshedSlot = mapOf(CHAIN_ID to declined),
+                    expected = lostAnswer.left(),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN the answer is lost and the list cannot be refreshed WHEN submit THEN the failure is shown`() =
+            runTest {
+                // Arrange
+                coEvery { repository.signOperation(any(), any(), any(), any()) } returns lostAnswer.left()
+                coEvery { fetcher.invoke(params = any()) } returns IllegalStateException("offline").left()
+
+                // Act
+                val actual = useCase.submit(prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe))
+
+                // Assert
+                assertThat(actual).isEqualTo(lostAnswer.left())
+            }
+
+        @ParameterizedTest
+        @EnumSource(RefusedBy::class)
+        fun `GIVEN the backend refuses the signature WHEN submit THEN its answer is kept and nothing is re-read`(
+            refusal: RefusedBy,
+        ) = runTest {
+            // Arrange
+            coEvery { repository.signOperation(any(), any(), any(), any()) } returns refusal.error.left()
+
+            // Act
+            val actual = useCase.submit(prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe))
+
+            // Assert
+            assertThat(actual).isEqualTo(refusal.error.left())
+            coVerify(exactly = 0) { fetcher.invoke(params = any()) }
+        }
+    }
+
+    enum class RefusedBy(val error: JointOperationSignError) {
+        NOT_FOUND(JointOperationSignError.OperationNotFound),
+        THRESHOLD_REACHED(JointOperationSignError.ThresholdReached),
+    }
+
+    data class LostAnswerModel(
+        val name: String,
+        val refreshedSlot: Map<Long, JointOperation>,
+        val expected: Either<JointOperationSignError, JointOperation?>,
+    ) {
+        override fun toString(): String = name
     }
 
     /** The local checks pass on the composition the app knows; the deployed Safe is the second opinion */
