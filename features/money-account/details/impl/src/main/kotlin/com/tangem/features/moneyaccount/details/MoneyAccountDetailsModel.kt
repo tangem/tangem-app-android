@@ -35,6 +35,8 @@ import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Not
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
@@ -73,6 +75,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     getUserWalletUseCase: GetUserWalletUseCase,
+    kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
     private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
@@ -99,7 +102,8 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val statusRefreshJobHolder = JobHolder()
 
     private val kycAdditionalInfoNotice = KycAdditionalInfoNotice(
-        accountType = AccountType.MONEY,
+        account = KycAdditionalInfoAccount(userWalletId = params.userWalletId, accountType = AccountType.MONEY),
+        popupStore = kycAdditionalInfoPopupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
         onProvideInformation = ::openKyc,
@@ -124,7 +128,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         refreshStatus()
     }
 
-    private fun onAccountLoaded(account: MoneyAccountStatusValue.Account) {
+    private suspend fun onAccountLoaded(account: MoneyAccountStatusValue.Account) {
         val previous = currentState
         currentState = account
         uiState.update { state -> stateFactory.createAccountState(prevState = state, account = account) }
