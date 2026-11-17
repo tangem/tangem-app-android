@@ -53,6 +53,8 @@ import com.tangem.features.collectibles.impl.packopening.video.source.PackReveal
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.collectibles.MockCollectibles
+import com.tangem.domain.collectibles.models.CollectiblesRegionStatus
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -93,6 +95,7 @@ internal class CollectiblesPackOpeningModelTest {
     private val buybackCollectibleUseCase: BuybackCollectibleUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase = mockk()
     private val userWallet = MockUserWalletFactory.create().copy(walletId = USER_WALLET_ID)
     private val statusFlow = MutableStateFlow<CollectiblesAccountStatusValue>(onboarded(usdcAmount = "1000"))
     private val player: PackRevealVideoPlayer = mockk(relaxed = true)
@@ -118,7 +121,9 @@ internal class CollectiblesPackOpeningModelTest {
             player,
             playerFactory,
             imagePreloader,
+            getRegionStatusUseCase,
         )
+        coEvery { getRegionStatusUseCase(any(), any()) } returns CollectiblesRegionStatus.ALLOWED
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
         every { openCollectiblePackUseCase(any(), any(), any()) } returns flowOf(OpenPackStep.Opened(PACK))
         statusFlow.value = onboarded(usdcAmount = "1000")
@@ -1382,6 +1387,46 @@ internal class CollectiblesPackOpeningModelTest {
         }
 
         @Test
+        fun `GIVEN a restricted region WHEN sell back tapped THEN the restriction is shown and no sale starts`() =
+            runTest {
+                // Arrange
+                coEvery { getRegionStatusUseCase(USER_WALLET_ID, any()) } returns CollectiblesRegionStatus.RESTRICTED
+                val model = openPack()
+                var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+                model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+                // Act
+                model.reveal().onSellBackClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+                assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.RegionRestricted)
+                coVerify(exactly = 1) { getRegionStatusUseCase(USER_WALLET_ID, skipCache = false) }
+                coVerify(exactly = 0) { buybackCollectibleUseCase(any(), any()) }
+                verify(exactly = 0) { router.pop() }
+            }
+
+        @Test
+        fun `GIVEN the region check fails WHEN sell back tapped THEN a generic error is shown and no sale starts`() =
+            runTest {
+                // Arrange
+                coEvery { getRegionStatusUseCase(USER_WALLET_ID, any()) } returns CollectiblesRegionStatus.UNKNOWN
+                val model = openPack()
+
+                // Act
+                model.reveal().onSellBackClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+                verify(exactly = 1) {
+                    messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+                }
+                coVerify(exactly = 0) { buybackCollectibleUseCase(any(), any()) }
+            }
+
+        @Test
         fun `GIVEN a sale in progress WHEN sell back tapped again THEN no second sale starts`() = runTest {
             // Arrange
             coEvery { buybackCollectibleUseCase(any(), any()) } coAnswers { awaitCancellation() }
@@ -1555,6 +1600,7 @@ internal class CollectiblesPackOpeningModelTest {
             buybackCollectibleUseCase = buybackCollectibleUseCase,
             userWalletsListRepository = userWalletsListRepository,
             messageSender = messageSender,
+            getRegionStatusUseCase = getRegionStatusUseCase,
             router = router,
             imagePreloader = imagePreloader,
             playerFactory = playerFactory,
