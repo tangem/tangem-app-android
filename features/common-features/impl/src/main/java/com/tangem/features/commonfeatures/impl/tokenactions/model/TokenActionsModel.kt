@@ -61,6 +61,7 @@ internal class TokenActionsModel @Inject constructor(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     ).apply { tryEmit(Unit) }
+    private var hasStarted = false
 
     private val cryptoCurrencyData: SharedFlow<CryptoCurrencyData> = params.data
         .flowOn(dispatchers.default)
@@ -110,7 +111,8 @@ internal class TokenActionsModel @Inject constructor(
             )
 
     fun onStart() {
-        regionRefreshRequests.tryEmit(Unit)
+        if (hasStarted) regionRefreshRequests.tryEmit(Unit)
+        hasStarted = true
     }
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction, shouldDismiss: Boolean) =

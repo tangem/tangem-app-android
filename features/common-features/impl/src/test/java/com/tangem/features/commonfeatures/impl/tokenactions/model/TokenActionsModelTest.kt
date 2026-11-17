@@ -38,6 +38,7 @@ internal class TokenActionsModelTest {
         val scheduler = TestCoroutineScheduler()
         coEvery { resolver.resolveRestrictedRegionName(userWallet) } returns null
         val model = createModel(scheduler)
+        model.onStart()
         scheduler.runCurrent()
         coEvery { resolver.resolveRestrictedRegionName(userWallet) } returns "United Kingdom"
 
@@ -57,6 +58,7 @@ internal class TokenActionsModelTest {
         val scheduler = TestCoroutineScheduler()
         coEvery { resolver.resolveRestrictedRegionName(userWallet) } returnsMany listOf(null, "United Kingdom")
         val model = createModel(scheduler)
+        model.onStart()
         scheduler.runCurrent()
 
         // Act
@@ -96,6 +98,7 @@ internal class TokenActionsModelTest {
         val scheduler = TestCoroutineScheduler()
         coEvery { resolver.resolveRestrictedRegionName(userWallet) } returnsMany listOf("United Kingdom", null)
         val model = createModel(scheduler)
+        model.onStart()
         scheduler.runCurrent()
 
         // Act
@@ -122,6 +125,23 @@ internal class TokenActionsModelTest {
 
         // Act
         data.value = updatedToken
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(builtInputs.last().onrampRestrictedRegionName).isEqualTo("United Kingdom")
+        coVerify(exactly = 1) { resolver.resolveRestrictedRegionName(userWallet) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new sheet WHEN first started THEN IP is looked up once`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { resolver.resolveRestrictedRegionName(userWallet) } returns "United Kingdom"
+        val model = createModel(scheduler)
+
+        // Act
+        model.onStart()
         scheduler.runCurrent()
 
         // Assert
