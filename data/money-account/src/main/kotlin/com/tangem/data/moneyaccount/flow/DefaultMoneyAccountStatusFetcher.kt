@@ -3,6 +3,7 @@ package com.tangem.data.moneyaccount.flow
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.local.connection.NetworkConnectionManager
+import com.tangem.data.moneyaccount.contribution.MoneyAccountContributionsFetcher
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
@@ -44,6 +45,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
     private val networkConnectionManager: NetworkConnectionManager,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val contributionsFetcher: MoneyAccountContributionsFetcher,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -90,9 +92,11 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         coroutineScope {
             val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
             val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
+            val contributionsDeferred = async { contributionsFetcher.fetch(userWalletId, cryptoCurrency) }
             val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
             val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse { error ->
                 balanceDeferred.cancel()
+                contributionsDeferred.cancel()
                 channelsDeferred.cancel()
                 return@coroutineScope error.toCachedStatusOrEmpty(userWalletId)
             }

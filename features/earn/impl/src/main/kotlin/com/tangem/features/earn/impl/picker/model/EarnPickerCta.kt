@@ -32,9 +32,11 @@ internal class EarnPickerCta @Inject constructor() {
 
         val block = primary.guardedBy(state).block
         val isStart = state.position == EarnPositionState.None
+        // A product without a minimum deposit still has nothing to deposit from an empty balance
+        val isBelowDeposit = ethBalance.signum() == 0 || ethBalance < state.limits.minDeposit
         return when {
             block != null -> button(primary.label, isDimmed = true, onClick = { onBlocked(block) })
-            isStart && ethBalance < state.limits.minDeposit -> button(EarnPickerTexts.addFunds, onClick = onAddFunds)
+            isStart && isBelowDeposit -> button(EarnPickerTexts.addFunds, onClick = onAddFunds)
             else -> button(primary.label, onClick = { onActionClick(primary.action) })
         }
     }

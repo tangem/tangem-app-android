@@ -22,7 +22,6 @@ import com.tangem.features.earn.lending.impl.provider.callData
 import com.tangem.features.earn.lending.impl.provider.isSameAddressAs
 import com.tangem.features.earn.lending.impl.provider.isSameCallAs
 import com.tangem.features.earn.lending.impl.provider.isSentTo
-import java.math.BigDecimal
 import javax.inject.Inject
 
 /** The contracts the transactions may touch; the caller resolves them, the verifier trusts none of its own */
@@ -113,11 +112,11 @@ internal class AaveTransactionVerifier @Inject constructor() {
         read: AaveModuleRead,
     ) {
         ensure(tx.amount.value?.signum() == 0) { unverified("Preparation carries a value") }
-        val zeroFee = Amount(value = BigDecimal.ZERO, blockchain = addresses.blockchain)
         val token = addresses.wrappedTokenAddress
+        val blockchain = addresses.blockchain
 
         if (preparation == YieldModulePreparation.Deploy) {
-            val deploy = CallDataFactory.getDeployCallData(owner, token, zeroFee)
+            val deploy = CallDataFactory.getNativeDeployCallData(owner, token, blockchain)
             ensure(tx.callData.isSameCallAs(deploy)) { unverified("Unexpected preparation call") }
             ensure(tx.isSentTo(addresses.factoryAddress, addresses.networkId)) {
                 unverified("Deploy goes to another address")
@@ -126,9 +125,9 @@ internal class AaveTransactionVerifier @Inject constructor() {
         }
 
         val expectedCall = if (preparation == YieldModulePreparation.InitToken) {
-            CallDataFactory.getInitTokenCallData(token, zeroFee)
+            CallDataFactory.getNativeInitTokenCallData(token, blockchain)
         } else {
-            CallDataFactory.getReactivateTokenCallData(token, zeroFee)
+            CallDataFactory.getNativeReactivateTokenCallData(token, blockchain)
         }
         val call =
             unwrap(tx = tx, read = read, networkId = addresses.networkId, isUpgradeExpected = read.isUpgradeRequired)

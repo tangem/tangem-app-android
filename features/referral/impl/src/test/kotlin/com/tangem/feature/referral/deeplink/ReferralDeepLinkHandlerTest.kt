@@ -4,10 +4,10 @@ import android.net.Uri
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.card.configs.MultiWalletCardConfig
 import com.tangem.domain.models.wallet.UserWallet

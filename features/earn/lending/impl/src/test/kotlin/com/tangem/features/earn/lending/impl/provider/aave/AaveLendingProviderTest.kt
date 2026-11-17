@@ -69,7 +69,6 @@ internal class AaveLendingProviderTest {
         assetResolver = mockk(),
         markets = AaveMarkets(yieldSupplyRepository),
         moduleReader = AaveModuleReader(yieldTransactions),
-        minDepositProvider = mockk(),
         apyHistoryLoader = mockk(),
         yieldSupplyRepository = yieldSupplyRepository,
         networkStatusSupplier = networkStatusSupplier,
@@ -123,15 +122,53 @@ internal class AaveLendingProviderTest {
     }
 
     @Test
-    fun `GIVEN inactive market WHEN market THEN closed with rate kept`() = runTest {
+    fun `GIVEN market with Yield Mode off WHEN market THEN open with its rate`() = runTest {
         // Arrange
         markets.value = listOf(wethMarket(isActive = false))
 
         // Act & Assert
         provider.market(userWalletId, asset).test {
             val actual = expectMostRecentItem()
-            assertThat(actual.isOpen).isFalse()
-            assertThat(actual.rate).isEqualTo(apy("0.03"))
+            val expected = LendingMarket(
+                rate = apy("0.03"),
+                isOpen = true,
+                deposit = LendingDepositGate.Loading,
+                position = null,
+                maxWithdraw = null,
+                providerState = AaveModuleRead(
+                    status = null,
+                    version = YieldModuleVersionStatus.UpToDate,
+                    withdrawLiquidity = BigDecimal("10"),
+                ),
+                source = StatusSource.CACHE,
+            )
+            assertThat(actual).isEqualTo(expected)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN network without Yield Module support WHEN market THEN closed with its rate`() = runTest {
+        // Arrange
+        coEvery { yieldSupplyRepository.isYieldSupplySupported(userWalletId, eth) } returns false
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            val actual = expectMostRecentItem()
+            val expected = LendingMarket(
+                rate = apy("0.03"),
+                isOpen = false,
+                deposit = LendingDepositGate.Loading,
+                position = null,
+                maxWithdraw = null,
+                providerState = AaveModuleRead(
+                    status = null,
+                    version = YieldModuleVersionStatus.UpToDate,
+                    withdrawLiquidity = BigDecimal("10"),
+                ),
+                source = StatusSource.CACHE,
+            )
+            assertThat(actual).isEqualTo(expected)
             cancelAndIgnoreRemainingEvents()
         }
     }

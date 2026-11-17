@@ -36,17 +36,11 @@ abstract class TangemGatewayApiConfig : ApiConfig() {
             ApiEnvironment.DEV_3,
             -> "[REDACTED_ENV_URL]"
             ApiEnvironment.STAGE,
-            ApiEnvironment.STAGE_2,
-            ApiEnvironment.STAGE_3,
             -> "[REDACTED_ENV_URL]"
             ApiEnvironment.MOCK -> "[REDACTED_ENV_URL]"
-            ApiEnvironment.DEV_NEW,
-            ApiEnvironment.DEV_2_NEW,
-            ApiEnvironment.DEV_3_NEW,
-            ApiEnvironment.DEV_4_NEW,
-            ApiEnvironment.DEV_5_NEW,
-            ApiEnvironment.DEV_6_NEW,
-            ApiEnvironment.PROD_NEW,
+            ApiEnvironment.DEV_4,
+            ApiEnvironment.DEV_5,
+            ApiEnvironment.DEV_6,
             -> error("Unknown environment: $environment")
         }
     }

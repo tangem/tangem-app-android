@@ -4,9 +4,9 @@ import android.net.Uri
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError

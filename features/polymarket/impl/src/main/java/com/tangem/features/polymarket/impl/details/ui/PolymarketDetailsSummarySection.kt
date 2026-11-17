@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.polymarket.impl.common.PolymarketResolutionSourceUM
 import com.tangem.features.polymarket.impl.common.ui.PolymarketResolutionSourceRow
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 
@@ -33,15 +34,36 @@ private const val COLLAPSED_DESCRIPTION_LINES = 4
 
 /** The tail of the feed: the resolution criteria and event information. */
 internal fun LazyListScope.summarySection(state: PolymarketEventDetailsUM.Content) {
-    state.description?.let { description ->
+    summarySection(
+        description = state.description,
+        isDescriptionExpanded = state.isDescriptionExpanded,
+        onReadMoreClick = state.onReadMoreClick,
+        resolutionDate = state.resolutionDate,
+        marketOpenedDate = state.marketOpenedDate,
+        resolutionSource = state.resolutionSource,
+        onResolutionSourceClick = state.onResolutionSourceClick,
+    )
+}
+
+@Suppress("LongParameterList")
+internal fun LazyListScope.summarySection(
+    description: TextReference?,
+    isDescriptionExpanded: Boolean,
+    onReadMoreClick: () -> Unit,
+    resolutionDate: TextReference,
+    marketOpenedDate: TextReference,
+    resolutionSource: PolymarketResolutionSourceUM?,
+    onResolutionSourceClick: (String) -> Unit,
+) {
+    description?.let { text ->
         item(key = KEY_DESCRIPTION) {
             DescriptionBlock(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                description = description,
-                isExpanded = state.isDescriptionExpanded,
-                onReadMoreClick = state.onReadMoreClick,
+                description = text,
+                isExpanded = isDescriptionExpanded,
+                onReadMoreClick = onReadMoreClick,
             )
         }
     }
@@ -51,28 +73,37 @@ internal fun LazyListScope.summarySection(state: PolymarketEventDetailsUM.Conten
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            state = state,
+            resolutionDate = resolutionDate,
+            marketOpenedDate = marketOpenedDate,
+            resolutionSource = resolutionSource,
+            onResolutionSourceClick = onResolutionSourceClick,
         )
     }
 }
 
 @Composable
-private fun InfoSection(state: PolymarketEventDetailsUM.Content, modifier: Modifier = Modifier) {
+private fun InfoSection(
+    resolutionDate: TextReference,
+    marketOpenedDate: TextReference,
+    resolutionSource: PolymarketResolutionSourceUM?,
+    onResolutionSourceClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier) {
         InfoRow(
             label = stringResourceSafe(R.string.prediction_details_resolution_date),
-            value = state.resolutionDate.resolveReference(),
+            value = resolutionDate.resolveReference(),
         )
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
         InfoRow(
             label = stringResourceSafe(R.string.prediction_details_market_opened),
-            value = state.marketOpenedDate.resolveReference(),
+            value = marketOpenedDate.resolveReference(),
         )
-        state.resolutionSource?.let { source ->
+        resolutionSource?.let { source ->
             HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
             PolymarketResolutionSourceRow(
                 state = source,
-                onOpenUrl = state.onResolutionSourceClick,
+                onOpenUrl = onResolutionSourceClick,
                 modifier = Modifier.padding(vertical = 14.dp),
                 includeInnerPaddings = false,
             )

@@ -7,6 +7,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyBalanceProvider
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
+import com.tangem.domain.yield.supply.isWrappedNative
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import com.tangem.domain.yield.supply.models.status.findFor
 import com.tangem.domain.yield.supply.models.status.toYieldSupplyStatus
@@ -30,6 +32,7 @@ import java.math.BigDecimal
 class YieldModuleStatusContributionProvider(
     private val yieldModuleStatusSupplier: YieldModuleStatusSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
+    private val wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
 ) : YieldSupplyBalanceProvider {
 
     override fun contributions(userWallet: UserWallet): Flow<ContributionResolver> {
@@ -51,6 +54,8 @@ class YieldModuleStatusContributionProvider(
     ): YieldSupplyContribution? {
         val token = currency as? CryptoCurrency.Token ?: return null
         val yieldStatus = yieldStatuses.findFor(token) ?: return null
+
+        if (wrappedNativeFactory.isWrappedNative(token)) return null
 
         return YieldSupplyContribution(
             status = yieldStatus.toYieldSupplyStatus(),

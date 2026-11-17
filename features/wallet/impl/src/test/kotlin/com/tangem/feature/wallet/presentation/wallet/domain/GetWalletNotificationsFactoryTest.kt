@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -72,6 +73,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -1142,6 +1144,32 @@ internal class GetWalletNotificationsFactoryTest {
         // Non-actionable statuses produce no TangemPay notification.
         TangemPayModel(value = PaymentAccountStatusValue.Loading),
     )
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN not synced payment account WHEN create THEN tangem icon shown only for cold wallet`(
+        isColdWallet: Boolean,
+    ) = runTest {
+        // Arrange
+        val paymentStatus = AccountStatus.Payment(
+            account = mockk<Account.Payment>(relaxed = true),
+            value = PaymentAccountStatusValue.Error.NotSynced,
+        )
+        stubAccountStatusList(balance = LOADED_NON_ZERO, accountStatuses = listOf(paymentStatus))
+        val wallet = if (isColdWallet) coldWallet else hotWallet
+
+        // Act
+        val result = factory.create(wallet, clickIntents).first().notifications
+
+        // Assert
+        val banner = result.filterIsInstance<WalletNotificationUM.TangemPayRefreshNeeded>().single()
+        val icon = banner.messageUM.buttonsUM.single().tangemIconUM
+        if (isColdWallet) {
+            assertThat(icon).isInstanceOf(TangemIconUM.Icon::class.java)
+        } else {
+            assertThat(icon).isNull()
+        }
+    }
 
     @Test
     fun `GIVEN no payment account status WHEN create THEN no tangem-pay banner is shown`() = runTest {

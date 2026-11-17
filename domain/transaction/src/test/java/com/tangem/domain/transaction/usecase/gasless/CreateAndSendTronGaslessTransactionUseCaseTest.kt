@@ -30,7 +30,6 @@ import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
 import com.tangem.domain.transaction.models.tron.TronGaslessSwap
 import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -48,7 +47,6 @@ import java.math.BigInteger
 internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
     private val transactionRepository: TransactionRepository = mockk()
-    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val gaslessSignerProvider: GaslessSignerProvider = mockk()
@@ -57,7 +55,6 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
     private val useCase = CreateAndSendTronGaslessTransactionUseCase(
         transactionRepository = transactionRepository,
-        walletManagersFacade = walletManagersFacade,
         tronGaslessTransactionRepository = tronGaslessTransactionRepository,
         singleAccountListSupplier = singleAccountListSupplier,
         gaslessSignerProvider = gaslessSignerProvider,
@@ -119,7 +116,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             transactionRepository.createTransferTransaction(any(), any(), any(), any(), any(), any(), any())
         } returns compensationTx
         coEvery {
-            walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+            tronGaslessTransactionRepository.sign(any(), any(), any(), any())
         } returns listOf("signedComp", "signedOrig")
         coEvery {
             tronGaslessTransactionRepository.submit(userWallet.walletId, "q_1", "signedComp", "signedOrig")
@@ -150,7 +147,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                 )
             }
             coVerify {
-                walletManagersFacade.signTronGaslessTransactions(
+                tronGaslessTransactionRepository.sign(
                     userWalletId = any(),
                     network = any(),
                     transactionDataList = match { it.size == 2 && it[0] === compensationTx && it[1] === originalTx },
@@ -195,7 +192,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN signing returns null WHEN invoke THEN error`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) } returns null
+        coEvery { tronGaslessTransactionRepository.sign(any(), any(), any(), any()) } returns null
 
         // Act
         val result = useCase(userWallet, originalTx, fee)
@@ -218,7 +215,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(result.isLeft()).isTrue()
-        coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { tronGaslessTransactionRepository.sign(any(), any(), any(), any()) }
     }
 
     @Test
@@ -333,7 +330,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
-            coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { tronGaslessTransactionRepository.sign(any(), any(), any(), any()) }
         }
 
     @Test
@@ -385,7 +382,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             runTest {
                 // Arrange
                 coEvery {
-                    walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                    tronGaslessTransactionRepository.sign(any(), any(), any(), any())
                 } returns listOf("signedComp", "signedSwap")
                 coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
 
@@ -395,7 +392,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                 // Assert
                 assertThat(result.getOrNull()).isEqualTo("hSwap")
                 coVerify(exactly = 1) {
-                    walletManagersFacade.signTronGaslessTransactions(
+                    tronGaslessTransactionRepository.sign(
                         userWalletId = any(),
                         network = any(),
                         transactionDataList = listOf(compensationTx, swapTx),
@@ -419,7 +416,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns
                 swapQuote.copy(quoteId = "q_2", quotedSwap = refreshedSwap)
             coEvery {
-                walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                tronGaslessTransactionRepository.sign(any(), any(), any(), any())
             } returns listOf("signedComp", "signedSwap")
             coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
 
@@ -454,7 +451,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
-            coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { tronGaslessTransactionRepository.sign(any(), any(), any(), any()) }
         }
 
         @Test
@@ -465,7 +462,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             )
             coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns swapQuote.copy(quoteId = "q_2")
             coEvery {
-                walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                tronGaslessTransactionRepository.sign(any(), any(), any(), any())
             } returns listOf("signedComp", "signedSwap")
             coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
 
@@ -488,7 +485,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                 assertThat(result.isLeft()).isTrue()
                 coVerify(exactly = 0) { tronGaslessTransactionRepository.estimateSwap(any()) }
                 coVerify(exactly = 0) {
-                    walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                    tronGaslessTransactionRepository.sign(any(), any(), any(), any())
                 }
             }
     }
@@ -529,7 +526,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                 // Assert
                 assertThat(result.getOrNull()).isEqualTo("hOrig")
                 coVerify {
-                    walletManagersFacade.signTronGaslessTransactions(
+                    tronGaslessTransactionRepository.sign(
                         userWalletId = any(),
                         network = any(),
                         transactionDataList = match { it.size == 2 && it[0] === compensationTx && it[1] === approvalTx },
@@ -583,7 +580,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
-            coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { tronGaslessTransactionRepository.sign(any(), any(), any(), any()) }
         }
 
         @Test

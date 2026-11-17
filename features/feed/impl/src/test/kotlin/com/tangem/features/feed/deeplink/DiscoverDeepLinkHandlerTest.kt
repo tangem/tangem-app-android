@@ -2,11 +2,11 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.deeplink.DiscoverDeepLinkHandler.Companion.FILTER_KEY

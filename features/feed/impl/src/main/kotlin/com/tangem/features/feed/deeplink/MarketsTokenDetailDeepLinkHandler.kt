@@ -2,15 +2,15 @@ package com.tangem.features.feed.deeplink
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.domain.markets.PreselectedTokenDetailsSection
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.utils.logging.TangemLogger

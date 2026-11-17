@@ -11,10 +11,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -34,10 +37,22 @@ internal class EarnFlowStatuses @Inject constructor(
             .onEach { status -> if (status == null) TangemLogger.e("Earn flow: no status for ${product.currency.id}") }
             .filterNotNull()
 
+    /**
+     * Follows the account list rather than [currency]: a top-up of the network coin changes the fee balance
+     * without changing the product currency's status.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun feeCurrency(product: EarnProduct.Params): Flow<CryptoCurrencyStatus> =
+        singleAccountStatusListSupplier(product.userWalletId)
+            .mapNotNull { it.getCryptoCurrencyStatus(currency = product.currency).getOrNull() }
+            .filter { it.value !is CryptoCurrencyStatus.Loading }
+            .mapLatest { status -> feeCurrency(product, status) }
+            .distinctUntilChanged()
+
     fun appCurrency(): Flow<AppCurrency> = getSelectedAppCurrencyUseCase().mapNotNull { it.getOrNull() }
 
     /** For a token the fee is paid in the network's coin; falls back to [status] when that status is not found. */
-    suspend fun feeCurrency(product: EarnProduct.Params, status: CryptoCurrencyStatus): CryptoCurrencyStatus {
+    private suspend fun feeCurrency(product: EarnProduct.Params, status: CryptoCurrencyStatus): CryptoCurrencyStatus {
         val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(product.userWalletId, status).getOrNull()
         if (feeStatus == null) TangemLogger.e("Earn flow: no fee currency status for ${status.currency.id}")
         return feeStatus ?: status

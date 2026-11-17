@@ -34,7 +34,7 @@ internal class CollectiblesVaultBalanceTest {
     )
 
     @Test
-    fun `GIVEN a priced vault WHEN cryptoCurrencyStatus THEN it is loaded at the token account`() {
+    fun `GIVEN a priced vault WHEN cryptoCurrencyStatus THEN it is loaded at the vault address`() {
         // Act
         val actual = vaultBalance(amount = "10", rate = "2").cryptoCurrencyStatus(source = StatusSource.ACTUAL)
 
@@ -42,7 +42,7 @@ internal class CollectiblesVaultBalanceTest {
         val value = actual.value as CryptoCurrencyStatus.Loaded
         Truth.assertThat(value.amount).isEqualTo(BigDecimal("10"))
         Truth.assertThat(value.fiatAmount).isEqualTo(BigDecimal("20"))
-        Truth.assertThat(value.networkAddress?.defaultAddress?.value).isEqualTo(VAULT_ATA_ADDRESS)
+        Truth.assertThat(value.networkAddress?.defaultAddress?.value).isEqualTo(VAULT_ADDRESS)
     }
 
     @Test
@@ -53,6 +53,6 @@ internal class CollectiblesVaultBalanceTest {
         // Assert
         val value = actual.value as CryptoCurrencyStatus.NoQuote
         Truth.assertThat(value.amount).isEqualTo(BigDecimal("10"))
-        Truth.assertThat(value.networkAddress?.defaultAddress?.value).isEqualTo(VAULT_ATA_ADDRESS)
+        Truth.assertThat(value.networkAddress?.defaultAddress?.value).isEqualTo(VAULT_ADDRESS)
     }
 }

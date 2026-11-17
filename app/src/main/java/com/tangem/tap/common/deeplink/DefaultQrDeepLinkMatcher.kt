@@ -1,9 +1,9 @@
 package com.tangem.tap.common.deeplink
 
 import androidx.core.net.toUri
-import com.tangem.common.routing.DeepLinkScheme
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.uri.ExternalUrlValidator
+import com.tangem.core.navigation.deeplink.DeepLinkScheme
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import com.tangem.domain.qrscanning.QrDeepLinkMatcher
 
 /**

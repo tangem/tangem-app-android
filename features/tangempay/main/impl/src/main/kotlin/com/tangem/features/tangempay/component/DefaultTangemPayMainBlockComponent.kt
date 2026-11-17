@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.component
 
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -26,8 +27,23 @@ internal class DefaultTangemPayMainBlockComponent @AssistedInject constructor(
             key = TANGEM_PAY_ACCOUNT_CONTENT_TYPE,
             contentType = TANGEM_PAY_ACCOUNT_CONTENT_TYPE,
         ) {
-            TangemPayMainBlockContent(state, isBalanceHidden, modifier)
+            TangemPayMainBlockContent(
+                state = state,
+                isBalanceHidden = isBalanceHidden,
+                isGrouped = false,
+                modifier = modifier,
+            )
         }
+    }
+
+    @Composable
+    override fun GroupedRow(state: TangemPayMainUM, isBalanceHidden: Boolean, modifier: Modifier) {
+        TangemPayMainBlockContent(
+            state = state,
+            isBalanceHidden = isBalanceHidden,
+            isGrouped = true,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory

@@ -73,6 +73,7 @@ import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.earn.impl.ui.EARN_CHART_DIMMED_ALPHA
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyAverageUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyBarUM
@@ -109,8 +110,6 @@ private val AVERAGE_LABEL_HEIGHT = 32.dp
 private val REFERENCE_LINE_THICKNESS = 2.dp
 
 private val GRID_LINE_THICKNESS = 1.dp
-
-private const val DIMMED_COLUMN_ALPHA = 0.3f
 
 private const val COLUMN_ROUNDNESS_PERCENT = 40
 
@@ -262,7 +261,7 @@ private fun rememberColumnsLayer(selectedBar: Int?, axisMax: Double, columnSpaci
         shape = Shape.rounded(COLUMN_ROUNDNESS_PERCENT),
     )
     val dimmed = rememberLineComponent(
-        color = accent.copy(alpha = DIMMED_COLUMN_ALPHA),
+        color = accent.copy(alpha = EARN_CHART_DIMMED_ALPHA),
         thickness = COLUMN_THICKNESS,
         shape = Shape.rounded(COLUMN_ROUNDNESS_PERCENT),
     )

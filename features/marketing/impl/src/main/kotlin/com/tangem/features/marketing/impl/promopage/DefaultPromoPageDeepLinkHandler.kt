@@ -1,7 +1,7 @@
 package com.tangem.features.marketing.impl.promopage
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.features.marketing.api.promopage.PromoPageDeepLinkHandler
 import javax.inject.Inject

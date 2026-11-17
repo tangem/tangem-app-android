@@ -101,7 +101,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             }
             is WalletNotification.PushNotifications -> PushBanner()
             is WalletNotification.AddFunds -> NoticeAddFunds()
-            is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
             is WalletNotification.YieldBoostPromo -> null
             is WalletNotification.AssetsDiscoveryCompleted -> null

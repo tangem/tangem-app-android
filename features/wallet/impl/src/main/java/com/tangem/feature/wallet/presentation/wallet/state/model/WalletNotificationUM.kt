@@ -369,6 +369,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         private val onRefreshClick: () -> Unit,
         private val buttonText: TextReference,
         private val shouldShowProgress: Boolean,
+        private val isColdWallet: Boolean,
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayRefreshNeeded",
@@ -387,7 +388,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = { TangemTheme.colors3.icon.inverse },
-                    ),
+                    ).takeIf { isColdWallet },
                     onClick = onRefreshClick,
                     type = TangemButtonType.Primary,
                     isLoading = shouldShowProgress,

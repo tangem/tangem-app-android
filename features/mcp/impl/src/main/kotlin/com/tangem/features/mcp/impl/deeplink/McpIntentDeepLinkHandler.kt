@@ -1,11 +1,11 @@
 package com.tangem.features.mcp.impl.deeplink
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.INTENT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SOURCE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent

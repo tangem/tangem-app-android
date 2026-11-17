@@ -2,10 +2,12 @@ package com.tangem.data.collectibles.vault
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
+import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.domain.models.network.Network
 import io.mockk.every
 import io.mockk.mockk
@@ -24,8 +26,8 @@ internal class DefaultCollectiblesVaultCurrencyFactoryTest {
         requireNotNull(
             NetworkFactory(excludedBlockchains).create(
                 blockchain = Blockchain.Solana,
-                extraDerivationPath = null,
-                derivationStyleProvider = null,
+                extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
+                derivationStyleProvider = mockk { every { getDerivationStyle() } returns DerivationStyle.V3 },
                 canHandleTokens = true,
             ),
         )
@@ -41,7 +43,7 @@ internal class DefaultCollectiblesVaultCurrencyFactoryTest {
             symbol = CollectiblesVaultCurrencies.TOKEN_SYMBOL,
             decimals = CollectiblesVaultCurrencies.DECIMALS,
             contractAddress = MINT,
-        )
+        ).copy(isCustom = false)
 
         // Act
         val actual = factory.create(mint = MINT)

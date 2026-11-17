@@ -25,6 +25,8 @@ import com.tangem.features.polymarket.impl.common.feed.model.PolymarketFeedContr
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryFilterUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -46,6 +48,7 @@ internal class PolymarketCategoryModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
+    fastTradingBannerSource: PolymarketFastTradingBannerSource,
     getEvents: GetPolymarketEventsBatchFlowUseCase,
     observeSports: ObservePolymarketSportsStateUseCase,
     observeQuotes: ObservePolymarketLiveQuotesUseCase,
@@ -83,16 +86,33 @@ internal class PolymarketCategoryModel @Inject constructor(
         shouldCacheFeeds = false,
     )
 
+    private val fastTradingBanner = PolymarketFastTradingBannerController(
+        scope = modelScope,
+        dispatchers = dispatchers,
+        userWalletId = params.userWalletId,
+        source = fastTradingBannerSource,
+        router = router,
+        onUnknownSignersReview = null,
+    )
+
     init {
         feed.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
+        fastTradingBanner.banner.onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner) } }
+            .launchIn(modelScope)
         selectFeed()
     }
 
     fun onBack() = router.pop()
 
-    fun onResume() = feed.resume()
+    fun onResume() {
+        fastTradingBanner.resume()
+        feed.resume()
+    }
 
-    fun onPause() = feed.pause()
+    fun onPause() {
+        feed.pause()
+        fastTradingBanner.pause()
+    }
 
     fun onLoadMore() = feed.loadMore()
 
@@ -148,6 +168,7 @@ internal class PolymarketCategoryModel @Inject constructor(
             try {
                 coroutineScope {
                     launch { regionAccess.refresh() }
+                    launch { fastTradingBanner.refresh() }
                     feed.refresh()
                 }
             } finally {

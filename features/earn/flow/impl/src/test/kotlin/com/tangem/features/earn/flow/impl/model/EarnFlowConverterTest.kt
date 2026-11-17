@@ -3,12 +3,7 @@ package com.tangem.features.earn.flow.impl.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
-import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
-import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.button.TangemButtonIconPosition
@@ -452,6 +447,36 @@ internal class EarnFlowConverterTest {
         }
 
         @ParameterizedTest
+        @MethodSource("provideWalletModels")
+        fun `GIVEN wallet type WHEN confirm THEN mobile holds to confirm and card taps with its icon`(
+            model: WalletModel,
+        ) {
+            // Act
+            val actual = confirm(walletIcon = model.walletIcon, isHoldToConfirm = model.isHoldToConfirm)
+
+            // Assert
+            assertThat(
+                ConfirmButtonModel(actual.isHoldToConfirm, actual.primary.tangemIconUM),
+            ).isEqualTo(model.expected)
+        }
+
+        private fun provideWalletModels() = listOf(
+            WalletModel(
+                walletIcon = null,
+                isHoldToConfirm = true,
+                expected = ConfirmButtonModel(isHoldToConfirm = true, icon = null),
+            ),
+            WalletModel(
+                walletIcon = CoreUiR.drawable.ic_tangem_24,
+                isHoldToConfirm = false,
+                expected = ConfirmButtonModel(
+                    isHoldToConfirm = false,
+                    icon = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_tangem_24),
+                ),
+            ),
+        )
+
+        @ParameterizedTest
         @MethodSource("provideEarningsModels")
         fun `GIVEN yearly fiat earnings row WHEN confirm THEN approximate amount per year in the app currency`(
             model: EarningsModel,
@@ -537,6 +562,7 @@ internal class EarnFlowConverterTest {
             plan: TestPlan = TestPlan(),
             product: EarnFlowProduct = testFlowProduct,
             walletIcon: Int? = null,
+            isHoldToConfirm: Boolean = false,
             onLegalClick: (String) -> Unit = {},
             appCurrency: AppCurrency? = AppCurrency.Default,
         ) = converter.confirm(
@@ -550,9 +576,14 @@ internal class EarnFlowConverterTest {
             isPreparing = false,
             notifications = persistentListOf(),
             walletIcon = walletIcon,
+            isHoldToConfirm = isHoldToConfirm,
             callbacks = EarnConfirmCallbacks(onInfoClick = {}, onConfirm = {}, onLegalClick = onLegalClick),
         )
     }
+
+    data class WalletModel(val walletIcon: Int?, val isHoldToConfirm: Boolean, val expected: ConfirmButtonModel)
+
+    data class ConfirmButtonModel(val isHoldToConfirm: Boolean, val icon: TangemIconUM?)
 
     data class EarningsModel(val earnings: BigDecimal, val expected: String)
 
