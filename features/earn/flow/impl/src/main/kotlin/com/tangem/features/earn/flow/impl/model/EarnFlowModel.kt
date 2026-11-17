@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -30,6 +31,8 @@ import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.flow.impl.analytics.EarnDisplayCurrency
 import com.tangem.features.earn.flow.impl.analytics.EarnErrorPopupAction
 import com.tangem.features.earn.flow.impl.analytics.EarnFlowAnalyticsEvent
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowNotice
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowNoticeAnalytics
 import com.tangem.features.earn.flow.impl.analytics.EarnFlowScreen
 import com.tangem.features.earn.flow.impl.analytics.EarnTxType
 import com.tangem.features.earn.flow.impl.analytics.amountScreen
@@ -65,6 +68,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -147,6 +152,11 @@ internal class EarnFlowModel @Inject constructor(
     /** The last fee type the selector offered with an enabled button: a reload through `Loading` keeps it. */
     private var lastFeeType: AnalyticsParam.FeeType? = null
 
+    private val noticeAnalytics = EarnFlowNoticeAnalytics(
+        analyticsEventHandler = analyticsEventHandler,
+        category = params.flowProduct.analytics.category,
+    )
+
     private var feeJob: Job? = null
     private var prepareJob: Job? = null
     private var executeJob: Job? = null
@@ -172,6 +182,7 @@ internal class EarnFlowModel @Inject constructor(
             modelScope.launch(dispatchers.main) { finish(EarnFlowExit.Done) }
         } else {
             subscribeOnStatuses()
+            txType?.let(::subscribeOnNotices)
             if (amountSource != null) loadMaxAmount()
             val userWallet = wallet.userWallet(params.product)
             state.update { flowState ->
@@ -350,6 +361,33 @@ internal class EarnFlowModel @Inject constructor(
             .onEach { appCurrency -> updateWithInitialAmount { it.copy(appCurrency = appCurrency) } }
             .launchIn(modelScope)
     }
+
+    private fun subscribeOnNotices(type: EarnTxType) {
+        combine(state, amount, confirm) { current, amountUM, confirmUM ->
+            when (current.step) {
+                EarnFlowStep.Amount ->
+                    type.amountScreen() to noticesOf(current, amountUM?.notifications, checksAmount = true)
+                EarnFlowStep.Confirm ->
+                    EarnFlowScreen.Confirm to noticesOf(current, confirmUM?.notifications, checksAmount = false)
+                EarnFlowStep.Result -> null
+            }
+        }
+            .filterNotNull()
+            .onEach { (screen, notices) -> noticeAnalytics.update(screen, notices) }
+            .launchIn(modelScope)
+    }
+
+    private fun noticesOf(
+        current: EarnFlowState,
+        notifications: List<NotificationUM>?,
+        checksAmount: Boolean,
+    ): Set<EarnFlowNotice> = buildSet {
+        if (checksAmount && current.isAmountAboveMax) add(EarnFlowNotice.InsufficientBalance)
+        if (notifications.orEmpty().any(::isFeeShortage)) add(EarnFlowNotice.InsufficientFee)
+    }
+
+    private fun isFeeShortage(notification: NotificationUM): Boolean =
+        notification is NotificationUM.Error.TotalExceedsBalance || notification is NotificationUM.Error.ExceedsBalance
 
     private fun loadMaxAmount() {
         modelScope.launch {

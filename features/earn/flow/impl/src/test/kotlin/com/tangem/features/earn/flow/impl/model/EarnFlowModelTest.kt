@@ -2151,6 +2151,184 @@ internal class EarnFlowModelTest {
             }
 
         @ParameterizedTest
+        @MethodSource("provideAmountScreenModels")
+        fun `GIVEN an amount above the max WHEN entered THEN InsufficientBalance is sent once for the amount screen`(
+            model: AmountScreenModel,
+        ) = runTest {
+            // Arrange
+            val flow = createModel(action = model.action)
+            advanceUntilIdle()
+
+            // Act
+            flow.onAmountValueChange("2.02")
+            flow.onAmountValueChange("2.03")
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.InsufficientBalance(category = "ETH Lending", screen = model.expectedScreen),
+                )
+            }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientBalance>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an amount above the max WHEN lowered to the max and raised again THEN InsufficientBalance is sent twice`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange("2.02")
+                advanceUntilIdle()
+
+                // Act
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                advanceUntilIdle()
+                flow.onAmountValueChange("2.02")
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 2) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientBalance(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a loaded fee WHEN the whole balance is entered THEN InsufficientBalance is sent once`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Act
+            flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+            advanceUntilIdle()
+
+            // Assert
+            val event = EarnFlowAnalyticsEvent.InsufficientBalance(category = "ETH Lending", screen = EarnFlowScreen.Deposit)
+            verify(exactly = 1) { analyticsEventHandler.send(event) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an amount within the max WHEN entered THEN no notice is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+            flow.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientBalance>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount plus fee above the balance WHEN on Confirm THEN InsufficientFee(Confirm) is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createConfirmedModel(amount = TEST_BALANCE.toPlainString())
+
+                // Act
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.03"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Confirm),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientBalance>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN amount plus fee above the balance WHEN on the amount step THEN InsufficientFee(Deposit) is sent`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+
+                // Act
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN withdraw fee above the wallet balance WHEN amount entered THEN InsufficientFee(Withdraw) is sent`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+                } returns testStatus(amount = BigDecimal("0.0001")).right()
+                val flow = createModel(action = Withdraw())
+                advanceUntilIdle()
+
+                // Act
+                flow.onAmountValueChange("0.5")
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Withdraw),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an action that is neither deposit nor withdraw WHEN the amount and fee exceed the balance THEN no notice is sent`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = TestTopUp)
+                advanceUntilIdle()
+
+                // Act
+                flow.onAmountValueChange("2.02")
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                advanceUntilIdle()
+
+                // Assert
+                val notifications = flow.amount.value?.notifications.orEmpty()
+                assertThat(
+                    notifications.any {
+                        it is NotificationUM.Error.TotalExceedsBalance || it is NotificationUM.Error.ExceedsBalance
+                    },
+                ).isTrue()
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                flow.onDestroy()
+            }
+
+        @ParameterizedTest
         @MethodSource("provideCurrencyModels")
         fun `GIVEN the amount step WHEN currency toggled THEN currency toggle carries the currency and the screen`(
             model: CurrencyToggleModel,
@@ -2645,10 +2823,10 @@ internal class EarnFlowModelTest {
         }
     }
 
-    private suspend fun TestScope.createConfirmedModel(): EarnFlowModel {
+    private suspend fun TestScope.createConfirmedModel(amount: String = "0.5"): EarnFlowModel {
         val model = createModel(action = Deposit())
         advanceUntilIdle()
-        model.onAmountValueChange("0.5")
+        model.onAmountValueChange(amount)
         model.onFeeResult(testFeeContent("0.00033"))
         advanceUntilIdle()
         model.onSubmit()

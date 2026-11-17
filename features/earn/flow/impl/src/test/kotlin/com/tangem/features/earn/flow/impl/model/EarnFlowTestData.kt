@@ -119,6 +119,14 @@ internal object TestClaim : EarnFlowAction {
     override fun title(productTitle: TextReference): TextReference = productTitle
 }
 
+internal object TestTopUp : EarnFlowAction {
+    override val id: String = "top-up"
+    override val label: TextReference = stringReference("Top up")
+    override val input: EarnActionInput = EarnActionInput.Amount(EarnActionInput.Amount.Source.Wallet)
+    override val isGaslessAllowed: Boolean = false
+    override fun title(productTitle: TextReference): TextReference = productTitle
+}
+
 internal data class TestPlan(
     override val fee: Fee = testFee("0.00033"),
     override val expectedAmount: BigDecimal? = BigDecimal("0.5"),
