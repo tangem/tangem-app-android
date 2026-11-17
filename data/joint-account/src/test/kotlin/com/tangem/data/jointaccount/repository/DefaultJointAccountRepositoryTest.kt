@@ -59,6 +59,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultJointAccountRepositoryTest {
@@ -693,6 +694,29 @@ internal class DefaultJointAccountRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(null.right())
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "application/json; charset=utf-8, true",
+        "application/problem+json, true",
+        "text/html, false",
+        "text/plain, false",
+    )
+    fun `GIVEN a 2xx answer of some content type WHEN reject THEN only JSON counts as a recorded refusal`(
+        contentType: String,
+        isRecorded: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.rejectJointOperation(any(), any()) } returns
+            ApiResponse.Success(data = Unit, headers = mapOf("content-type" to listOf(contentType)))
+
+        // Act
+        val actual = repository.rejectOperation(userWalletId = WALLET_ID, operationId = OPERATION_ID)
+
+        // Assert
+        assertThat(actual.isRight()).isEqualTo(isRecorded)
+        assertThat(actual.leftOrNull() is JointOperationRejectError.Failed).isEqualTo(!isRecorded)
     }
 
     @Test

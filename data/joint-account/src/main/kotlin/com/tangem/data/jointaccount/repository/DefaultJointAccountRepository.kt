@@ -315,12 +315,19 @@ internal class DefaultJointAccountRepository @Inject constructor(
     ): Either<JointOperationRejectError, Unit> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                jointAccountApi.rejectJointOperation(
+                val response = jointAccountApi.rejectJointOperation(
                     walletId = userWalletId.stringValue,
                     operationId = operationId,
-                ).bind()
+                )
+                response.bind()
 
-                Unit.right()
+                val contentType = response.headers[CONTENT_TYPE_HEADER]?.firstOrNull()
+                if (contentType == null || contentType.contains(JSON_SUBTYPE, ignoreCase = true)) {
+                    Unit.right()
+                } else {
+                    val cause = IllegalStateException("Unexpected answer to the refusal: $contentType")
+                    JointOperationRejectError.Failed(cause = cause).left()
+                }
             },
             onError = { error -> rejectErrorConverter.convert(error).left() },
         )
@@ -329,6 +336,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private companion object {
         const val TAG = "JointAccountRepository"
         const val NO_JOINT_ACCOUNTS = 0
+        const val CONTENT_TYPE_HEADER = "content-type"
+        const val JSON_SUBTYPE = "json"
         val DEAD_INVITE_CODES = setOf(Code.CONFLICT, Code.NOT_FOUND)
         val SLOT_UNAVAILABLE_CODES = setOf(Code.FORBIDDEN, Code.NOT_FOUND, Code.CONFLICT)
     }
