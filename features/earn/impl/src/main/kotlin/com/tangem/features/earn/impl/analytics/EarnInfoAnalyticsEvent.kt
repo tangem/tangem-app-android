@@ -49,6 +49,24 @@ internal sealed class EarnInfoAnalyticsEvent(
         event = "Button - Info Screen Action",
         params = mapOf(EarnAnalyticsParam.ACTION to action.value),
     )
+
+    class HowItWorksOpened(
+        category: String,
+        source: EarnEntrySource,
+    ) : EarnInfoAnalyticsEvent(
+        category = category,
+        event = "How It Works Sheet Opened",
+        params = mapOf(AnalyticsParam.SOURCE to source.toAnalyticsValue()),
+    )
+
+    class LearnMore(
+        category: String,
+        source: EarnEntrySource,
+    ) : EarnInfoAnalyticsEvent(
+        category = category,
+        event = "Button - Learn More",
+        params = mapOf(AnalyticsParam.SOURCE to source.toAnalyticsValue()),
+    )
 }
 
 internal enum class InfoAction(val value: String) {

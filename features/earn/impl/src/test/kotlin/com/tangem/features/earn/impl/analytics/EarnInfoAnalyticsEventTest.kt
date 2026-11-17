@@ -89,6 +89,22 @@ internal class EarnInfoAnalyticsEventTest {
                 expectedId = "[ETH Lending] Button - Info Screen Action",
                 expectedParams = mapOf("Action" to "Withdraw"),
             ),
+            EventModel(
+                event = EarnInfoAnalyticsEvent.HowItWorksOpened(
+                    category = "ETH Lending",
+                    source = EarnEntrySource.EarnBanner,
+                ),
+                expectedId = "[ETH Lending] How It Works Sheet Opened",
+                expectedParams = mapOf("Source" to "Earn Banner"),
+            ),
+            EventModel(
+                event = EarnInfoAnalyticsEvent.LearnMore(
+                    category = "ETH Lending",
+                    source = EarnEntrySource.EarnBanner,
+                ),
+                expectedId = "[ETH Lending] Button - Learn More",
+                expectedParams = mapOf("Source" to "Earn Banner"),
+            ),
         )
     }
 

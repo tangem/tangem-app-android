@@ -416,10 +416,12 @@ internal class EarnInfoModel @Inject constructor(
     }
 
     private fun onHowItWorksClick(content: EarnHowItWorks) {
+        sendInfoEvent { category -> EarnInfoAnalyticsEvent.HowItWorksOpened(category, params.source) }
         howItWorks.value = content.toUM(onLearnMoreClick = ::openBlogPost)
     }
 
     private fun openBlogPost(post: TangemBlogUrlBuilder.Post) {
+        sendInfoEvent { category -> EarnInfoAnalyticsEvent.LearnMore(category, params.source) }
         modelScope.launch { urlOpener.openUrl(blogUrlBuilder.build(post)) }
     }
 
