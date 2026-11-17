@@ -61,7 +61,6 @@ import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.currency.balance.accruingContributions
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
@@ -344,6 +343,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
+        observeTickingBalance()
     }
 
     private fun handleBalanceHiding() {
@@ -512,7 +512,6 @@ internal class TokenDetailsModel @Inject constructor(
                     updateButtons(currencyStatus = status)
                     updateWarnings(status)
                     subscribeOnUpdateStakingInfo(status)
-                    subscribeOnTickingBalance(status)
                 }
                 currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
             }
@@ -521,8 +520,18 @@ internal class TokenDetailsModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun subscribeOnTickingBalance(status: CryptoCurrencyStatus) {
-        val appCurrency = selectedAppCurrencyFlow.value
+    /** The ticking total carries the currency symbol, so the selected currency restarts it too */
+    private fun observeTickingBalance() {
+        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .map { it.status }
+            .distinctUntilChanged()
+            .combine(selectedAppCurrencyFlow) { status, appCurrency -> status to appCurrency }
+            .onEach { (status, appCurrency) -> subscribeOnTickingBalance(status, appCurrency) }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnTickingBalance(status: CryptoCurrencyStatus, appCurrency: AppCurrency) {
         val tickingBalance = when {
             status.value.yieldSupply?.isActive == true -> {
                 accruingTickInputs = null
@@ -532,8 +541,7 @@ internal class TokenDetailsModel @Inject constructor(
                 yieldSupplyGetRewardsBalanceUseCase(status, appCurrency)
             }
             status.value.accruingContributions().isNotEmpty() -> {
-                // A restart rewinds the extrapolated growth to the last read, so only new inputs restart the ticker
-                val inputs = AccruingTickInputs(status.value.amount, status.value.contributions, status.value.fiatRate)
+                val inputs = AccruingTickInputs.of(status, appCurrency)
                 if (yieldSupplyBalanceJobHolder.isActive && inputs == accruingTickInputs) return
                 accruingTickInputs = inputs
                 getAccruingBalanceUseCase(status, appCurrency).onEmpty { emit(YieldSupplyRewardBalance.empty()) }
@@ -558,12 +566,6 @@ internal class TokenDetailsModel @Inject constructor(
             redesignStateController.update(SetYieldSupplyBalanceTransformer(YieldSupplyRewardBalance.empty()))
         }
     }
-
-    private data class AccruingTickInputs(
-        val amount: BigDecimal?,
-        val contributions: List<BalanceContribution>,
-        val fiatRate: BigDecimal?,
-    )
 
     private fun updateTxHistory() {
         modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
