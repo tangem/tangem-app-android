@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.deeplink.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.feature.tokendetails.deeplink.DefaultExpressDeepLinkTrigger
 import com.tangem.feature.tokendetails.deeplink.DefaultTokenDetailsDeepLinkHandler
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionTrigger

@@ -1,28 +1,17 @@
 package com.tangem.tap.routing.utils
 
 import android.net.Uri
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
-import com.tangem.common.routing.deeplink.DeeplinkConst
-import com.tangem.domain.marketing.MarketingFeatureToggles
-import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Receives deep links and keeps the last one until [RootDeepLinkDispatcher] takes it. */
 @ActivityScoped
-internal class DeepLinkFactory @Inject constructor(
-    private val marketingFeatureToggles: MarketingFeatureToggles,
-    private val marketingUidBindingRepository: MarketingUidBindingRepository,
-    private val appCoroutineScope: AppCoroutineScope,
-    private val deepLinkHandlerRegistry: DeepLinkHandlerRegistry,
-) {
+internal class DeepLinkFactory @Inject constructor() {
 
     val parkedDeepLink: StateFlow<ParkedDeepLink?>
         field = MutableStateFlow<ParkedDeepLink?>(null)
@@ -61,16 +50,6 @@ internal class DeepLinkFactory @Inject constructor(
 
     /** Takes [deepLink] out of the box. Returns `false` when it has already been taken or replaced. */
     fun consume(deepLink: ParkedDeepLink): Boolean = parkedDeepLink.compareAndSet(expect = deepLink, update = null)
-
-    fun bindMarketingUid(deeplinkUri: Uri) {
-        // `wc:` and other opaque links have no query: getQueryParameters throws for them
-        if (!marketingFeatureToggles.isUidBindingEnabled || deeplinkUri.isOpaque) return
-
-        val uid = deeplinkUri.getQueryParameters(DeeplinkConst.UID_KEY).firstOrNull(String::isNotEmpty) ?: return
-        if (deepLinkHandlerRegistry.find(deeplinkUri) == null) return
-
-        appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
-    }
 }
 
 /** A deep link waiting for the app to become routable, and where it came from. */

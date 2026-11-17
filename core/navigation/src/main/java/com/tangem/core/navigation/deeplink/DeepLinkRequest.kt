@@ -1,4 +1,4 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.core.navigation.deeplink
 
 import android.net.Uri
 import com.tangem.core.decompose.navigation.Router

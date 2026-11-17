@@ -3,13 +3,13 @@ package com.tangem.feature.wallet.deeplink
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.common.routing.deeplink.DeeplinkConst.PROMO_CODE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.mask
 import com.tangem.core.ui.extensions.resourceReference

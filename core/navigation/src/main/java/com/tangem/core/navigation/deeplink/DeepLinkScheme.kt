@@ -1,4 +1,4 @@
-package com.tangem.common.routing
+package com.tangem.core.navigation.deeplink
 
 enum class DeepLinkScheme(val scheme: String) {
     Tangem(scheme = "tangem"),

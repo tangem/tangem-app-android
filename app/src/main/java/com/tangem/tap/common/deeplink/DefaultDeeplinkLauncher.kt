@@ -4,10 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.navigation.deeplink.DeepLinkScheme
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.utils.logging.TangemLogger

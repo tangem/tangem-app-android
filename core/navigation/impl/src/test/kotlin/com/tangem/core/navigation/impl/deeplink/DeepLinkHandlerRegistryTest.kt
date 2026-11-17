@@ -1,7 +1,9 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.core.navigation.impl.deeplink
 
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk

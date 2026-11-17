@@ -1,6 +1,6 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.networks.repository.NetworksRepository

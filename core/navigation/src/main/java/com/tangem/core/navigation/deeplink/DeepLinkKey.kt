@@ -1,4 +1,4 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.core.navigation.deeplink
 
 import dagger.MapKey
 
@@ -10,7 +10,7 @@ import dagger.MapKey
  *
  * Empty path segments are ignored, so `tangem://staking/` equals `tangem://staking`; percent-encoded characters are
  * decoded like in the received URI, except `%2F`. Query and fragment are not allowed.
- * The most specific key wins, see [DeepLinkHandlerRegistry].
+ * The most specific key wins.
  */
 @MapKey
 @Retention(AnnotationRetention.RUNTIME)

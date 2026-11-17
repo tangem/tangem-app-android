@@ -2,8 +2,8 @@ package com.tangem.feature.wallet.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope

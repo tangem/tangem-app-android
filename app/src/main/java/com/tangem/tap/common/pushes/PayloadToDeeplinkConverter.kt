@@ -2,7 +2,6 @@ package com.tangem.tap.common.pushes
 
 import android.os.Bundle
 import com.tangem.common.routing.deeplink.DeepLinkBuilder
-import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
@@ -15,6 +14,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
