@@ -40,7 +40,7 @@ interface EarnSession {
 
     fun track(ref: EarnTxRef): Flow<EarnTxStatus>
 
-    /** Empty for a session that has nothing to tell about [action] */
+    /** Must not throw: the flow calls it without a catch. */
     suspend fun screenAnalytics(action: EarnFlowAction): EarnScreenAnalytics = EarnScreenAnalytics()
 
     fun interface Factory {
