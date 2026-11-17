@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.details.ui
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.features.polymarket.impl.R
@@ -22,8 +23,19 @@ internal fun PolymarketEventDetailsChart(
         PolymarketChartPeriod.Day -> DateTimeFormatters.localFullDate
         else -> DateTimeFormatters.dateMMMdYYYY
     }
+    val chart = snapshot.chart
+    val localized = if (
+        chart is PolymarketProbabilityChart.State.Content && snapshot.content.localizedTitles.isNotEmpty()
+    ) {
+        chart.copy(series = chart.series.map { series ->
+            val title = snapshot.content.localizedTitles[series.id]?.resolveReference()
+            if (title == null) series else series.copy(title = title)
+        }.toImmutableList())
+    } else {
+        chart
+    }
     PolymarketProbabilityChart(
-        state = snapshot.chart,
+        state = localized,
         periods = snapshot.content.periods.map {
             PolymarketProbabilityChart.Period(it.id, resourceReference(it.title(snapshot.content.isLive)))
         }.toImmutableList(),
