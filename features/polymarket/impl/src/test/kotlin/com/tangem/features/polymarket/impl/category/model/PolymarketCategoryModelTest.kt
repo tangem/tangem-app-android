@@ -17,11 +17,16 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -29,8 +34,11 @@ import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -48,6 +56,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedContentUM
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -62,6 +73,12 @@ internal class PolymarketCategoryModelTest {
     private val getEvents: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val observeSports: ObservePolymarketSportsStateUseCase = mockk {
         every { this@mockk.invoke(any(), any()) } returns flowOf(PolymarketSportsState(emptyMap()))
+    }
+    private val fastTradingBanner = MutableStateFlow<PolymarketFastTradingBanner?>(value = null)
+    private val fastTradingBannerSource: PolymarketFastTradingBannerSource = mockk {
+        every { observe(any(), any(), any()) } returns fastTradingBanner
+        coEvery { refresh(any()) } just Runs
+        coEvery { dismiss(any(), any()) } just Runs
     }
     private val feeds = mutableListOf<Feed>()
     private var model: PolymarketCategoryModel? = null
@@ -296,6 +313,132 @@ internal class PolymarketCategoryModelTest {
         assertThat(model.cards().map { it.id }).containsExactly("question")
     }
 
+    @Test
+    fun `GIVEN a resumed category WHEN the source emits a banner THEN it is shown and hidden with the source`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            fastTradingBanner.value = PolymarketFastTradingBanner.Extend(daysLeft = 3)
+            runCurrent()
+            val shown = model.uiState.value.fastTradingBanner
+            fastTradingBanner.value = null
+            runCurrent()
+
+            // Assert
+            assertThat(shown).isInstanceOf(PolymarketFastTradingBannerUM.Extend::class.java)
+            assertThat((shown as PolymarketFastTradingBannerUM.Extend).daysLeft).isEqualTo(3)
+            assertThat(model.uiState.value.fastTradingBanner).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a category WHEN resumed THEN the banner is observed without unknown signers and refreshed`() = runTest {
+        // Arrange
+        val model = createModel()
+        runCurrent()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        verify(exactly = 1) { fastTradingBannerSource.observe(walletId, any(), includesUnknownSigners = false) }
+        coVerify(exactly = 1) { fastTradingBannerSource.refresh(walletId) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the source reports unknown signers WHEN observed THEN the category shows no banner`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        fastTradingBanner.value = PolymarketFastTradingBanner.UnknownSigners
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.fastTradingBanner).isNull()
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("bannerActivationActions")
+    fun `GIVEN a shown banner WHEN action clicked THEN the activation screen opens with its action`(
+        banner: PolymarketFastTradingBanner,
+        action: ActivationAction,
+    ) = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        fastTradingBanner.value = banner
+        runCurrent()
+
+        // Act
+        model.uiState.value.fastTradingBanner!!.onActionClick()
+
+        // Assert
+        verify(exactly = 1) { router.push(PolymarketRoute.FastTradingActivation(walletId, action), any()) }
+        verify(exactly = 0) { messages.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a shown banner WHEN close clicked THEN the banner is dismissed for the wallet`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        fastTradingBanner.value = PolymarketFastTradingBanner.Activate
+        runCurrent()
+
+        // Act
+        (model.uiState.value.fastTradingBanner as PolymarketFastTradingBannerUM.Activate).onCloseClick()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerSource.dismiss(walletId, PolymarketFastTradingBanner.Activate) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an observed banner WHEN paused THEN the subscription is cancelled until resumed`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        model.onPause()
+        runCurrent()
+        val pausedSubscribers = fastTradingBanner.subscriptionCount.value
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(pausedSubscribers).isEqualTo(0)
+        assertThat(fastTradingBanner.subscriptionCount.value).isEqualTo(1)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a category WHEN pulled to refresh THEN the fast trading banner source is refreshed`() = runTest {
+        // Arrange
+        val model = createModel()
+        runCurrent()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fastTradingBannerSource.refresh(walletId) }
+    }
+
     private fun PolymarketCategoryModel.clickFilter(id: String) {
         (uiState.value.filters.single { it.id == id } as TangemTabItemUM.Content).onClick()
     }
@@ -317,6 +460,7 @@ internal class PolymarketCategoryModelTest {
             router = router,
             messageSender = messages,
             regionAccess = region,
+            fastTradingBannerSource = fastTradingBannerSource,
             getEvents = getEvents,
             observeSports = observeSports,
             observeQuotes = mockk(),
@@ -352,5 +496,22 @@ internal class PolymarketCategoryModelTest {
                 PaginationStatus.EndOfPagination,
             )
         }
+    }
+
+    private companion object {
+
+        @JvmStatic
+        fun bannerActivationActions() = listOf(
+            Arguments.of(PolymarketFastTradingBanner.Activate, ActivationAction.Activate),
+            Arguments.of(
+                PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+                ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Reactivate),
+            ),
+            Arguments.of(
+                PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+                ActivationAction.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
+            ),
+            Arguments.of(PolymarketFastTradingBanner.Extend(daysLeft = 12), ActivationAction.Extend),
+        )
     }
 }

@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.fasttrading.banner
 
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 

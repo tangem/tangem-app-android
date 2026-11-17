@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.fasttrading.banner
 
 import arrow.core.left
 import arrow.core.right
@@ -24,10 +24,8 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationFailure
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationOutcome
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
-import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.getEmittedValues
@@ -61,7 +59,6 @@ internal class PolymarketFastTradingBannerSourceTest {
 
     private val observeFastTrading: ObservePolymarketFastTradingUseCase = mockk()
     private val refreshFastTrading: RefreshPolymarketFastTradingUseCase = mockk()
-    private val startOperation: StartPolymarketSessionKeyOperationUseCase = mockk()
     private val bannerStore: PolymarketFastTradingBannerStore = mockk()
     private val featureToggles: PolymarketFeatureToggles = mockk()
     private val clock = MutableClock(NOW)
@@ -69,7 +66,6 @@ internal class PolymarketFastTradingBannerSourceTest {
     private val source = PolymarketFastTradingBannerSource(
         observeFastTrading = observeFastTrading,
         refreshFastTrading = refreshFastTrading,
-        startOperation = startOperation,
         bannerStore = bannerStore,
         featureToggles = featureToggles,
         clock = clock,
@@ -77,13 +73,12 @@ internal class PolymarketFastTradingBannerSourceTest {
 
     @BeforeEach
     fun reset() {
-        clearMocks(observeFastTrading, refreshFastTrading, startOperation, bannerStore, featureToggles)
+        clearMocks(observeFastTrading, refreshFastTrading, bannerStore, featureToggles)
         clock.now = NOW
         every { featureToggles.isPolymarketFastOrdersEnabled } returns true
         every { bannerStore.dismissedAt(any(), any()) } returns flowOf(null)
         coEvery { bannerStore.dismiss(any(), any(), any()) } returns Unit
         coEvery { refreshFastTrading(any()) } returns Unit
-        every { startOperation(any(), any()) } returns PolymarketSessionKeyOperationStart.Started(id = 1)
     }
 
     @ParameterizedTest
@@ -96,7 +91,7 @@ internal class PolymarketFastTradingBannerSourceTest {
         }
 
         // Act
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
 
         // Assert
         assertThat(actual).containsExactly(model.expected)
@@ -356,12 +351,48 @@ internal class PolymarketFastTradingBannerSourceTest {
         every { featureToggles.isPolymarketFastOrdersEnabled } returns false
 
         // Act
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
 
         // Assert
         assertThat(actual).containsExactly(null)
         verify(exactly = 0) { observeFastTrading(any()) }
     }
+
+    @ParameterizedTest
+    @MethodSource("provideWithoutUnknownSignersModels")
+    fun `GIVEN foreign signers WHEN observed without unknown signers THEN emits the own key banner`(
+        model: BannerModel,
+    ) = runTest {
+        // Arrange
+        every { observeFastTrading(WALLET_ID) } returns flowOf(model.state)
+
+        // Act
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = false))
+
+        // Assert
+        assertThat(actual).containsExactly(model.expected)
+    }
+
+    private fun provideWithoutUnknownSignersModels() = listOf(
+        BannerModel(
+            state = stateOf(OFFER_ENABLE, foreignSigners = listOf(FOREIGN_SIGNER)),
+            expected = PolymarketFastTradingBanner.Activate,
+        ),
+        BannerModel(
+            state = stateOf(
+                PolymarketSessionKeyDeviceState.Active(keyOf(validFor = Duration.ofDays(5)), false),
+                foreignSigners = listOf(FOREIGN_SIGNER),
+            ),
+            expected = PolymarketFastTradingBanner.Extend(daysLeft = 5),
+        ),
+        BannerModel(
+            state = stateOf(
+                PolymarketSessionKeyDeviceState.Active(keyOf(), isRenewDue = false),
+                foreignSigners = listOf(FOREIGN_SIGNER),
+            ),
+            expected = null,
+        ),
+    )
 
     @Test
     fun `GIVEN dismissed banner WHEN recheck emitted after the dismissal period THEN banner reappears`() = runTest {
@@ -371,7 +402,7 @@ internal class PolymarketFastTradingBannerSourceTest {
         every { observeFastTrading(WALLET_ID) } returns flowOf(stateOf(OFFER_ENABLE))
         every { bannerStore.dismissedAt(WALLET_ID, PolymarketFastTradingBannerKind.ACTIVATE) } returns
             flowOf(NOW.minus(Duration.ofDays(29)))
-        val actual = getEmittedValues(source.observe(WALLET_ID, rechecks))
+        val actual = getEmittedValues(source.observe(WALLET_ID, rechecks, includesUnknownSigners = true))
 
         // Act
         clock.now = NOW.plus(Duration.ofDays(2))
@@ -392,7 +423,7 @@ internal class PolymarketFastTradingBannerSourceTest {
             )
             every { observeFastTrading(WALLET_ID) } returns
                 flowOf(stateOf(OFFER_ENABLE, sessionKeys = listOf(pendingKey)))
-            val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+            val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
             runCurrent()
             val beforeWindowEnds = actual.toList()
 
@@ -411,7 +442,7 @@ internal class PolymarketFastTradingBannerSourceTest {
         every { observeFastTrading(WALLET_ID) } returns flowOf(stateOf(OFFER_ENABLE))
         every { bannerStore.dismissedAt(WALLET_ID, PolymarketFastTradingBannerKind.ACTIVATE) } returns
             flowOf(NOW.minus(Duration.ofDays(30)).plus(Duration.ofHours(1)))
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
         runCurrent()
         val beforePeriodEnds = actual.toList()
 
@@ -430,7 +461,7 @@ internal class PolymarketFastTradingBannerSourceTest {
         val rechecks = MutableSharedFlow<Unit>(replay = 1)
         rechecks.tryEmit(Unit)
         every { observeFastTrading(WALLET_ID) } returns flowOf(stateOf(OFFER_ENABLE))
-        val actual = getEmittedValues(source.observe(WALLET_ID, rechecks))
+        val actual = getEmittedValues(source.observe(WALLET_ID, rechecks, includesUnknownSigners = true))
 
         // Act
         rechecks.tryEmit(Unit)
@@ -471,43 +502,12 @@ internal class PolymarketFastTradingBannerSourceTest {
         coVerify(exactly = 0) { bannerStore.dismiss(any(), any(), any()) }
     }
 
-    @ParameterizedTest
-    @MethodSource("provideStartModels")
-    fun `GIVEN an actionable banner WHEN started THEN its operation is requested`(model: StartModel) {
-        // Act
-        val actual = source.start(WALLET_ID, model.banner)
-
-        // Assert
-        assertThat(actual).isEqualTo(PolymarketSessionKeyOperationStart.Started(id = 1))
-        verify(exactly = 1) { startOperation(WALLET_ID, model.request) }
-    }
-
-    private fun provideStartModels() = listOf(
-        StartModel(PolymarketFastTradingBanner.Activate, PolymarketSessionKeyOperationRequest.Activate),
-        StartModel(REACTIVATE, PolymarketSessionKeyOperationRequest.Reactivate),
-        StartModel(
-            PolymarketFastTradingBanner.Reactivate(PolymarketSessionKeyOperationRequest.Activate),
-            PolymarketSessionKeyOperationRequest.Activate,
-        ),
-        StartModel(PolymarketFastTradingBanner.Extend(daysLeft = 3), PolymarketSessionKeyOperationRequest.Extend),
-    )
-
-    @Test
-    fun `GIVEN unknown signers banner WHEN started THEN no operation is requested`() {
-        // Act
-        val actual = source.start(WALLET_ID, PolymarketFastTradingBanner.UnknownSigners)
-
-        // Assert
-        assertThat(actual).isNull()
-        verify(exactly = 0) { startOperation(any(), any()) }
-    }
-
     @Test
     fun `GIVEN activation runs WHEN it fails THEN activate banner returns at once`() = runTest {
         // Arrange
         val states = MutableStateFlow(stateOf(OFFER_ENABLE, operation = OPERATION))
         every { observeFastTrading(WALLET_ID) } returns states
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
         runCurrent()
 
         // Act
@@ -535,7 +535,7 @@ internal class PolymarketFastTradingBannerSourceTest {
         val key = keyOf(validFor = Duration.ofDays(31))
         every { observeFastTrading(WALLET_ID) } returns
             flowOf(stateOf(PolymarketSessionKeyDeviceState.Active(key, isRenewDue = false)))
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
         runCurrent()
 
         // Act
@@ -552,7 +552,7 @@ internal class PolymarketFastTradingBannerSourceTest {
         val key = keyOf(validFor = Duration.ofDays(5).plusHours(1))
         every { observeFastTrading(WALLET_ID) } returns
             flowOf(stateOf(PolymarketSessionKeyDeviceState.Active(key, isRenewDue = false)))
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
         runCurrent()
 
         // Act
@@ -573,7 +573,7 @@ internal class PolymarketFastTradingBannerSourceTest {
             flowOf(stateOf(PolymarketSessionKeyDeviceState.Reenable(keyOf())))
         every { bannerStore.dismissedAt(WALLET_ID, REACTIVATE_KIND) } returns
             flowOf(NOW.minus(Duration.ofHours(23)))
-        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit)))
+        val actual = getEmittedValues(source.observe(WALLET_ID, flowOf(Unit), includesUnknownSigners = true))
         runCurrent()
 
         // Act

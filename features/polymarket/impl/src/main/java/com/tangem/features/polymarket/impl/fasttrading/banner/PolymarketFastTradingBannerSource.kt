@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.fasttrading.banner
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
@@ -12,10 +12,8 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
-import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -36,12 +34,10 @@ private val ACTIVATED_ANEW = setOf(PolymarketSessionKeyStatus.FAILED, Polymarket
 
 private typealias Dismissals = Map<PolymarketFastTradingBannerKind, Instant?>
 
-@Suppress("LongParameterList")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketFastTradingBannerSource(
     private val observeFastTrading: ObservePolymarketFastTradingUseCase,
     private val refreshFastTrading: RefreshPolymarketFastTradingUseCase,
-    private val startOperation: StartPolymarketSessionKeyOperationUseCase,
     private val bannerStore: PolymarketFastTradingBannerStore,
     private val featureToggles: PolymarketFeatureToggles,
     private val clock: Clock,
@@ -51,19 +47,21 @@ internal class PolymarketFastTradingBannerSource(
     constructor(
         observeFastTrading: ObservePolymarketFastTradingUseCase,
         refreshFastTrading: RefreshPolymarketFastTradingUseCase,
-        startOperation: StartPolymarketSessionKeyOperationUseCase,
         bannerStore: PolymarketFastTradingBannerStore,
         featureToggles: PolymarketFeatureToggles,
     ) : this(
         observeFastTrading = observeFastTrading,
         refreshFastTrading = refreshFastTrading,
-        startOperation = startOperation,
         bannerStore = bannerStore,
         featureToggles = featureToggles,
         clock = Clock.systemUTC(),
     )
 
-    fun observe(userWalletId: UserWalletId, rechecks: Flow<Unit>): Flow<PolymarketFastTradingBanner?> {
+    fun observe(
+        userWalletId: UserWalletId,
+        rechecks: Flow<Unit>,
+        includesUnknownSigners: Boolean,
+    ): Flow<PolymarketFastTradingBanner?> {
         if (!featureToggles.isPolymarketFastOrdersEnabled) return flowOf(null)
 
         return combine(
@@ -74,7 +72,14 @@ internal class PolymarketFastTradingBannerSource(
             .transformLatest { (state, dismissals) ->
                 var now = clock.instant()
                 while (true) {
-                    emit(select(state = state, dismissals = dismissals, now = now))
+                    emit(
+                        select(
+                            state = state,
+                            dismissals = dismissals,
+                            now = now,
+                            includesUnknownSigners = includesUnknownSigners,
+                        ),
+                    )
                     val boundary = nextBoundary(state, dismissals, now) ?: break
                     delay(Duration.between(now, boundary).toMillis())
                     now = boundary
@@ -85,16 +90,6 @@ internal class PolymarketFastTradingBannerSource(
 
     suspend fun refresh(userWalletId: UserWalletId) {
         if (featureToggles.isPolymarketFastOrdersEnabled) refreshFastTrading(userWalletId)
-    }
-
-    fun start(userWalletId: UserWalletId, banner: PolymarketFastTradingBanner): PolymarketSessionKeyOperationStart? {
-        val request = when (banner) {
-            PolymarketFastTradingBanner.UnknownSigners -> return null
-            PolymarketFastTradingBanner.Activate -> PolymarketSessionKeyOperationRequest.Activate
-            is PolymarketFastTradingBanner.Reactivate -> banner.request
-            is PolymarketFastTradingBanner.Extend -> PolymarketSessionKeyOperationRequest.Extend
-        }
-        return startOperation(userWalletId, request)
     }
 
     suspend fun dismiss(userWalletId: UserWalletId, banner: PolymarketFastTradingBanner) {
@@ -112,9 +107,10 @@ internal class PolymarketFastTradingBannerSource(
         state: PolymarketFastTradingState,
         dismissals: Dismissals,
         now: Instant,
+        includesUnknownSigners: Boolean,
     ): PolymarketFastTradingBanner? {
         val overview = state.overview.getOrNull() ?: return null
-        if (overview.hasForeignSigners()) return PolymarketFastTradingBanner.UnknownSigners
+        if (includesUnknownSigners && overview.hasForeignSigners()) return PolymarketFastTradingBanner.UnknownSigners
         if (state.operation != null) return null
         if (overview.wallet.sessionKeys.newestPerAddress().any { it.isSettlingAt(now) }) return null
 
