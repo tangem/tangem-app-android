@@ -14,7 +14,6 @@ import com.tangem.features.details.ui.DetailsScreen
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.mcp.api.McpFeatureToggles
 import kotlinx.coroutines.runBlocking
 
 internal class PreviewDetailsComponent : DetailsComponent {
@@ -25,10 +24,6 @@ internal class PreviewDetailsComponent : DetailsComponent {
             hotWalletFeatureToggles = object : HotWalletFeatureToggles {
                 override val isGoogleDriveBackupEnabled: Boolean = true
                 override val isMultipleHotWalletsEnabled: Boolean = false
-            },
-            mcpFeatureToggles = object : McpFeatureToggles {
-                override val isMcpEnabled: Boolean = true
-                override val isIntentsHistoryEnabled: Boolean = false
             },
             analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildAll(

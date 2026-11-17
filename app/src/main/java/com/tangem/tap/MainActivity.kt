@@ -41,7 +41,6 @@ import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
@@ -120,9 +119,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var deepLinkHandlerRegistry: DeepLinkHandlerRegistry
-
-    @Inject
-    internal lateinit var marketingFeatureToggles: MarketingFeatureToggles
 
     @Inject
     internal lateinit var marketingUidBindingRepository: MarketingUidBindingRepository
@@ -433,7 +429,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun bindMarketingUid(deepLink: Uri) {
         // `wc:` and other opaque links have no query: getQueryParameters throws for them
-        if (!marketingFeatureToggles.isUidBindingEnabled || deepLink.isOpaque) return
+        if (deepLink.isOpaque) return
 
         val uid = deepLink.getQueryParameters(DeeplinkConst.UID_KEY).firstOrNull(String::isNotEmpty) ?: return
         if (deepLinkHandlerRegistry.find(deepLink) == null) return

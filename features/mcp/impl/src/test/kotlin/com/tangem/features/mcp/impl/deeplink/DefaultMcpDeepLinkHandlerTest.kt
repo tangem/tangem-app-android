@@ -21,7 +21,6 @@ internal class DefaultMcpDeepLinkHandlerTest {
 
     private val handler = DefaultMcpDeepLinkHandler(
         mcpRequestService = mcpRequestService,
-        mcpFeatureToggles = mockk(),
     )
 
     @BeforeEach

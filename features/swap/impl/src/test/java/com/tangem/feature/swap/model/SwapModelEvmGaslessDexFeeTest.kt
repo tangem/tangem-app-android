@@ -48,7 +48,6 @@ internal class SwapModelEvmGaslessDexFeeTest : SwapModelTestBase() {
     fun setUp() {
         clearMocks(swapInteractor, swapFeatureToggles, isEvmGaslessFeeSupportedForNetwork)
         setUpBase()
-        every { swapFeatureToggles.isEvmGaslessDexSwapEnabled } returns true
         every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
     }
 

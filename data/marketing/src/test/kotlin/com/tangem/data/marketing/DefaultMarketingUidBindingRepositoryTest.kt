@@ -7,7 +7,6 @@ import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.Runs
@@ -18,7 +17,6 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -33,7 +31,6 @@ internal class DefaultMarketingUidBindingRepositoryTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val featureToggles: MarketingFeatureToggles = mockk()
     private val walletServerBinder: WalletServerBinder = mockk()
 
     private val defaultWallet = wallet(WALLET_ID)
@@ -42,32 +39,17 @@ internal class DefaultMarketingUidBindingRepositoryTest {
     private val repository = DefaultMarketingUidBindingRepository(
         tangemTechApi = tangemTechApi,
         userWalletsListRepository = userWalletsListRepository,
-        featureToggles = featureToggles,
         walletServerBinder = walletServerBinder,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemTechApi, userWalletsListRepository, featureToggles, walletServerBinder)
+        clearMocks(tangemTechApi, userWalletsListRepository, walletServerBinder)
         userWallets.value = listOf(defaultWallet)
 
-        every { featureToggles.isUidBindingEnabled } returns true
         every { userWalletsListRepository.userWallets } returns userWallets
         coEvery { tangemTechApi.bindMarketingUidWallets(any(), any()) } returns success()
         coEvery { walletServerBinder.awaitBound(any()) } just Runs
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN bind THEN no request is made`() = runTest {
-        // Arrange
-        every { featureToggles.isUidBindingEnabled } returns false
-
-        // Act
-        repository.bind(UID)
-
-        // Assert
-        verify(exactly = 0) { userWalletsListRepository.userWallets }
-        coVerify(exactly = 0) { tangemTechApi.bindMarketingUidWallets(any(), any()) }
     }
 
     @Test

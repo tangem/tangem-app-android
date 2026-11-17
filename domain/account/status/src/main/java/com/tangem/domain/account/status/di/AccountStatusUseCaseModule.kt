@@ -18,16 +18,10 @@ import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import com.tangem.domain.networks.utils.NetworksCleaner
-import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -167,17 +161,11 @@ internal object AccountStatusUseCaseModule {
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         contributionFetchers: Set<@JvmSuppressWildcards BalanceContributionFetcher>,
-        tokensFeatureToggles: TokensFeatureToggles,
-        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
-        stakingIdFactory: StakingIdFactory,
     ): BalanceFetchingOperations {
         return BalanceFetchingOperations(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             contributionFetchers = contributionFetchers,
-            tokensFeatureToggles = tokensFeatureToggles,
-            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-            stakingIdFactory = stakingIdFactory,
         )
     }
 
@@ -198,12 +186,10 @@ internal object AccountStatusUseCaseModule {
     fun provideBalanceContributionsRefresher(
         singleAccountListSupplier: SingleAccountListSupplier,
         balanceFetchingOperations: BalanceFetchingOperations,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): BalanceContributionsRefresher {
         return BalanceContributionsRefresher(
             singleAccountListSupplier = singleAccountListSupplier,
             balanceFetchingOperations = balanceFetchingOperations,
-            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
@@ -243,18 +229,10 @@ internal object AccountStatusUseCaseModule {
     @Singleton
     fun provideCryptoCurrencyMetadataCleaner(
         currencyDataCleaners: Set<@JvmSuppressWildcards CryptoCurrencyDataCleaner>,
-        tokensFeatureToggles: TokensFeatureToggles,
-        networksCleaner: NetworksCleaner,
-        stakingCleaner: StakingCleaner,
-        nftCleaner: NFTCleaner,
         dispatchers: CoroutineDispatcherProvider,
     ): CryptoCurrencyMetadataCleaner {
         return CryptoCurrencyMetadataCleaner(
             currencyDataCleaners = currencyDataCleaners,
-            tokensFeatureToggles = tokensFeatureToggles,
-            networksCleaner = networksCleaner,
-            stakingCleaner = stakingCleaner,
-            nftCleaner = nftCleaner,
             dispatchers = dispatchers,
         )
     }

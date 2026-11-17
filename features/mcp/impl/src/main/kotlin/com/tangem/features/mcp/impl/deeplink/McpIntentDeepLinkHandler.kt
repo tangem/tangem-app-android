@@ -9,7 +9,6 @@ import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
@@ -23,11 +22,7 @@ import javax.inject.Inject
 internal class McpIntentDeepLinkHandler @Inject constructor(
     private val mcpRequestService: McpRequestService,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val mcpFeatureToggles: McpFeatureToggles,
 ) : DeepLinkHandler {
-
-    override val isEnabled: Boolean
-        get() = mcpFeatureToggles.isMcpEnabled
 
     override fun handle(request: DeepLinkRequest) {
         val queryParams = request.queryParams

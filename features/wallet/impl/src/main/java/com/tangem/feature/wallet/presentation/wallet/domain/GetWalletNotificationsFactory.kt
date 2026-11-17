@@ -41,7 +41,6 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
-import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.combine8
@@ -78,7 +77,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
     private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val walletLinkProgressHolder: WalletLinkProgressHolder,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
@@ -153,11 +151,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
     /** A link status that can't be read is treated as linked, so it never blocks the notifications or nags the user */
     private fun isWalletLinkedFlow(userWallet: UserWallet): Flow<Boolean> =
-        if (walletFeatureToggles.isWalletLinkingEnabled) {
-            getWalletLinkStatusUseCase(userWallet).onEmpty { emit(true) }
-        } else {
-            flowOf(true)
-        }
+        getWalletLinkStatusUseCase(userWallet).onEmpty { emit(true) }
 
     /** Whether the wallet is linked, and whether it is being linked right now */
     private fun linkStateFlow(userWallet: UserWallet): Flow<Pair<Boolean, Boolean>> = combine(

@@ -4,8 +4,6 @@ interface WalletFeatureToggles {
 
     val isRedesignedAccountRowsEnabled: Boolean
 
-    val isWalletLinkingEnabled: Boolean
-
     val isRedesignedTokenRowsEnabled: Boolean
 
     val isTangemPayGroupEnabled: Boolean
