@@ -4,10 +4,11 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.deeplink.DeeplinkConst.EARN_PRODUCT_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.navigation.pushIfAbsent
 import com.tangem.core.navigation.deeplink.DeepLinkHandler
 import com.tangem.core.navigation.deeplink.DeepLinkRequest
+import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -43,20 +44,29 @@ internal class EarnDeepLinkHandler @Inject constructor(
         }
 
         request.scope.launch {
-            val accountList = singleAccountListSupplier.getSyncOrNull(userWalletId)
+            // The account list producer has no fallback: a failing load would otherwise never answer
+            val accountList = singleAccountListSupplier.getSyncOrNull(
+                params = SingleAccountListProducer.Params(userWalletId),
+                timeMillis = ACCOUNT_LIST_TIMEOUT_MILLIS,
+            )
+            if (accountList == null) {
+                openMain(router, reason = "the account list is not available")
+                return@launch
+            }
+
             val isRequested = { currency: CryptoCurrency ->
                 currency.network.rawId.equals(networkId, ignoreCase = true) &&
                     currency.id.rawCurrencyId?.value.equals(tokenId, ignoreCase = true)
             }
-            val currency = accountList?.mainAccount?.cryptoCurrencies?.firstOrNull(isRequested)
-                ?: accountList?.flattenCurrencies()?.firstOrNull(isRequested)
+            val currency = accountList.mainAccount.cryptoCurrencies.firstOrNull(isRequested)
+                ?: accountList.flattenCurrencies().firstOrNull(isRequested)
 
             when {
                 currency == null -> openMain(router, reason = "token $tokenId in $networkId is not in the wallet")
                 !earnAvailability.isEarnAvailable(userWalletId, currency) -> {
                     openMain(router, reason = "Earn is not available for ${currency.name}")
                 }
-                else -> router.pushIfAbsent(
+                else -> router.popToOrPush(
                     AppRoute.EarnEntry(
                         userWalletId = userWalletId,
                         cryptoCurrency = currency,
@@ -66,6 +76,10 @@ internal class EarnDeepLinkHandler @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun Router.popToOrPush(route: Route) {
+        navigate(transformer = { stack -> if (route in stack) stack.dropLastWhile { it != route } else stack + route })
     }
 
     private fun resolveStart(product: String?): AppRoute.EarnEntry.Start {
@@ -83,5 +97,7 @@ internal class EarnDeepLinkHandler @Inject constructor(
 
     companion object {
         const val DEEPLINK_KEY = "tangem://earn"
+
+        private const val ACCOUNT_LIST_TIMEOUT_MILLIS = 5_000L
     }
 }

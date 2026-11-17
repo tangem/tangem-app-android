@@ -12,6 +12,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
@@ -31,9 +32,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -69,7 +73,7 @@ internal class EarnDeepLinkHandlerTest {
         }
         selectedWallet.value = wallet
         every { userWalletsListRepository.selectedUserWallet } returns selectedWallet
-        coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns accountList(main = listOf(eth))
+        coEvery { singleAccountListSupplier.getSyncOrNull(ACCOUNT_LIST_PARAMS, any()) } returns accountList(main = listOf(eth))
         every { earnAvailability.isEarnAvailable(any(), any()) } returns true
         every { productsRegistry.find(any()) } returns null
         every { productsRegistry.find(LENDING) } returns mockk()
@@ -130,7 +134,7 @@ internal class EarnDeepLinkHandlerTest {
     fun `GIVEN ETH in main and second account WHEN handle THEN main account coin is used`() = runTest {
         // Arrange
         val secondAccountEth = eth.copy(name = "Ethereum #1")
-        coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns
+        coEvery { singleAccountListSupplier.getSyncOrNull(ACCOUNT_LIST_PARAMS, any()) } returns
             accountList(main = listOf(eth), second = listOf(secondAccountEth), isSecondListedFirst = true)
 
         // Act
@@ -144,7 +148,7 @@ internal class EarnDeepLinkHandlerTest {
     fun `GIVEN ETH only in second account WHEN handle THEN that coin is used`() = runTest {
         // Arrange
         val secondAccountEth = eth.copy(name = "Ethereum #1")
-        coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns
+        coEvery { singleAccountListSupplier.getSyncOrNull(ACCOUNT_LIST_PARAMS, any()) } returns
             accountList(main = emptyList(), second = listOf(secondAccountEth))
 
         // Act
@@ -170,12 +174,52 @@ internal class EarnDeepLinkHandlerTest {
     }
 
     @Test
+    fun `GIVEN the same Earn entry under another WHEN handle THEN pops back to it`() = runTest {
+        // Arrange
+        val requested = entry(start = AppRoute.EarnEntry.Start.Auto)
+        stack = listOf(AppRoute.Wallet, requested, entry(start = AppRoute.EarnEntry.Start.Info(LENDING)))
+
+        // Act
+        handle(params = ethParams())
+
+        // Assert
+        assertThat(stack).containsExactly(AppRoute.Wallet, requested).inOrder()
+    }
+
+    @Test
+    fun `GIVEN account list never loads WHEN handle THEN opens main screen after the timeout`() = runTest {
+        // Arrange
+        val neverLoadingSupplier = object : SingleAccountListSupplier(factory = mockk(), keyCreator = { "" }) {
+            override fun invoke(params: SingleAccountListProducer.Params): Flow<AccountList> = MutableSharedFlow()
+        }
+        val handler = EarnDeepLinkHandler(
+            userWalletsListRepository = userWalletsListRepository,
+            singleAccountListSupplier = neverLoadingSupplier,
+            earnAvailability = earnAvailability,
+            productsRegistry = productsRegistry,
+        )
+
+        // Act
+        handle(params = ethParams(), handler = handler)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.popTo(AppRoute.Wallet, any()) }
+        assertThat(stack).isEmpty()
+    }
+
+    @Test
     fun `GIVEN blank token_id WHEN handle THEN account list is not loaded`() = runTest {
         // Act
         handle(params = ethParams() + (TOKEN_ID_KEY to " "))
 
         // Assert
-        coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
+        coVerify(exactly = 0) {
+            singleAccountListSupplier.getSyncOrNull(
+                params = any<SingleAccountListProducer.Params>(),
+                timeMillis = any(),
+            )
+        }
     }
 
     @ParameterizedTest
@@ -183,7 +227,7 @@ internal class EarnDeepLinkHandlerTest {
     fun `GIVEN unusable link WHEN handle THEN opens main screen`(model: FallbackModel) = runTest {
         // Arrange
         selectedWallet.value = model.selectedWallet
-        coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns model.accountList
+        coEvery { singleAccountListSupplier.getSyncOrNull(ACCOUNT_LIST_PARAMS, any()) } returns model.accountList
         every { earnAvailability.isEarnAvailable(any(), any()) } returns model.isEarnAvailable
 
         // Act
@@ -204,7 +248,10 @@ internal class EarnDeepLinkHandlerTest {
         FallbackModel(description = "Earn unavailable", isEarnAvailable = false),
     )
 
-    private fun TestScope.handle(params: Map<String, String>) {
+    private fun TestScope.handle(
+        params: Map<String, String>,
+        handler: EarnDeepLinkHandler = this@EarnDeepLinkHandlerTest.handler,
+    ) {
         handler.handle(
             DeepLinkRequest(
                 uri = mockk<Uri>(),
@@ -236,6 +283,7 @@ internal class EarnDeepLinkHandlerTest {
     private companion object {
         val WALLET_ID = UserWalletId("011")
         val LENDING = EarnProductId("lending")
+        val ACCOUNT_LIST_PARAMS = SingleAccountListProducer.Params(WALLET_ID)
 
         val eth: CryptoCurrency.Coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
         val wallet: UserWallet = mockk { every { walletId } returns WALLET_ID }
