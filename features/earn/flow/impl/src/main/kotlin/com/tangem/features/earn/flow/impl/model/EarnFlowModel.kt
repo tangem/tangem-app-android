@@ -184,7 +184,11 @@ internal class EarnFlowModel @Inject constructor(
         feeJob = modelScope.launch {
             val isSubtractAvailable = amountSource == EarnActionInput.Amount.Source.Wallet &&
                 statuses.isAmountSubtractAvailable(params.product, selection)
-            state.update { it.copy(isAmountSubtractAvailable = isSubtractAvailable) }
+            val deduction = selection.fee.amount.value?.takeIf { isSubtractAvailable } ?: BigDecimal.ZERO
+            state.update { current ->
+                val withSubtract = current.copy(isAmountSubtractAvailable = isSubtractAvailable)
+                if (amountSource != null) amountInput.withFeeDeduction(withSubtract, deduction) else withSubtract
+            }
 
             val current = state.value
             if (current.step == EarnFlowStep.Confirm && !current.signing.isExecuting) prepare()
@@ -192,10 +196,12 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     override fun onAmountValueChange(value: String) {
+        state.update { it.copy(pendingSharePercent = null) }
         amountInput.change(state.value, value)?.let(::updateAmount)
     }
 
     override fun onMaxValueClick() {
+        if (deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) return
         amountInput.max(state.value)?.let(::updateAmount)
     }
 
@@ -213,7 +219,15 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onPercentClick(percent: Int) {
+        if (deferShareUntilFee(percent)) return
         amountInput.percent(state.value, percent)?.let(::updateAmount)
+    }
+
+    /** A wallet Max leaves room for the fee, so a tap before the first fee estimate is set once the fee arrives. */
+    private fun deferShareUntilFee(percent: Int): Boolean {
+        val isFeeUnknown = amountSource == EarnActionInput.Amount.Source.Wallet && state.value.feeDeduction == null
+        if (isFeeUnknown) state.update { it.copy(pendingSharePercent = percent) }
+        return isFeeUnknown
     }
 
     fun onSubmit() {

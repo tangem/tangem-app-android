@@ -18,8 +18,9 @@ import java.math.RoundingMode
 
 /**
  * The amount card of the flow on the shared transformers of the Send and Staking amount screens. The input boundary is
- * the session's `maxAmount`: the fee is not part of it, the flow deducts it on submit. Every function returns `null`
- * while the card has nothing to change.
+ * [EarnFlowState.availableMax]: the session's `maxAmount` less the fee paid from the same balance, so Max, the percent
+ * presets and the field limit leave room for the fee. Every function returns `null` while the card has nothing to
+ * change.
  */
 internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntents) {
 
@@ -29,7 +30,7 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
         if (state.amountState !is AmountState.Empty) return null
         val status = state.status?.takeIf { it.value !is CryptoCurrencyStatus.Loading } ?: return null
         val appCurrency = state.appCurrency ?: return null
-        val max = state.maxAmount ?: return null
+        val max = state.availableMax ?: return null
 
         return AmountStateConverter(
             clickIntents = clickIntents,
@@ -63,7 +64,7 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
 
     fun percent(state: EarnFlowState, percent: Int): AmountState? {
         val status = state.status ?: return null
-        val share = state.maxAmount
+        val share = state.availableMax
             ?.multiply(BigDecimal(percent))
             ?.divide(ONE_HUNDRED)
             ?.setScale(status.currency.decimals, RoundingMode.DOWN)
@@ -88,6 +89,27 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
         ).transform(state.amountState)
     }
 
+    /**
+     * Applies a fee estimate to the amount: a Max or percent tap waiting for it is set now; an amount that fitted with
+     * the previous fee but not with this one is capped to the new Max; any other amount is checked against it.
+     */
+    fun withFeeDeduction(state: EarnFlowState, deduction: BigDecimal): EarnFlowState {
+        val previousMax = state.availableMax
+        val updated = state.copy(feeDeduction = deduction, pendingSharePercent = null)
+        val newMax = updated.availableMax
+        val entered = state.enteredAmount
+        val pending = state.pendingSharePercent
+        val isNoLongerAffordable = entered != null && previousMax != null && newMax != null &&
+            entered <= previousMax && entered > newMax
+        val amountState = when {
+            pending == FULL_SHARE_PERCENT -> max(updated)
+            pending != null -> percent(updated, pending)
+            isNoLongerAffordable -> max(updated)
+            else -> revalidate(updated)
+        }
+        return amountState?.let { updated.copy(amountState = it) } ?: updated
+    }
+
     fun withInitial(state: EarnFlowState): EarnFlowState = initial(state)?.let { state.copy(amountState = it) } ?: state
 
     /** The minimum joins the field validation from now on, so the field shows the error right away. */
@@ -100,9 +122,10 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
         minAmount?.let { EnterAmountBoundary(amount = it, fiatAmount = null, fiatRate = null) }
 
     private fun EarnFlowState.maxBoundary(): EnterAmountBoundary? =
-        maxAmount?.let { EnterAmountBoundary(amount = it, fiatRate = status?.value?.fiatRate) }
+        availableMax?.let { EnterAmountBoundary(amount = it, fiatRate = status?.value?.fiatRate) }
 
-    private companion object {
-        val ONE_HUNDRED = BigDecimal(100)
+    companion object {
+        private val ONE_HUNDRED = BigDecimal(100)
+        const val FULL_SHARE_PERCENT = 100
     }
 }

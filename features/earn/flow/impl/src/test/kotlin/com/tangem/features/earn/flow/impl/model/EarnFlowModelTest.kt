@@ -354,6 +354,8 @@ internal class EarnFlowModelTest {
                 coEvery { session.maxAmount(action = any()) } returns BigDecimal("1.000000000000000001").right()
                 val model = createModel(action = Deposit())
                 advanceUntilIdle()
+                model.onFeeResult(testFeeContent("0"))
+                advanceUntilIdle()
 
                 // Act
                 model.onPercentClick(25)
@@ -444,7 +446,7 @@ internal class EarnFlowModelTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN entered amount and fee WHEN submit THEN prepare gets the amount after deduction`(
+        fun `GIVEN amount entered before fee WHEN fee arrives and submit THEN field and prepare stay within Max`(
             model: DeductionModel,
         ) = runTest {
             // Arrange
@@ -466,7 +468,7 @@ internal class EarnFlowModelTest {
                     fee = testFeeSelection(model.fee),
                 )
             }
-            assertThat(flow.state.value.enteredAmount).isEqualTo(BigDecimal(model.entered ?: "2.01"))
+            assertThat(flow.state.value.enteredAmount).isEqualTo(BigDecimal(model.expected))
             flow.onDestroy()
         }
 
@@ -478,7 +480,139 @@ internal class EarnFlowModelTest {
         )
 
         @Test
-        fun `GIVEN Max and fee not below balance WHEN amount screen THEN total exceeds balance and no prepare`() =
+        fun `GIVEN fee estimate WHEN Max THEN amount is balance less fee`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.0004"))
+            advanceUntilIdle()
+
+            // Act
+            model.onMaxValueClick()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("2.0096"))
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("providePercentModels")
+        fun `GIVEN fee estimate WHEN percent THEN share of balance less fee`(model: PercentModel) = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Act
+            flow.onPercentClick(model.percent)
+
+            // Assert
+            assertThat(flow.state.value.enteredAmount).isEqualToIgnoringScale(BigDecimal(model.expected))
+            flow.onDestroy()
+        }
+
+        private fun providePercentModels() = listOf(
+            PercentModel(percent = 25, expected = "0.5"),
+            PercentModel(percent = 50, expected = "1"),
+            PercentModel(percent = 75, expected = "1.5"),
+            PercentModel(percent = 100, expected = "2"),
+        )
+
+        @Test
+        fun `GIVEN no fee yet WHEN percent THEN share is set once the fee arrives`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            model.onPercentClick(25)
+            val beforeFee = model.state.value.enteredAmount
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(beforeFee).isNull()
+            assertThat(model.state.value.enteredAmount).isEqualToIgnoringScale(BigDecimal("0.5"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN percent pending WHEN amount typed before fee THEN typed amount is kept`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onPercentClick(25)
+
+            // Act
+            model.onAmountValueChange("0.3")
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("0.3"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee estimate WHEN amount above Max typed THEN field shows error and is not reduced`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Act
+            model.onAmountValueChange("2.005")
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError).isTrue()
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("2.005"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount fits both fees WHEN fee rises THEN amount is kept`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+            model.onAmountValueChange("1")
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("0.02"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("1"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max WHEN fee rises on amount step THEN amount is capped to the new Max`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+            model.onMaxValueClick()
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("0.02"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("1.99"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee not below balance WHEN Max THEN Max is zero with fee notice and no prepare`() =
             runTest {
                 // Arrange
                 val model = createModel(action = Deposit())
@@ -493,7 +627,8 @@ internal class EarnFlowModelTest {
 
                 // Assert
                 val amountUM = model.amount.value
-                assertThat(amountUM?.notifications).contains(NotificationUM.Error.TotalExceedsBalance)
+                assertThat(model.state.value.enteredAmount).isNull()
+                assertThat(amountUM?.notifications?.filterIsInstance<NotificationUM.Error.ExceedsBalance>()).hasSize(1)
                 assertThat(amountUM?.primary?.isEnabled).isFalse()
                 coVerify(exactly = 0) { session.prepare(action = any(), amount = any(), fee = any()) }
                 model.onDestroy()
@@ -551,7 +686,7 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN Max WHEN fee on confirm exceeds balance THEN confirm is blocked`() = runTest {
+        fun `GIVEN Max WHEN fee on confirm exceeds balance THEN fee notice and confirm is blocked`() = runTest {
             // Arrange
             val model = createModel(action = Deposit())
             advanceUntilIdle()
@@ -567,7 +702,7 @@ internal class EarnFlowModelTest {
 
             // Assert
             val confirm = model.confirm.value
-            assertThat(confirm?.notifications?.filterIsInstance<NotificationUM.Error.TotalExceedsBalance>()).hasSize(1)
+            assertThat(confirm?.notifications?.filterIsInstance<NotificationUM.Error.ExceedsBalance>()).hasSize(1)
             assertThat(confirm?.primary?.isEnabled).isFalse()
             model.onDestroy()
         }
@@ -1463,6 +1598,8 @@ internal class EarnFlowModelTest {
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
+
+    data class PercentModel(val percent: Int, val expected: String)
 
     data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
 }
