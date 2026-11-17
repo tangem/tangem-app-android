@@ -102,10 +102,12 @@ sealed class FeeSelectorParams {
     /**
      * [Plain] drops the fee icon and the block's own background, for hosts that draw the card themselves.
      * [Row] is the DS3 card, rounded by the block itself so the host passes no clip.
+     * [IconRow] is the DS3 row with the fee icon and no background or shape, for hosts that place it in their own card.
      */
     enum class BlockAppearance {
         Default,
         Plain,
         Row,
+        IconRow,
     }
 }
