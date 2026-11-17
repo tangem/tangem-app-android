@@ -7,6 +7,9 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
@@ -17,7 +20,7 @@ import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.earn.lending.impl.analytics.LendingAnalyticsSender
 import com.tangem.features.earn.lending.impl.product.LendingEarnProduct
-import com.tangem.features.earn.lending.impl.product.LendingTexts
+import com.tangem.features.earn.lending.impl.product.LendingStateMapper
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
@@ -155,7 +158,7 @@ internal class LendingSession @AssistedInject constructor(
         val selectedFee = ensureNotNull(plan.fee as? Fee.Ethereum) { EarnSessionError.Failed() }
         val sentGasLimits = ensureNotNull(plan.sentGasLimits()) { EarnSessionError.Failed() }
         val state = ensureNotNull(currentState()) { EarnSessionError.Failed() }
-        ensure(!state.hasPendingTx) { EarnSessionError.Rejected(LendingTexts.pendingTransaction) }
+        ensure(!state.hasPendingTx) { EarnSessionError.Rejected(LendingStateMapper.PENDING_BLOCK.reason) }
         ensureAffordable(plan = plan, operation = operation, state = state, fee = selectedFee)
 
         val newPlan = planFactory.plan(
@@ -187,7 +190,9 @@ internal class LendingSession @AssistedInject constructor(
 
     /** The text speaks of a deposit and names the limit it needs: a withdrawal has no such text and just fails */
     private fun gasLimitError(operation: LendingOperation, required: BigInteger): EarnSessionError = when (operation) {
-        LendingOperation.Deposit -> EarnSessionError.Rejected(LendingTexts.gasLimitTooLow(required))
+        LendingOperation.Deposit -> EarnSessionError.Rejected(
+            resourceReference(R.string.lending_error_gas_limit_too_low, wrappedList(required.toString())),
+        )
         LendingOperation.Withdraw -> EarnSessionError.Failed()
     }
 
@@ -201,7 +206,7 @@ internal class LendingSession @AssistedInject constructor(
         val feeValue = ensureNotNull(fee.amount.value) { EarnSessionError.Failed() }
         when (operation) {
             LendingOperation.Deposit -> {
-                ensure(state.market.isOpen) { EarnSessionError.Rejected(LendingTexts.depositsPaused) }
+                ensure(state.market.isOpen) { EarnSessionError.Rejected(LendingStateMapper.CLOSED_BLOCK.reason) }
                 ensure(plan.amount + feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
             LendingOperation.Withdraw -> {

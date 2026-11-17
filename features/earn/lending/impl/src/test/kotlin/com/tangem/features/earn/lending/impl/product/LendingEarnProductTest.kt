@@ -655,7 +655,7 @@ internal class LendingEarnProductTest {
         val PENDING_BLOCK = EarnBlock(
             reason = resourceReference(R.string.lending_error_previous_transaction_processing),
         )
-        val DEPOSITS_PAUSED = stringReference("Deposits are paused by the provider.")
+        val DEPOSITS_PAUSED = resourceReference(R.string.lending_error_deposits_paused)
         val CLOSED_BLOCK = EarnBlock(reason = DEPOSITS_PAUSED)
     }
 }
