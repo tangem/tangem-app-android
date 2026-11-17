@@ -16,7 +16,9 @@ class GetOnrampCountryByIpUseCase(
     suspend operator fun invoke(userWallet: UserWallet): Either<OnrampError, OnrampCountry> {
         return Either.catch {
             Either.catch { repository.getCountryByIp(userWallet) }
-                .getOrElse { error -> repository.getCachedCountryByIp() ?: throw error }
+                .getOrElse { error ->
+                    repository.getCachedCountryByIp()?.takeUnless { it.isOnrampAvailable } ?: throw error
+                }
         }.mapLeft(errorResolver::resolve)
     }
 }
