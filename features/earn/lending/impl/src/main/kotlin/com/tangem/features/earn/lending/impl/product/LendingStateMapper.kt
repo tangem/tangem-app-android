@@ -4,6 +4,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
@@ -60,7 +61,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         ),
     )
 
-    private val updateRequiredBlock = EarnBlock(reason = LendingTexts.updateRequired)
+    private val updateRequiredBlock = EarnBlock(reason = resourceReference(R.string.lending_update_app_message))
 
     fun map(state: LendingAssetState?): EarnProductState {
         val market = state?.market ?: return EarnProductState.Unavailable
@@ -147,8 +148,8 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         }
     }
 
-    private companion object {
-        val BENEFITS = listOf(
+    internal companion object {
+        private val BENEFITS = listOf(
             EarnTextBlock(
                 title = resourceReference(R.string.yield_module_promo_screen_cash_out_title),
                 description = resourceReference(R.string.yield_module_promo_screen_cash_out_subtitle),
@@ -160,15 +161,19 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         )
-        val WITHDRAW = Withdraw(notice = resourceReference(R.string.lending_withdraw_instant_notice))
-        val PENDING_BLOCK = EarnBlock(reason = LendingTexts.pendingTransaction)
-        val CLOSED_BLOCK = EarnBlock(reason = LendingTexts.depositsPaused)
-        val RETRY_BLOCK = EarnBlock(
+        private val WITHDRAW = Withdraw(notice = resourceReference(R.string.lending_withdraw_instant_notice))
+        val PENDING_BLOCK = EarnBlock(
+            reason = resourceReference(R.string.lending_error_previous_transaction_processing),
+        )
+
+        // Temporary plain text, no Lokalise key: neither the PRD nor the iOS app has this state.
+        val CLOSED_BLOCK = EarnBlock(reason = stringReference("Deposits are paused by the provider."))
+        private val RETRY_BLOCK = EarnBlock(
             reason = resourceReference(R.string.common_unable_to_load),
             action = EarnBlockAction.Retry,
         )
 
-        fun infoRow(label: TextReference, value: EarnValue, info: TextReference) = EarnRow(
+        private fun infoRow(label: TextReference, value: EarnValue, info: TextReference) = EarnRow(
             label = label,
             value = value,
             info = EarnTextBlock(title = label, description = info),

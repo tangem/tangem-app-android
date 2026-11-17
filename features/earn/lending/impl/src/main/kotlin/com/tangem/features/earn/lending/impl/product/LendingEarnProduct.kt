@@ -3,7 +3,9 @@ package com.tangem.features.earn.lending.impl.product
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -51,7 +53,7 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success
 
-    override val title: TextReference = LendingTexts.title
+    override val title: TextReference = resourceReference(R.string.earn_product_lending_on_aave)
 
     override val provider: EarnProvider = lendingProvider.info
 
