@@ -199,12 +199,8 @@ class BuyCampaignBannersTest : BaseTestCase() {
                     onConciergeDemandSurveyScreen { navigationTitle.assertIsDisplayed() }
                 }
             }
-            step("Close the survey bottom sheet") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    runCatching { onConciergeDemandSurveyScreen { navigationTitle.assertDoesNotExist() } }
-                        .onFailure { device.uiDevice.pressBack() }
-                        .getOrThrow()
-                }
+            step("Click on 'Close' button of the survey bottom sheet") {
+                onConciergeDemandSurveyScreen { closeButton.clickWithAssertion() }
             }
             step("Assert survey bottom sheet is closed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {

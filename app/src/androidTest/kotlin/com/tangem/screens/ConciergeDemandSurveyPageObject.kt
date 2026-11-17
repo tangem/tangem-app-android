@@ -3,6 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
+import com.tangem.core.ui.test.TopNavigationTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -13,6 +14,11 @@ class ConciergeDemandSurveyPageObject(semanticsProvider: SemanticsNodeInteractio
 
     val navigationTitle: KNode = child {
         hasText(getResourceString(R.string.survey_demand_navigation_title))
+        useUnmergedTree = true
+    }
+
+    val closeButton: KNode = child {
+        hasTestTag(TopNavigationTestTags.CLOSE_BUTTON)
         useUnmergedTree = true
     }
 }
