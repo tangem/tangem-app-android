@@ -91,6 +91,8 @@ internal interface InnerWalletRouter {
 
     fun openMoneyAccountDetails(userWalletId: UserWalletId)
 
+    fun openMoneyAccountActivation(userWalletId: UserWalletId)
+
     fun openTangemPayDetails(status: AccountStatus.Payment)
 
     /** Open BS abput yield supply active and all money deposited in AAVE */

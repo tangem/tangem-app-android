@@ -47,6 +47,7 @@ import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockCompo
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.moneyaccount.main.component.MoneyAccountActivationComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoBottomSheetComponent
@@ -77,6 +78,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val yieldModePromoBottomSheetComponentFactory: YieldModePromoBottomSheetComponent.Factory,
+    private val moneyAccountActivationComponentFactory: MoneyAccountActivationComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -209,6 +211,15 @@ internal class WalletComponent @AssistedInject constructor(
                             tokenRowState = dialogConfig.tokenRowState,
                             offsetX = dialogConfig.offsetX,
                             offsetY = dialogConfig.offsetY,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.MoneyAccountActivation -> {
+                    moneyAccountActivationComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = MoneyAccountActivationComponent.Params(
+                            userWalletId = dialogConfig.userWalletId,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
                 }

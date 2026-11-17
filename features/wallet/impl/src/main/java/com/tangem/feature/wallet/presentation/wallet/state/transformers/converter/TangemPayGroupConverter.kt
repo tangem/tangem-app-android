@@ -44,14 +44,15 @@ internal class TangemPayGroupConverter(
         val paymentBalance = paymentStatus.value.availableBalance()
         val moneyBalance = moneyStatus.value.availableBalance()
         val balances = listOfNotNull(paymentBalance, moneyBalance)
+        val issuedAccountsCount = listOf(paymentStatus.value.isIssued(), moneyStatus.value.isIssued()).count { it }
 
         return TangemPayGroupUM.Content(
-            id = GROUP_ID,
+            id = "TangemPayGroup",
             title = resourceReference(R.string.tangempay_main_group_title),
             label = pluralReference(
                 id = R.plurals.tangempay_main_group_subtitle,
-                count = GROUP_ACCOUNTS_COUNT,
-                formatArgs = wrappedList(GROUP_ACCOUNTS_COUNT),
+                count = issuedAccountsCount,
+                formatArgs = wrappedList(issuedAccountsCount),
             ),
             balance = if (balances.isEmpty()) {
                 stringReference(DASH_SIGN)
@@ -61,6 +62,18 @@ internal class TangemPayGroupConverter(
             isBalanceFlickering = paymentStatus.value.isRefreshing() || moneyStatus.value.isRefreshing(),
             isExpanded = isExpanded,
             onClick = { clickIntents.onTangemPayGroupClick(accountId = groupAccountId, isExpanded = isExpanded) },
+        )
+    }
+
+    private fun formatUsd(amount: BigDecimal): TextReference {
+        val currency = getJavaCurrencyByCode("USD")
+        return stringReference(
+            amount.format {
+                fiat(
+                    fiatCurrencyCode = currency.currencyCode,
+                    fiatCurrencySymbol = currency.symbol,
+                )
+            },
         )
     }
 
@@ -75,26 +88,13 @@ internal class TangemPayGroupConverter(
         else -> null
     }
 
+    private fun PaymentAccountStatusValue.isIssued(): Boolean =
+        this is PaymentAccountStatusValue.Loaded || this is PaymentAccountStatusValue.Deactivated
+
+    private fun MoneyAccountStatusValue.isIssued(): Boolean = this is MoneyAccountStatusValue.Account
+
     private fun PaymentAccountStatusValue.isRefreshing(): Boolean =
         this is PaymentAccountStatusValue.Loading || source == StatusSource.CACHE
 
     private fun MoneyAccountStatusValue.isRefreshing(): Boolean = source == StatusSource.CACHE
-
-    private fun formatUsd(amount: BigDecimal): TextReference {
-        val currency = getJavaCurrencyByCode(USD_CURRENCY_CODE)
-        return stringReference(
-            amount.format {
-                fiat(
-                    fiatCurrencyCode = currency.currencyCode,
-                    fiatCurrencySymbol = currency.symbol,
-                )
-            },
-        )
-    }
-
-    companion object {
-        const val GROUP_ID = "TangemPayGroup"
-        const val GROUP_ACCOUNTS_COUNT = 2
-        private const val USD_CURRENCY_CODE = "USD"
-    }
 }

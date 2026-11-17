@@ -339,7 +339,7 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             }
             coVerify(exactly = 0) { submitTariffTransitionUseCase(any(), any()) }
             verify(exactly = 0) { uiMessageSender.send(any()) }
-            verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess) }
+            verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, TANGEM_PAY_SUCCESS_ROUTE) }
         }
 
         @Test
@@ -357,7 +357,7 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             assertThat(selectContent(model).isProcessing).isFalse()
             verify(exactly = 1) { uiMessageSender.send(any()) }
             verify(exactly = 0) { router.pop() }
-            verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess) }
+            verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, TANGEM_PAY_SUCCESS_ROUTE) }
         }
 
         @Test
@@ -644,6 +644,9 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
     }
 
     private companion object {
+        val TANGEM_PAY_SUCCESS_ROUTE = AppRoute.TangemPayOnboardingSuccess(
+            product = AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY,
+        )
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
 
         val AVAILABLE_PRODUCTS = setOf(TangemPayProduct.BANKING_ACCOUNT, TangemPayProduct.PAYMENT_ACCOUNT)
