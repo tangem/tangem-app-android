@@ -34,6 +34,7 @@ internal class EarnCalculatorConverter @Inject constructor() {
         onInitialStep: (Int) -> Unit,
         onTopUpStep: (Int) -> Unit,
         onHorizonSelect: (EarnHorizon) -> Unit,
+        onBarSelected: (Int?) -> Unit,
     ): EarnCalculatorUM = EarnCalculatorUM(
         incentive = incentiveRate.toIncentiveUM(onClick = onIncentiveClick),
         total = stringReference(result.total.format { fiat(appCurrency.code, appCurrency.symbol) }),
@@ -42,8 +43,10 @@ internal class EarnCalculatorConverter @Inject constructor() {
         ),
         earnedLabel = EarnCalculatorTexts.earnedIn,
         horizon = horizonSelect(selected = input.horizon, onSelect = onHorizonSelect),
-        bars = bars(result = result).toImmutableList(),
+        bars = bars(result = result, appCurrency = appCurrency).toImmutableList(),
         axisLabels = axisLabels(input.horizon).toImmutableList(),
+        selectedBar = null,
+        onBarSelected = onBarSelected,
         initialBalance = stepper(
             label = EarnCalculatorTexts.initialBalance,
             value = input.initialFiat.wholeAmount(appCurrency),
@@ -71,11 +74,19 @@ internal class EarnCalculatorConverter @Inject constructor() {
         }.toImmutableList(),
     )
 
-    private fun bars(result: EarnProjectionResult): List<EarnProjectionBarUM> {
+    private fun bars(result: EarnProjectionResult, appCurrency: AppCurrency): List<EarnProjectionBarUM> {
         val points = result.points.sampled()
         val tallest = points.maxOf { point -> point.income }
 
-        return points.map { point -> EarnProjectionBarUM(earned = point.income.visibleShareOf(tallest)) }
+        return points.map { point ->
+            EarnProjectionBarUM(
+                height = point.income.visibleShareOf(tallest),
+                balance = stringReference(point.capital.format { fiat(appCurrency.code, appCurrency.symbol) }),
+                earned = stringReference(
+                    StringsSigns.PLUS + point.income.format { fiat(appCurrency.code, appCurrency.symbol) },
+                ),
+            )
+        }
     }
 
     /** A non-empty bar never gets shorter than [MIN_BAR_SHARE], otherwise a small amount is not drawn at all. */
