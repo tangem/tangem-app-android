@@ -14,15 +14,31 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnValue
-import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnFlowExit
 import com.tangem.features.earn.product.api.session.EarnResult
 import com.tangem.features.earn.product.api.session.EarnResultAsset
 import com.tangem.features.earn.product.api.session.EarnResultButton
 import java.math.BigDecimal
 
-internal fun lendingTxAnalytics(action: EarnFlowAction): EarnTxAnalytics =
-    EarnTxAnalytics(params = mapOf("action" to action.id))
+internal fun lendingTxAnalytics(plan: LendingPlan, amountBucket: String?): EarnTxAnalytics {
+    val operation = plan.operation
+    val transactionType = when (operation) {
+        LendingPlannedOperation.Deposit -> TYPE_DEPOSIT
+        is LendingPlannedOperation.Withdraw -> TYPE_WITHDRAW
+    }
+    return EarnTxAnalytics(
+        params = mapOf(
+            TRANSACTION_TYPE_KEY to transactionType,
+            WITH_UPGRADE_KEY to plan.isWithUpgrade.toString(),
+        ),
+        confirmedParams = buildMap {
+            amountBucket?.let { put(AMOUNT_BUCKET_KEY, it) }
+            if (operation is LendingPlannedOperation.Withdraw) {
+                put(WITHDRAW_TYPE_KEY, if (operation.isEntire) WITHDRAW_FULL else WITHDRAW_PARTIAL)
+            }
+        },
+    )
+}
 
 internal fun lendingDepositResult(amount: BigDecimal, currency: CryptoCurrency, accountName: TextReference) =
     EarnResult(
@@ -63,3 +79,12 @@ internal fun lendingWithdrawResult(amount: BigDecimal, currency: CryptoCurrency,
     asset = EarnResultAsset.Status(TangemStatusIcon.Kind.Checkmark),
     isExplorerShown = true,
 )
+
+private const val TRANSACTION_TYPE_KEY = "Transaction Type"
+private const val WITH_UPGRADE_KEY = "With Upgrade"
+private const val AMOUNT_BUCKET_KEY = "Amount Bucket"
+private const val WITHDRAW_TYPE_KEY = "Withdraw Type"
+private const val TYPE_DEPOSIT = "Deposit"
+private const val TYPE_WITHDRAW = "Withdraw"
+private const val WITHDRAW_FULL = "Full"
+private const val WITHDRAW_PARTIAL = "Partial"

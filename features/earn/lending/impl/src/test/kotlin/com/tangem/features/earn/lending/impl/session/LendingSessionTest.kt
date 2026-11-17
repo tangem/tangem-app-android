@@ -54,6 +54,7 @@ import com.tangem.features.earn.lending.impl.supplier.LendingSnapshot
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
 import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnValue
@@ -128,6 +129,7 @@ internal class LendingSessionTest {
     private val transactionRepository: YieldSupplyTransactionRepository = mockk()
     private val analyticsSender: LendingAnalyticsSender = mockk(relaxUnitFun = true)
     private val accountNames: LendingAccountNames = mockk()
+    private val usdValuation: EarnUsdValuation = mockk()
     private val pendingTracker: YieldSupplyPendingTracker = mockk(relaxUnitFun = true)
     private val gaslessFees: LendingGaslessFees = mockk()
     private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
@@ -158,11 +160,13 @@ internal class LendingSessionTest {
             transactionRepository,
             analyticsSender,
             accountNames,
+            usdValuation,
             pendingTracker,
             gaslessFees,
             createAndSendEvmGaslessTransactionUseCase,
         )
         coEvery { accountNames.nameOf(userWalletId, eth.id) } returns ACCOUNT_NAME
+        coEvery { usdValuation.bucket(currency = any(), cryptoAmount = any()) } returns null
         provider.refreshCalls.clear()
         every { getUserWalletUseCase(userWalletId) } returns userWallet.right()
         arrangeState(assetState())
@@ -1051,10 +1055,10 @@ internal class LendingSessionTest {
             session.execute(plan).test {
                 // Assert
                 assertThat(awaitItem()).isEqualTo(
-                    EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = analytics("deposit")),
+                    EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = depositAnalytics()),
                 )
                 val sent = awaitItem() as EarnSigningStep.Sent
-                val expectedRef = txRef(id = DEPOSIT_HASH, actionId = "deposit", createdAt = sent.ref.createdAt)
+                val expectedRef = txRef(id = DEPOSIT_HASH, analytics = depositAnalytics(), createdAt = sent.ref.createdAt)
                 assertThat(sent).isEqualTo(EarnSigningStep.Sent(expectedRef))
                 assertThat(awaitItem()).isEqualTo(EarnSigningStep.Done(expectedRef, depositResult()))
                 awaitComplete()
@@ -1206,7 +1210,11 @@ internal class LendingSessionTest {
                 // Assert
                 awaitItem()
                 val sent = awaitItem() as EarnSigningStep.Sent
-                val expectedRef = txRef(id = WITHDRAW_HASH, actionId = "withdraw", createdAt = sent.ref.createdAt)
+                val expectedRef = txRef(
+                    id = WITHDRAW_HASH,
+                    analytics = withdrawAnalytics(),
+                    createdAt = sent.ref.createdAt,
+                )
                 assertThat(awaitItem()).isEqualTo(EarnSigningStep.Done(expectedRef, withdrawResult(plan.plan.fee)))
                 awaitComplete()
             }
@@ -1262,6 +1270,72 @@ internal class LendingSessionTest {
         private fun provideTestModels() = listOf(
             SendTransactionError.UserCancelledError,
             SendTransactionError.NetworkError(message = "deposit not sent", code = null),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ExecuteResultParams {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN plan WHEN execute THEN the step and the reference carry the result event parameters`(
+            model: ResultParamsModel,
+        ) = runTest {
+            // Arrange
+            arrangeVerifiable(model.plan)
+            coEvery { usdValuation.bucket(currency = eth, cryptoAmount = model.plan.amount) } returns model.bucket
+            arrangeSend(listOf(DEPOSIT_HASH).right())
+            val verifiedPlan = verified(model.plan)
+
+            // Act
+            session.execute(verifiedPlan).test {
+                // Assert
+                val awaiting = awaitItem() as EarnSigningStep.AwaitingConfirmation
+                val sent = awaitItem() as EarnSigningStep.Sent
+                assertThat(awaiting.tx).isEqualTo(model.expected)
+                assertThat(sent.ref.analytics).isEqualTo(model.expected)
+                cancelAndConsumeRemainingEvents()
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            ResultParamsModel(
+                name = "deposit with upgrade and bucket",
+                plan = depositPlan(isWithUpgrade = true),
+                bucket = "250-1K",
+                expected = EarnTxAnalytics(
+                    params = mapOf("Transaction Type" to "Deposit", "With Upgrade" to "true"),
+                    confirmedParams = mapOf("Amount Bucket" to "250-1K"),
+                ),
+            ),
+            ResultParamsModel(
+                name = "deposit without rate",
+                plan = depositPlan(),
+                bucket = null,
+                expected = EarnTxAnalytics(
+                    params = mapOf("Transaction Type" to "Deposit", "With Upgrade" to "false"),
+                    confirmedParams = emptyMap(),
+                ),
+            ),
+            ResultParamsModel(
+                name = "entire withdraw with bucket",
+                plan = withdrawPlan(amount = POSITION, isEntire = true),
+                bucket = "50-250",
+                expected = EarnTxAnalytics(
+                    params = mapOf("Transaction Type" to "Withdraw", "With Upgrade" to "false"),
+                    confirmedParams = mapOf("Amount Bucket" to "50-250", "Withdraw Type" to "Full"),
+                ),
+            ),
+            ResultParamsModel(
+                name = "partial withdraw without rate",
+                plan = withdrawPlan(amount = WITHDRAW_AMOUNT, isEntire = false),
+                bucket = null,
+                expected = EarnTxAnalytics(
+                    params = mapOf("Transaction Type" to "Withdraw", "With Upgrade" to "false"),
+                    confirmedParams = mapOf("Withdraw Type" to "Partial"),
+                ),
+            ),
         )
     }
 
@@ -1332,7 +1406,7 @@ internal class LendingSessionTest {
             } returnsMany listOf(null, YieldSupplyTransactionOutcome.Confirmed)
 
             // Act
-            session.track(txRef(id = DEPOSIT_HASH, actionId = "deposit")).test {
+            session.track(txRef(id = DEPOSIT_HASH, analytics = depositAnalytics())).test {
                 // Assert
                 assertThat(awaitItem()).isEqualTo(EarnTxStatus(TxInfo.TransactionStatus.Unconfirmed))
                 assertThat(awaitItem()).isEqualTo(EarnTxStatus(TxInfo.TransactionStatus.Confirmed))
@@ -1353,7 +1427,7 @@ internal class LendingSessionTest {
             } returns YieldSupplyTransactionOutcome.Reverted
 
             // Act
-            session.track(txRef(id = DEPOSIT_HASH, actionId = "deposit")).test {
+            session.track(txRef(id = DEPOSIT_HASH, analytics = depositAnalytics())).test {
                 // Assert
                 assertThat(awaitItem()).isEqualTo(EarnTxStatus(TxInfo.TransactionStatus.Failed))
                 awaitComplete()
@@ -1372,7 +1446,7 @@ internal class LendingSessionTest {
             } returns null
 
             // Act
-            session.track(txRef(id = DEPOSIT_HASH, actionId = "deposit")).test {
+            session.track(txRef(id = DEPOSIT_HASH, analytics = depositAnalytics())).test {
                 // Assert
                 assertThat(awaitItem()).isEqualTo(EarnTxStatus(TxInfo.TransactionStatus.Unconfirmed))
                 awaitComplete()
@@ -1393,7 +1467,7 @@ internal class LendingSessionTest {
             val tokenSession = createSession(FakeLendingProvider(assets = mapOf(eth.id to asset.copy(currency = weth))))
 
             // Act
-            tokenSession.track(txRef(id = DEPOSIT_HASH, actionId = "deposit")).test {
+            tokenSession.track(txRef(id = DEPOSIT_HASH, analytics = depositAnalytics())).test {
                 // Assert
                 assertThat(awaitItem()).isEqualTo(EarnTxStatus(TxInfo.TransactionStatus.Unconfirmed))
                 awaitComplete()
@@ -1413,7 +1487,7 @@ internal class LendingSessionTest {
             val unwrapped = createSession(FakeLendingProvider(assets = mapOf(eth.id to asset.copy(wrappedToken = null))))
 
             // Act
-            unwrapped.track(txRef(id = DEPOSIT_HASH, actionId = "deposit")).test {
+            unwrapped.track(txRef(id = DEPOSIT_HASH, analytics = depositAnalytics())).test {
                 // Assert
                 assertThat(awaitItem()).isEqualTo(EarnTxStatus(TxInfo.TransactionStatus.Unconfirmed))
                 awaitComplete()
@@ -1448,6 +1522,7 @@ internal class LendingSessionTest {
         analyticsSender = analyticsSender,
         accountNames = accountNames,
         gaslessFees = gaslessFees,
+        usdValuation = usdValuation,
     )
 
     private fun arrangeState(state: LendingAssetState) = arrangeSnapshot(stateMap(state))
@@ -1515,6 +1590,16 @@ internal class LendingSessionTest {
     )
 
     private fun tokenFee(): Fee = Fee.Common(Amount(currencySymbol = "USDC", value = TOKEN_FEE, decimals = 6))
+
+    private fun arrangeVerifiable(plan: LendingPlan) {
+        when (plan.operation) {
+            LendingPlannedOperation.Deposit -> arrangeDeposit(built = listOf(rawPreparation, rawDeposit))
+            is LendingPlannedOperation.Withdraw -> {
+                arrangeState(assetState(position = POSITION, maxWithdraw = POSITION))
+                arrangeWithdraw(amount = plan.amount, position = POSITION)
+            }
+        }
+    }
 
     private fun arrangeVerifier(result: Either<LendingTxError, Unit>) {
         coEvery {
@@ -1616,16 +1701,23 @@ internal class LendingSessionTest {
     private fun selectedFee(gasLimit: BigInteger): Fee = ethFee(gasLimit, maxFeePerGas = SELECTED_GAS_PRICE)
         .fixFee(eth, gasLimit)
 
-    private fun analytics(actionId: String) = EarnTxAnalytics(params = mapOf("action" to actionId))
+    private fun depositAnalytics() = EarnTxAnalytics(
+        params = mapOf("Transaction Type" to "Deposit", "With Upgrade" to "false"),
+    )
 
-    private fun txRef(id: String, actionId: String, createdAt: Instant = Instant.DISTANT_PAST) = EarnTxRef(
+    private fun withdrawAnalytics() = EarnTxAnalytics(
+        params = mapOf("Transaction Type" to "Withdraw", "With Upgrade" to "false"),
+        confirmedParams = mapOf("Withdraw Type" to "Partial"),
+    )
+
+    private fun txRef(id: String, analytics: EarnTxAnalytics, createdAt: Instant = Instant.DISTANT_PAST) = EarnTxRef(
         version = 1,
         productId = EarnProductId("lending"),
         id = id,
         userWalletId = userWalletId,
         currencyId = eth.id,
         createdAt = createdAt,
-        analytics = analytics(actionId),
+        analytics = analytics,
     )
 
     private fun depositResult() = EarnResult(
@@ -1679,6 +1771,15 @@ internal class LendingSessionTest {
         val assets: Map<CryptoCurrency.ID, LendingAssetState>,
         val expected: Either<EarnSessionError, BigDecimal>,
     )
+
+    data class ResultParamsModel(
+        val name: String,
+        val plan: LendingPlan,
+        val bucket: String?,
+        val expected: EarnTxAnalytics,
+    ) {
+        override fun toString(): String = name
+    }
 
     data class PrepareModel(
         val built: List<TransactionData.Uncompiled>,
