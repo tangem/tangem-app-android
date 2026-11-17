@@ -68,7 +68,12 @@ internal class TokenActionsModel @Inject constructor(
             params.bottomAction,
         ) { token, isBalanceHidden, bottomAction ->
             uiBuilder.build(
-                input = TokenActionsBuildInput(token.data, isBalanceHidden, bottomAction, token.region),
+                input = TokenActionsBuildInput(
+                    cryptoCurrencyData = token.data,
+                    isBalanceHidden = isBalanceHidden,
+                    bottomAction = bottomAction,
+                    onrampRegion = token.region,
+                ),
                 tokenActionsHandler = tokenActionsHandler,
                 appCurrency = currentAppCurrency.value,
                 canBuy = {

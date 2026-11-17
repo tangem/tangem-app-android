@@ -69,7 +69,12 @@ internal class TokenActionsUiBuilderTest {
 
         // Act
         val result = builder.build(
-            input = TokenActionsBuildInput(data, false, BottomAction.None, case.region),
+            input = TokenActionsBuildInput(
+                cryptoCurrencyData = data,
+                isBalanceHidden = false,
+                bottomAction = BottomAction.None,
+                onrampRegion = case.region,
+            ),
             tokenActionsHandler = handler,
             appCurrency = AppCurrency.Default,
             canBuy = { canBuy },
