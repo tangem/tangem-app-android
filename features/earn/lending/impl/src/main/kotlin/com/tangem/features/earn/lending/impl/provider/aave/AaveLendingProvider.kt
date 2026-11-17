@@ -153,6 +153,7 @@ internal class AaveLendingProvider @Inject constructor(
             deposit = read?.let { status.depositGate(it.toState()) } ?: chain.unreadGate(),
             position = position?.let(::LendingPosition),
             maxWithdraw = if (position != null && liquidity != null) position.min(liquidity) else position,
+            isLiquidityKnown = liquidity != null,
             providerState = read,
             source = listOf(chain.source, status.source).getResultStatusSource(),
             rateSource = market.source,

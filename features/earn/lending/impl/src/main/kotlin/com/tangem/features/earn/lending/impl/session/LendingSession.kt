@@ -23,6 +23,7 @@ import com.tangem.features.earn.lending.impl.product.LendingStateMapper
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
+import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.EarnAmount
@@ -158,6 +159,17 @@ internal class LendingSession @AssistedInject constructor(
             if (attempt < MAX_TRACK_ATTEMPTS - 1) delay(POLL_INTERVAL)
         }
     }.distinctUntilChanged()
+
+    override suspend fun screenAnalytics(action: EarnFlowAction): EarnScreenAnalytics {
+        val market = currentState()?.market ?: return EarnScreenAnalytics()
+        return EarnScreenAnalytics(
+            rate = market.rate,
+            performanceFee = lendingProvider.performanceFee,
+            position = market.position?.cryptoAmount,
+            availableToWithdraw = market.maxWithdraw,
+            isLiquidityKnown = market.isLiquidityKnown,
+        )
+    }
 
     private suspend fun recheck(plan: LendingPlan): Either<EarnSessionError, EarnVerification> = either {
         val operation = ensureNotNull(plan.action.toLendingOperation()) { EarnSessionError.Failed() }

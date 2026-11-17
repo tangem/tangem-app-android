@@ -19,6 +19,7 @@ import java.math.BigDecimal
 internal class FakeLendingProvider(
     private val assets: Map<CryptoCurrency.ID, LendingAsset> = emptyMap(),
     override val isAvailable: Boolean = true,
+    override val performanceFee: BigDecimal = BigDecimal.ZERO,
 ) : LendingProvider {
 
     val marketFlow = MutableStateFlow(loadingMarket())
@@ -34,7 +35,6 @@ internal class FakeLendingProvider(
         privacyPolicyUrl = "https://fake.example/privacy",
     )
     override val apyPeriods: List<EarnPeriod> = emptyList()
-    override val performanceFee: BigDecimal = BigDecimal.ZERO
 
     override fun resolveAsset(currency: CryptoCurrency): LendingAsset? = assets[currency.id]
 
