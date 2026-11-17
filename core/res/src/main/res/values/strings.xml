@@ -170,9 +170,13 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="all_services_crypto_account_subtitle">Separate funds by purpose</string>
   <string name="all_services_header_description">Everything available to you in one place.\nAdd what you need, when you need it.</string>
   <string name="all_services_header_title">All services</string>
+  <string name="all_services_joint_account_subtitle">Share funds with group approvals</string>
+  <string name="all_services_staking_subtitle">Stake tokens for up to %s APY</string>
   <string name="all_services_title">Services</string>
+  <string name="all_services_yield_mode_subtitle">Up to %s APY, withdraw anytime</string>
   <string name="app_settings_access_code_warning">Set an access code to enable biometrics</string>
   <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
   <string name="app_settings_default_fee">Default Fee</string>

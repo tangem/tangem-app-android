@@ -2,10 +2,12 @@ package com.tangem.features.commonfeatures.impl.portfolioselector.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.commonfeatures.api.portfolioselector.AccountWalletPicker
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultAccountWalletPicker
 import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfolioSelectorController
 import com.tangem.features.commonfeatures.impl.portfolioselector.PortfolioSelectorModel
@@ -39,6 +41,9 @@ internal interface PortfolioSelectorSingletonModule {
     fun bindPortfolioSelectorBridgeFactory(
         impl: DefaultPortfolioSelectorBridge.Factory,
     ): PortfolioSelectorBridge.Factory
+
+    @Binds
+    fun bindAccountWalletPickerFactory(impl: DefaultAccountWalletPicker.Factory): AccountWalletPicker.Factory
 
     @Binds
     fun bindPortfolioSelectorController(impl: DefaultPortfolioSelectorController): PortfolioSelectorController

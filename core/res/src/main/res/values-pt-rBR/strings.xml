@@ -3148,12 +3148,12 @@
   <string name="tangempay_card_details_activate">Ativar cartão</string>
   <string name="tangempay_card_details_add_funds">Adicionar fundos</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opções de recarga</string>
-  <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar ao Google Wallet</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar à Carteira do Google</string>
   <string name="tangempay_card_details_add_to_wallet_error_description">Tentar usar outro dispositivo ou entre em contato com o suporte</string>
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Tentativas demais. Tente novamente em 24 horas</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Não foi possível adicionar o cartão</string>
-  <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">O Google Wallet não está disponível. Verifique as configurações do sistema</string>
-  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado ao Google Wallet</string>
+  <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">A Carteira do Google não está disponível. Verifique as configurações do sistema</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado à Carteira do Google</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancele %1$s, mude para %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Para pagar a mensalidade do plano e começar a usar o novo cartão</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Recarregue sua conta no valor de %1$s</string>
@@ -3169,7 +3169,7 @@
   <string name="tangempay_card_details_hide_details">Ocultar detalhes</string>
   <string name="tangempay_card_details_hide_text">Esconder</string>
   <string name="tangempay_card_details_name_on_card">Nome do titular do cartão</string>
-  <string name="tangempay_card_details_open_wallet_button">Abra a Carteira do Google</string>
+  <string name="tangempay_card_details_open_wallet_button">Abrir a Carteira do Google</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Configure o Tangem Pay em poucos toques e comece a pagar com o Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configure o Tangem Pay em poucos toques e comece a pagar com o Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Adicione seu cartão ao Google Pay</string>

@@ -43,6 +43,7 @@ sealed interface PortfolioSelectorItemUM {
     data class Portfolio(
         val item: UserWalletItemUM,
         val isSelected: Boolean,
+        val endBadge: TextReference? = null,
         override val groupPosition: GroupPosition = GroupPosition.Default,
     ) : PortfolioSelectorItemUM {
         override val id: String = item.id

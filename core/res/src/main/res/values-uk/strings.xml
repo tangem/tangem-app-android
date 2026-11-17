@@ -296,7 +296,11 @@
   <string name="survey_demand_transaction_size_hint">Приблизно, у USD</string>
   <string name="survey_demand_transaction_size_question">Яка типова сума однієї транзакції?</string>
   <string name="tangempay_cancel_kyc">Приховати статус</string>
-  <string name="tangempay_card_details_added_to_google_wallet_text">Картку додано до Google Wallet</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Додати в Google Гаманець</string>
+  <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Гаманець недоступний. Перевірте налаштування системи</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Картку додано в Google Гаманець</string>
+  <string name="tangempay_card_details_open_wallet_button">Відкрити Google Гаманець</string>
+  <string name="tangempay_card_details_open_wallet_step_1">Відкрийте Google Гаманець</string>
   <string name="tangempay_card_page_closing_banner_description">Зазвичай займає до 5 хвилин</string>
   <string name="tangempay_cashback_accruals_pay_description">До 11-го числа наступного місяця, після перевірки транзакцій на відповідність правилам програми кешбеку</string>
   <string name="tangempay_kyc_rejected_button_text">Приховати статус</string>
