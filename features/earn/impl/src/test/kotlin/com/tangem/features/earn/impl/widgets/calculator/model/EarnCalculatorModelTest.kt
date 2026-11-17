@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.widgets.calculator.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -14,7 +15,6 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjection
@@ -169,7 +169,7 @@ internal class EarnCalculatorModelTest {
             val actual = requireNotNull(model.uiState.value)
             assertThat(actual.total).isEqualTo(stringReference("$79,881.12"))
             assertThat(actual.horizon.items.single { it.isSelected }.label)
-                .isEqualTo(EarnCalculatorTexts.horizon(EarnHorizon.Year10))
+                .isEqualTo(pluralReference(R.plurals.earn_calculator_years, count = 10, formatArgs = wrappedList(10)))
             model.onDestroy()
         }
 
@@ -186,6 +186,129 @@ internal class EarnCalculatorModelTest {
         // Assert
         val actual = requireNotNull(model.uiState.value)
         assertThat(actual.monthlyTopUp.value).isEqualTo(stringReference("$400"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 3Y bars WHEN onBarSelected 5 THEN selectedBar is 5`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isEqualTo(5)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar selected WHEN onBarSelected null THEN selectedBar is null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = null)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 24 bars WHEN onBarSelected 24 THEN selectedBar stays null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = 24)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 23 selected on 3Y WHEN horizon becomes Months6 THEN selectedBar is null and onBarSelected 23 is ignored`() =
+        runTest {
+            // Arrange
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+            advanceUntilIdle()
+            model.onBarSelected(index = 23)
+            advanceUntilIdle()
+
+            // Act
+            model.onHorizonSelect(EarnHorizon.Months6)
+            advanceUntilIdle()
+            val afterHorizonChange = requireNotNull(model.uiState.value)
+            model.onBarSelected(index = 23)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(afterHorizonChange.bars).hasSize(6)
+            assertThat(afterHorizonChange.selectedBar).isNull()
+            assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN bar selected WHEN onInitialStep 1 THEN selectedBar is null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        model.onInitialStep(direction = 1)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 5 selected WHEN projection re-emits an equal projection THEN selectedBar stays 5`() = runTest {
+        // Arrange
+        val projection = MutableStateFlow<EarnProjection?>(projectionOf("0.0468"))
+        val model = createModel(projection = projection)
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        projection.value = projectionOf("0.0468")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isEqualTo(5)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 5 selected WHEN projection emits another rate THEN selectedBar is null`() = runTest {
+        // Arrange
+        val projection = MutableStateFlow<EarnProjection?>(projectionOf("0.0468"))
+        val model = createModel(projection = projection)
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        projection.value = projectionOf("0.032")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
         model.onDestroy()
     }
 

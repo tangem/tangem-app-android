@@ -343,7 +343,7 @@ internal class AccountDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN joint account WHEN status is loaded THEN the account block says how many members it has`() = runTest {
+    fun `GIVEN joint account WHEN status is loaded THEN the members count goes under the account name`() = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
         every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
@@ -357,6 +357,7 @@ internal class AccountDetailsModelTest {
         assertThat(model.uiState.value.accountSubtitle).isEqualTo(
             pluralReference(id = R.plurals.joint_account_members_count, count = 2, formatArgs = wrappedList(2)),
         )
+        assertThat(model.uiState.value.isNameAboveSubtitle).isTrue()
         model.onDestroy()
     }
 
@@ -405,7 +406,7 @@ internal class AccountDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN personal account WHEN model loads THEN title is account details title`() = runTest {
+    fun `GIVEN personal account WHEN model loads THEN it has its title and the label above the name`() = runTest {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1)
         val status = AccountStatus.Personal(
@@ -424,6 +425,7 @@ internal class AccountDetailsModelTest {
         // Assert
         assertThat(model.uiState.value.title).isEqualTo(resourceReference(R.string.account_details_title))
 
+        assertThat(model.uiState.value.isNameAboveSubtitle).isFalse()
         model.onDestroy()
     }
 

@@ -201,9 +201,13 @@ internal class ForgetWalletModel @Inject constructor(
                     }
 
                     uiState.update { it.copy(isInProgress = false) }
-                    uiMessageSender.send(
-                        message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
-                    )
+                    if (isSocialDeletion && hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
+                        showDeletionFailedDialog()
+                    } else {
+                        uiMessageSender.send(
+                            message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
+                        )
+                    }
 
                     return@launch
                 }

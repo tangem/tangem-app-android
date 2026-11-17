@@ -1,17 +1,11 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import arrow.core.right
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
-import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.utils.annotations.RemoveWithToggle
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 
 /**
@@ -23,9 +17,6 @@ import kotlinx.coroutines.*
  * @property multiNetworkStatusFetcher Fetcher for updating network statuses.
  * @property multiQuoteStatusFetcher Fetcher for updating quote statuses.
  * @property contributionFetchers Fetchers of extra balances registered by their owning features.
- * @property tokensFeatureToggles Toggles switching between [contributionFetchers] and the legacy staking fetch.
- * @property multiStakingBalanceFetcher Fetcher for updating staking balances.
- * @property stakingIdFactory Factory for creating staking IDs.
  *
 [REDACTED_AUTHOR]
  */
@@ -33,11 +24,6 @@ class BalanceFetchingOperations(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val contributionFetchers: Set<BalanceContributionFetcher>,
-    private val tokensFeatureToggles: TokensFeatureToggles,
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private val stakingIdFactory: StakingIdFactory,
 ) {
 
     /**
@@ -79,17 +65,13 @@ class BalanceFetchingOperations(
                     source.name to fetchQuotes(currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId })
                 },
             )
-            FetchingSource.CONTRIBUTIONS -> if (tokensFeatureToggles.isPluggableBalanceSourcesEnabled) {
-                contributionFetchers.map { fetcher ->
-                    async {
-                        fetcher.javaClass.simpleName to fetcher.fetch(
-                            userWalletId = userWalletId,
-                            currencies = currencies,
-                        )
-                    }
+            FetchingSource.CONTRIBUTIONS -> contributionFetchers.map { fetcher ->
+                async {
+                    fetcher.javaClass.simpleName to fetcher.fetch(
+                        userWalletId = userWalletId,
+                        currencies = currencies,
+                    )
                 }
-            } else {
-                listOf(async { LEGACY_STAKING_SOURCE_NAME to fetchStaking(userWalletId, currencies) })
             }
         }
     }
@@ -123,51 +105,5 @@ class BalanceFetchingOperations(
         return multiQuoteStatusFetcher(
             params = MultiQuoteStatusFetcher.Params(currenciesIds = rawCurrencyIds, appCurrencyId = null),
         )
-    }
-
-    /**
-     * Fetches staking balances for the given currencies.
-     *
-     * Logs errors for currencies where staking ID cannot be obtained.
-     *
-     * @param userWalletId the user wallet identifier
-     * @param currencies the cryptocurrencies to fetch staking balances for
-     * @return Either with Unit on success or Throwable on failure
-     */
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private suspend fun fetchStaking(
-        userWalletId: UserWalletId,
-        currencies: Collection<CryptoCurrency>,
-    ): Either<Throwable, Unit> {
-        // A joint account is a Safe contract: it has no staking address of its own, and asking the wallet manager
-        // for one would try to build a manager for a network that has no key
-        val stakableCurrencies = currencies.filterNot { it.isJoint }
-
-        val stakingIds = stakableCurrencies.mapNotNullTo(hashSetOf()) { currency ->
-            val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)
-
-            if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) {
-                TangemLogger.e(
-                    messageString = "Unable to get stakingID for user wallet $userWalletId and currency ${currency.id}",
-                    shouldSanitize = false,
-                )
-            }
-
-            stakingId.getOrNull()
-        }
-
-        if (stakingIds.isEmpty()) {
-            TangemLogger.i("No staking IDs found for user wallet $userWalletId")
-            return Unit.right()
-        }
-
-        return multiStakingBalanceFetcher(
-            params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
-        )
-    }
-
-    private companion object {
-        @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-        const val LEGACY_STAKING_SOURCE_NAME = "STAKING"
     }
 }

@@ -1,10 +1,13 @@
 package com.tangem.features.earn.impl.info.model
 
 import com.tangem.common.ui.amountScreen.utils.getFiatString
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -12,13 +15,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.earn.impl.guardedBy
 import com.tangem.features.earn.impl.info.EarnInfoActions
-import com.tangem.features.earn.impl.info.EarnInfoTexts
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import com.tangem.features.earn.product.api.product.EarnActionItem
 import com.tangem.features.earn.product.api.product.EarnBlock
-import com.tangem.features.earn.product.api.product.EarnFreshness
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
@@ -30,11 +31,6 @@ import com.tangem.features.earn.product.api.session.EarnAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 import javax.inject.Inject
 
 internal class EarnInfoConverter @Inject constructor(
@@ -49,27 +45,18 @@ internal class EarnInfoConverter @Inject constructor(
         isBalanceHidden: Boolean,
         ready: EarnProductState.Ready,
         callbacks: Callbacks,
-        locale: Locale = Locale.getDefault(),
-        zoneId: ZoneId = ZoneId.systemDefault(),
     ): EarnInfoUM? {
         val position = (ready.position as? EarnPositionState.Known)?.position ?: return null
         val rate = status.value.fiatRate
-        val staleSince = listOfNotNull(
-            ready.freshness,
-            position.freshness,
-        ).filter { it.isStale }.minByOrNull { it.asOf }
-        val isStale = staleSince != null
+        val isStale = listOfNotNull(ready.freshness, position.freshness).any { it.isStale }
 
         return EarnInfoUM(
             title = product.title,
-            subtitle = stringReference(status.currency.network.name),
+            subtitle = resourceReference(R.string.lending_position_subtitle),
             balanceFiat = stringReference(
                 getFiatString(position.cryptoAmount, rate, appCurrency).orMaskWithStars(isBalanceHidden),
             ),
             balanceCrypto = cryptoText(position.cryptoAmount, status.currency, isBalanceHidden),
-            earned = position.earned?.let { earned ->
-                EarnInfoTexts.earnedChip(getFiatString(earned, rate, appCurrency).orMaskWithStars(isBalanceHidden))
-            },
             rewards = position.rewards?.let { rewards ->
                 rewardsBanner(
                     rewards = rewards,
@@ -78,8 +65,6 @@ internal class EarnInfoConverter @Inject constructor(
                     callbacks = callbacks,
                 )
             },
-            // The numbers are as old as the oldest stale source
-            staleNotice = staleSince?.let { EarnInfoTexts.staleNotice(it.formatAsOf(locale, zoneId)) },
             tabs = tabs(ready),
             myFunds = EarnInfoUM.MyFundsUM(
                 provider = product.provider.title,
@@ -123,8 +108,8 @@ internal class EarnInfoConverter @Inject constructor(
 
     private fun rewardsBanner(rewards: EarnRewards, amount: String, isStale: Boolean, callbacks: Callbacks) =
         EarnInfoUM.RewardsUM(
-            title = EarnInfoTexts.rewardsTitle(amount),
-            description = EarnInfoTexts.rewardsDescription,
+            title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList(amount)),
+            description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
             claim = button(
                 item = EarnActionItem(rewards.claimAction),
                 type = TangemButtonType.Primary,
@@ -146,12 +131,6 @@ internal class EarnInfoConverter @Inject constructor(
     /** The one place an amount of the position turns into text, so the header and the rows cannot differ. */
     private fun cryptoText(amount: BigDecimal, currency: CryptoCurrency, isBalanceHidden: Boolean): TextReference =
         stringReference(amount.format { crypto(currency) }.orMaskWithStars(isBalanceHidden))
-
-    private fun EarnFreshness.formatAsOf(locale: Locale, zoneId: ZoneId): String =
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-            .withLocale(locale)
-            .withZone(zoneId)
-            .format(Instant.ofEpochMilli(asOf.toEpochMilliseconds()))
 
     data class Callbacks(
         val onActionClick: (EarnAction) -> Unit,

@@ -2,6 +2,8 @@ package com.tangem.core.decompose.navigation
 
 import kotlin.reflect.KClass
 
+// TODO: The Router contract (Route, Router, RouterExt, NavigationFailureHandler, DummyRouter) does not depend on
+//  Decompose. Move it to core:navigation and drop the core:navigation -> core:decompose dependency.
 /**
  * Interface for a router in the application.
  * It provides methods for navigating through the application by stack.

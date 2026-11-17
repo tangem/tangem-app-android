@@ -18,6 +18,7 @@ import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.MAX_HOT_WALLETS_COUNT
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
+import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
@@ -92,6 +93,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             walletRegistrationTrigger,
             seenWalletCardReporter,
             hotWalletFeatureToggles,
+            passwordRequester,
         )
 
         every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
@@ -505,6 +507,36 @@ internal class DefaultUserWalletsListRepositoryTest {
             )
         }
         verify(exactly = 0) { walletRegistrationTrigger.onMobileWalletsUnlocked(any()) }
+    }
+
+    @Test
+    fun `GIVEN wallet deleted on wrong code WHEN unlock with access code THEN no retry and no dismiss`() = runTest {
+        // Arrange
+        val walletId = UserWalletId("00cc")
+        val lockedHot = UserWallet.Hot(
+            name = "Hot",
+            walletId = walletId,
+            hotWalletId = mockk(relaxed = true),
+            wallets = null, // locked
+            isBackedUp = false,
+        )
+        repository.userWallets.value = listOf(lockedHot)
+        coEvery { passwordRequester.requestPassword(any()) } returnsMany listOf(
+            HotWalletPasswordRequester.Result.EnteredPassword(HotAuth.Password("000000".toCharArray())),
+            HotWalletPasswordRequester.Result.Dismiss,
+        )
+        coEvery { userWalletEncryptionKeysRepository.getEncryptedWithPassword(walletId, any()) } returns null
+        coEvery { passwordRequester.wrongPassword(any()) } coAnswers {
+            repository.userWallets.value = emptyList()
+        }
+
+        // Act
+        val result = repository.unlock(walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(UnlockWalletError.UserCancelled)
+        coVerify(exactly = 1) { passwordRequester.requestPassword(any()) }
+        coVerify(exactly = 0) { passwordRequester.dismiss() }
     }
 
     @Test

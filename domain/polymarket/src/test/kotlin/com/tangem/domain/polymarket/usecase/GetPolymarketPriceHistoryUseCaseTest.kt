@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.PolymarketPriceHistoryRepository
+import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
+import com.tangem.domain.polymarket.model.PolymarketSoccerTab
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketHistoryToken
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -148,6 +150,31 @@ internal class GetPolymarketPriceHistoryUseCaseTest {
         assertThat(firstResult).isEqualTo(mapOf(yes to points.right()))
         coVerify(exactly = 1) { repository.getPriceHistory("yes", query) }
         coVerify(exactly = 1) { repository.getPriceHistory("yes", secondQuery) }
+    }
+
+    @Test
+    fun `GIVEN soccer child owners WHEN requesting history THEN valid child tokens are accepted without changing owners`() = runTest {
+        // Arrange
+        val markets = event(marketEventId = "child").markets
+        val soccer: PolymarketSoccerEvent = mockk {
+            every { tabs } returns listOf(PolymarketSoccerTab(
+                PolymarketSoccerTab.Key.GAME_LINES, listOf(mockk { every { this@mockk.markets } returns markets }),
+            ))
+        }
+        val invalid = yes.copy(version = PolymarketMarketVersion.V1)
+        coEvery { repository.getPriceHistory("yes", query) } returns points.right()
+        coEvery { repository.getPriceHistory("no", query) } returns PolymarketPriceHistoryError.Network.left()
+
+        // Act
+        val actual = useCase.getSoccerHistory(soccer, setOf(yes, no, invalid), query)
+
+        // Assert
+        assertThat(actual).isEqualTo(mapOf(
+            yes to points.right(), no to PolymarketPriceHistoryError.Network.left(),
+            invalid to PolymarketPriceHistoryError.InvalidToken.left(),
+        ))
+        coVerify(exactly = 2) { repository.getPriceHistory(any(), any()) }
+        assertThat(markets.single().eventId).isEqualTo("child")
     }
 
     private fun event(marketEventId: String = "event"): PolymarketEvent {

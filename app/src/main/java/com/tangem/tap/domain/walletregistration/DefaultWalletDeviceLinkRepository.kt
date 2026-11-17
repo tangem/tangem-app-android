@@ -11,7 +11,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.registration.WalletDeviceLinkRepository
 import com.tangem.domain.wallets.registration.WalletLinkError
-import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletRegistrationResult
@@ -28,7 +27,6 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
     private val walletRegistrar: WalletRegistrar,
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : WalletDeviceLinkRepository {
 
@@ -106,8 +104,6 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
      * wallet is on another curve (an Ed25519-only card) could never be linked and would keep the banner forever.
      */
     private fun UserWallet.canBeLinked(): Boolean {
-        if (!walletFeatureToggles.isWalletLinkingEnabled) return false
-
         return when (this) {
             is UserWallet.Cold -> {
                 val card = scanResponse.card

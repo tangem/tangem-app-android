@@ -80,4 +80,5 @@ dependencies {
     /** Tests */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

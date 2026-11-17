@@ -2,8 +2,8 @@ package com.tangem.features.onramp.deeplink
 
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.GetUserWalletError

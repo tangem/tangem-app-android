@@ -8,8 +8,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
-import com.tangem.features.earn.impl.info.label
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -111,3 +113,9 @@ private fun LazyListState.position(): ListPosition = ListPosition(
     index = firstVisibleItemIndex,
     scrollOffset = firstVisibleItemScrollOffset,
 )
+
+private fun EarnInfoTab.label(): TextReference = when (this) {
+    EarnInfoTab.MyFunds -> resourceReference(R.string.yield_module_earn_sheet_my_funds_title)
+    EarnInfoTab.Benefits -> resourceReference(R.string.lending_position_benefits)
+    EarnInfoTab.Details -> resourceReference(R.string.lending_position_details)
+}

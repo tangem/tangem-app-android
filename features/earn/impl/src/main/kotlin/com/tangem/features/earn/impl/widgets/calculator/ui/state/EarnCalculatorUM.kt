@@ -14,6 +14,8 @@ internal data class EarnCalculatorUM(
     val horizon: EarnHorizonSelectUM,
     val bars: ImmutableList<EarnProjectionBarUM>,
     val axisLabels: ImmutableList<TextReference>,
+    val selectedBar: Int?,
+    val onBarSelected: (Int?) -> Unit,
     val initialBalance: EarnStepperUM,
     val monthlyTopUp: EarnStepperUM,
 )
@@ -33,7 +35,9 @@ internal data class EarnHorizonItemUM(
 
 @Immutable
 internal data class EarnProjectionBarUM(
-    val earned: Float,
+    val height: Float,
+    val balance: TextReference,
+    val earned: TextReference,
 )
 
 @Immutable

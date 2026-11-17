@@ -111,6 +111,80 @@ internal class PredictionWithdrawalTrackerTest {
     }
 
     @Test
+    fun `GIVEN the wallet is busy once WHEN tracked THEN the batch is resent after an interval and its id is polled`() =
+        runTest {
+            // Arrange
+            coEvery { store.get(WALLET_ID) } returns record(transactionId = null)
+            coEvery {
+                submitInteractor.resend(userWalletId = WALLET_ID, walletId = WALLET_ID.stringValue)
+            } returnsMany listOf(
+                PredictionWithdrawalFailure.WalletBusy.left(),
+                receipt(PredictionWithdrawalState.IN_PROGRESS).right(),
+            )
+            coEvery { getState(walletId = WALLET_ID.stringValue, transactionId = TX_ID) } returns
+                receipt(PredictionWithdrawalState.CONFIRMED).right()
+            val tracker = createTracker()
+
+            // Act
+            tracker.track(WALLET_ID)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { submitInteractor.resend(any(), any()) }
+            advanceTimeBy(5.seconds)
+            runCurrent()
+            coVerify(exactly = 2) { submitInteractor.resend(any(), any()) }
+            coVerify(exactly = 0) { getState(any(), any()) }
+            advanceTimeBy(5.seconds)
+            runCurrent()
+            coVerify(exactly = 2) { submitInteractor.resend(any(), any()) }
+            coVerify(exactly = 1) { getState(walletId = WALLET_ID.stringValue, transactionId = TX_ID) }
+            coVerify(exactly = 1) { store.clear(WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN the wallet stays busy WHEN tracked THEN the resend stops at the attempt cap and nothing is polled`() =
+        runTest {
+            // Arrange
+            coEvery { store.get(WALLET_ID) } returns record(transactionId = null)
+            coEvery { submitInteractor.resend(any(), any()) } returns PredictionWithdrawalFailure.WalletBusy.left()
+            val tracker = createTracker()
+
+            // Act
+            tracker.track(WALLET_ID)
+            advanceTimeBy(60.seconds)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 3) { submitInteractor.resend(any(), any()) }
+            coVerify(exactly = 0) { getState(any(), any()) }
+            coVerify(exactly = 0) { store.clear(any()) }
+        }
+
+    @Test
+    fun `GIVEN the id was recorded while the wallet was busy WHEN tracked THEN it is polled without a second resend`() =
+        runTest {
+            // Arrange
+            coEvery { store.get(WALLET_ID) } returnsMany listOf(
+                record(transactionId = null),
+                record(transactionId = TX_ID),
+            )
+            coEvery { submitInteractor.resend(any(), any()) } returns PredictionWithdrawalFailure.WalletBusy.left()
+            coEvery { getState(walletId = WALLET_ID.stringValue, transactionId = TX_ID) } returns
+                receipt(PredictionWithdrawalState.CONFIRMED).right()
+            val tracker = createTracker()
+
+            // Act
+            tracker.track(WALLET_ID)
+            advanceTimeBy(20.seconds)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { submitInteractor.resend(any(), any()) }
+            coVerify(exactly = 1) { getState(walletId = WALLET_ID.stringValue, transactionId = TX_ID) }
+        }
+
+    @Test
     fun `GIVEN the resend answers with a terminal receipt WHEN tracked THEN the record is cleared and nothing is polled`() =
         runTest {
             // Arrange

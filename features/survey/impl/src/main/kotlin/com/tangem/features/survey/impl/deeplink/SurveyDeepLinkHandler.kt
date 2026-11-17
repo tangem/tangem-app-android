@@ -1,8 +1,8 @@
 package com.tangem.features.survey.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 

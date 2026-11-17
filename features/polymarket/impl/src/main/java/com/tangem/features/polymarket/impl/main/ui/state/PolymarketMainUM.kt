@@ -7,6 +7,7 @@ import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedSc
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -31,27 +32,3 @@ internal data class PolymarketMainUM(
     val isFastTradingSettingsAvailable: Boolean = false,
     val fastTradingBanner: PolymarketFastTradingBannerUM? = null,
 )
-
-@Immutable
-internal sealed interface PolymarketFastTradingBannerUM {
-
-    val onActionClick: () -> Unit
-
-    data class UnknownSigners(override val onActionClick: () -> Unit) : PolymarketFastTradingBannerUM
-
-    data class Activate(
-        override val onActionClick: () -> Unit,
-        val onCloseClick: () -> Unit,
-    ) : PolymarketFastTradingBannerUM
-
-    data class Reactivate(
-        override val onActionClick: () -> Unit,
-        val onCloseClick: () -> Unit,
-    ) : PolymarketFastTradingBannerUM
-
-    data class Extend(
-        val daysLeft: Int,
-        override val onActionClick: () -> Unit,
-        val onCloseClick: () -> Unit,
-    ) : PolymarketFastTradingBannerUM
-}

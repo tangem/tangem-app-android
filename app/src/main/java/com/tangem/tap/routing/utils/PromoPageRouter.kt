@@ -6,7 +6,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.uri.PromoPageUrlValidator
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.PromoPageRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.marketing.api.promopage.PromoPageDeepLinkHandler
@@ -22,13 +21,12 @@ import javax.inject.Inject
 internal class PromoPageRouter @Inject constructor(
     private val promoPageRepository: PromoPageRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val marketingFeatureToggles: MarketingFeatureToggles,
     private val appRouter: AppRouter,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
 
     fun savePage(deeplinkUri: Uri) {
-        if (!marketingFeatureToggles.isPromoPageEnabled || !PromoPageDeepLinkHandler.canHandle(deeplinkUri)) return
+        if (!PromoPageDeepLinkHandler.canHandle(deeplinkUri)) return
 
         // Not getQueryParameter: it decodes + as a space
         val page = deeplinkUri.getQueryParameters(PAGE_PARAM).firstOrNull(String::isNotEmpty)
@@ -36,8 +34,6 @@ internal class PromoPageRouter @Inject constructor(
     }
 
     fun observe(scope: CoroutineScope, currentRoute: Flow<AppRoute?>) {
-        if (!marketingFeatureToggles.isPromoPageEnabled) return
-
         combine(
             promoPageRepository.observePage(),
             currentRoute,

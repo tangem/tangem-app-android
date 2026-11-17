@@ -5,10 +5,19 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.squareup.moshi.JsonAdapter
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessInstructionRule
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessTransactionSigner
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.extensions.Result
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SolanaGaslessError
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.gasless.SolanaGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
@@ -22,6 +31,7 @@ import java.util.Base64
 
 internal class DefaultSolanaGaslessTransactionRepository(
     private val api: SolanaGaslessApi,
+    private val walletManagersFacade: WalletManagersFacade,
     errorAdapter: JsonAdapter<GaslessErrorResponse>,
     private val dispatchers: CoroutineDispatcherProvider,
     // Monotonic, so a wall clock set back cannot keep a cached fee payer (or failure) alive past its TTL
@@ -67,6 +77,46 @@ internal class DefaultSolanaGaslessTransactionRepository(
         }
         return result
     }
+
+    override suspend fun sign(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionData: TransactionData,
+        feePayer: String,
+        signer: TransactionSigner,
+        sponsorsRent: Boolean,
+    ): Result<SolanaGaslessSignedTransaction>? = withContext(dispatchers.io) {
+        getGaslessSigner(userWalletId, network)?.signGaslessTransaction(
+            transactionData = transactionData,
+            feePayer = feePayer,
+            signer = signer,
+            instructionRules = gaslessInstructionRules(sponsorsRent),
+        )
+    }
+
+    override suspend fun simulate(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionData: TransactionData,
+        feePayer: String,
+        sponsorsRent: Boolean,
+    ): Result<SolanaGaslessSimulation>? = withContext(dispatchers.io) {
+        getGaslessSigner(userWalletId, network)?.simulateGaslessTransaction(
+            transactionData = transactionData,
+            feePayer = feePayer,
+            instructionRules = gaslessInstructionRules(sponsorsRent),
+        )
+    }
+
+    private suspend fun getGaslessSigner(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): SolanaGaslessTransactionSigner? =
+        walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            as? SolanaGaslessTransactionSigner
+
+    private fun gaslessInstructionRules(sponsorsRent: Boolean): List<SolanaGaslessInstructionRule> =
+        if (sponsorsRent) SolanaGaslessInstructionRule.ASSOCIATED_TOKEN_ACCOUNT else emptyList()
 
     private fun SolanaGaslessError.invalidatesFeePayerCache(): Boolean = this is SolanaGaslessError.Unauthorized ||
         this is SolanaGaslessError.Disabled ||

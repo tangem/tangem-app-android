@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
@@ -25,6 +26,7 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     private val speiAvailability: BankWithdrawSpeiAvailability,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) {
 
     fun observe(account: BankWithdrawSourceAccount, offramp: BankOfframpOptions): Flow<BankWithdrawOptions?> =
@@ -77,7 +79,7 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
                     ),
                 ),
                 balanceCurrencyCode = active.balance?.currencyCode,
-                isLimitedPerRail = true,
+                isLimitedPerRail = moneyAccountFeatureToggles.isMxnEnabled,
                 isSpeiOffered = speiAvailability.isOffered(account),
             )
         }

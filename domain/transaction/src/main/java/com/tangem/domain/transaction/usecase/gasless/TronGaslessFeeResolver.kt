@@ -14,7 +14,7 @@ import com.tangem.domain.transaction.TransactionFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.transaction.models.tron.isPaidByOwnTronEnergy
+import com.tangem.domain.transaction.models.tron.isLoweredByOwnTronEnergy
 import com.tangem.domain.transaction.models.tron.isPreferredOverTronGasless
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -35,7 +35,7 @@ class TronGaslessFeeResolver(
      * transaction sends.
      *
      * @return `null` when Tron gasless does not apply and the caller's native fee stands. Otherwise
-     * [loadNativeFee]'s when TRX is payable and either own energy covers the transfer or it costs no more in
+     * [loadNativeFee]'s when TRX is payable and either own energy lowers it or it costs no more in
      * fiat than the gasless compensation, else the gasless fee unless only TRX can pay. Each TRX
      * preference is gated by [TransactionFeatureToggles]; with both off, TRX is weighed only when the gasless
      * quote fails or the token cannot cover it. A refused account
@@ -73,8 +73,8 @@ class TronGaslessFeeResolver(
         val eagerNativeFee = if (isNativeFeeAutoPicked()) loadNativeFee() else null
         if (transactionFeatureToggles.isTronClientEnergyEnabled) {
             eagerNativeFee?.onRight { nativeFee ->
-                // Not reported as preferred: a later destination may need more energy than the account holds.
-                if (nativeFee.transactionFee.isPaidByOwnTronEnergy(nativeCurrencyStatus)) return nativeFee.right()
+                // Not reported as preferred: the account may run out of energy before another destination is quoted.
+                if (nativeFee.transactionFee.isLoweredByOwnTronEnergy(nativeCurrencyStatus)) return nativeFee.right()
             }
         }
 

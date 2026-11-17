@@ -3,12 +3,7 @@ package com.tangem.features.earn.flow.impl.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
-import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
-import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.button.TangemButtonIconPosition
@@ -16,16 +11,21 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.features.earn.api.ui.EarnRowUM
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnLegal
+import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnFlowExit
@@ -39,12 +39,16 @@ import io.mockk.mockk
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.util.Locale
 import com.tangem.core.ui.R as CoreUiR
 
 internal class EarnFlowConverterTest {
@@ -354,6 +358,19 @@ internal class EarnFlowConverterTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Confirm {
 
+        private var previousLocale: Locale = Locale.getDefault()
+
+        @BeforeEach
+        fun pinLocale() {
+            previousLocale = Locale.getDefault()
+            Locale.setDefault(Locale.US)
+        }
+
+        @AfterEach
+        fun restoreLocale() {
+            Locale.setDefault(previousLocale)
+        }
+
         @Test
         fun `GIVEN executing WHEN confirm THEN primary is loading`() {
             // Act
@@ -361,6 +378,16 @@ internal class EarnFlowConverterTest {
 
             // Assert
             assertThat(actual.primary.isLoading).isTrue()
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN amount validity WHEN confirm THEN primary is enabled only for a valid amount`(isValid: Boolean) {
+            // Act
+            val actual = confirm(isAmountValid = isValid)
+
+            // Assert
+            assertThat(actual.primary.isEnabled).isEqualTo(isValid)
         }
 
         @Test
@@ -430,6 +457,91 @@ internal class EarnFlowConverterTest {
             assertThat(actual.tangemIconUM).isNull()
         }
 
+        @ParameterizedTest
+        @MethodSource("provideWalletModels")
+        fun `GIVEN wallet type WHEN confirm THEN mobile holds to confirm and card taps with its icon`(
+            model: WalletModel,
+        ) {
+            // Act
+            val actual = confirm(walletIcon = model.walletIcon, isHoldToConfirm = model.isHoldToConfirm)
+
+            // Assert
+            assertThat(
+                ConfirmButtonModel(actual.isHoldToConfirm, actual.primary.tangemIconUM),
+            ).isEqualTo(model.expected)
+        }
+
+        private fun provideWalletModels() = listOf(
+            WalletModel(
+                walletIcon = null,
+                isHoldToConfirm = true,
+                expected = ConfirmButtonModel(isHoldToConfirm = true, icon = null),
+            ),
+            WalletModel(
+                walletIcon = CoreUiR.drawable.ic_tangem_24,
+                isHoldToConfirm = false,
+                expected = ConfirmButtonModel(
+                    isHoldToConfirm = false,
+                    icon = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_tangem_24),
+                ),
+            ),
+        )
+
+        @ParameterizedTest
+        @MethodSource("provideEarningsModels")
+        fun `GIVEN yearly fiat earnings row WHEN confirm THEN approximate amount per year in the app currency`(
+            model: EarningsModel,
+        ) {
+            // Arrange
+            val plan = TestPlan(
+                rows = listOf(EarnRow(label = EARNINGS_LABEL, value = EarnValue.YearlyFiatEarnings(model.earnings))),
+            )
+
+            // Act
+            val actual = confirm(plan = plan).rows
+
+            // Assert
+            val expected = EarnRowUM(
+                label = EARNINGS_LABEL,
+                value = combinedReference(
+                    stringReference("~"),
+                    resourceReference(R.string.for_you_earn_per_year, wrappedList(model.expected)),
+                ),
+                onInfoClick = null,
+                onValueClick = null,
+            )
+            assertThat(actual).containsExactly(expected)
+        }
+
+        private fun provideEarningsModels() = listOf(
+            EarningsModel(earnings = BigDecimal("37.40"), expected = "$37"),
+            EarningsModel(earnings = BigDecimal("0.47"), expected = "$0.47"),
+        )
+
+        @Test
+        fun `GIVEN yearly fiat earnings row and no app currency WHEN confirm THEN the earnings row waits`() {
+            // Arrange
+            val textRow = EarnRow(label = stringReference("APY"), value = EarnValue.Text(stringReference("5.5%")))
+            val plan = TestPlan(
+                rows = listOf(
+                    textRow,
+                    EarnRow(label = EARNINGS_LABEL, value = EarnValue.YearlyFiatEarnings(BigDecimal("37.40"))),
+                ),
+            )
+
+            // Act
+            val actual = confirm(plan = plan, appCurrency = null).rows
+
+            // Assert
+            val expected = EarnRowUM(
+                label = stringReference("APY"),
+                value = stringReference("5.5%"),
+                onInfoClick = null,
+                onValueClick = null,
+            )
+            assertThat(actual).containsExactly(expected)
+        }
+
         @Test
         fun `GIVEN product with legal links WHEN confirm THEN legal opens each document`() {
             // Arrange
@@ -461,21 +573,32 @@ internal class EarnFlowConverterTest {
             plan: TestPlan = TestPlan(),
             product: EarnFlowProduct = testFlowProduct,
             walletIcon: Int? = null,
+            isHoldToConfirm: Boolean = false,
             onLegalClick: (String) -> Unit = {},
+            appCurrency: AppCurrency? = AppCurrency.Default,
+            isAmountValid: Boolean = true,
         ) = converter.confirm(
             action = action,
             product = product,
             plan = plan,
             status = status,
-            appCurrency = AppCurrency.Default,
+            appCurrency = appCurrency,
             signing = signing,
             isFeeReady = true,
+            isAmountValid = isAmountValid,
             isPreparing = false,
             notifications = persistentListOf(),
             walletIcon = walletIcon,
+            isHoldToConfirm = isHoldToConfirm,
             callbacks = EarnConfirmCallbacks(onInfoClick = {}, onConfirm = {}, onLegalClick = onLegalClick),
         )
     }
+
+    data class WalletModel(val walletIcon: Int?, val isHoldToConfirm: Boolean, val expected: ConfirmButtonModel)
+
+    data class ConfirmButtonModel(val isHoldToConfirm: Boolean, val icon: TangemIconUM?)
+
+    data class EarningsModel(val earnings: BigDecimal, val expected: String)
 
     data class VariantModel(val status: EarnTxStatus, val expected: TangemStatusScreen.Variant)
 
@@ -493,6 +616,7 @@ internal class EarnFlowConverterTest {
 private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
 private val PLAN_NOTICE = stringReference("From the plan")
 private val ACTION_NOTICE = stringReference("From the action")
+private val EARNINGS_LABEL = stringReference("Projected earnings")
 
 private fun testHowItWorks() = EarnHowItWorks(
     title = stringReference("How it works"),

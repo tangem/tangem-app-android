@@ -9,6 +9,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.tangempay.TEST_CLABE
 import com.tangem.data.tangempay.speiBankAccountDetails
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.OrderStep
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
@@ -41,6 +42,7 @@ import com.tangem.spend.datasource.tangempay.models.response.OrderResponse
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -59,17 +61,20 @@ internal class DefaultBankOfframpOrderRepositoryTest {
 
     private val tangemPayApi: TangemPayApi = mockk()
     private val requestPerformer: TangemPayRequestPerformer = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     private val repository = DefaultBankOfframpOrderRepository(
         tangemPayApi = tangemPayApi,
         requestPerformer = requestPerformer,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     private val savedRecipientRequest = orderRequest(BankOfframpRecipient.Saved(bankAccountId = "acc-1"))
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestPerformer)
+        clearMocks(tangemPayApi, requestPerformer, moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
 
         coEvery {
             requestPerformer.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -354,6 +359,26 @@ internal class DefaultBankOfframpOrderRepositoryTest {
 
             // Assert
             assertThat(actual.mapLeft(::withoutCause)).isEqualTo(model.expected.left())
+        }
+
+        @Test
+        fun `GIVEN MXN off and the region code WHEN createRoute THEN unknown error keeping the code`() = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns false
+            coEvery {
+                requestPerformer.performRequest<Any>(userWalletId = any(), requestBlock = any())
+            } returns TangemPayApiError.BankOfframpRegionUnsupported.left()
+
+            // Act
+            val actual = createSavedRecipientRoute()
+
+            // Assert
+            val expected = BankOfframpError.Unknown(
+                cause = null,
+                isOutcomeUnknown = false,
+                errorCode = TangemPayApiError.BankOfframpRegionUnsupported.errorCode,
+            )
+            assertThat(actual.mapLeft(::withoutCause)).isEqualTo(expected.left())
         }
 
         @ParameterizedTest

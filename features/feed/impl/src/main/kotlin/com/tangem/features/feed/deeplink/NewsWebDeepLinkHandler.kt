@@ -2,8 +2,8 @@ package com.tangem.features.feed.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import javax.inject.Inject
 
 /**

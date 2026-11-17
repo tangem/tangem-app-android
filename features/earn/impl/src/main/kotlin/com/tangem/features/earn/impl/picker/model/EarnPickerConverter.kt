@@ -1,8 +1,9 @@
 package com.tangem.features.earn.impl.picker.model
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
@@ -48,8 +49,8 @@ internal class EarnPickerConverter @Inject constructor(
         )
 
         return EarnPickerUM(
-            title = EarnPickerTexts.title,
-            subtitle = EarnPickerTexts.subtitle,
+            title = resourceReference(R.string.earn_yield_picker_title),
+            subtitle = resourceReference(R.string.earn_yield_picker_subtitle),
             barTitle = product.title,
             products = products(summaries, selectedId, intents),
             content = content(product, state, intents),
@@ -68,9 +69,9 @@ internal class EarnPickerConverter @Inject constructor(
         )
 
         return EarnPickerUM(
-            title = EarnPickerTexts.title,
-            subtitle = EarnPickerTexts.subtitle,
-            barTitle = EarnPickerTexts.title,
+            title = resourceReference(R.string.earn_yield_picker_title),
+            subtitle = resourceReference(R.string.earn_yield_picker_subtitle),
+            barTitle = resourceReference(R.string.earn_yield_picker_title),
             products = persistentListOf(),
             content = content,
             cta = button,

@@ -672,6 +672,9 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                     modifier: Modifier,
                 ) {
                 }
+
+                @Composable
+                override fun GroupedRow(state: TangemPayMainUM, isBalanceHidden: Boolean, modifier: Modifier) = Unit
             },
             moneyAccountComponent = object : MoneyAccountMainBlockComponent {
                 override fun LazyListScope.moneyAccountMainContent(
@@ -680,6 +683,9 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                     modifier: Modifier,
                 ) {
                 }
+
+                @Composable
+                override fun GroupedRow(state: MoneyAccountMainUM, isBalanceHidden: Boolean, modifier: Modifier) = Unit
             },
             polymarketComponent = object : PolymarketWalletBlockComponent {
                 override fun LazyListScope.polymarketWalletBlockContent(

@@ -21,6 +21,9 @@ class SupportedAccountTypes @Inject constructor(
             if (collectiblesFeatureToggles.isCollectiblesEnabled) add(WalletAccountDTO.Type.COLLECTIBLES)
         }
 
+    val query: String
+        get() = types.joinToString(separator = ",") { it.name.lowercase() }
+
     fun isSupported(type: WalletAccountDTO.Type): Boolean = type in types
 
     fun isSupported(record: WalletAccountDTO): Boolean = isSupported(record.type ?: WalletAccountDTO.Type.CRYPTO)

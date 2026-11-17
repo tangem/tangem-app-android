@@ -30,6 +30,8 @@ internal sealed interface WalletUM {
 
     val moneyAccountMainUM: MoneyAccountMainUM
 
+    val tangemPayGroupUM: TangemPayGroupUM
+
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
 
     val jointOperationBanners: ImmutableList<JointOperationBannerUM>
@@ -50,6 +52,7 @@ internal sealed interface WalletUM {
         override val moneyAccountMainUM: MoneyAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
+        override val tangemPayGroupUM: TangemPayGroupUM = TangemPayGroupUM.Hidden,
         val areActionsAvailable: Boolean = false,
         override val isMarketingBlockVisible: Boolean = false,
         /**
@@ -72,6 +75,7 @@ internal sealed interface WalletUM {
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
         override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty
+        override val tangemPayGroupUM: TangemPayGroupUM = TangemPayGroupUM.Hidden
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
         override val isMarketingBlockVisible: Boolean = false

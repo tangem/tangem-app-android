@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.onboardingV2.api)
     api(projects.features.wallet.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.introduction.api)
     implementation(projects.features.mcp.api)
 
     /* Project - Core */

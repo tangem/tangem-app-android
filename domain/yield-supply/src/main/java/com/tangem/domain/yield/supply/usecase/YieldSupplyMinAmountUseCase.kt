@@ -2,8 +2,7 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import arrow.core.Either.Companion.catch
-import arrow.core.getOrElse
-import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCoin
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.QuoteStatus
@@ -27,24 +26,26 @@ class YieldSupplyMinAmountUseCase(
     private val feeRepository: FeeRepository,
     private val quotesRepository: QuotesRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
 ) {
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        isHeldOutsidePortfolio: Boolean = false,
     ): Either<Throwable, BigDecimal> = catch {
         val feeWithoutGas = feeRepository.getEthereumFeeWithoutGas(userWalletId, cryptoCurrencyStatus.currency)
 
         val fiatRate = cryptoCurrencyStatus.value.fiatRate ?: error("Fiat rate is missing")
         require(fiatRate > BigDecimal.ZERO) { "Fiat rate for token must be > 0" }
 
-        val accountStatusList = singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
-            ?: error("Account status list is missing: $userWalletId")
-
-        val nativeCryptoCurrency = accountStatusList.getCoin(cryptoCurrencyStatus.currency)
-            .getOrElse {
-                error("Unable to find coin for network ID: ${cryptoCurrencyStatus.currency.network.id}")
-            }
+        val nativeCryptoCurrency = findNativeCoin(
+            userWalletId = userWalletId,
+            currency = cryptoCurrencyStatus.currency,
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio,
+            singleAccountListSupplier = singleAccountListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+        )
 
         val quotes =
             quotesRepository.getMultiQuoteSyncOrNull(setOfNotNull(nativeCryptoCurrency.id.rawCurrencyId))

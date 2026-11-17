@@ -31,6 +31,7 @@ import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.introduction.AddWalletComponent
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
@@ -68,6 +69,11 @@ internal class WelcomeModel @Inject constructor(
 
     val uiState: StateFlow<WelcomeUM>
         field = MutableStateFlow<WelcomeUM>(WelcomeUM.Plain)
+
+    val addWalletSheetRequests: SharedFlow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    val addWalletModelCallbacks = AddWalletModelCallbacks()
 
     private val walletsFetcher = userWalletsFetcherFactory.create(
         messageSender = uiMessageSender,
@@ -192,8 +198,13 @@ internal class WelcomeModel @Inject constructor(
         if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
             scanCard()
         } else {
-            router.push(AppRoute.CreateWalletSelection)
+            addWalletSheetRequests.tryEmit(Unit)
         }
+    }
+
+    inner class AddWalletModelCallbacks : AddWalletComponent.ModelCallbacks {
+
+        override fun onAddCardClick() = scanCard()
     }
 
     private fun scanCard() {

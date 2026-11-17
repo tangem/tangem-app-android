@@ -9,7 +9,6 @@ import com.tangem.core.ui.message.ModalMessage
 import com.tangem.core.ui.message.modalMessage
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_24
-import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.CloseMethod
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ContactSupportClicked
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.EntryPoint
@@ -19,25 +18,31 @@ import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Pop
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.PopupShown
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ProvideInformationClicked
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.Source
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import java.util.concurrent.atomic.AtomicBoolean
 
 class KycAdditionalInfoNotice(
-    private val accountType: AccountType,
+    private val account: KycAdditionalInfoAccount,
+    private val popupStore: KycAdditionalInfoPopupStore,
     private val analytics: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val onProvideInformation: () -> Unit,
     private val onContactSupport: () -> Unit,
 ) {
 
+    private val accountType = account.accountType
+
     private var isRequired: Boolean = false
 
-    fun onStatus(isRequired: Boolean, isPopupAllowed: Boolean) {
+    suspend fun onStatus(isRequired: Boolean, isPopupAllowed: Boolean) {
         val hasAppeared = isRequired && !this.isRequired
         this.isRequired = isRequired
+        if (!isRequired) popupStore.reset(account)
         if (!hasAppeared) return
 
         analytics.send(NoticeShown(accountType = accountType, placement = Placement.ACCOUNT_BLOCK))
-        if (isPopupAllowed) showPopup()
+        if (isPopupAllowed && popupStore.tryMarkShown(account)) showPopup()
     }
 
     fun onBannerProvideInformationClick() {

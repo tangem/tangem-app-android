@@ -24,6 +24,8 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.OwnerKeyIndex
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
@@ -73,6 +75,8 @@ internal class JointAccountMembersModel @Inject constructor(
     private val pollingCoordinator: JointAccountPollingCoordinator,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val issueJointAccountInviteUseCase: IssueJointAccountInviteUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
@@ -319,24 +323,34 @@ internal class JointAccountMembersModel @Inject constructor(
         if (!issuingSlot.compareAndSet(expect = null, update = slot)) return
 
         modelScope.launch {
-            issueJointAccountInviteUseCase(accountId = accountId, slot = slot)
-                .onRight { invite ->
-                    bottomSheetNavigation.activate(
-                        JointAccountMembersSheetConfig.InviteMember(
-                            message = inviteSharing.message(inviteId = invite.id, accountName = accountName),
-                        ),
-                    )
-                }
-                .onLeft { error ->
-                    TangemLogger.e("Failed to issue the invite of slot $slot", error.cause)
-                    if (error is JointAccountInviteIssueError.Failed) {
-                        uiMessageSender.send(
-                            SnackbarMessage(message = resourceReference(CoreUiR.string.common_unknown_error)),
-                        )
-                    }
-                }
+            if (ensureWalletLinked()) issueInvite(accountId = accountId, slot = slot, accountName = accountName)
             issuingSlot.value = null
         }
+    }
+
+    private suspend fun ensureWalletLinked(): Boolean {
+        val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull() ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
+    }
+
+    private suspend fun issueInvite(accountId: AccountId, slot: Int, accountName: TextReference) {
+        issueJointAccountInviteUseCase(accountId = accountId, slot = slot)
+            .onRight { invite ->
+                bottomSheetNavigation.activate(
+                    JointAccountMembersSheetConfig.InviteMember(
+                        message = inviteSharing.message(inviteId = invite.id, accountName = accountName),
+                    ),
+                )
+            }
+            .onLeft { error ->
+                TangemLogger.e("Failed to issue the invite of slot $slot", error.cause)
+                if (error is JointAccountInviteIssueError.Failed) {
+                    uiMessageSender.send(
+                        SnackbarMessage(message = resourceReference(CoreUiR.string.common_unknown_error)),
+                    )
+                }
+            }
     }
 
     private fun onConfirmAddressClick(cryptoAccountId: String) {

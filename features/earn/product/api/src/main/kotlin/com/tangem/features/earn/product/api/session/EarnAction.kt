@@ -2,9 +2,10 @@ package com.tangem.features.earn.product.api.session
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import java.math.BigDecimal
 
@@ -46,11 +47,10 @@ data class Deposit(override val isGaslessAllowed: Boolean = false) : EarnFlowAct
 
     override val input: EarnActionInput = EarnActionInput.Amount(EarnActionInput.Amount.Source.Wallet)
 
-    // Temporary plain text: replace with a localized string resource.
-    override val label: TextReference = stringReference("Deposit")
+    override val label: TextReference = resourceReference(R.string.lending_deposit_button)
 
     override fun title(productTitle: TextReference): TextReference =
-        combinedReference(stringReference("Deposit to "), productTitle)
+        resourceReference(R.string.earn_deposit_title, wrappedList(productTitle))
 
     companion object {
         const val ID = "deposit"
@@ -66,12 +66,12 @@ data class Withdraw(
 
     override val input: EarnActionInput = EarnActionInput.Amount(EarnActionInput.Amount.Source.Position)
 
-    // Temporary plain text: replace with a localized string resource.
-    override val label: TextReference = stringReference("Withdraw")
+    override val label: TextReference = resourceReference(R.string.lending_withdraw_button)
 
-    override fun title(productTitle: TextReference): TextReference = stringReference("Withdrawal")
+    override fun title(productTitle: TextReference): TextReference = resourceReference(R.string.common_withdrawal)
 
-    override fun confirmTitle(productTitle: TextReference): TextReference = stringReference("Withdrawal")
+    override fun confirmTitle(productTitle: TextReference): TextReference =
+        resourceReference(R.string.common_withdrawal)
 
     companion object {
         const val ID = "withdraw"

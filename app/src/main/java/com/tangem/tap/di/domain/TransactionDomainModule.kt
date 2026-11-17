@@ -423,14 +423,12 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideCreateAndSendTronGaslessTransactionUseCase(
         transactionRepository: TransactionRepository,
-        walletManagersFacade: WalletManagersFacade,
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
         gaslessSignerProvider: GaslessSignerProvider,
     ): CreateAndSendTronGaslessTransactionUseCase {
         return CreateAndSendTronGaslessTransactionUseCase(
             transactionRepository = transactionRepository,
-            walletManagersFacade = walletManagersFacade,
             tronGaslessTransactionRepository = tronGaslessTransactionRepository,
             singleAccountListSupplier = singleAccountListSupplier,
             gaslessSignerProvider = gaslessSignerProvider,
@@ -440,13 +438,11 @@ internal object TransactionDomainModule {
     @Provides
     @Singleton
     fun provideCreateAndSendSolanaGaslessTransactionUseCase(
-        walletManagersFacade: WalletManagersFacade,
         solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         gaslessSignerProvider: GaslessSignerProvider,
     ): CreateAndSendSolanaGaslessTransactionUseCase {
         return CreateAndSendSolanaGaslessTransactionUseCase(
-            walletManagersFacade = walletManagersFacade,
             solanaGaslessTransactionRepository = solanaGaslessTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             gaslessSignerProvider = gaslessSignerProvider,

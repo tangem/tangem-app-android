@@ -22,11 +22,15 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.features.polymarket.impl.category.ui.state.PolymarketCategoryUM
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
+import com.tangem.features.polymarket.impl.common.feed.ui.POLYMARKET_FEED_STATUS_KEY
 import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketScrollIdleEffect
 import com.tangem.features.polymarket.impl.common.feed.ui.PolymarketVisibleEventsEffect
 import com.tangem.features.polymarket.impl.common.feed.ui.polymarketEventsSection
 import com.tangem.features.polymarket.impl.common.feed.ui.toTangemTabItemUM
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBanner
 import kotlinx.collections.immutable.toImmutableList
+
+private const val KEY_FAST_TRADING_BANNER = "fast_trading_banner"
 
 @Suppress("LongParameterList")
 @Composable
@@ -73,17 +77,27 @@ internal fun PolymarketCategoryScreen(
                             listState = listState,
                             feedKey = state.selection,
                             onVisibleEventsChange = onVisibleEventsChange,
+                            excludedKeys = setOf(KEY_FAST_TRADING_BANNER, POLYMARKET_FEED_STATUS_KEY),
                         )
                         PolymarketScrollIdleEffect(listState, state.selection, onScrollIdle)
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             state = listState,
                             contentPadding = PaddingValues(
-                                top = padding.calculateTopPadding() + 12.dp,
+                                top = padding.calculateTopPadding(),
                                 bottom = padding.calculateBottomPadding() + 16.dp,
                             ),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
+                            item(key = KEY_FAST_TRADING_BANNER) {
+                                state.fastTradingBanner?.let { banner ->
+                                    PolymarketFastTradingBanner(
+                                        state = banner,
+                                        modifier = Modifier
+                                            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 12.dp),
+                                    )
+                                }
+                            }
                             polymarketEventsSection(content = state.content, skeletonCount = 6)
                         }
                     }

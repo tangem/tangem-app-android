@@ -22,6 +22,7 @@ import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orEmpty
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -42,7 +43,7 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
             onDismissRequest = sheet.onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        title = { SheetHeader(title = R.string.common_choose_network, onClose = sheet.onDismiss) },
+        title = { SheetHeader(title = resourceReference(R.string.common_choose_network), onClose = sheet.onDismiss) },
     ) {
         tokens?.items?.fastForEach { item -> TokenRow(item = item) }
     }
@@ -54,9 +55,7 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
             onDismissRequest = sheet.onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        title = {
-            SheetHeader(title = R.string.tangempay_withdraw_bank_choose_transfer_method, onClose = sheet.onDismiss)
-        },
+        title = { SheetHeader(title = routes?.title.orEmpty(), onClose = sheet.onDismiss) },
     ) {
         routes?.items?.fastForEach { item -> RouteRow(item = item) }
         routes?.networkFeeNote?.let { note -> NetworkFeeNote(note = note) }
@@ -64,9 +63,9 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
 }
 
 @Composable
-private fun SheetHeader(title: Int, onClose: () -> Unit) {
+private fun SheetHeader(title: TextReference, onClose: () -> Unit) {
     TangemModal.TopNavigation(
-        title = resourceReference(title),
+        title = title,
         onClose = onClose,
     )
 }

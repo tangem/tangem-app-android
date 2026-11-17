@@ -2,7 +2,7 @@ package com.tangem.tap.common.pushes
 
 import android.net.Uri
 import androidx.core.net.toUri
-import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.utils.extensions.uriValidate

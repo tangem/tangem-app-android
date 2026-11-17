@@ -22,7 +22,6 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
-import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.McpSession
@@ -32,14 +31,12 @@ import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.walletconnect.ConnectionsAnalyticEvents
-import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
 import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
 import com.tangem.features.walletconnect.connections.entity.WcConnections
@@ -68,7 +65,6 @@ internal class WcConnectionsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val wcPairService: WcPairService,
     private val mcpRequestService: McpRequestService,
-    private val mcpFeatureToggles: McpFeatureToggles,
     private val mcpRepository: McpRepository,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
@@ -86,20 +82,10 @@ internal class WcConnectionsModel @Inject constructor(
     private val isAgentsReloading = MutableStateFlow(value = false)
 
     /** The repository keeps the list hot, so the screen only has to collect it. */
-    private val mcpSessions: Flow<McpSessionsLce> = if (mcpFeatureToggles.isMcpEnabled) {
-        mcpRepository.getSessions()
-    } else {
-        flowOf(emptyList<McpSession>().lceContent())
-    }
+    private val mcpSessions: Flow<McpSessionsLce> = mcpRepository.getSessions()
 
     init {
-        analytics.send(
-            if (mcpFeatureToggles.isMcpEnabled) {
-                ConnectionsAnalyticEvents.ScreenOpened()
-            } else {
-                WcAnalyticEvents.ScreenOpened()
-            },
-        )
+        analytics.send(ConnectionsAnalyticEvents.ScreenOpened())
         listenQrUpdates()
         listenWcSessions()
     }
@@ -136,8 +122,6 @@ internal class WcConnectionsModel @Inject constructor(
      * too — anything else stays on the WalletConnect path.
      */
     private fun parseMcpUserCode(qrCode: String): String? {
-        if (!mcpFeatureToggles.isMcpEnabled) return null
-
         val uri = runCatching { Uri.parse(qrCode) }.getOrNull() ?: return null
         if (!McpDeepLinkHandler.canHandle(uri)) return null
 
@@ -216,16 +200,10 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     private fun disconnectAllSessions() {
-        analytics.send(
-            if (mcpFeatureToggles.isMcpEnabled) {
-                ConnectionsAnalyticEvents.ButtonDisconnectAll()
-            } else {
-                WcAnalyticEvents.ButtonDisconnectAll()
-            },
-        )
+        analytics.send(ConnectionsAnalyticEvents.ButtonDisconnectAll())
         modelScope.launch {
             coroutineScope {
-                if (mcpFeatureToggles.isMcpEnabled) launch { mcpRepository.revokeAllSessions() }
+                launch { mcpRepository.revokeAllSessions() }
                 launch { wcDisconnectUseCase.disconnectAll() }
             }
 
