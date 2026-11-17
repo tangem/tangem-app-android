@@ -71,6 +71,7 @@ internal fun TangemButtonContainer(
     interactionSource: MutableInteractionSource,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     hold: HoldToConfirmSpec? = null,
 ) {
     val isLoaderInline = isLoading && loadingText != null
@@ -106,6 +107,7 @@ internal fun TangemButtonContainer(
             .alpha(disabledAlpha)
             .then(hold.chromeModifier(backgroundColor, isEnabled, interactionSource)),
         onClick = onClick,
+        onLongClick = onLongClick,
         enabled = isEnabled,
         color = if (hold != null) Color.Transparent else backgroundColor,
         border = colorTokens.defaultBorderColor?.let { BorderStroke(width = 1.dp, color = it) },
