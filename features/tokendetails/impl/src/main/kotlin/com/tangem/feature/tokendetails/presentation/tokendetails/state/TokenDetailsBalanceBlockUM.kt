@@ -52,6 +52,13 @@ internal sealed class TokenDetailsBalanceBlockUM {
                 TokenBalanceTypeUM.Type.ALL -> displayFiatBalanceAll
                 TokenBalanceTypeUM.Type.AVAILABLE -> displayFiatBalanceAvailable ?: displayFiatBalanceAll
             }
+
+        /** The ticking value is the total, so the Available balance stays still */
+        val tickingFiatBalance: String?
+            get() = displayYieldSupplyFiatBalance.takeIf { tokenBalanceTypeUM.type == TokenBalanceTypeUM.Type.ALL }
+
+        val tickingCryptoBalance: String?
+            get() = displayYieldSupplyCryptoBalance.takeIf { tokenBalanceTypeUM.type == TokenBalanceTypeUM.Type.ALL }
     }
 
     data class Error(

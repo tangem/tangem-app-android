@@ -152,7 +152,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
     SpacerH(8.dp)
     AnimatedBalance(
         modifier = Modifier.testTag(TokenDetailsScreenTestTags.BALANCE_FIAT),
-        yieldBalance = state.displayYieldSupplyFiatBalance,
+        yieldBalance = state.tickingFiatBalance,
         fallbackBalance = state.displayFiatBalance,
         style = TangemTheme.typography2.titleRegular44,
         color = TangemTheme.colors3.text.primary,
@@ -160,7 +160,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
     )
     SpacerH(10.dp)
     AnimatedBalance(
-        yieldBalance = state.displayYieldSupplyCryptoBalance,
+        yieldBalance = state.tickingCryptoBalance,
         fallbackBalance = state.displayCryptoBalance,
         style = TangemTheme.typography2.bodySemibold16,
         color = TangemTheme.colors3.text.secondary,
