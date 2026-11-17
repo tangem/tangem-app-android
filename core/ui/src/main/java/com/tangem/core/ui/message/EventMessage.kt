@@ -2,12 +2,14 @@ package com.tangem.core.ui.message
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetDsl
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.bottomsheets.message.OLD_DSL_DEPRECATION
 import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.modal.MessageModalBuilder
@@ -43,6 +45,34 @@ data class ToastMessage(
         Long,
     }
 }
+
+/**
+ * Shows a design-system [TangemToast] in the app-wide [com.tangem.core.ui.ds2.toast.TangemToastStack]: on top of
+ * the screen, its modals and bottom sheets, newest on top. It survives closing the screen that sent it.
+ *
+ * @param label The message, up to three lines.
+ * @param appearance Leading icon and its tint. Optional, [TangemToast.Appearance.Neutral] by default.
+ * @param icon Leading icon of the [TangemToast.Appearance.Neutral] appearance; `null` hides it. Ignored by the status
+ * appearances, which use their fixed icon.
+ * @param duration How long the toast stays on screen. A label that wraps onto several lines always stays for
+ * [TangemToast.Duration.Long]. Optional, [TangemToast.Duration.Short] by default.
+ * @param actionLabel The label of the action button. The button shows only when [action] is set too.
+ * @param action Invoked when the action button is tapped; the toast is dismissed right after.
+ * @param isClosable Whether the toast has a close button. `true` by default.
+ * @param onDismissRequest Invoked when the toast is dismissed by its timeout, the close button or newer toasts
+ * pushing it out — not by the action button.
+ * */
+@Immutable
+data class TangemToastMessage(
+    val label: TextReference,
+    val appearance: TangemToast.Appearance = TangemToast.Appearance.Neutral,
+    val icon: ImageVector? = null,
+    val duration: TangemToast.Duration = TangemToast.Duration.Short,
+    val actionLabel: TextReference? = null,
+    val action: (() -> Unit)? = null,
+    val isClosable: Boolean = true,
+    val onDismissRequest: () -> Unit = {},
+) : EventMessage
 
 /**
  * Shows a snackbar.

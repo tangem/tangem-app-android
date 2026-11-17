@@ -24,7 +24,9 @@ import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
+import com.tangem.core.ui.ds2.toast.TangemToastStack
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.LocalToastStackState
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -48,6 +50,7 @@ fun ModalBottomSheetWithBackHandling(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val topSnackbarHostState = LocalTopSnackbarHostState.current
+    val toastStackState = LocalToastStackState.current
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -80,6 +83,11 @@ fun ModalBottomSheetWithBackHandling(
                             .padding(horizontal = 16.dp)
                             .padding(top = 24.dp),
                         hostState = topSnackbarHostState,
+                    )
+                    TangemToastStack(
+                        state = toastStackState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        placement = TangemToastStack.Placement.Sheet,
                     )
                 }
             }
