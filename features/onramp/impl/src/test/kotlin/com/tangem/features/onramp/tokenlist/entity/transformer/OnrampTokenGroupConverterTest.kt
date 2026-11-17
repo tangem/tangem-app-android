@@ -86,7 +86,7 @@ internal class OnrampTokenGroupConverterTest {
         val row = converter.convert(accountList, isAccountsMode = true).single().rows.single() as OnrampTokenRowUM.Available
 
         // Assert
-        assertThat(row.state).isInstanceOf(TangemTokenRow.State.Content::class.java)
+        assertThat((row.state as TangemTokenRow.State.Network).network).isEqualTo(stringReference(ethereum.symbol))
         assertThat(row.id).isEqualTo(ethereum.id.value)
     }
 

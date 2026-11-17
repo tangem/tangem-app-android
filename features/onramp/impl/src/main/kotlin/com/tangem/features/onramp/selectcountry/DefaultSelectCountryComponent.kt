@@ -10,8 +10,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.selectcountry.model.OnrampSelectCountryModel
 import com.tangem.features.onramp.selectcountry.ui.OnrampCountryList
+import com.tangem.features.onramp.selectcountry.ui.OnrampCountryListDs
 import com.tangem.features.onramp.selectcountry.ui.SelectCountryBottomSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,6 +22,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultSelectCountryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: SelectCountryComponent.Params,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : SelectCountryComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampSelectCountryModel = getOrCreateModel(params)
@@ -31,6 +34,7 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
+        val isNewDesignSystemEnabled = onrampFeatureToggles.isNewDesignSystemEnabled
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
                 isShown = true,
@@ -40,7 +44,14 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
         }
         SelectCountryBottomSheet(
             config = bottomSheetConfig,
-            content = { OnrampCountryList(state = state, modifier = Modifier.fillMaxSize()) },
+            addBottomInsets = !isNewDesignSystemEnabled,
+            content = {
+                if (isNewDesignSystemEnabled) {
+                    OnrampCountryListDs(state = state, onCloseClick = ::dismiss, modifier = Modifier.fillMaxSize())
+                } else {
+                    OnrampCountryList(state = state, modifier = Modifier.fillMaxSize())
+                }
+            },
         )
     }
 

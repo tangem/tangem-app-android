@@ -1,6 +1,7 @@
 package com.tangem.store.datasource.surveysparrow
 
 import com.tangem.store.datasource.surveysparrow.models.CreateSurveySparrowResponseBody
+import com.tangem.store.datasource.surveysparrow.models.SurveySparrowQuestionsDto
 import com.tangem.store.datasource.surveysparrow.models.SurveySparrowResponsesDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -18,4 +19,12 @@ interface SurveySparrowApi {
 
     @POST("v3/responses")
     suspend fun createResponse(@Body body: CreateSurveySparrowResponseBody)
+
+    /** A null [languageLabel] asks for the survey's base language. */
+    @GET("v3/questions")
+    suspend fun getQuestions(
+        @Query("survey_id") surveyId: Long,
+        @Query("limit") limit: Int,
+        @Query("language_label") languageLabel: String?,
+    ): SurveySparrowQuestionsDto
 }

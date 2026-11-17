@@ -25,13 +25,13 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -621,14 +621,25 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_verified")
 
     @Serializable
-    data object TangemPayOnboardingSuccess : AppRoute(path = "/tangem_pay_onboarding_success")
+    data class TangemPayOnboardingSuccess(
+        @SerialName("product") val product: Product,
+    ) : AppRoute(path = "/tangem_pay_onboarding_success") {
+
+        @Serializable
+        enum class Product {
+            @SerialName("tangem_pay")
+            TANGEM_PAY,
+
+            @SerialName("money_account")
+            MONEY_ACCOUNT,
+        }
+    }
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
 
     @Serializable
     data class TangemPayEligibility(
-        val product: TangemPayProduct,
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/tangem_pay_eligibility")
 
@@ -639,6 +650,24 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
+
+    /**
+     * @property stage the lifecycle stage label of the entry point, empty when it has none
+     * @property repeatAfterDays how long an answer closes the survey on this device; null closes it for good
+     * @property isAlreadyAnswered opens straight on the thank-you screen, for a survey answered within its term
+     */
+    @Serializable
+    data class NativeSurvey(
+        val surveyId: Long,
+        val source: Source,
+        val stage: String,
+        val repeatAfterDays: Int?,
+        val userWalletId: UserWalletId,
+        val isAlreadyAnswered: Boolean,
+    ) : AppRoute(path = "/native_survey/$surveyId") {
+
+        enum class Source { SHEET, PUSH, BANNER, LINK }
+    }
 
     @Serializable
     data class YieldSupplyEntry(

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -36,48 +37,56 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 internal fun TangemPayMainBlockContent(
     state: TangemPayMainUM,
     isBalanceHidden: Boolean,
+    isGrouped: Boolean,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
         is TangemPayMainUM.Empty -> Unit
-        is TangemPayMainUM.Loading -> TangemPayMainLoading(modifier)
-        is TangemPayMainUM.SelectPlan -> TangemPayRow(
-            subtitle = resourceReference(R.string.tangempay_main_select_plan),
-            modifier = modifier,
-            onClick = state.onClick,
-        )
+        is TangemPayMainUM.Loading -> TangemPayMainLoading(isGrouped = isGrouped, modifier = modifier)
         is TangemPayMainUM.UnderReview -> TangemPayRow(
+            isGrouped = isGrouped,
             subtitle = state.subtitle,
             modifier = modifier,
             onClick = state.onClick,
         )
         is TangemPayMainUM.ActionRequired -> TangemPayRow(
+            isGrouped = isGrouped,
             subtitle = resourceReference(R.string.tangempay_action_required_title),
             subtitleColor = TangemTheme.colors3.text.status.warning,
             modifier = modifier,
             onClick = state.onClick,
         )
         is TangemPayMainUM.IssuingCard -> TangemPayRow(
+            isGrouped = isGrouped,
             subtitle = resourceReference(R.string.money_account_main_status_activating),
             modifier = modifier,
             onClick = state.onClick,
         )
         is TangemPayMainUM.FailedToIssue -> TangemPayRow(
+            isGrouped = isGrouped,
             subtitle = resourceReference(R.string.tangempay_failed_to_issue_card),
             modifier = modifier,
             showError = true,
             onClick = state.onClick,
         )
-        is TangemPayMainUM.Content -> TangemPayMainContent(state, isBalanceHidden, modifier)
+        is TangemPayMainUM.Content -> TangemPayMainContent(
+            payMainUM = state,
+            isBalanceHidden = isBalanceHidden,
+            isGrouped = isGrouped,
+            modifier = modifier,
+        )
         is TangemPayMainUM.TemporaryUnavailable -> TangemPayUnavailable(
+            isGrouped = isGrouped,
             subtitle = stringReference(DASH_SIGN),
             modifier = modifier,
         )
         is TangemPayMainUM.SyncNeeded -> TangemPayUnavailable(
+            isGrouped = isGrouped,
             subtitle = resourceReference(R.string.tangempay_payment_account_sync_needed),
             modifier = modifier,
         )
         is TangemPayMainUM.ExposedDevice -> TangemPayRow(
+            isGrouped = isGrouped,
             subtitle = resourceReference(R.string.tangem_pay_rooted_device_subtitle),
             modifier = modifier,
         )
@@ -88,34 +97,54 @@ internal fun TangemPayMainBlockContent(
 private fun TangemPayMainContent(
     payMainUM: TangemPayMainUM.Content,
     isBalanceHidden: Boolean,
+    isGrouped: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    TangemRow(
-        modifier = modifier.tangemPayCard(),
-        contentLead = TangemRowContentLead.Start,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
-        onClick = payMainUM.onClick,
-        startSlot = { TangemPayIssuedIcon() },
-        titleSlot = { TangemPayTitle() },
-        subtitleSlot = { TangemPaySubtitle(text = payMainUM.subtitle) },
-        valueSlot = {
-            TangemPayFiatAmount(
-                text = payMainUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                isBalanceFlickering = payMainUM.isBalanceFlickering,
-                isBalanceFromCache = payMainUM.shouldShowOnlyCacheWarning,
+    Box(modifier = modifier) {
+        TangemRow(
+            modifier = Modifier.tangemPayCard(isActionRequired = payMainUM.isActionRequired, isGrouped = isGrouped),
+            contentLead = TangemRowContentLead.Start,
+            verticalAlignment = TangemRowVerticalAlignment.Center,
+            onClick = payMainUM.onClick,
+            startSlot = { TangemPayIssuedIcon() },
+            titleSlot = { TangemPayTitle() },
+            subtitleSlot = {
+                TangemPaySubtitle(
+                    text = payMainUM.subtitle,
+                    color = if (payMainUM.isActionRequired) {
+                        TangemTheme.colors3.text.status.warning
+                    } else {
+                        TangemTheme.colors3.text.secondary
+                    },
+                )
+            },
+            valueSlot = {
+                TangemPayFiatAmount(
+                    text = payMainUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                    isBalanceFlickering = payMainUM.isBalanceFlickering,
+                    isBalanceFromCache = payMainUM.shouldShowOnlyCacheWarning,
+                )
+            },
+            subvalueSlot = {
+                TangemRowText(
+                    text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden),
+                    role = TangemRowTextRole.Subvalue,
+                )
+            },
+        )
+        if (payMainUM.isActionRequired && !isGrouped) {
+            TangemGlowRing(
+                modifier = Modifier.matchParentSize(),
+                variant = TangemGlowRing.Variant.Warning,
+                cornerRadius = 24.dp,
             )
-        },
-        subvalueSlot = {
-            TangemRowText(
-                text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden),
-                role = TangemRowTextRole.Subvalue,
-            )
-        },
-    )
+        }
+    }
 }
 
 @Composable
 private fun TangemPayRow(
+    isGrouped: Boolean,
     subtitle: TextReference,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
@@ -123,7 +152,7 @@ private fun TangemPayRow(
     showError: Boolean = false,
 ) {
     TangemRow(
-        modifier = modifier.tangemPayCard(),
+        modifier = modifier.tangemPayCard(isActionRequired = false, isGrouped = isGrouped),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = onClick,
@@ -151,9 +180,9 @@ private fun TangemPayRow(
 }
 
 @Composable
-private fun TangemPayUnavailable(subtitle: TextReference, modifier: Modifier = Modifier) {
+private fun TangemPayUnavailable(isGrouped: Boolean, subtitle: TextReference, modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.tangemPayCard(),
+        modifier = modifier.tangemPayCard(isActionRequired = false, isGrouped = isGrouped),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { TangemPayIcon() },
@@ -234,9 +263,9 @@ private fun TangemPayFiatAmount(text: AnnotatedString, isBalanceFlickering: Bool
 }
 
 @Composable
-private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
+private fun TangemPayMainLoading(isGrouped: Boolean, modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.tangemPayCard(),
+        modifier = modifier.tangemPayCard(isActionRequired = false, isGrouped = isGrouped),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
@@ -270,10 +299,15 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Modifier.tangemPayCard(): Modifier = this
-    .clip(RoundedCornerShape(24.dp))
-    .background(TangemTheme.colors3.bg.secondary)
-    .testTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+private fun Modifier.tangemPayCard(isActionRequired: Boolean, isGrouped: Boolean): Modifier = if (isGrouped) {
+    testTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+} else {
+    clip(RoundedCornerShape(24.dp))
+        .background(
+            if (isActionRequired) TangemTheme.colors3.bg.status.warningSubtle else TangemTheme.colors3.bg.secondary,
+        )
+        .testTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+}
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -287,6 +321,7 @@ private fun TangemPayMainBlockContent_Preview(
         TangemPayMainBlockContent(
             state = state,
             isBalanceHidden = false,
+            isGrouped = false,
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
@@ -303,7 +338,6 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
         TangemPayMainUM.FailedToIssue(onClick = {}),
         TangemPayMainUM.UnderReview(subtitle = resourceReference(R.string.tangempay_kyc_in_progress), onClick = {}),
         TangemPayMainUM.ActionRequired(onClick = {}),
-        TangemPayMainUM.SelectPlan(onClick = {}),
         TangemPayMainUM.IssuingCard(onClick = {}),
         TangemPayMainUM.Content(
             subtitle = TextReference.Str("*1234"),
@@ -312,6 +346,16 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
             balanceSubtitle = TextReference.Str("USDC"),
             onClick = {},
             shouldShowOnlyCacheWarning = true,
+            isActionRequired = false,
+        ),
+        TangemPayMainUM.Content(
+            subtitle = resourceReference(R.string.tangempay_action_required_title),
+            isBalanceFlickering = false,
+            balance = TextReference.Str("$ 101.56"),
+            balanceSubtitle = TextReference.Str("USD"),
+            onClick = {},
+            shouldShowOnlyCacheWarning = false,
+            isActionRequired = true,
         ),
     ),
 )

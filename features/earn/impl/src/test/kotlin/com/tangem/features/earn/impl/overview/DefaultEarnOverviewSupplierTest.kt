@@ -23,6 +23,7 @@ import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.core.getEmittedValues
@@ -67,7 +68,7 @@ internal class DefaultEarnOverviewSupplierTest {
     private val registry = EarnProductsRegistry(
         products = setOf(
             TestEarnProduct(id = lendingId, rank = 0),
-            TestEarnProduct(id = stakingId, rank = 1, hasLegacyBlock = true, badgeAccent = EarnBadgeAccent.Info),
+            TestEarnProduct(id = stakingId, rank = 1, badgeAccent = EarnBadgeAccent.Info),
             TestEarnProduct(id = vaultId, rank = 2),
         ),
         rateSources = setOf(TestEarnRateSource(id = yieldModeId, rank = 3)),
@@ -108,7 +109,7 @@ internal class DefaultEarnOverviewSupplierTest {
     inner class Projection {
 
         @Test
-        fun `GIVEN only staking with a position WHEN invoke THEN headline is set and banner is absent`() = runTest {
+        fun `GIVEN only staking with a position WHEN invoke THEN headline and banner both take staking`() = runTest {
             // Arrange
             val rate = createRate(fraction = "0.04", type = EarnRateType.APR)
             val route = TestRoute("pooled_staking")
@@ -127,7 +128,12 @@ internal class DefaultEarnOverviewSupplierTest {
                         route = route,
                         badgeAccent = EarnBadgeAccent.Info,
                     ),
-                    banner = null,
+                    banner = EarnBannerOverview(
+                        rate = rate,
+                        bestProductId = stakingId,
+                        activeCount = 1,
+                        totalPosition = BigDecimal("3"),
+                    ),
                 ),
             )
 
@@ -139,7 +145,7 @@ internal class DefaultEarnOverviewSupplierTest {
         }
 
         @Test
-        fun `GIVEN active staking and idle lending WHEN invoke THEN staking headline and banner without positions`() =
+        fun `GIVEN active staking and idle lending WHEN invoke THEN headline and banner take the active staking`() =
             runTest {
                 // Arrange
                 val stakingRate = createRate(fraction = "0.04", type = EarnRateType.APR)
@@ -161,7 +167,12 @@ internal class DefaultEarnOverviewSupplierTest {
                             route = route,
                             badgeAccent = EarnBadgeAccent.Info,
                         ),
-                        banner = EarnBannerOverview(rate = lendingRate, activeCount = 0, totalPosition = null),
+                        banner = EarnBannerOverview(
+                            rate = stakingRate,
+                            bestProductId = stakingId,
+                            activeCount = 1,
+                            totalPosition = BigDecimal("3"),
+                        ),
                     ),
                 )
 
@@ -189,7 +200,12 @@ internal class DefaultEarnOverviewSupplierTest {
                             badge = apyBadge("9.00"),
                             route = yieldModeRoute,
                         ),
-                        banner = EarnBannerOverview(rate = lendingRate, activeCount = 0, totalPosition = null),
+                        banner = EarnBannerOverview(
+                            rate = lendingRate,
+                            bestProductId = lendingId,
+                            activeCount = 0,
+                            totalPosition = null,
+                        ),
                     ),
                 )
 
@@ -228,7 +244,12 @@ internal class DefaultEarnOverviewSupplierTest {
             val expected = overviewsOf(
                 EarnOverview(
                     headline = headlineOf(rate = rate, isActive = false, badge = apyBadge("5.00"), route = null),
-                    banner = EarnBannerOverview(rate = rate, activeCount = 0, totalPosition = null),
+                    banner = EarnBannerOverview(
+                        rate = rate,
+                        bestProductId = lendingId,
+                        activeCount = 0,
+                        totalPosition = null,
+                    ),
                 ),
             )
             val frames = collectOverviews(productSummaries(lending))
@@ -264,7 +285,12 @@ internal class DefaultEarnOverviewSupplierTest {
                                 badge = apyBadge("5.00"),
                                 route = null,
                             ),
-                            banner = EarnBannerOverview(rate = lendingRate, activeCount = 0, totalPosition = null),
+                            banner = EarnBannerOverview(
+                                rate = lendingRate,
+                                bestProductId = lendingId,
+                                activeCount = 0,
+                                totalPosition = null,
+                            ),
                         ),
                         bnbId to EarnOverview(
                             headline = headlineOf(
@@ -311,7 +337,12 @@ internal class DefaultEarnOverviewSupplierTest {
                             route = null,
                             badgeAccent = EarnBadgeAccent.Info,
                         ),
-                        banner = null,
+                        banner = EarnBannerOverview(
+                            rate = rate,
+                            bestProductId = stakingId,
+                            activeCount = 1,
+                            totalPosition = BigDecimal("3"),
+                        ),
                     ),
                     source = model,
                 )
@@ -331,7 +362,7 @@ internal class DefaultEarnOverviewSupplierTest {
     inner class Banner {
 
         @Test
-        fun `GIVEN products with and without legacy block WHEN invoke THEN banner counts only the one without`() =
+        fun `GIVEN staking and lending positions WHEN invoke THEN banner counts both and takes the best rate`() =
             runTest {
                 // Arrange
                 val stakingRate = createRate(fraction = "0.08", type = EarnRateType.APR)
@@ -356,9 +387,10 @@ internal class DefaultEarnOverviewSupplierTest {
                             badgeAccent = EarnBadgeAccent.Info,
                         ),
                         banner = EarnBannerOverview(
-                            rate = lendingRate,
-                            activeCount = 1,
-                            totalPosition = BigDecimal("2"),
+                            rate = stakingRate,
+                            bestProductId = stakingId,
+                            activeCount = 2,
+                            totalPosition = BigDecimal("7"),
                         ),
                     ),
                 )
@@ -371,30 +403,35 @@ internal class DefaultEarnOverviewSupplierTest {
             }
 
         @Test
-        fun `GIVEN only legacy product without position WHEN invoke THEN headline is set and banner is absent`() =
-            runTest {
-                // Arrange
-                val rate = createRate(fraction = "0.04", type = EarnRateType.APR)
-                val staking = createSummary(productId = stakingId, rate = rate)
-                val expected = overviewsOf(
-                    EarnOverview(
-                        headline = headlineOf(
-                            rate = rate,
-                            isActive = false,
-                            badge = aprBadge("4.00"),
-                            route = null,
-                            badgeAccent = EarnBadgeAccent.Info,
-                        ),
-                        banner = null,
+        fun `GIVEN staking and lending without positions WHEN invoke THEN banner takes the higher rate`() = runTest {
+            // Arrange
+            val stakingRate = createRate(fraction = "0.031", type = EarnRateType.APR)
+            val staking = createSummary(productId = stakingId, rate = stakingRate)
+            val lending = createSummary(productId = lendingId, rate = createRate(fraction = "0.024"))
+            val expected = overviewsOf(
+                EarnOverview(
+                    headline = headlineOf(
+                        rate = stakingRate,
+                        isActive = false,
+                        badge = aprBadge("3.10"),
+                        route = null,
+                        badgeAccent = EarnBadgeAccent.Info,
                     ),
-                )
+                    banner = EarnBannerOverview(
+                        rate = stakingRate,
+                        bestProductId = stakingId,
+                        activeCount = 0,
+                        totalPosition = null,
+                    ),
+                ),
+            )
 
-                // Act
-                val actual = collectOverviews(productSummaries(staking))
+            // Act
+            val actual = collectOverviews(productSummaries(staking, lending))
 
-                // Assert
-                assertThat(actual).containsExactly(expected)
-            }
+            // Assert
+            assertThat(actual).containsExactly(expected)
+        }
 
         @Test
         fun `GIVEN a product missing in the registry WHEN invoke THEN headline is set and banner is absent`() =
@@ -460,7 +497,12 @@ internal class DefaultEarnOverviewSupplierTest {
                 val expected = overviewsOf(
                     EarnOverview(
                         headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
-                        banner = EarnBannerOverview(rate = rate, activeCount = 1, totalPosition = BigDecimal("2")),
+                        banner = EarnBannerOverview(
+                            rate = rate,
+                            bestProductId = lendingId,
+                            activeCount = 1,
+                            totalPosition = BigDecimal("2"),
+                        ),
                     ),
                 )
                 summaryFeed.emit(productSummaries(lending))
@@ -479,30 +521,42 @@ internal class DefaultEarnOverviewSupplierTest {
             }
 
         @Test
-        fun `GIVEN only counted product is full without position WHEN invoke THEN banner has no rate and positions`() =
-            runTest {
-                // Arrange
-                val vault = createSummary(
-                    productId = vaultId,
-                    rate = createRate(fraction = "0.06"),
-                    availability = ProductAvailability.Full,
-                )
-                val expected = overviewsOf(
-                    EarnOverview(
-                        headline = null,
-                        banner = EarnBannerOverview(rate = null, activeCount = 0, totalPosition = null),
+        fun `GIVEN open staking and closed lending WHEN invoke THEN headline and banner take staking`() = runTest {
+            // Arrange
+            val stakingRate = createRate(fraction = "0.0239", type = EarnRateType.APR)
+            val staking = createSummary(productId = stakingId, rate = stakingRate)
+            val lending = createSummary(
+                productId = lendingId,
+                rate = createRate(fraction = "0.0144"),
+                availability = ProductAvailability.Unavailable,
+            )
+            val expected = overviewsOf(
+                EarnOverview(
+                    headline = headlineOf(
+                        rate = stakingRate,
+                        isActive = false,
+                        badge = aprBadge("2.39"),
+                        route = null,
+                        badgeAccent = EarnBadgeAccent.Info,
                     ),
-                )
+                    banner = EarnBannerOverview(
+                        rate = stakingRate,
+                        bestProductId = stakingId,
+                        activeCount = 0,
+                        totalPosition = null,
+                    ),
+                ),
+            )
 
-                // Act
-                val actual = collectOverviews(productSummaries(vault))
+            // Act
+            val actual = collectOverviews(productSummaries(staking, lending))
 
-                // Assert
-                assertThat(actual).containsExactly(expected)
-            }
+            // Assert
+            assertThat(actual).containsExactly(expected)
+        }
 
         @Test
-        fun `GIVEN toggle on and product without legacy block WHEN invoke THEN banner is set and skips rate sources`() =
+        fun `GIVEN toggle on, a product and a rate source WHEN invoke THEN banner is set and skips the rate source`() =
             runTest {
                 // Arrange
                 val lendingRate = createRate(fraction = "0.05")
@@ -529,6 +583,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         ),
                         banner = EarnBannerOverview(
                             rate = lendingRate,
+                            bestProductId = lendingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("1"),
                         ),
@@ -541,6 +596,113 @@ internal class DefaultEarnOverviewSupplierTest {
                 // Assert
                 assertThat(actual).containsExactly(expected)
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BannerOfClosedProducts {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN every product is closed and none has a position WHEN invoke THEN banner is absent`(
+            model: ClosedProductsModel,
+        ) = runTest {
+            // Arrange
+            val expected = overviewsOf(EarnOverview(headline = null, banner = null))
+
+            // Act
+            val actual = collectOverviews(productSummaries(*model.products.toTypedArray()))
+
+            // Assert
+            assertThat(actual).containsExactly(expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            ClosedProductsModel(
+                name = "unavailable product",
+                products = listOf(closedSummary(lendingId, ProductAvailability.Unavailable)),
+            ),
+            ClosedProductsModel(
+                name = "full product",
+                products = listOf(closedSummary(vaultId, ProductAvailability.Full)),
+            ),
+            ClosedProductsModel(
+                name = "unavailable and full products",
+                products = listOf(
+                    closedSummary(lendingId, ProductAvailability.Unavailable),
+                    closedSummary(vaultId, ProductAvailability.Full),
+                ),
+            ),
+            ClosedProductsModel(
+                name = "unavailable staking and lending",
+                products = listOf(
+                    closedSummary(stakingId, ProductAvailability.Unavailable),
+                    closedSummary(lendingId, ProductAvailability.Unavailable),
+                ),
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BannerNextToClosedProducts {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an open or held product WHEN invoke THEN banner stays`(model: OpenOrHeldModel) = runTest {
+            // Act
+            val actual = collectOverviews(productSummaries(*model.products.toTypedArray()))
+
+            // Assert
+            assertThat(actual.single()[ETH_ID]?.banner).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<OpenOrHeldModel> {
+            val lendingRate = createRate(fraction = "0.0144")
+            val vaultRate = createRate(fraction = "0.06")
+            return listOf(
+                OpenOrHeldModel(
+                    name = "closed product with a position",
+                    products = listOf(
+                        closedSummary(
+                            productId = lendingId,
+                            availability = ProductAvailability.Unavailable,
+                            rate = lendingRate,
+                            position = EarnPositionSummary(cryptoAmount = BigDecimal("2")),
+                        ),
+                    ),
+                    expected = EarnBannerOverview(
+                        rate = lendingRate,
+                        bestProductId = lendingId,
+                        activeCount = 1,
+                        totalPosition = BigDecimal("2"),
+                    ),
+                ),
+                OpenOrHeldModel(
+                    name = "closed product next to an open one",
+                    products = listOf(
+                        closedSummary(lendingId, ProductAvailability.Unavailable, rate = lendingRate),
+                        createSummary(productId = vaultId, rate = vaultRate),
+                    ),
+                    expected = EarnBannerOverview(
+                        rate = vaultRate,
+                        bestProductId = vaultId,
+                        activeCount = 0,
+                        totalPosition = null,
+                    ),
+                ),
+                OpenOrHeldModel(
+                    name = "open product with an unknown rate",
+                    products = listOf(createSummary(productId = vaultId, rate = null)),
+                    expected = EarnBannerOverview(
+                        rate = null,
+                        bestProductId = null,
+                        activeCount = 0,
+                        totalPosition = null,
+                    ),
+                ),
+            )
+        }
     }
 
     @Nested
@@ -569,7 +731,12 @@ internal class DefaultEarnOverviewSupplierTest {
                         badge = apyBadge("3.00"),
                         route = null,
                     ),
-                    banner = EarnBannerOverview(rate = lendingRate, activeCount = 1, totalPosition = BigDecimal("2")),
+                    banner = EarnBannerOverview(
+                        rate = lendingRate,
+                        bestProductId = lendingId,
+                        activeCount = 1,
+                        totalPosition = BigDecimal("2"),
+                    ),
                 ),
             )
 
@@ -607,6 +774,7 @@ internal class DefaultEarnOverviewSupplierTest {
             }
             val expected = EarnBannerOverview(
                 rate = createRate(),
+                bestProductId = lendingId,
                 activeCount = model.expectedActiveCount,
                 totalPosition = model.expectedTotal,
             )
@@ -730,7 +898,12 @@ internal class DefaultEarnOverviewSupplierTest {
         private val overviews = overviewsOf(
             EarnOverview(
                 headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
-                banner = EarnBannerOverview(rate = rate, activeCount = 1, totalPosition = BigDecimal("2")),
+                banner = EarnBannerOverview(
+                    rate = rate,
+                    bestProductId = lendingId,
+                    activeCount = 1,
+                    totalPosition = BigDecimal("2"),
+                ),
             ),
         )
 
@@ -793,7 +966,12 @@ internal class DefaultEarnOverviewSupplierTest {
             val expected = overviewsOf(
                 EarnOverview(
                     headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
-                    banner = EarnBannerOverview(rate = rate, activeCount = 1, totalPosition = BigDecimal("2")),
+                    banner = EarnBannerOverview(
+                        rate = rate,
+                        bestProductId = lendingId,
+                        activeCount = 1,
+                        totalPosition = BigDecimal("2"),
+                    ),
                 ),
             )
             val wallet = createColdWallet()
@@ -865,6 +1043,13 @@ internal class DefaultEarnOverviewSupplierTest {
         badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,
     ) = EarnHeadline(rate = rate, isActive = isActive, badge = badge, badgeAccent = badgeAccent, route = route)
 
+    private fun closedSummary(
+        productId: EarnProductId,
+        availability: ProductAvailability,
+        rate: EarnProductRate = createRate(),
+        position: EarnPositionSummary? = null,
+    ) = createSummary(productId = productId, rate = rate, availability = availability, position = position)
+
     private fun apyBadge(percent: String) =
         resourceReference(R.string.yield_module_earn_badge, wrappedList(percent))
 
@@ -901,6 +1086,18 @@ internal class DefaultEarnOverviewSupplierTest {
         val positions: List<EarnPositionSummary?>,
         val expectedActiveCount: Int,
         val expectedTotal: BigDecimal?,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class ClosedProductsModel(val name: String, val products: List<EarnProductSummary>) {
+        override fun toString(): String = name
+    }
+
+    internal data class OpenOrHeldModel(
+        val name: String,
+        val products: List<EarnProductSummary>,
+        val expected: EarnBannerOverview,
     ) {
         override fun toString(): String = name
     }

@@ -9,9 +9,11 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationFailure
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationOutcome
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
+import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStart
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
@@ -46,7 +48,11 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
             OutcomeModel(success(RESUME), expected = null),
             OutcomeModel(success(REVOKE), expected = SUCCESS_REVOKED),
             OutcomeModel(failure(ACTIVATE), error(R.string.prediction_session_key_toast_activation_failed)),
-            OutcomeModel(failure(REACTIVATE), error(R.string.prediction_session_key_toast_reactivation_failed)),
+            OutcomeModel(
+                failure(ACTIVATE, isAfterRevocation = true),
+                error(R.string.prediction_session_key_toast_reactivation_failed_revoked),
+            ),
+            OutcomeModel(failure(REACTIVATE), error(R.string.prediction_session_key_toast_activation_failed)),
             OutcomeModel(
                 failure(REACTIVATE, isAfterRevocation = true),
                 error(R.string.prediction_session_key_toast_reactivation_failed_revoked),
@@ -54,7 +60,7 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
             OutcomeModel(failure(EXTEND), error(R.string.prediction_session_key_toast_extension_failed)),
             OutcomeModel(
                 failure(EXTEND, isAfterRevocation = true),
-                error(R.string.prediction_session_key_toast_extension_failed_revoked),
+                error(R.string.prediction_session_key_toast_extension_failed),
             ),
             OutcomeModel(failure(REVOKE), error(R.string.prediction_session_key_toast_revocation_failed)),
             OutcomeModel(failure(PAUSE), error(R.string.prediction_session_key_toast_pausing_failed)),
@@ -71,7 +77,7 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
             OutcomeModel(failure(REVOKE, error = BACKEND_BUSY), BUSY),
             OutcomeModel(
                 failure(EXTEND, error = BACKEND_BUSY, isAfterRevocation = true),
-                error(R.string.prediction_session_key_toast_extension_failed_revoked),
+                error(R.string.prediction_session_key_toast_extension_failed),
             ),
             OutcomeModel(
                 failure(REACTIVATE, error = IN_PROGRESS, isAfterRevocation = true),
@@ -85,6 +91,50 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
                 failure(ACTIVATE, error = PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)),
                 error(R.string.prediction_session_key_toast_activation_failed),
             ),
+            OutcomeModel(failure(ACTIVATE, error = UNSETTLED), expected = null),
+            OutcomeModel(failure(ACTIVATE, error = UNSETTLED, isAfterRevocation = true), expected = null),
+            OutcomeModel(failure(REVOKE, error = UNSETTLED), expected = null),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Running {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN running operation WHEN create THEN only a submitted activation or revocation is toasted`(
+            model: RunningModel,
+        ) {
+            // Arrange
+            val operation = PolymarketSessionKeyOperation(
+                id = 1L,
+                request = model.request,
+                targetAddress = ADDRESS,
+                stage = model.stage,
+            )
+
+            // Act
+            val actual = PolymarketSessionKeyMessagesFactory.create(operation)
+
+            // Assert
+            assertThat(actual?.message).isEqualTo(model.expectedMessageId?.let(::resourceReference))
+            assertThat(actual?.startIconId).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            RunningModel(ACTIVATE, PolymarketSessionKeyOperationStage.SIGNING, expectedMessageId = null),
+            RunningModel(ACTIVATE, PolymarketSessionKeyOperationStage.REVOKING, ACTIVATION_IN_PROGRESS),
+            RunningModel(ACTIVATE, PolymarketSessionKeyOperationStage.REVOKED, ACTIVATION_IN_PROGRESS),
+            RunningModel(ACTIVATE, PolymarketSessionKeyOperationStage.AUTHORIZING, ACTIVATION_IN_PROGRESS),
+            RunningModel(ACTIVATE, PolymarketSessionKeyOperationStage.CHECKING_READINESS, ACTIVATION_IN_PROGRESS),
+            RunningModel(REACTIVATE, PolymarketSessionKeyOperationStage.SIGNING, expectedMessageId = null),
+            RunningModel(REACTIVATE, PolymarketSessionKeyOperationStage.AUTHORIZING, ACTIVATION_IN_PROGRESS),
+            RunningModel(REVOKE, PolymarketSessionKeyOperationStage.SIGNING, expectedMessageId = null),
+            RunningModel(REVOKE, PolymarketSessionKeyOperationStage.REVOKING, REVOKING),
+            RunningModel(REVOKE, PolymarketSessionKeyOperationStage.REVOKED, expectedMessageId = null),
+            RunningModel(EXTEND, PolymarketSessionKeyOperationStage.AUTHORIZING, expectedMessageId = null),
+            RunningModel(PAUSE, PolymarketSessionKeyOperationStage.TOGGLING, expectedMessageId = null),
         )
     }
 
@@ -113,6 +163,12 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
 
     data class OutcomeModel(val outcome: PolymarketSessionKeyOperationOutcome, val expected: ExpectedToast?)
 
+    data class RunningModel(
+        val request: PolymarketSessionKeyOperationRequest,
+        val stage: PolymarketSessionKeyOperationStage,
+        val expectedMessageId: Int?,
+    )
+
     data class StartModel(val start: PolymarketSessionKeyOperationStart, val expected: ExpectedToast?)
 
     private companion object {
@@ -130,6 +186,9 @@ internal class PolymarketSessionKeyMessagesFactoryTest {
         val IN_PROGRESS = PolymarketSessionKeyLifecycleError.OperationInProgress
         val BACKEND_BUSY = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.SessionKeyBusy)
         val GENERIC = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+        val UNSETTLED = PolymarketSessionKeyLifecycleError.Unsettled(sessionKey = mockk())
+        val ACTIVATION_IN_PROGRESS = R.string.prediction_session_key_toast_activation_in_progress
+        val REVOKING = R.string.prediction_session_key_toast_revoking
 
         val SUCCESS_REVOKED = ExpectedToast(
             messageId = R.string.prediction_session_key_toast_revoked,

@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
@@ -112,7 +113,7 @@ class ManagePolymarketSessionKeyInteractor(
         operation(userWalletId) {
             val revoke = PolymarketSessionKeyBatch.Revoke(sessionKeyAddress = sessionKeyAddress)
             emit(PolymarketSessionKeyProgress.Signing)
-            val (signed, revoking) = depositWalletLock.withLock(userWalletId) {
+            val (signed, revoking) = depositWalletLock.withSessionKeyOperation(userWalletId) {
                 val signed = sign(userWalletId, nonEmptyListOf(revoke))
                 signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
             }
@@ -141,7 +142,7 @@ class ManagePolymarketSessionKeyInteractor(
         authorize: PolymarketSessionKeyBatch.Authorize,
     ): PolymarketSessionKey {
         emit(PolymarketSessionKeyProgress.Signing)
-        val (sent, pending) = depositWalletLock.withLock(userWalletId) {
+        val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             sendAuthorization(userWalletId = userWalletId, signed = sign(userWalletId, nonEmptyListOf(authorize)))
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
@@ -155,18 +156,26 @@ class ManagePolymarketSessionKeyInteractor(
     ): PolymarketSessionKey {
         val batches = nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(sessionKeyAddress = revokedAddress), authorize)
         emit(PolymarketSessionKeyProgress.Signing)
-        val (signedBoth, revoking) = depositWalletLock.withLock(userWalletId) {
+        val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             val signed = sign(userWalletId, batches)
-            signed to send { relay.revoke(userWalletId, revocationOf(signed)) }
-        }
-        val revoked = awaitRevoked(userWalletId, signedBoth.ownerAddress(), revoking)
-        emit(PolymarketSessionKeyProgress.Revoked(revoked))
-        val (sent, pending) = depositWalletLock.withLock(userWalletId) {
-            sendAuthorization(
-                userWalletId = userWalletId,
-                signed = signedBoth,
-                relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
-            )
+            ensure(!authorizationOf(signed).isExpired()) {
+                TangemLogger.i("Polymarket session key authorization expired before the revocation was sent")
+                PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
+            }
+            var lastKnown: PolymarketSessionKey? = null
+            withTimeoutOrNull(authorizationOf(signed).timeLeft()) {
+                val revoking = send { relay.revoke(userWalletId, revocationOf(signed)) }.also { lastKnown = it }
+                val revoked = awaitRevoked(userWalletId, signed.ownerAddress(), revoking).also { lastKnown = it }
+                emit(PolymarketSessionKeyProgress.Revoked(revoked))
+                sendAuthorization(
+                    userWalletId = userWalletId,
+                    signed = signed,
+                    relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
+                )
+            } ?: run {
+                delay(PolymarketRelayerDeadline.timeLeft(authorizationOf(signed).deadline, clock.millis()))
+                raise(renewalPastDeadline(lastKnown))
+            }
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
         return awaitActive(userWalletId, sent.ownerAddress, pending)
@@ -279,6 +288,7 @@ class ManagePolymarketSessionKeyInteractor(
             TangemLogger.e("Polymarket session key ${settled.address} not authorized: ${settled.status}")
             PolymarketSessionKeyLifecycleError.AuthorizationFailed(settled)
         }
+        tradingStore.markAuthorized(userWalletId, settled.address)
         awaitReady(userWalletId = userWalletId, ownerAddress = ownerAddress, active = settled)
         return settled
     }
@@ -294,14 +304,14 @@ class ManagePolymarketSessionKeyInteractor(
             .bind()
         val credentials = getApiCredentials(userWalletId)
             ?: raise(PolymarketSessionKeyLifecycleError.OwnerCredentialsUnavailable(active))
-        val validUntil = active.validUntil ?: raise(PolymarketSessionKeyLifecycleError.NotListedOnExchange(active))
-        val isListed = relay.awaitListing(
+        val validUntil = active.validUntil
+        val isListed = validUntil != null && relay.awaitListing(
             owner = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials),
             sessionKey = active,
         )
-        ensure(isListed) {
-            TangemLogger.e("Polymarket does not list the active session key ${active.address}")
-            PolymarketSessionKeyLifecycleError.NotListedOnExchange(active)
+        if (validUntil == null || !isListed) {
+            TangemLogger.i("Polymarket does not list the active session key ${active.address} yet, left to reconcile")
+            return
         }
         tradingStore.markReadyOnExchange(userWalletId, active.address, validUntil)
     }
@@ -339,22 +349,13 @@ class ManagePolymarketSessionKeyInteractor(
         }
     }
 
-    private fun PolymarketSessionKeyAuthorization.isExpired(): Boolean =
-        PolymarketRelayerDeadline.isExpired(deadline = deadline, nowMillis = clock.millis() + DEADLINE_MARGIN_MILLIS)
+    private fun PolymarketSessionKeyAuthorization.isExpired(): Boolean = !timeLeft().isPositive()
 
-    private fun PolymarketSessionKeyError.needsNewSignature(): Boolean =
-        this is PolymarketSessionKeyError.RelayerRejected ||
-            this == PolymarketSessionKeyError.NonceAlreadyUsed ||
-            this == PolymarketSessionKeyError.InvalidDeadline ||
-            this == PolymarketSessionKeyError.InvalidValidUntil
+    private fun PolymarketSessionKeyAuthorization.timeLeft() =
+        PolymarketRelayerDeadline.timeLeft(deadline = deadline, nowMillis = clock.millis() + DEADLINE_MARGIN_MILLIS)
 
     private fun Raise<PolymarketSessionKeyLifecycleError>.unexpectedBatches(): Nothing =
         raise(PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.MalformedRequest))
-
-    private fun PolymarketSignedSessionKeyBatches.ownerAddress(): String = when (val batch = batches.first()) {
-        is PolymarketSignedSessionKeyBatches.Signed.Authorization -> batch.authorization.ownerAddress
-        is PolymarketSignedSessionKeyBatches.Signed.Revocation -> batch.revocation.ownerAddress
-    }
 
     private fun Operation.authorizationOf(signed: PolymarketSignedSessionKeyBatches) = signed.batches
         .filterIsInstance<PolymarketSignedSessionKeyBatches.Signed.Authorization>()
@@ -378,5 +379,25 @@ class ManagePolymarketSessionKeyInteractor(
         const val FOLLOW_UP_REJECTION_RETRIES = 5
         val BUSY_RETRY_DELAY = 1_500.milliseconds
         val RELAYER_REJECTION_RETRY_DELAY = 3.seconds
+    }
+}
+
+private fun PolymarketSessionKeyError.needsNewSignature(): Boolean =
+    this is PolymarketSessionKeyError.RelayerRejected ||
+        this == PolymarketSessionKeyError.NonceAlreadyUsed ||
+        this == PolymarketSessionKeyError.InvalidDeadline ||
+        this == PolymarketSessionKeyError.InvalidValidUntil
+
+private fun PolymarketSignedSessionKeyBatches.ownerAddress(): String = when (val batch = batches.first()) {
+    is PolymarketSignedSessionKeyBatches.Signed.Authorization -> batch.authorization.ownerAddress
+    is PolymarketSignedSessionKeyBatches.Signed.Revocation -> batch.revocation.ownerAddress
+}
+
+private fun renewalPastDeadline(lastKnown: PolymarketSessionKey?): PolymarketSessionKeyLifecycleError {
+    TangemLogger.e("Polymarket session key authorization deadline reached during the renewal")
+    return if (lastKnown != null) {
+        PolymarketSessionKeyLifecycleError.Unsettled(lastKnown)
+    } else {
+        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,7 +16,11 @@ import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.usecase.*
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
 import com.tangem.features.feed.earn.components.EarnNetworkFilterComponent
 import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
@@ -31,8 +36,13 @@ import com.tangem.features.feed.earn.ui.state.EarnFeedTabUM
 import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
+import com.tangem.features.feed.v2.FeedFilterSheet
+import com.tangem.features.feed.v2.awaitEntryHandled
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -53,6 +63,10 @@ internal class EarnFeedTabModel @Inject constructor(
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
+    private val earnFeatureToggles: EarnFeatureToggles,
+    private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
+    private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
     private val feedEntryController: FeedEntryController,
 ) : Model() {
 
@@ -62,6 +76,9 @@ internal class EarnFeedTabModel @Inject constructor(
     private val appliedFilter = MutableStateFlow<EarnFilter?>(null)
 
     private val currentFilter: EarnFilter get() = appliedFilter.value ?: DEFAULT_FILTER
+
+    /** What the type sheet ticks: set ahead of the async store write by a deeplink, so an open sheet follows at once. */
+    private val selectedType = MutableStateFlow(DEFAULT_FILTER.earnFilterType)
 
     private val filterChipsFactory = EarnFilterChipsFactory(
         onNetworkClick = ::onNetworkFilterClick,
@@ -78,6 +95,10 @@ internal class EarnFeedTabModel @Inject constructor(
 
     private val addToPortfolioLauncher = EarnAddToPortfolioLauncher(
         addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+        portfolioSelectorBridgeFactory = portfolioSelectorBridgeFactory,
+        earnFeatureToggles = earnFeatureToggles,
+        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
+        yieldSupplyGetAvailabilityUseCase = yieldSupplyGetAvailabilityUseCase,
         analyticsEventHandler = analyticsEventHandler,
         router = router,
         modelScope = modelScope,
@@ -98,6 +119,9 @@ internal class EarnFeedTabModel @Inject constructor(
     )
 
     private var isOpenedReported = false
+
+    /** Launched rather than awaited: the networks may be slow, and a newer deeplink must not queue behind them. */
+    private val deeplinkSheetJob = JobHolder()
 
     val state: StateFlow<EarnFeedTabUM>
         get() = stateController.uiState
@@ -130,10 +154,39 @@ internal class EarnFeedTabModel @Inject constructor(
     private suspend fun applyDeeplinkFilter(filter: FeedEntryFilter) {
         feedEntryController.consumeFilter()
 
-        val type = filter.earnType ?: return
+        val type = filter.earnType?.toEarnFilterType()
+        if (type == null && filter.sheet == null) return
         val stored = appliedFilter.filterNotNull().first()
 
-        setEarnFilterUseCase(stored.copy(earnFilterType = type.toEarnFilterType()))
+        if (type != null) {
+            selectedType.value = type
+            setEarnFilterUseCase(stored.copy(earnFilterType = type))
+        }
+
+        modelScope.launch {
+            when (filter.sheet) {
+                FeedFilterSheet.Type -> openDeeplinkSheet(filter, ::onTypeFilterClick)
+                FeedFilterSheet.Network -> openDeeplinkNetworkFilter(filter)
+                FeedFilterSheet.Category, null -> Unit
+            }
+        }.saveIn(deeplinkSheetJob)
+    }
+
+    /** The picker offers only the loaded networks, so with none there is nothing to open. */
+    private suspend fun openDeeplinkNetworkFilter(filter: FeedEntryFilter) {
+        val networks = earnNetworks.filterNotNull().first().getOrNull()
+
+        if (networks.isNullOrEmpty()) {
+            TangemLogger.i("Discover deeplink: no earn networks to open the network filter with")
+            return
+        }
+
+        openDeeplinkSheet(filter, ::onNetworkFilterClick)
+    }
+
+    private suspend fun openDeeplinkSheet(filter: FeedEntryFilter, open: () -> Unit) {
+        feedEntryController.awaitEntryHandled()
+        if (feedEntryController.isLatest(filter)) open()
     }
 
     private fun PreselectedEarnType.toEarnFilterType(): EarnFilterType = when (this) {
@@ -197,6 +250,10 @@ internal class EarnFeedTabModel @Inject constructor(
     private fun subscribeOnActiveFilters() {
         modelScope.launch(dispatchers.default) {
             combine(getEarnFilterUseCase(), earnNetworks) { filter, networks ->
+                // a networks-only emission repeats the stored type, which may still lag a deeplink's pick
+                if (filter.earnFilterType != appliedFilter.value?.earnFilterType) {
+                    selectedType.value = filter.earnFilterType
+                }
                 appliedFilter.value = filter
                 stateController.update(
                     UpdateEarnFiltersTransformer(
@@ -232,29 +289,31 @@ internal class EarnFeedTabModel @Inject constructor(
     }
 
     /* start of clicks area */
+    /** An open type sheet is kept rather than rebuilt: it follows [selectedType] itself. */
     private fun onTypeFilterClick() {
-        bottomSheetNavigation.activate(
-            EarnBottomSheetRoute.TypeFilter(
+        bottomSheetNavigation.navigate { current ->
+            current as? EarnBottomSheetRoute.TypeFilter ?: EarnBottomSheetRoute.TypeFilter(
                 params = EarnTypeFilterComponent.Params(
-                    selectedFilter = currentFilter.earnFilterType,
+                    selectedFilter = selectedType,
                     onFilterSelected = ::onTypeFilterOptionSelected,
                     onDismiss = { bottomSheetNavigation.dismiss() },
                 ),
-            ),
-        )
+            )
+        }
     }
 
+    /** An open network sheet is kept rather than rebuilt: a deeplink never carries a network to show. */
     private fun onNetworkFilterClick() {
-        bottomSheetNavigation.activate(
-            EarnBottomSheetRoute.NetworkFilter(
+        bottomSheetNavigation.navigate { current ->
+            current as? EarnBottomSheetRoute.NetworkFilter ?: EarnBottomSheetRoute.NetworkFilter(
                 params = EarnNetworkFilterComponent.Params(
                     networks = earnNetworks.value?.getOrNull().orEmpty(),
                     selectedFilter = currentFilter.earnFilterNetwork,
                     onFilterSelected = ::onNetworkFilterOptionSelected,
                     onDismiss = { bottomSheetNavigation.dismiss() },
                 ),
-            ),
-        )
+            )
+        }
     }
 
     private fun onClearFiltersClick() = applyFilter(DEFAULT_FILTER)

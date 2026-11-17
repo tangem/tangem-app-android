@@ -4,10 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationOutcome
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
-import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
@@ -19,7 +16,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -46,9 +43,9 @@ internal class PolymarketModel @Inject constructor(
     private val isVisible = MutableStateFlow(false)
 
     init {
-        if (featureToggles.isPolymarketSessionKeysEnabled) {
+        if (featureToggles.isPolymarketFastOrdersEnabled) {
             toastSessionKeyOutcomes()
-            toastSubmittedRevocations()
+            toastSubmittedOperations()
         }
     }
 
@@ -68,11 +65,15 @@ internal class PolymarketModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun toastSubmittedRevocations() {
+    private fun toastSubmittedOperations() {
         observeVisibleWallet(observeSessionKeyOperation::invoke)
-            .mapNotNull { operation -> operation?.takeIf { it.isSubmittedRevocation() }?.id }
-            .distinctUntilChanged()
-            .onEach { messageSender.send(PolymarketSessionKeyMessagesFactory.revokingToast()) }
+            .filterNotNull()
+            .mapNotNull { operation ->
+                PolymarketSessionKeyMessagesFactory.create(operation)?.let { operation.id to it }
+            }
+            .distinctUntilChangedBy { (operationId, _) -> operationId }
+            .map { (_, toast) -> toast }
+            .onEach(messageSender::send)
             .launchIn(modelScope)
     }
 
@@ -80,9 +81,6 @@ internal class PolymarketModel @Inject constructor(
     private fun <T> observeVisibleWallet(observe: (UserWalletId) -> Flow<T>): Flow<T> =
         combine(isVisible, settledWalletId) { isVisible, walletId -> walletId.takeIf { isVisible } }
             .flatMapLatest { walletId -> if (walletId == null) emptyFlow() else observe(walletId) }
-
-    private fun PolymarketSessionKeyOperation.isSubmittedRevocation(): Boolean =
-        request is PolymarketSessionKeyOperationRequest.Revoke && stage == PolymarketSessionKeyOperationStage.REVOKING
 
     private fun toast(userWalletId: UserWalletId, outcome: PolymarketSessionKeyOperationOutcome) {
         PolymarketSessionKeyMessagesFactory.create(outcome)?.let(messageSender::send)

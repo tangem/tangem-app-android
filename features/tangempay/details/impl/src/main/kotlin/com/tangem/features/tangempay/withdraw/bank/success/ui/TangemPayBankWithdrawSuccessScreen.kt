@@ -127,5 +127,14 @@ private class SuccessPreviewProvider : PreviewParameterProvider<TangemPayBankWit
             ),
             onCloseClick = {},
         ),
+        TangemPayBankWithdrawSuccessUM(
+            title = title,
+            subtitle = subtitle,
+            rows = persistentListOf(
+                RowUM(resourceReference(R.string.send_recipient), "Saburo Arasaka"),
+                RowUM(resourceReference(R.string.virtual_account_requisites_clabe), "646180110400000007"),
+            ),
+            onCloseClick = {},
+        ),
     )
 }

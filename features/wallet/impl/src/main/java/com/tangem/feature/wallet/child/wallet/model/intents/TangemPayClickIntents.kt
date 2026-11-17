@@ -18,7 +18,6 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -26,6 +25,8 @@ import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
@@ -40,8 +41,6 @@ internal interface TangemPayIntents {
     fun onRefreshPayToken(userWallet: UserWallet)
 
     fun openDetails(status: AccountStatus.Payment)
-
-    fun onSelectPlanClicked(status: AccountStatus.Payment)
 
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
@@ -61,8 +60,6 @@ internal interface TangemPayIntents {
 
     fun onKycRejectedHideKycClicked(userWalletId: UserWalletId)
 
-    fun onIssuingCardClicked()
-
     fun onOnboardingBannerClick(userWalletId: UserWalletId)
 
     fun onOnboardingBannerCloseClick(userWalletId: UserWalletId)
@@ -79,6 +76,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val tangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -111,11 +109,11 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     override fun openDetails(status: AccountStatus.Payment) {
+        tangemPayAnalyticsEventSender.onAccountOpened(
+            userWalletId = status.account.userWalletId,
+            accountType = AccountType.PAYMENT,
+        )
         router.openTangemPayDetails(status = status)
-    }
-
-    override fun onSelectPlanClicked(status: AccountStatus.Payment) {
-        router.openTangemPaySelectPlan(status = status)
     }
 
     override fun onKycProgressClicked(userWalletId: UserWalletId) {
@@ -169,7 +167,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     private fun openEligibility(userWalletId: UserWalletId) {
-        router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
+        router.openTangemPayEligibility(userWalletId = userWalletId)
     }
 
     override fun onVerifiedClicked(userWalletId: UserWalletId) {
@@ -228,25 +226,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 ),
             )
         }
-    }
-
-    override fun onIssuingCardClicked() {
-        val issuingBottomSheet = bottomSheetMessage {
-            infoBlock {
-                icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
-                    type = MessageBottomSheetUM.Icon.Type.Informative
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
-                }
-                title = resourceReference(R.string.tangempay_issuing_your_card)
-                body = resourceReference(R.string.tangempay_issuing_your_card_description)
-            }
-            secondaryButton {
-                text = resourceReference(R.string.common_got_it)
-                onClick { closeBs() }
-            }
-        }
-
-        uiMessageSender.send(issuingBottomSheet)
     }
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {

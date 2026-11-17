@@ -1,6 +1,8 @@
 package com.tangem.features.earn.impl.di
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.features.earn.impl.banner.model.EarnBannerModel
+import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.picker.model.EarnPickerModel
 import com.tangem.features.earn.impl.sheet.model.EarnYieldSheetModel
 import com.tangem.features.earn.impl.widgets.calculator.model.EarnCalculatorModel
@@ -10,7 +12,7 @@ import org.junit.jupiter.api.Test
 internal class EarnModelModuleTest {
 
     @Test
-    fun `GIVEN model module WHEN reading its bindings THEN EarnCalculatorModel, EarnPickerModel and EarnYieldSheetModel are bound into the model map`() {
+    fun `GIVEN model module WHEN reading its bindings THEN EarnCalculatorModel, EarnPickerModel, EarnYieldSheetModel, EarnBannerModel and EarnInfoModel are bound into the model map`() {
         // Act
         val boundModels = EarnModelModule::class.java.declaredMethods
             .mapNotNull { it.getAnnotation(ClassKey::class.java)?.value }
@@ -20,6 +22,8 @@ internal class EarnModelModuleTest {
             EarnCalculatorModel::class,
             EarnPickerModel::class,
             EarnYieldSheetModel::class,
+            EarnBannerModel::class,
+            EarnInfoModel::class,
         )
     }
 }

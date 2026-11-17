@@ -25,6 +25,8 @@ import com.tangem.feature.tester.presentation.addresses.ui.AddressesInfoScreen
 import com.tangem.feature.tester.presentation.addresses.viewmodels.AddressesInfoViewModel
 import com.tangem.feature.tester.presentation.backendauth.ui.BackendAuthStatusScreen
 import com.tangem.feature.tester.presentation.backendauth.viewmodels.BackendAuthStatusViewModel
+import com.tangem.feature.tester.presentation.earnflow.ui.TesterEarnFlowScreen
+import com.tangem.feature.tester.presentation.earnflow.viewmodel.TesterEarnFlowViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
 import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
 import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsScreen
@@ -82,9 +84,9 @@ internal class TesterActivity : ComposeActivity() {
     private fun TesterNavHost() {
         val navController = rememberNavController().also { innerTesterRouter.setNavController(it) }
 
-        // The storybook draws edge-to-edge; its pages apply system bar insets themselves.
+        // The storybook and the Earn flow draw edge-to-edge; they apply system bar insets themselves.
         val backStackEntry by navController.currentBackStackEntryAsState()
-        val isEdgeToEdge = backStackEntry?.destination?.route == TesterScreen.STORY_BOOK.name
+        val isEdgeToEdge = backStackEntry?.destination?.route in EDGE_TO_EDGE_ROUTES
 
         NavHost(
             modifier = if (isEdgeToEdge) Modifier else Modifier.systemBarsPadding(),
@@ -109,6 +111,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.BACKEND_AUTH_STATUS,
                             ButtonUM.SELL_REDIRECT_GENERATOR,
                             ButtonUM.SOCIAL_LOGIN,
+                            ButtonUM.EARN_FLOW,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -125,6 +128,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.BACKEND_AUTH_STATUS -> TesterScreen.BACKEND_AUTH_STATUS
                                 ButtonUM.SELL_REDIRECT_GENERATOR -> TesterScreen.SELL_REDIRECT_GENERATOR
                                 ButtonUM.SOCIAL_LOGIN -> TesterScreen.SOCIAL_LOGIN
+                                ButtonUM.EARN_FLOW -> TesterScreen.EARN_FLOW
                             }
 
                             innerTesterRouter.open(route)
@@ -252,6 +256,15 @@ internal class TesterActivity : ComposeActivity() {
 
                 SocialLoginTesterScreen(state)
             }
+
+            composable(route = TesterScreen.EARN_FLOW.name) {
+                val viewModel = hiltViewModel<TesterEarnFlowViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                TesterEarnFlowScreen(state)
+            }
         }
     }
 
@@ -267,5 +280,6 @@ internal class TesterActivity : ComposeActivity() {
     private companion object {
         const val DOMAIN = "tangem.surveysparrow.com"
         const val TEST_SHARE_TOKEN = "ntt-84iF22PDajmervYneMW4kv"
+        val EDGE_TO_EDGE_ROUTES = setOf(TesterScreen.STORY_BOOK.name, TesterScreen.EARN_FLOW.name)
     }
 }

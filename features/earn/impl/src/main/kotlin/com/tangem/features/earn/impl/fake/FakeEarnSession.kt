@@ -37,9 +37,12 @@ internal class FakeEarnSession(
     private val behavior: FakeEarnSessionBehavior,
 ) : EarnSession {
 
+    /** Once grown, the fee stays grown: the flow reloads it and prepares a fresh plan after a `Changed` verify. */
+    private var isFeeGrown = false
+
     override suspend fun loadFee(action: EarnFlowAction, amount: EarnAmount?): Either<GetFeeError, TransactionFee> =
         if (action.isSupported()) {
-            TransactionFee.Single(normal = fakeFee(FAKE_FEE_ETH)).right()
+            TransactionFee.Single(normal = fakeFee(if (isFeeGrown) FAKE_FEE_GROWN_ETH else FAKE_FEE_ETH)).right()
         } else {
             GetFeeError.UnknownError.left()
         }
@@ -72,8 +75,10 @@ internal class FakeEarnSession(
 
     override suspend fun verify(plan: EarnPlan): EarnVerification = when {
         plan !is FakeDepositPlan -> EarnVerification.Rejected(EarnSessionError.Failed())
-        behavior.isFeeGrowingOnVerify && !plan.isFeeRefreshed ->
-            EarnVerification.Changed(plan.copy(fee = fakeFee(FAKE_FEE_GROWN_ETH), isFeeRefreshed = true))
+        behavior.isFeeGrowingOnVerify && !isFeeGrown -> {
+            isFeeGrown = true
+            EarnVerification.Changed(plan.copy(fee = fakeFee(FAKE_FEE_GROWN_ETH)))
+        }
         else -> EarnVerification.Verified(FakeVerifiedPlan(plan))
     }
 

@@ -46,7 +46,34 @@ internal sealed interface TangemPayBankWithdrawPreviewUM {
     data class TransferUM(
         val amount: AmountCardUM,
         val route: RouteUM,
+        val conversion: ConversionUM?,
         val sendingSummary: TextReference,
+    )
+
+    @Immutable
+    data class ConversionUM(
+        val rate: String?,
+        val recipientGets: String?,
+        val rateLock: RateLockUM,
+        val fees: ImmutableList<FeeRowUM>,
+        val total: String?,
+    )
+
+    /** [Hidden] when the device clock cannot be trusted to time the lock, so the quote shows without a countdown. */
+    @Immutable
+    sealed interface RateLockUM {
+
+        data object Loading : RateLockUM
+
+        data object Hidden : RateLockUM
+
+        data class Countdown(val text: TextReference) : RateLockUM
+    }
+
+    @Immutable
+    data class FeeRowUM(
+        val label: TextReference,
+        val value: String?,
     )
 
     /**
@@ -69,7 +96,7 @@ internal sealed interface TangemPayBankWithdrawPreviewUM {
         val rail: BankRail,
         val title: TextReference,
         val eta: TextReference,
-        val fee: String,
+        val fee: String?,
         val onClick: (() -> Unit)? = null,
     )
 

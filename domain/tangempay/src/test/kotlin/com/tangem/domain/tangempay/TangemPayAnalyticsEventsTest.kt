@@ -3,6 +3,7 @@ package com.tangem.domain.tangempay
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
@@ -78,6 +79,21 @@ internal class TangemPayAnalyticsEventsTest {
     internal data class ProductSetModel(val products: Set<TangemPayProduct>, val expectedValue: String?)
 
     private fun provideTestModels() = listOf(
+        EventModel(
+            event = TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = NoticeState.SHOWN),
+            expectedId = "[Visa Screen] Visa Main Screen Opened",
+            expectedParams = mapOf("additional_verification_notice" to "shown"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = NoticeState.NOT_SHOWN),
+            expectedId = "[Visa Screen] Visa Main Screen Opened",
+            expectedParams = mapOf("additional_verification_notice" to "not_shown"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = null),
+            expectedId = "[Visa Screen] Visa Main Screen Opened",
+            expectedParams = emptyMap(),
+        ),
         EventModel(
             event = TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.CARD),
             expectedId = "[Visa Screen] Button - Terms And Limits",

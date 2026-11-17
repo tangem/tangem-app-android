@@ -29,21 +29,6 @@ internal class DefaultSwapFeatureTogglesTest {
         assertThat(actual).isEqualTo(isDexEnabled)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `GIVEN EVM DEX toggle WHEN read isEvmGaslessDexSwapEnabled THEN reflects toggle`(isDexEnabled: Boolean) {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED)
-        } returns isDexEnabled
-
-        // Act
-        val actual = toggles.isEvmGaslessDexSwapEnabled
-
-        // Assert
-        assertThat(actual).isEqualTo(isDexEnabled)
-    }
-
     @Test
     fun `GIVEN Solana gasless toggle enabled WHEN read isSolanaGaslessEnabled THEN true`() {
         // Arrange
@@ -70,5 +55,22 @@ internal class DefaultSwapFeatureTogglesTest {
 
         // Assert
         assertThat(actual).isFalse()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN Solana gasless rent toggle WHEN read isSolanaGaslessRentEnabled THEN reflects toggle`(
+        isRentEnabled: Boolean,
+    ) {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19141_SOLANA_GASLESS_RENT_ENABLED)
+        } returns isRentEnabled
+
+        // Act
+        val actual = toggles.isSolanaGaslessRentEnabled
+
+        // Assert
+        assertThat(actual).isEqualTo(isRentEnabled)
     }
 }

@@ -28,28 +28,36 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.model.TangemPayTopUpData
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.tangempay.usecase.*
 import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.account.cashback.withCashback
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.common.*
+import com.tangem.features.tangempay.common.kyc.KycAdditionalInfoNotice
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
 import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUpdateListener
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
@@ -83,8 +91,11 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
     private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase,
+    getUserWalletUseCase: GetUserWalletUseCase,
     cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
+    kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -104,6 +115,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
+        isColdWallet = getUserWalletUseCase(userWalletId).getOrNull()?.isColdWallet == true,
     )
 
     private val baseState = MutableStateFlow(
@@ -128,7 +140,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }.stateIn(modelScope, SharingStarted.Eagerly, baseState.value)
 
     private val refreshStateJobHolder = JobHolder()
-    private val planSelectionJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -138,8 +149,24 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val isInitialRouteHandled = MutableStateFlow(false)
 
+    private val kycAdditionalInfoNotice = KycAdditionalInfoNotice(
+        account = KycAdditionalInfoAccount(userWalletId = userWalletId, accountType = AccountType.PAYMENT),
+        popupStore = kycAdditionalInfoPopupStore,
+        analytics = analytics,
+        uiMessageSender = uiMessageSender,
+        onProvideInformation = ::openKyc,
+        onContactSupport = ::sendFeatureIsBetaSupportEmail,
+    )
+
     init {
-        analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
+        analytics.send(
+            TangemPayAnalyticsEvents.MainScreenOpened(
+                additionalVerificationNotice = NoticeState.of(
+                    isEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+                    isRequired = isInitialKycAdditionalInfoRequired(),
+                ),
+            ),
+        )
 
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { status -> currentStatus.update { status } }
@@ -159,9 +186,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                         sendDeliveryBannerAnalytics()
                         handleInitialRoute()
                     }
-                    is PaymentAccountStatusValue.Inactive -> baseState.update {
-                        stateFactory.getInactiveState(state)
-                    }
                     is PaymentAccountStatusValue.Error.CardIssueFailed -> baseState.update {
                         stateFactory.getCardIssueFailedState(
                             status = state,
@@ -170,8 +194,26 @@ internal class TangemPayDetailsModel @Inject constructor(
                     }
                     else -> baseState.update { stateFactory.getLoadingState() }
                 }
+                handleKycAdditionalInfo(state)
             }
             .launchIn(modelScope)
+    }
+
+    private fun isInitialKycAdditionalInfoRequired(): Boolean =
+        (params.initialStatus.value as? PaymentAccountStatusValue.Loaded)?.isKycAdditionalInfoActionRequired == true
+
+    private suspend fun handleKycAdditionalInfo(state: PaymentAccountStatusValue) {
+        val isRequired = when (state) {
+            is PaymentAccountStatusValue.Loaded -> state.isKycAdditionalInfoActionRequired
+            is PaymentAccountStatusValue.Deactivated,
+            is PaymentAccountStatusValue.Error.CardIssueFailed,
+            -> false
+            else -> return
+        }
+        kycAdditionalInfoNotice.onStatus(
+            isRequired = isRequired,
+            isPopupAllowed = params.initialRoute == TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        )
     }
 
     private fun handleInitialRoute() {
@@ -180,9 +222,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         isInitialRouteHandled.update { true }
 
         when (params.initialRoute) {
-            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
-            TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
-            -> Unit
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> Unit
             TangemPayDetailsInitialRoute.ADD_FUNDS -> openAddFunds()
             TangemPayDetailsInitialRoute.VA_ONRAMP,
             TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
@@ -195,25 +235,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun onStart() {
-        observeAwaitingPlanSelection()
         onRefreshSwipe(refreshState = ShowRefreshState(false))
-    }
-
-    fun onStop() {
-        planSelectionJobHolder.cancel()
-    }
-
-    private fun observeAwaitingPlanSelection() {
-        currentStatus
-            .map { it.value }
-            .filterIsInstance<PaymentAccountStatusValue.AwaitingPlanSelection>()
-            .onEach { status ->
-                router.replaceAll(
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
-                )
-            }
-            .launchIn(modelScope)
-            .saveIn(planSelectionJobHolder)
     }
 
     override fun onClickAddFunds() {
@@ -307,6 +329,10 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onContactSupportClicked() {
         analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
+        sendFeatureIsBetaSupportEmail()
+    }
+
+    private fun sendFeatureIsBetaSupportEmail() {
         val customerId = currentStatus.value.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
@@ -328,6 +354,14 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onBankTransferOnrampFailedBannerDismissed() {
         modelScope.launch { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
+    }
+
+    override fun onProvideKycInformationClick() {
+        kycAdditionalInfoNotice.onBannerProvideInformationClick()
+    }
+
+    private fun openKyc() {
+        router.push(AppRoute.Kyc(userWalletId = userWalletId))
     }
 
     override fun onCardIssueFailedSupportClick() {
@@ -509,7 +543,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun openChangePlan() {
         if (currentStatus.value.tariffPlan == null) return
-        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan)
     }
 
     private fun openCashback() {
@@ -616,7 +650,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun sendTiersAnalytics(state: PaymentAccountStatusValue) {
         val tariffPlan = when (state) {
             is PaymentAccountStatusValue.Loaded -> state.tariffPlan
-            is PaymentAccountStatusValue.Inactive -> state.tariffPlan
             else -> null
         }
         val banner = tariffPlan?.let { TangemPayTiersBannerType.fromPlan(it) }

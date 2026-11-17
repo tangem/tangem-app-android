@@ -8,7 +8,6 @@ sealed class TangemPayMainUM {
 
     data object Empty : TangemPayMainUM()
     data object Loading : TangemPayMainUM()
-    data class SelectPlan(val onClick: () -> Unit) : TangemPayMainUM()
     data class UnderReview(val subtitle: TextReference, val onClick: () -> Unit) : TangemPayMainUM()
     data class ActionRequired(val onClick: () -> Unit) : TangemPayMainUM()
     data class IssuingCard(val onClick: () -> Unit) : TangemPayMainUM()
@@ -20,6 +19,7 @@ sealed class TangemPayMainUM {
         val balanceSubtitle: TextReference,
         val onClick: () -> Unit,
         val shouldShowOnlyCacheWarning: Boolean,
+        val isActionRequired: Boolean,
     ) : TangemPayMainUM()
 
     data object TemporaryUnavailable : TangemPayMainUM()

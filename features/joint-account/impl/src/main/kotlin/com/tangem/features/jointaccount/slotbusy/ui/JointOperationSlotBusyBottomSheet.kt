@@ -39,6 +39,7 @@ internal fun JointOperationSlotBusyBottomSheet(networkName: String, onDismiss: (
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
+        presentation = TangemModal.Presentation.Dialog,
         title = {
             TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = onDismiss) })
         },

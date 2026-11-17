@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.transaction.error.GetFeeError
@@ -16,6 +17,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawA
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUMFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
+import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -33,6 +35,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawAmountModel @Inject constructor(
@@ -42,9 +45,12 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     analytics: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val networkFeeLoader: BankWithdrawNetworkFeeLoader,
+    moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
+
+    private val isEditing = params.step is TangemPayBankWithdrawInnerRoute.Edit
 
     private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
@@ -65,8 +71,9 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             onRouteSelected = ::onRouteSelected,
             onSheetDismiss = ::closeSheet,
             onContinueClick = ::onContinueClick,
-            onRetryFeeClick = ::loadNetworkFee,
+            onRetryClick = ::onRetryClick,
         ),
+        isMxnEnabled = moneyAccountFeatureToggles.isMxnEnabled,
     )
 
     private val state = MutableStateFlow(AmountState())
@@ -82,6 +89,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 selection = currentSelection(),
                 sheet = state.value.sheet,
                 networkFee = state.value.networkFee,
+                customerName = params.customerName.value,
                 isBalanceHidden = true,
             ),
         )
@@ -94,19 +102,26 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             flow2 = params.options,
             flow3 = state,
             flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-        ) { draft, options, amountState, isBalanceHidden ->
-            val selection = amountState.resolve(draft = draft, options = options)
+            flow5 = params.customerName,
+        ) { draft, options, amountState, isBalanceHidden, customerName ->
+            val selection = amountState.resolve(draft = draft, options = options, isEditing = isEditing)
             trackInsufficientFunds(selection.validation)
             umFactory.create(
                 draft = draft,
                 selection = selection,
                 sheet = amountState.sheet,
                 networkFee = amountState.networkFee,
+                customerName = customerName,
                 isBalanceHidden = isBalanceHidden,
             )
         }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
+    }
+
+    private fun onRetryClick() {
+        if (state.value.networkFee == NetworkFeeState.Unreachable) loadNetworkFee()
+        params.onRetryCustomerName()
     }
 
     private fun loadNetworkFee() {
@@ -210,7 +225,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     }
 
     private fun currentSelection(): AmountSelection =
-        state.value.resolve(draft = params.draft.value, options = params.options.value)
+        state.value.resolve(draft = params.draft.value, options = params.options.value, isEditing = isEditing)
 }
 
 private const val TAG = "TangemPayBankWithdrawAmountModel"

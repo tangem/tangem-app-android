@@ -13,6 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyRevocation
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.isTransient
+import com.tangem.domain.polymarket.model.newestFor
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import java.time.Clock
@@ -54,7 +55,7 @@ internal class PolymarketSessionKeyRelay(
             polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
                 .onLeft { error -> TangemLogger.i("Polymarket session key status not read, still waiting: $error") }
                 .onRight { state ->
-                    val record = state.sessionKeys.firstOrNull { it.address.equals(submitted.address, true) }
+                    val record = state.sessionKeys.newestFor(submitted.address)
                     when {
                         record != null -> {
                             latest = record
@@ -82,7 +83,7 @@ internal class PolymarketSessionKeyRelay(
 
     suspend fun awaitUnlisted(owner: PolymarketClobIdentity.Owner, sessionKey: PolymarketSessionKey): Unlisting {
         var unlisting: Unlisting = Unlisting.StillListed
-        repeat(LISTING_ATTEMPTS) { attempt ->
+        repeat(UNLISTING_ATTEMPTS) { attempt ->
             if (attempt > 0) delay(POLL_INTERVAL)
             sessionKeyRepository.getSessionSigners(owner).fold(
                 ifLeft = { error ->
@@ -134,7 +135,8 @@ internal class PolymarketSessionKeyRelay(
         private val SETTLE_TIMEOUT: Duration = 35.minutes
         private val SETTLE_ATTEMPTS = (SETTLE_TIMEOUT / POLL_INTERVAL).toInt()
         private const val DROPPED_READS = 2
-        private const val LISTING_ATTEMPTS = 20
+        private const val LISTING_ATTEMPTS = 10
+        private const val UNLISTING_ATTEMPTS = 20
         private const val RESEND_ATTEMPTS = 3
     }
 }
@@ -143,16 +145,18 @@ internal fun PolymarketSessionKeyStatus.isSettling(): Boolean =
     this == PolymarketSessionKeyStatus.PENDING || this == PolymarketSessionKeyStatus.REVOKING
 
 internal fun PolymarketSessionSigner.lists(sessionKey: PolymarketSessionKey, now: Instant): Boolean =
-    signsFor(sessionKey, now = now.plusMillis(LISTING_EXPIRY_MARGIN.inWholeMilliseconds)) &&
-        scopes.any { it.uppercase() in TRADING_SCOPES }
+    carriesTermsOf(sessionKey) && validUntil?.isAfter(now.plusMillis(LISTING_EXPIRY_MARGIN.inWholeMilliseconds)) == true
 
-private fun PolymarketSessionSigner.signsFor(sessionKey: PolymarketSessionKey, now: Instant): Boolean {
-    val validUntil = validUntil ?: return false
-    return address.equals(sessionKey.address, ignoreCase = true) && validUntil > now
+internal fun PolymarketSessionSigner.carriesTermsOf(record: PolymarketSessionKey): Boolean {
+    val listedUntil = validUntil ?: return false
+    val recordedUntil = record.validUntil ?: return false
+    return address.equals(record.address, ignoreCase = true) &&
+        scopes.mapTo(mutableSetOf()) { it.uppercase() } == TRADING_SCOPES &&
+        listedUntil.epochSecond == recordedUntil.epochSecond
 }
 
 private fun PolymarketSessionSigner.maySignFor(sessionKey: PolymarketSessionKey, now: Instant): Boolean =
     address.equals(sessionKey.address, ignoreCase = true) && validUntil?.isAfter(now) != false
 
-private val TRADING_SCOPES = setOf("CLOB", "ALL")
+private val TRADING_SCOPES = setOf("CLOB")
 private val LISTING_EXPIRY_MARGIN: Duration = 10.minutes

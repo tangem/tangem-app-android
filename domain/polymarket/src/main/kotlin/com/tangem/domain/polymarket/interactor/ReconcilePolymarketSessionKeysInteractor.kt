@@ -12,9 +12,11 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
+import com.tangem.domain.polymarket.model.newestFor
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeySnapshot
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradability
@@ -57,17 +59,19 @@ class ReconcilePolymarketSessionKeysInteractor(
         )
         guarded {
             tradingStore.setReconciliation(userWalletId, assessment.reconciliation)
-            markListedKeyReady(
+            syncOwnKeyReadiness(
                 userWalletId = userWalletId,
                 wallet = wallet,
                 localKeyAddress = localKeyAddress,
                 signers = signers,
+                reconciliation = assessment.reconciliation,
             )
         }
 
         PolymarketSessionKeyOverview(
             wallet = wallet,
             localKeyAddress = localKeyAddress,
+            deviceId = deviceId,
             assessment = assessment,
             isTradable = isTradable(userWalletId = userWalletId, wallet = wallet, localKeyAddress = localKeyAddress),
         )
@@ -93,13 +97,19 @@ class ReconcilePolymarketSessionKeysInteractor(
         return tradability is PolymarketSessionKeyTradability.Tradable
     }
 
-    private suspend fun markListedKeyReady(
+    private suspend fun syncOwnKeyReadiness(
         userWalletId: UserWalletId,
         wallet: PolymarketWalletState,
         localKeyAddress: String?,
         signers: List<PolymarketSessionSigner>?,
+        reconciliation: PolymarketSessionKeyReconciliation,
     ) {
-        val own = wallet.sessionKeys.firstOrNull { it.address.equals(localKeyAddress, ignoreCase = true) } ?: return
+        val own = localKeyAddress?.let(wallet.sessionKeys::newestFor) ?: return
+        if (reconciliation.listsOnOtherTerms(own.address)) {
+            TangemLogger.i("Polymarket lists the session key ${own.address} on other terms, dropping its readiness")
+            tradingStore.forgetReadyOnExchange(userWalletId, own.address)
+            return
+        }
         val validUntil = own.validUntil ?: return
         val isListed = signers.orEmpty().any { it.lists(own, now = clock.instant()) }
         if (own.status != PolymarketSessionKeyStatus.ACTIVE || !isListed) return
@@ -108,6 +118,11 @@ class ReconcilePolymarketSessionKeysInteractor(
             TangemLogger.i("Polymarket lists the session key ${own.address}, marking it ready")
             tradingStore.restoreReadyOnExchange(userWalletId, own.address, validUntil)
         }
+    }
+
+    private fun PolymarketSessionKeyReconciliation.listsOnOtherTerms(address: String): Boolean {
+        val checked = this as? PolymarketSessionKeyReconciliation.Checked ?: return false
+        return address.lowercase() in checked.listedSigners && address in checked.missingOnExchange
     }
 
     private suspend fun readSigners(userWalletId: UserWalletId): List<PolymarketSessionSigner>? {
@@ -140,6 +155,7 @@ class ReconcilePolymarketSessionKeysInteractor(
 data class PolymarketSessionKeyOverview(
     val wallet: PolymarketWalletState,
     val localKeyAddress: String?,
+    val deviceId: String,
     val assessment: PolymarketSessionKeyAssessment,
     val isTradable: Boolean,
 )

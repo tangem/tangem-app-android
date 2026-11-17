@@ -8,16 +8,22 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.CustomerName
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.repository.BankOfframpRepository
 import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +32,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawModel @Inject constructor(
@@ -34,6 +41,8 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
+    private val bankOfframpRepository: BankOfframpRepository,
     analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -44,13 +53,30 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
 
-    /** Every saved account of the wallet: the recipient forms suggest from it while an account number is typed. */
+    /** Every saved account the withdrawal can pay: the recipient forms suggest from it as a number is typed. */
     val savedAccounts: StateFlow<List<BankAccount>>
         field = MutableStateFlow(emptyList<BankAccount>())
+
+    val customerName: StateFlow<CustomerNameState>
+        field = MutableStateFlow<CustomerNameState>(CustomerNameState.NotNeeded)
+
+    private val customerNameJobHolder = JobHolder()
 
     init {
         loadSavedAccounts()
         prefetchResidency()
+        if (isCustomerNameNeeded()) loadCustomerName()
+    }
+
+    /** A SPEI payout goes to the customer's own account, so a CLABE recipient carries the customer's KYC name. */
+    fun lockedRecipientValues(): Map<BankWithdrawFormField, String> {
+        val name = customerName.value as? CustomerNameState.Loaded ?: return emptyMap()
+        if (draft.value.destination?.rail != BankRail.SPEI) return emptyMap()
+        return mapOf(BankWithdrawFormField.FirstName to name.firstName, BankWithdrawFormField.LastName to name.lastName)
+    }
+
+    fun onRetryCustomerName() {
+        if (customerName.value == CustomerNameState.Unreachable) loadCustomerName()
     }
 
     fun onRecipientSelected(account: BankAccount) {
@@ -112,6 +138,34 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         params.onWithdrawSent()
     }
 
+    private fun isCustomerNameNeeded(): Boolean = params.entry == BankWithdrawEntry.NewPersonal &&
+        params.options.value.destinations.any { it.rail == BankRail.SPEI }
+
+    private fun loadCustomerName() {
+        customerName.value = CustomerNameState.Loading
+        modelScope.launch {
+            customerName.value = bankOfframpRepository.getCustomerName(params.userWalletId).fold(
+                ifLeft = { error ->
+                    TangemLogger.withTag(TAG).e("Failed to load the customer name: $error")
+                    CustomerNameState.Unreachable
+                },
+                ifRight = { name -> name.toState() },
+            )
+        }.saveIn(customerNameJobHolder)
+    }
+
+    private fun CustomerName.toState(): CustomerNameState {
+        val first = firstName?.trim().orEmpty()
+        val last = lastName?.trim().orEmpty()
+        if (first.isEmpty() || last.isEmpty()) {
+            TangemLogger.withTag(TAG).e(
+                "The customer name misses a part: first=${first.isNotEmpty()}, last=${last.isNotEmpty()}",
+            )
+            return CustomerNameState.Unreachable
+        }
+        return CustomerNameState.Loaded(firstName = first, lastName = last)
+    }
+
     /** The wizard's address steps open two pickers; warming them here keeps the first tap instant. */
     private fun prefetchResidency() {
         if (TangemPayBankWithdrawInnerRoute.RecipientDetails !in BankWithdrawFlow.steps(params.entry)) return
@@ -124,11 +178,15 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     /** One request per wizard: the suggestions and the recipient of a [BankWithdrawEntry.Saved] entry share it. */
     private fun loadSavedAccounts() {
         modelScope.launch {
-            getBankAccountsUseCase(params.userWalletId).fold(
+            getBankAccountsUseCase(
+                userWalletId = params.userWalletId,
+                includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
+            ).fold(
                 ifLeft = { error -> TangemLogger.withTag(TAG).e("Failed to load saved bank accounts: $error") },
                 ifRight = { accounts ->
-                    savedAccounts.value = accounts
-                    selectEntryRecipient(accounts)
+                    val payable = accounts.filter(params.options.value::canPay)
+                    savedAccounts.value = payable
+                    selectEntryRecipient(payable)
                 },
             )
         }
@@ -139,12 +197,18 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         accounts.firstOrNull { it.id == entry.bankAccountId }?.let(::onRecipientSelected)
     }
 
-    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft = copy(
-        recipient = account,
-        destination = destination?.let { current ->
-            params.options.value.destinations.firstOrNull { it.rail == account.details.rail } ?: current
-        },
-    )
+    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft {
+        val allowed = params.options.value.destinationsFor(account.details.rail)
+        if (allowed.isEmpty()) return this
+        return copy(
+            recipient = account,
+            destination = destination?.let { current ->
+                allowed.firstOrNull { it.rail == account.details.rail }
+                    ?: current.takeIf { it in allowed }
+                    ?: allowed.first()
+            },
+        )
+    }
 }
 
 private const val TAG = "TangemPayBankWithdrawModel"

@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
@@ -17,6 +18,12 @@ internal object BankWithdrawFlow {
 
     private val SAVED_STEPS = listOf(
         TangemPayBankWithdrawInnerRoute.Amount,
+        TangemPayBankWithdrawInnerRoute.Preview,
+    )
+
+    private val NEW_SPEI_RECIPIENT_STEPS = listOf(
+        TangemPayBankWithdrawInnerRoute.Amount,
+        TangemPayBankWithdrawInnerRoute.RecipientDetails,
         TangemPayBankWithdrawInnerRoute.Preview,
     )
 
@@ -49,8 +56,12 @@ internal object BankWithdrawFlow {
      * entry continues as the saved-recipient flow, so Continue on the amount leads to the preview and not back to
      * the forms.
      */
-    fun steps(draft: BankWithdrawDraft): List<TangemPayBankWithdrawInnerRoute> =
-        if (draft.recipient != null && draft.entry.startsNewRecipient()) SAVED_STEPS else steps(draft.entry)
+    fun steps(draft: BankWithdrawDraft): List<TangemPayBankWithdrawInnerRoute> = when {
+        !draft.entry.startsNewRecipient() -> steps(draft.entry)
+        draft.recipient != null -> SAVED_STEPS
+        draft.destination?.rail == BankRail.SPEI -> NEW_SPEI_RECIPIENT_STEPS
+        else -> steps(draft.entry)
+    }
 
     fun initialStep(entry: BankWithdrawEntry): TangemPayBankWithdrawInnerRoute = steps(entry).first()
 
@@ -69,7 +80,7 @@ internal object BankWithdrawFlow {
      */
     fun stepCounter(draft: BankWithdrawDraft, step: TangemPayBankWithdrawInnerRoute): StepCounter? {
         if (!draft.entry.startsNewRecipient() || draft.recipient != null) return null
-        val numbered = steps(draft.entry).filter { it in NUMBERED_STEPS }
+        val numbered = steps(draft).filter { it in NUMBERED_STEPS }
         val index = numbered.indexOf(step.toNumberedStep())
         return if (index == -1) null else StepCounter(current = index + 1, total = numbered.size)
     }

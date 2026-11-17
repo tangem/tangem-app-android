@@ -14,7 +14,14 @@ internal data class EarnConfirmUM(
     val rows: ImmutableList<EarnRowUM>,
     val notice: TextReference?,
     val notifications: ImmutableList<NotificationUM>,
-    val legal: TextReference?,
+    val legal: EarnLegalUM?,
     val stepLabel: TextReference?,
     val primary: TangemButtonUM,
+    val isHoldToConfirm: Boolean = false,
+)
+
+internal data class EarnLegalUM(
+    val termsOfUseUrl: String,
+    val privacyPolicyUrl: String,
+    val onClick: (String) -> Unit,
 )

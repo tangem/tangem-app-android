@@ -3,8 +3,8 @@ package com.tangem.tap.common.analytics.appsflyer
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -41,8 +41,8 @@ internal class AppsFlyerDeeplinkRouterTest {
     private val appsFlyerRepository: AppsFlyerRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
-    private val tangemPayOnboardDeepLink: TangemPayOnboardDeepLinkHandler.Factory = mockk(relaxed = true)
+    private val rootRouter: Router = mockk(relaxed = true)
+    private val tangemPayOnboardDeepLinkHandler: TangemPayOnboardDeepLinkHandler = mockk(relaxed = true)
     private val urisByString = listOf(DIRECT_URI, UNSUPPORTED_URI).associateWith { mockk<Uri>() }
     private val directUri: Uri = urisByString.getValue(DIRECT_URI)
 
@@ -50,8 +50,7 @@ internal class AppsFlyerDeeplinkRouterTest {
         appsFlyerRepository = appsFlyerRepository,
         userWalletsListRepository = userWalletsListRepository,
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
-        appRouter = appRouter,
-        tangemPayOnboardDeepLink = tangemPayOnboardDeepLink,
+        tangemPayOnboardDeepLinkHandler = tangemPayOnboardDeepLinkHandler,
     )
 
     @BeforeAll
@@ -71,8 +70,8 @@ internal class AppsFlyerDeeplinkRouterTest {
             appsFlyerRepository,
             userWalletsListRepository,
             clearAppsFlyerDeeplinkUseCase,
-            appRouter,
-            tangemPayOnboardDeepLink,
+            rootRouter,
+            tangemPayOnboardDeepLinkHandler,
         )
         // Happy baseline: deep link pending, authorized.
         every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
@@ -172,12 +171,12 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
             verify {
-                appRouter.push(
+                rootRouter.push(
                     route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
                     onComplete = any(),
                 )
@@ -193,12 +192,12 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert — root, not push: the onboarding falls back to Home with `replaceCurrent`.
-            verify(exactly = 1) { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
-            verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+            verify(exactly = 1) { rootRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+            verify(exactly = 0) { rootRouter.push(route = any(), onComplete = any()) }
             coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -212,11 +211,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             )
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert — returning after forgetting the last wallet is not an install entry to hijack.
-            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -230,11 +229,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             )
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert — the NFC scan started by the launch owns the screen.
-            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -248,11 +247,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             )
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert — wallet creation is already under way; the link waits for a start screen.
-            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -262,7 +261,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             // Arrange
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Act — the store is mocked, so the link still reads as pending on the re-emission.
@@ -270,7 +269,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+            verify(exactly = 1) { rootRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
             coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -283,11 +282,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert — referral install → hot wallet creation; the deep link stays until a wallet is created.
-            verify { appRouter.replaceAll(AppRoute.CreateWalletStart, onComplete = any()) }
+            verify { rootRouter.replaceAll(AppRoute.CreateWalletStart, onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -300,11 +299,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.push(route = AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
+            verify { rootRouter.push(route = AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -317,11 +316,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.replaceAll(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
+            verify { rootRouter.replaceAll(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -333,12 +332,12 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE))
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any(), any()) }
-            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.push(any(), any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(any(), onComplete = any()) }
         }
 
     @Test
@@ -349,12 +348,12 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.AppSettings)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) {
-                appRouter.push(route = AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any())
+                rootRouter.push(route = AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any())
             }
         }
 
@@ -369,12 +368,12 @@ internal class AppsFlyerDeeplinkRouterTest {
             )
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any(), any()) }
-            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.push(any(), any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(any(), onComplete = any()) }
         }
 
     @Test
@@ -388,11 +387,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             )
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(any(), onComplete = any()) }
         }
 
     @Test
@@ -402,12 +401,12 @@ internal class AppsFlyerDeeplinkRouterTest {
         val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
         // Act
-        router.observe(backgroundScope, currentRoute)
+        router.observe(backgroundScope, currentRoute, rootRouter)
         advanceUntilIdle()
 
         // Assert
         coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { rootRouter.push(any(), any()) }
     }
 
     // endregion
@@ -422,12 +421,14 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { tangemPayOnboardDeepLink.create(directUri) }
-            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 1) {
+                tangemPayOnboardDeepLinkHandler.handle(match { it.uri == directUri && it.router === rootRouter })
+            }
+            verify(exactly = 0) { rootRouter.push(any(), any()) }
         }
 
     @Test
@@ -439,13 +440,13 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { tangemPayOnboardDeepLink.create(directUri) }
+            verify(exactly = 1) { tangemPayOnboardDeepLinkHandler.handle(match { it.uri == directUri }) }
             coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
-            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { rootRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
         }
 
     @Test
@@ -456,11 +457,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { tangemPayOnboardDeepLink.create(any()) }
+            verify(exactly = 0) { tangemPayOnboardDeepLinkHandler.handle(any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -472,11 +473,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Initial)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { tangemPayOnboardDeepLink.create(any()) }
+            verify(exactly = 0) { tangemPayOnboardDeepLinkHandler.handle(any()) }
         }
 
     @Test
@@ -487,13 +488,13 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             currentRoute.value = AppRoute.Home()
             currentRoute.value = AppRoute.Wallet
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { tangemPayOnboardDeepLink.create(directUri) }
+            verify(exactly = 1) { tangemPayOnboardDeepLinkHandler.handle(match { it.uri == directUri }) }
         }
 
     @Test
@@ -504,7 +505,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             advanceUntilIdle()
 
             // Assert
@@ -520,13 +521,13 @@ internal class AppsFlyerDeeplinkRouterTest {
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
             // Act
-            router.observe(backgroundScope, currentRoute)
+            router.observe(backgroundScope, currentRoute, rootRouter)
             stored.value = null
             stored.value = DIRECT_URI
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 2) { tangemPayOnboardDeepLink.create(directUri) }
+            verify(exactly = 2) { tangemPayOnboardDeepLinkHandler.handle(match { it.uri == directUri }) }
             coVerify(exactly = 2) { clearAppsFlyerDeeplinkUseCase() }
         }
 

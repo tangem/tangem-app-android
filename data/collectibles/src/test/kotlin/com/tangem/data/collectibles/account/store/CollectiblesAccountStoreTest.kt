@@ -219,7 +219,10 @@ internal class CollectiblesAccountStoreTest {
         assertThat(store.getSessionKey(WALLET_A)).isEqualTo(SESSION_KEY)
         assertThat(persisted.data.first()).containsExactly(
             WALLET_A.stringValue,
-            CollectiblesAccountDTO(status = CollectiblesAccountStatusValueDTO.Onboarded(), sessionKeyHotWalletId = SESSION_KEY),
+            CollectiblesAccountDTO(
+                status = CollectiblesAccountStatusValueDTO.Onboarded(),
+                sessionKeyHotWalletId = SESSION_KEY,
+            ),
         )
     }
 
@@ -285,6 +288,7 @@ internal class CollectiblesAccountStoreTest {
         val BALANCE_DTO = CollectiblesVaultBalanceDTO(
             usdcAmount = BigDecimal("20"),
             usdcMint = MockCollectibles.USDC_MINT,
+            vaultAddress = MockCollectibles.VAULT_ADDRESS,
             usdcAtaAddress = MockCollectibles.USDC_ATA_ADDRESS,
         )
 

@@ -57,6 +57,28 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = Enabling(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING)),
             ),
             Model(
+                case = "local key renewed after revocation trades on its newest record",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKED).copy(createdAt = NOW - Duration.ofDays(2)),
+                        key(Owner.LOCAL),
+                    ),
+                    signers = listOf(matching(key(Owner.LOCAL))),
+                ),
+                expected = Active(key(Owner.LOCAL), isRenewDue = false),
+            ),
+            Model(
+                case = "local key requested again matches its newest record ignoring case",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.LOCAL).copy(createdAt = NOW - Duration.ofDays(2)),
+                        key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING),
+                    ),
+                    localAddress = checksummed(Owner.LOCAL),
+                ),
+                expected = Enabling(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING)),
+            ),
+            Model(
                 case = "revoking local key is revoking",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKING))),
                 expected = Revoking(key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKING)),
@@ -95,6 +117,22 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = Reenable(key(Owner.LOCAL)),
             ),
             Model(
+                case = "active local key the exchange lists with other scopes is enabled again",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL)),
+                    signers = listOf(matching(key(Owner.LOCAL)).copy(scopes = listOf("ALL"))),
+                ),
+                expected = Reenable(key(Owner.LOCAL)),
+            ),
+            Model(
+                case = "fresh local key the exchange lists with other terms stays active",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, authorizedAt = FRESH)),
+                    signers = listOf(matching(key(Owner.LOCAL)).copy(validUntil = VALID_UNTIL.plusSeconds(1))),
+                ),
+                expected = Active(key(Owner.LOCAL, authorizedAt = FRESH), isRenewDue = false),
+            ),
+            Model(
                 case = "failed local key the exchange lists anyway is repaired by renewal",
                 snapshot = snapshot(
                     keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
@@ -114,6 +152,39 @@ internal class PolymarketSessionKeyAssessorTest {
                 case = "failed local key without the exchange's list is enabled again",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)), signers = null),
                 expected = Reenable(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+            ),
+            Model(
+                case = "failed local key the exchange lists in another case is repaired by renewal",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+                    signers = listOf(
+                        matching(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED))
+                            .copy(address = checksummed(Owner.LOCAL)),
+                    ),
+                ),
+                expected = RepairByRenewal(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+            ),
+            Model(
+                case = "previous key whose newest record is revoked is not waited for",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING),
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.REVOKED).copy(createdAt = IN_THE_LAST_HOUR),
+                    ),
+                ),
+                expected = OfferEnable,
+            ),
+            Model(
+                case = "previous key renewed after its revoked record listed first is waited for",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.REVOKED),
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING).copy(createdAt = IN_THE_LAST_HOUR),
+                    ),
+                ),
+                expected = WaitingForPrevious(
+                    key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING).copy(createdAt = IN_THE_LAST_HOUR),
+                ),
             ),
             Model(
                 case = "pending previous key of this device is waited for",
@@ -388,6 +459,52 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = checked(),
             ),
             ReconciliationModel(
+                case = "active local key the exchange lists with other scopes is foreign and missing",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL)),
+                    signers = listOf(matching(key(Owner.LOCAL)).copy(scopes = listOf("CLOB", "ALL"))),
+                ),
+                expected = checked(
+                    foreign = listOf(matching(key(Owner.LOCAL)).copy(scopes = listOf("CLOB", "ALL"))),
+                    missing = setOf(Owner.LOCAL.address),
+                ),
+            ),
+            ReconciliationModel(
+                case = "active local key the exchange lists a second later is foreign and missing",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL)),
+                    signers = listOf(matching(key(Owner.LOCAL)).copy(validUntil = VALID_UNTIL.plusSeconds(1))),
+                ),
+                expected = checked(
+                    foreign = listOf(matching(key(Owner.LOCAL)).copy(validUntil = VALID_UNTIL.plusSeconds(1))),
+                    missing = setOf(Owner.LOCAL.address),
+                ),
+            ),
+            ReconciliationModel(
+                case = "active local key the exchange lists in the recorded second is ours",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL)),
+                    signers = listOf(matching(key(Owner.LOCAL)).copy(validUntil = VALID_UNTIL.plusMillis(700))),
+                ),
+                expected = checked(),
+            ),
+            ReconciliationModel(
+                case = "fresh local key the exchange lists with other terms is not judged yet",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, authorizedAt = FRESH)),
+                    signers = listOf(matching(key(Owner.LOCAL)).copy(scopes = listOf("ALL"))),
+                ),
+                expected = checked(),
+            ),
+            ReconciliationModel(
+                case = "active record listed with its own scopes other than CLOB is foreign",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.OTHER_DEVICE).copy(scopes = listOf("ALL"))),
+                    signers = listOf(OTHER_DEVICE_ALL_SCOPES),
+                ),
+                expected = checked(foreign = listOf(OTHER_DEVICE_ALL_SCOPES)),
+            ),
+            ReconciliationModel(
                 case = "scopes are compared ignoring case",
                 snapshot = snapshot(
                     keys = listOf(key(Owner.OTHER_DEVICE)),
@@ -498,6 +615,11 @@ internal class PolymarketSessionKeyAssessorTest {
                 expected = ALMOST_EXPIRED,
             ),
             NextChangeModel(
+                case = "own active key changes when the extension offer opens",
+                snapshot = snapshot(keys = listOf(key(Owner.LOCAL, validUntil = NOW + Duration.ofDays(40)))),
+                expected = NOW + Duration.ofDays(10),
+            ),
+            NextChangeModel(
                 case = "own active key changes when its renewal is due",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, renewAfter = IN_ONE_HOUR))),
                 expected = IN_ONE_HOUR,
@@ -518,7 +640,7 @@ internal class PolymarketSessionKeyAssessorTest {
             NextChangeModel(
                 case = "readiness grace changes nothing without signers",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, authorizedAt = FRESH)), signers = null),
-                expected = VALID_UNTIL - Duration.ofMinutes(10),
+                expected = VALID_UNTIL - Duration.ofDays(30),
             ),
         )
     }
@@ -560,6 +682,7 @@ internal class PolymarketSessionKeyAssessorTest {
         val ALMOST_EXPIRED: Instant = NOW + Duration.ofMinutes(9)
         val FRESH: Instant = NOW - Duration.ofMinutes(1)
         val IN_ONE_HOUR: Instant = NOW + Duration.ofHours(1)
+        val IN_THE_LAST_HOUR: Instant = NOW - Duration.ofHours(1)
 
         val UNRECORDED = PolymarketSessionSigner(
             address = "0xf0e1000000000000000000000000000000000009",

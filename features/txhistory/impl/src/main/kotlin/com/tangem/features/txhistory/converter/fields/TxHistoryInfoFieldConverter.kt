@@ -277,6 +277,7 @@ internal class TxHistoryInfoFieldConverter(
             is TransactionType.YieldSupply.ReactivateToken,
             is TransactionType.GaslessFee,
             is TransactionType.NetworkFee,
+            is TransactionType.Lending,
             -> null
         }
     }

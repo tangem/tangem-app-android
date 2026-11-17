@@ -236,6 +236,22 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         }
 
         @Test
+        fun `GIVEN CLABE pasted with spaces WHEN field loses focus THEN only digits kept and accepted`() {
+            // Arrange
+            val model = createModel(formFields = persistentListOf(BankWithdrawFormField.Clabe))
+            fill(model, BankWithdrawFormField.Clabe, "002 010 07777777777 1")
+
+            // Act
+            textField(model, BankWithdrawFormField.Clabe).onFocusChange(false)
+
+            // Assert
+            val clabe = textField(model, BankWithdrawFormField.Clabe)
+            assertThat(clabe.value).isEqualTo("002010077777777771")
+            assertThat(clabe.error).isNull()
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN field with error WHEN value changes THEN error cleared`() {
             // Arrange
             val model = createModel()
@@ -280,7 +296,91 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
                 value = "Москва",
                 expectedError = resourceReference(R.string.tangempay_order_data_field_latin_only),
             ),
+            FormatErrorModel(
+                formFields = persistentListOf(BankWithdrawFormField.Clabe),
+                field = BankWithdrawFormField.Clabe,
+                value = "002010077777777772",
+                expectedError = resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe),
+            ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ProfileNames {
+
+        @Test
+        fun `GIVEN profile names WHEN SPEI form shown THEN names are locked and the CLABE field explains itself`() {
+            // Act
+            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+
+            // Assert
+            assertThat(model.uiState.value.fields.filterIsInstance<FieldUM.Locked>()).containsExactly(
+                FieldUM.Locked(
+                    field = BankWithdrawFormField.FirstName,
+                    value = "José",
+                    placeholder = BankWithdrawFormField.FirstName.placeholder,
+                ),
+                FieldUM.Locked(
+                    field = BankWithdrawFormField.LastName,
+                    value = "Hernández",
+                    placeholder = BankWithdrawFormField.LastName.placeholder,
+                ),
+            ).inOrder()
+            assertThat(textField(model, BankWithdrawFormField.Clabe).helperText)
+                .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_field_clabe_hint))
+        }
+
+        @Test
+        fun `GIVEN a name typed earlier WHEN SPEI form shown with profile names THEN the profile name is shown`() {
+            // Arrange
+            setDraftFirstName("Typed")
+
+            // Act
+            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+
+            // Assert
+            assertThat(anyField(model, BankWithdrawFormField.FirstName).value).isEqualTo("José")
+        }
+
+        @Test
+        fun `GIVEN profile names WHEN SPEI form shown THEN the CLABE field finishes the input`() {
+            // Act
+            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+
+            // Assert
+            assertThat(textField(model, BankWithdrawFormField.Clabe).keyboardOptions.imeAction.toString())
+                .isEqualTo("Done")
+        }
+
+        @Test
+        fun `GIVEN profile names with accents WHEN valid CLABE continued THEN names reported without a Latin check`() {
+            // Arrange
+            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+            fill(model, BankWithdrawFormField.Clabe, "002010077777777771")
+
+            // Act
+            model.uiState.value.onContinueClick()
+
+            // Assert
+            verify(exactly = 1) {
+                onContinue(
+                    BankWithdrawFormResult(
+                        values = mapOf(
+                            BankWithdrawFormField.Clabe to "002010077777777771",
+                            BankWithdrawFormField.FirstName to "José",
+                            BankWithdrawFormField.LastName to "Hernández",
+                        ),
+                        displayNames = mapOf(
+                            BankWithdrawFormField.Clabe to "",
+                            BankWithdrawFormField.FirstName to "",
+                            BankWithdrawFormField.LastName to "",
+                        ),
+                    ),
+                )
+            }
+            assertThat(model.uiState.value.fields.mapNotNull { it.error }).isEmpty()
+        }
     }
 
     @Nested
@@ -1432,6 +1532,7 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         formFields: ImmutableList<BankWithdrawFormField> = fields,
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.RecipientDetails,
         sourceAccount: BankWithdrawSourceAccount = paymentAccount,
+        lockedValues: Map<BankWithdrawFormField, String> = emptyMap(),
     ): TangemPayBankWithdrawFormModel = TangemPayBankWithdrawFormModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawFormModel.Params(
@@ -1440,6 +1541,7 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
                     draft = draft,
                     step = step,
                     fields = formFields,
+                    lockedValues = lockedValues,
                     savedAccounts = savedAccounts,
                     onBack = onBack,
                     onContinue = onContinue,
@@ -1455,6 +1557,15 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
     ).destroyAfterTest()
 
     private companion object {
+        val speiFields = persistentListOf(
+            BankWithdrawFormField.Clabe,
+            BankWithdrawFormField.FirstName,
+            BankWithdrawFormField.LastName,
+        )
+        val profileNames = mapOf(
+            BankWithdrawFormField.FirstName to "José",
+            BankWithdrawFormField.LastName to "Hernández",
+        )
         val addressFields = persistentListOf(BankWithdrawFormField.Country, BankWithdrawFormField.Region)
         val usAddressFields = persistentListOf(
             BankWithdrawFormField.Country,

@@ -1,8 +1,9 @@
 package com.tangem.features.feed.deeplink
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
-import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import android.net.Uri
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import javax.inject.Inject
 
 /**
@@ -11,15 +12,28 @@ import javax.inject.Inject
  */
 internal class NewsWebDeepLinkHandler @Inject constructor(
     private val newsDeepLinkHandler: NewsDeepLinkHandler,
-    private val newsDetailsDeepLinkHandlerFactory: NewsDetailsDeepLinkHandler.Factory,
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
-        if (NewsDetailsDeepLinkHandler.extractArticleIdFromUri(request.uri) != null) {
-            newsDetailsDeepLinkHandlerFactory.create(coroutineScope = request.scope, deeplinkUri = request.uri)
+        val articleId = extractArticleIdFromUri(request.uri)
+        if (articleId != null) {
+            request.router.push(AppRoute.NewsDetails(newsId = articleId))
         } else {
             newsDeepLinkHandler.handle(request)
         }
+    }
+
+    /**
+     * Parses a URI of the form `https://tangem.com/news/{category}/{id}-{slug}` into the article id.
+     * Returns `null` when the path carries no article id — e.g. the bare `/news` listing page or
+     * a `/news/{category}` page.
+     */
+    private fun extractArticleIdFromUri(uri: Uri): Int? {
+        val pathSegments = uri.path.orEmpty().split("/").filter { it.isNotBlank() }
+        if (pathSegments.isEmpty() || pathSegments[0] != "news" || pathSegments.size < 2) {
+            return null
+        }
+        return pathSegments.last().substringBefore("-").toIntOrNull()
     }
 
     companion object {

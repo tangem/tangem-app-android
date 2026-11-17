@@ -43,7 +43,7 @@ internal class PolymarketEventConverterTest {
                         version = "v2",
                     ),
                 ),
-            )
+            ).copy(eventType = "soccer")
 
             // Act
             val actual = converter.convert(value = dto)
@@ -51,6 +51,7 @@ internal class PolymarketEventConverterTest {
             // Assert
             val expected = PolymarketEvent(
                 id = "event-id",
+                eventType = "soccer",
                 slug = "event-slug",
                 title = "Event title",
                 description = "Event description",

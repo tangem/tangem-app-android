@@ -1,14 +1,23 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.E2eCatalog
+import com.tangem.core.ui.test.ManageTokensScreenTestTags
+import com.tangem.core.ui.test.SwitchTestTags
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractEditableText
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.isDisplayedNow
 import com.tangem.common.extensions.parseNumericBalance
@@ -26,6 +35,7 @@ import com.tangem.screens.onPortfolioSelectorSheet
 import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
+import com.tangem.screens.onSendSelectNetworkFeeBottomSheet
 import com.tangem.screens.onSendSuccessScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTransferBottomSheet
@@ -33,6 +43,8 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 import java.math.BigDecimal
+import java.math.RoundingMode
+import org.junit.Assume.assumeTrue
 import com.tangem.core.ui.R as CoreUiR
 
 fun BaseTestCase.waitForMainScreenLoaded() {
@@ -69,7 +81,19 @@ fun BaseTestCase.addNetworkToMainViaMarkets(network: E2eCatalog.E2eNetwork) {
         searchTokenInMarkets(network.searchQuery)
     }
     step("Click on '${network.tokenName}' token") {
-        awaitSuccess { onMarketsScreen { tokenWithTitle(network.tokenName).clickWithAssertion() } }
+        // Low-cap coins (under 100k USD market cap, e.g. ZENIQ) are hidden behind a "Show tokens" button that
+        // only renders once the async search returns. Poll fast with isDisplayedNow (no per-probe flaky-safety
+        // wait, which would otherwise burn the whole budget on the still-hidden token): reveal the low-cap list
+        // as soon as the button appears, then wait for the token row before tapping it.
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onMarketsScreen {
+                if (showTokensButton.isDisplayedNow()) showTokensButton.clickWithAssertion()
+                check(tokenWithTitle(network.tokenName).isDisplayedNow()) {
+                    "'${network.tokenName}' token not visible yet in Markets search"
+                }
+            }
+        }
+        onMarketsScreen { tokenWithTitle(network.tokenName).clickWithAssertion() }
         waitForIdle()
     }
     step("Add '${network.networkName}' to the portfolio") {
@@ -102,10 +126,27 @@ private fun BaseTestCase.selectAddToPortfolioNetwork(network: E2eCatalog.E2eNetw
 
 fun BaseTestCase.addNetworkToMainViaManageTokens(network: E2eCatalog.E2eNetwork) {
     openManageTokensForE2e()
-    enableNetworkInManageTokensAndReturn(network)
+    enableInManageTokensAndReturn(network.searchQuery, network.tokenName, network.manageTokensNetworkLabel)
 }
 
 fun BaseTestCase.addNetworkToSecondAccountViaManageTokens(network: E2eCatalog.E2eNetwork) {
+    openManageTokensForSecondAccount()
+    enableInManageTokensAndReturn(network.searchQuery, network.tokenName, network.manageTokensNetworkLabel)
+}
+
+// Token variants (for the token Send E2E test): enable the ERC-20 token on the same network. The add-token
+// flow is identical to the native coin — only the search query / row title / network label come from the token.
+fun BaseTestCase.addTokenToMainViaManageTokens(token: E2eCatalog.E2eToken) {
+    openManageTokensForE2e()
+    enableInManageTokensAndReturn(token.searchQuery, token.tokenName, token.manageTokensNetworkLabel)
+}
+
+fun BaseTestCase.addTokenToSecondAccountViaManageTokens(token: E2eCatalog.E2eToken) {
+    openManageTokensForSecondAccount()
+    enableInManageTokensAndReturn(token.searchQuery, token.tokenName, token.manageTokensNetworkLabel)
+}
+
+private fun BaseTestCase.openManageTokensForSecondAccount() {
     val secondAccountName = secondAccountName()
     step("Open 'Manage Tokens' for the '$secondAccountName' account via its 'Add tokens' button") {
         onMainScreen { collapseOnScreenPageHeader() }
@@ -120,7 +161,6 @@ fun BaseTestCase.addNetworkToSecondAccountViaManageTokens(network: E2eCatalog.E2
         onMainScreen { emptyAccountAddTokensButton.performClick() }
         awaitSuccess { onManageTokensScreen { searchField.assertIsDisplayed() } }
     }
-    enableNetworkInManageTokensAndReturn(network)
 }
 
 private fun BaseTestCase.secondAccountName(): String {
@@ -156,29 +196,64 @@ private fun BaseTestCase.revealAccountTokenOnMain(accountName: String, tokenName
     }
 }
 
-private fun BaseTestCase.enableNetworkInManageTokensAndReturn(network: E2eCatalog.E2eNetwork) {
-    step("Search for '${network.searchQuery}' in Manage Tokens") {
+private fun BaseTestCase.enableInManageTokensAndReturn(searchQuery: String, tokenName: String, networkLabel: String) {
+    // A symbol like "USDC" recurs across dozens of result rows (bridged variants, meme tokens that reuse the
+    // ticker), and each row's text includes that symbol — so matching by text alone is ambiguous. The genuine
+    // coin is the only row whose *title* (the row's first text) equals the token name; every other row has a
+    // different title ("UpSideDownCat", "USD CoinVertible", …).
+    val genuineToken = {
+        composeTestRule.onNode(
+            SemanticsMatcher("TOKEN_ITEM titled '$tokenName'") { node ->
+                val config = node.config
+                val isTokenItem = SemanticsProperties.TestTag in config &&
+                    config[SemanticsProperties.TestTag] == ManageTokensScreenTestTags.TOKEN_ITEM
+                val title = if (SemanticsProperties.Text in config) {
+                    config[SemanticsProperties.Text].firstOrNull()?.text
+                } else {
+                    null
+                }
+                isTokenItem && title == tokenName
+            },
+        )
+    }
+    // Network switches render only under an expanded token, so their presence is a reliable "expanded" signal.
+    val anyNetworkSwitchPresent = {
+        composeTestRule.onAllNodes(hasTestTag(SwitchTestTags.SWITCH)).fetchSemanticsNodes().isNotEmpty()
+    }
+    // Scroll to index 0 first: the genuine coin is the first result and the LazyColumn renders behind the sticky
+    // search bar, so a slightly-scrolled list leaves the top row clipped under the bar and the tap would miss.
+    val expandGenuineToken = {
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
+        waitForIdle()
+        genuineToken().performClick()
+        waitForIdle()
+    }
+
+    step("Search for '$searchQuery' in Manage Tokens") {
         onManageTokensScreen {
             searchField.performClick()
-            searchField.performTextInput(network.searchQuery)
+            searchField.performTextInput(searchQuery)
         }
         // Dismiss the IME specifically — pressBack() would navigate out of Manage Tokens if the keyboard never opened.
         Espresso.closeSoftKeyboard()
         waitForIdle()
     }
-    step("Expand '${network.tokenName}'") {
-        awaitSuccess { onManageTokensScreen { tokenItem(network.tokenName).assertIsDisplayed() } }
-        onManageTokensScreen { tokenItem(network.tokenName).performClick() }
-        waitForIdle()
-    }
-    step("Ensure the '${network.manageTokensNetworkLabel}' network is enabled") {
-        awaitSuccess { onManageTokensScreen { networkSwitch(network.manageTokensNetworkLabel).assertIsDisplayed() } }
+    step("Expand '$tokenName' and enable the '$networkLabel' network") {
+        // The token list keeps refreshing while the portfolio fetches balances for the token just added to the
+        // previous account, and every refresh collapses the expanded row. So (re-)expand and locate the target
+        // network switch in a single retry loop that survives those recompositions — performScrollTo throws when
+        // the switch is absent (row collapsed or switch below the fold), which drives another expand+scroll pass.
+        awaitSuccess {
+            if (!anyNetworkSwitchPresent()) expandGenuineToken()
+            onManageTokensScreen { networkSwitch(networkLabel).performScrollTo() }
+            onManageTokensScreen { networkSwitch(networkLabel).assertIsDisplayed() }
+        }
         // Toggle only when OFF — never disable an already-enabled network.
         val alreadyEnabled = runCatching {
-            onManageTokensScreen { networkSwitch(network.manageTokensNetworkLabel).assertIsOn() }
+            onManageTokensScreen { networkSwitch(networkLabel).assertIsOn() }
         }.isSuccess
         if (!alreadyEnabled) {
-            onManageTokensScreen { networkSwitch(network.manageTokensNetworkLabel).performClick() }
+            onManageTokensScreen { networkSwitch(networkLabel).performClick() }
             awaitSuccess { onManageTokensScreen { saveButton.assertIsDisplayed() } }
             onManageTokensScreen { saveButton.performClick() }
             waitForIdle()
@@ -285,13 +360,47 @@ fun BaseTestCase.assertTokenBalanceLoadedAndNonNegative(tokenTitle: String) {
     }
 }
 
-// Small native-coin reserve required on top of the send amount to cover the network fee. A single constant is
-// enough while fees are tiny (≈0.006–0.008 POL/send); make it a per-network catalog field if a network needs more.
-private val FEE_RESERVE = BigDecimal("0.01")
-
 // Mirrors the iOS SendBetweenAccountsE2ETests flow: always a real on-chain broadcast.
 fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, amount: String) {
-    val token = network.mainScreenToken
+    performSendFromRicherAccount(
+        tokenTitle = network.mainScreenToken,
+        symbol = network.searchQuery,
+        amount = amount,
+        accountAddresses = network.accountAddresses,
+        networkName = network.networkName,
+    )
+}
+
+fun BaseTestCase.sendTokenFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, token: E2eCatalog.E2eToken) {
+    performSendFromRicherAccount(
+        tokenTitle = token.mainScreenToken,
+        symbol = token.searchQuery,
+        amount = token.sendAmount,
+        accountAddresses = network.accountAddresses,
+        networkName = network.networkName,
+    )
+}
+
+fun BaseTestCase.sendWithCustomFeeFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, percentAboveMarket: Int) {
+    performSendFromRicherAccount(
+        tokenTitle = network.mainScreenToken,
+        symbol = network.searchQuery,
+        amount = network.sendAmount,
+        accountAddresses = network.accountAddresses,
+        networkName = network.networkName,
+        beforeBroadcast = { setCustomFeeAboveMarket(percentAboveMarket) },
+    )
+}
+
+private fun BaseTestCase.performSendFromRicherAccount(
+    tokenTitle: String,
+    symbol: String,
+    amount: String,
+    accountAddresses: List<String>,
+    networkName: String,
+    beforeBroadcast: BaseTestCase.() -> Unit = {},
+) {
+    val token = tokenTitle
     var accountNames = emptyList<String>()
     step("Read the account list") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
@@ -319,19 +428,22 @@ fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, am
     val senderName = accountNames[senderIndex]
     // Fail here with a clear top-up message when the wallet runs dry, rather than timing out later on a disabled
     // Next button (the app blocks it on insufficient funds) — on a scheduled run that is the expected dry-wallet
-    // failure, and a bare "Next not enabled" would read like an app bug.
-    val required = amount.toBigDecimal() + FEE_RESERVE
-    require(balances[senderIndex] >= required) {
-        "E2E wallet is out of funds on ${network.networkName}: richer account '$senderName' holds " +
-            "${balances[senderIndex]} ${network.searchQuery}, needs >= $required (amount $amount + fee reserve). " +
-            "Top up ${network.accountAddresses.joinToString()}"
+    // failure, and a bare "Next not enabled" would read like an app bug. We only require the balance to be at least
+    // the send amount (not amount + a fixed fee reserve): the fee varies wildly by network — tiny on L2s, where a
+    // flat reserve would falsely reject a wallet that can actually send — and the app's own Next button enforces the
+    // real amount + fee. Use >=, not >: for token sends gas is paid in the native coin, so transferring the full
+    // token balance (balance == amount) is valid and must not be rejected here.
+    require(balances[senderIndex] >= amount.toBigDecimal()) {
+        "E2E wallet is out of funds on $networkName: richer account '$senderName' holds " +
+            "${balances[senderIndex]} $symbol, needs >= $amount (the send amount). " +
+            "Top up ${accountAddresses.joinToString()}"
     }
     // The on-screen account order is reorderable (ApplyAccountListSortingUseCase), so map the recipient by account
     // identity, not display position: the catalog addresses are ordered by account index (0 = main, 1 = second).
     // This keeps the recipient the *other* account and rules out a self-transfer that would pass trivially.
     val mainName = getResourceString(CoreUiR.string.account_main_account_title)
     val recipientAddress =
-        if (senderName == mainName) network.accountAddresses[1] else network.accountAddresses[0]
+        if (senderName == mainName) accountAddresses[1] else accountAddresses[0]
     TangemLogger.i(
         "E2E-SEND accounts=$accountNames balances=$balances senderIndex=$senderIndex " +
             "sender=$senderName recipient=$recipientAddress",
@@ -357,6 +469,7 @@ fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, am
         onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
     }
     openSendConfirmScreenViaNextButton()
+    beforeBroadcast()
     // The confirm 'Send' button is hold-to-confirm (a tap does nothing) — broadcast via the shared long-click
     // helper, which holds and asserts the success screen.
     openSendSuccessScreenViaLongClickOnSendButton()
@@ -376,3 +489,71 @@ fun BaseTestCase.sendFromRicherAccountToOther(network: E2eCatalog.E2eNetwork, am
         step("Sent transaction: $txUrl")
     }
 }
+
+// Opens the fee selector on the confirm screen, switches to Custom and raises the EVM max fee per gas to
+// [percent]% above the prefilled market value. maxFeePerGas is the fee cap — the on-chain charge still follows
+// EIP-1559; the increase is asserted on the field value (the confirm-screen fiat fee rounds to "<$0.01" on cheap
+// networks and would not show the change). Market/custom values are reported as step names for the Allure report.
+private fun BaseTestCase.setCustomFeeAboveMarket(percent: Int) {
+    // EIP-1559 networks expose a "Max fee" custom field; legacy-gas networks (e.g. ZENIQ) a single "Gas price".
+    val maxFeeTitle = getResourceString(CoreUiR.string.send_custom_evm_max_fee)
+    val gasPriceTitle = getResourceString(CoreUiR.string.send_gas_price)
+    step("Open the fee selector and select Custom") {
+        // The fee keeps computing after the confirm screen appears; the selector is a no-op until it is ready.
+        // The ⇕ select-fee icon renders only once the fee is loaded and selectable, so wait for it before tapping.
+        awaitSuccess { onSendConfirmScreen { selectFeeIcon.assertIsDisplayed() } }
+        onSendConfirmScreen { feeSelectorIcon.performClick() }
+        awaitSuccess { onSendSelectNetworkFeeBottomSheet { chooseSpeedTitle.assertIsDisplayed() } }
+        awaitSuccess { onSendSelectNetworkFeeBottomSheet { customSelectorItem.assertIsDisplayed() } }
+        onSendSelectNetworkFeeBottomSheet { customSelectorItem.performClick() }
+    }
+    step("Set the custom fee $percent% above market") {
+        // The custom editor shows different fields per fee model: EIP-1559 networks a "Max fee" field, legacy-gas
+        // networks (e.g. ZENIQ) a single "Gas price" field. They are mutually exclusive — detect which is shown
+        // (legacy is then skipped below, see [REDACTED_TASK_KEY]).
+        var feeTitle: String? = null
+        awaitSuccess {
+            onSendSelectNetworkFeeBottomSheet {
+                feeTitle = when {
+                    inputTextFieldValue(maxFeeTitle).isDisplayedNow() -> maxFeeTitle
+                    inputTextFieldValue(gasPriceTitle).isDisplayedNow() -> gasPriceTitle
+                    else -> null
+                }
+            }
+            requireNotNull(feeTitle) { "No editable custom fee field found ('Max fee' or 'Gas price')" }
+        }
+        val title = feeTitle!!
+        // Legacy-gas (non-EIP-1559) custom fee is broken in the app: EthereumLegacyCustomFeeConverter reads the
+        // "Gas price" field as wei instead of gwei, so a custom price is mis-scaled by ~10^9 and the node rejects the
+        // broadcast as "gas price too small" ([REDACTED_TASK_KEY]). Skip until the converter is fixed, rather than sending a
+        // doomed transaction.
+        assumeTrue(
+            "Skipped on legacy-gas (non-EIP-1559) network: custom Gas price is mis-scaled gwei→wei ([REDACTED_TASK_KEY])",
+            title != gasPriceTitle,
+        )
+        var marketRaw = ""
+        onSendSelectNetworkFeeBottomSheet { marketRaw = inputTextFieldValue(title).extractEditableText() }
+        val market = numericPart(marketRaw)
+        require(market > BigDecimal.ZERO) { "Prefilled market fee is not a positive number: '$marketRaw'" }
+        val raised = market.multiply(BigDecimal(100 + percent)).divide(BigDecimal(100))
+        // The EIP-1559 "Max fee" field accepts fractional gwei (sub-gwei on cheap chains), so keep the field's full
+        // precision and round UP (rounding to 2 dp could erase a small bump or floor a low fee to 0).
+        val bumped = raised.setScale(9, RoundingMode.UP).stripTrailingZeros().toPlainString()
+        onSendSelectNetworkFeeBottomSheet {
+            inputTextFieldValue(title).performClick()
+            inputTextFieldValue(title).performTextReplacement(bumped)
+        }
+        var appliedRaw = ""
+        onSendSelectNetworkFeeBottomSheet { appliedRaw = inputTextFieldValue(title).extractEditableText() }
+        require(numericPart(appliedRaw) > market) {
+            "Custom fee did not increase above market: market='$marketRaw' applied='$appliedRaw'"
+        }
+        step("Custom fee field '$title' — market: $marketRaw; custom (+$percent%): $bumped")
+    }
+    step("Apply the custom fee") {
+        onSendSelectNetworkFeeBottomSheet { doneButton.performClick() }
+    }
+}
+
+private fun numericPart(raw: String): BigDecimal =
+    Regex("[0-9]+([.,][0-9]+)?").find(raw)?.value?.replace(",", ".")?.toBigDecimal() ?: BigDecimal.ZERO

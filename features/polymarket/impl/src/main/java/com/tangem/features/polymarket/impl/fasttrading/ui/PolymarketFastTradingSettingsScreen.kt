@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingActivateBannerUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM.RevokeSubject
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
@@ -80,7 +81,13 @@ internal fun PolymarketFastTradingSettingsScreen(
                     config = state.pullToRefreshConfig,
                     indicatorOffset = contentPadding.calculateTopPadding(),
                 ) {
-                    KeysList(keys = state.keys, onActionClick = state.onActionClick, contentPadding = contentPadding)
+                    KeysList(
+                        keys = state.keys,
+                        onActionClick = state.onActionClick,
+                        onActivateClick = state.onActivateClick,
+                        contentPadding = contentPadding,
+                    )
+                    state.revokeConfirmation?.let { PolymarketRevokeConfirmationSheet(it) }
                 }
             }
         }
@@ -91,6 +98,7 @@ internal fun PolymarketFastTradingSettingsScreen(
 private fun KeysList(
     keys: FastTradingKeysUM,
     onActionClick: (FastTradingKeyActionUM) -> Unit,
+    onActivateClick: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     LazyColumn(
@@ -98,16 +106,7 @@ private fun KeysList(
         contentPadding = contentPadding,
     ) {
         unknownSignersSection(keys, onActionClick)
-        keys.thisDevice?.let { row ->
-            sectionHeader(key = "this_device_header", title = R.string.prediction_session_key_this_device)
-            item(key = "this_device:${row.id}", contentType = "key") {
-                PolymarketFastTradingKeyRow(
-                    state = row,
-                    areActionsEnabled = keys.areActionsEnabled,
-                    onActionClick = onActionClick,
-                )
-            }
-        }
+        thisDeviceSection(keys, onActionClick, onActivateClick)
         if (keys.otherDevices.isNotEmpty()) {
             sectionHeader(key = "other_devices_header", title = R.string.prediction_session_key_other_devices)
             items(keys.otherDevices, key = { "other_device:${it.id}" }, contentType = { "key" }) { row ->
@@ -118,6 +117,38 @@ private fun KeysList(
                 )
             }
         }
+    }
+}
+
+private fun LazyListScope.thisDeviceSection(
+    keys: FastTradingKeysUM,
+    onActionClick: (FastTradingKeyActionUM) -> Unit,
+    onActivateClick: () -> Unit,
+) {
+    if (keys.thisDevice.isEmpty() && keys.activateBanner == null) return
+    sectionHeader(key = "this_device_header", title = R.string.prediction_session_key_this_device)
+    keys.activateBanner?.let { banner ->
+        item(key = "activate_banner", contentType = "banner") {
+            TangemMessageBanner(
+                title = resourceReference(R.string.prediction_session_key_banner_activate_title),
+                description = resourceReference(R.string.prediction_session_key_banner_activate_text),
+                variant = TangemMessageBanner.Variant.Default,
+                primaryButton = TangemMessageBanner.Button(
+                    text = resourceReference(R.string.common_activate),
+                    onClick = onActivateClick,
+                    isEnabled = banner.isEnabled || banner.isLoading,
+                    isLoading = banner.isLoading,
+                ),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+    }
+    items(keys.thisDevice, key = { "this_device:${it.id}" }, contentType = { "key" }) { row ->
+        PolymarketFastTradingKeyRow(
+            state = row,
+            areActionsEnabled = keys.areActionsEnabled,
+            onActionClick = onActionClick,
+        )
     }
 }
 
@@ -189,7 +220,10 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
                         ),
                     ),
                 ),
-                thisDevice = previewRow("Pixel 9", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
+                thisDevice = persistentListOf(
+                    previewRow("Pixel 9", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
+                ),
+                activateBanner = null,
                 otherDevices = persistentListOf(
                     previewRow("Galaxy S24", FastTradingKeyStatusUM.Paused("2 May 2027")),
                     previewRow("iPhone 16", FastTradingKeyStatusUM.Revoking),
@@ -201,6 +235,25 @@ private class SettingsPreviewProvider : PreviewParameterProvider<PolymarketFastT
             ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             onActionClick = {},
+            onActivateClick = {},
+            revokeConfirmation = null,
+        ),
+        PolymarketFastTradingSettingsUM.Content(
+            onBackClick = {},
+            keys = FastTradingKeysUM(
+                isUnknownSignersWarningShown = false,
+                unknownSigners = persistentListOf(),
+                thisDevice = persistentListOf(),
+                activateBanner = FastTradingActivateBannerUM(isLoading = false, isEnabled = true),
+                otherDevices = persistentListOf(
+                    previewRow("iPhone XR", FastTradingKeyStatusUM.Active("20 Apr 2027"), isExpiringSoon = true),
+                ),
+                areActionsEnabled = true,
+            ),
+            pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            onActionClick = {},
+            onActivateClick = {},
+            revokeConfirmation = null,
         ),
         PolymarketFastTradingSettingsUM.Loading(onBackClick = {}),
         PolymarketFastTradingSettingsUM.Error(onBackClick = {}, onRetryClick = {}),

@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -34,6 +35,9 @@ import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
@@ -93,6 +97,8 @@ internal class PolymarketMainModel @Inject constructor(
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val receiveSheetFactory: PolymarketReceiveSheetFactory,
+    private val walletLinkGate: PolymarketWalletLinkGate,
+    private val fastTradingBannerSource: PolymarketFastTradingBannerSource,
     observePolymarketSportsStateUseCase: ObservePolymarketSportsStateUseCase,
     observePolymarketLiveQuotesUseCase: ObservePolymarketLiveQuotesUseCase,
     polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -136,7 +142,7 @@ internal class PolymarketMainModel @Inject constructor(
                 categories = persistentListOf(),
                 content = PolymarketFeedContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
-                isFastTradingSettingsAvailable = polymarketFeatureToggles.isPolymarketSessionKeysEnabled,
+                isFastTradingSettingsAvailable = polymarketFeatureToggles.isPolymarketFastOrdersEnabled,
             ),
         )
 
@@ -218,10 +224,23 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val balancePollJobHolder = JobHolder()
 
+    private val fastTradingBanner = PolymarketFastTradingBannerController(
+        scope = modelScope,
+        dispatchers = dispatchers,
+        userWalletId = params.userWalletId,
+        source = fastTradingBannerSource,
+        router = router,
+        onUnknownSignersReview = ::onFastTradingSettingsClick,
+    )
+
+    private var isWalletLinked = false
+
     init {
         feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
-        loadCategories()
+        fastTradingBanner.banner.onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner) } }
+            .launchIn(modelScope)
         modelScope.launch { regionAccess.refresh() }
+        loadCategoriesOnceLinked()
     }
 
     fun onBackClick() {
@@ -266,11 +285,30 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onResume() {
+        if (isWalletLinked) fastTradingBanner.resume()
         feedController.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
             .saveIn(balancePollJobHolder)
+    }
+
+    private fun loadCategoriesOnceLinked() {
+        uiState.update { it.copy(isCategoriesLoading = true) }
+        modelScope.launch {
+            if (walletLinkGate.ensureLinked(params.userWalletId)) {
+                isWalletLinked = true
+                fastTradingBanner.subscribe()
+                loadCategories()
+            } else {
+                TangemLogger.i("Main: wallet ${params.userWalletId} not linked; closing the feature")
+                router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId)) { router.pop() }
+            }
+        }
+    }
+
+    private suspend fun refreshFastTradingBannerIfLinked() {
+        if (isWalletLinked) fastTradingBanner.refresh()
     }
 
     private fun returnToGate() {
@@ -281,6 +319,7 @@ internal class PolymarketMainModel @Inject constructor(
     fun onPause() {
         feedController.pause()
         balancePollJobHolder.cancel()
+        fastTradingBanner.pause()
     }
 
     private fun loadCategories() {
@@ -367,10 +406,11 @@ internal class PolymarketMainModel @Inject constructor(
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
 
-    private fun onEventClick(eventId: String) {
+    private fun onEventClick(event: PolymarketEvent) {
         router.push(
             PolymarketRoute.EventDetails(
-                eventId = eventId,
+                eventId = event.id,
+                eventType = event.eventType,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedFeedCategory()?.label,
             ),
@@ -387,6 +427,7 @@ internal class PolymarketMainModel @Inject constructor(
                     listOf(
                         async { regionAccess.refresh() },
                         async { blocksRefresh.refreshAll() },
+                        async { refreshFastTradingBannerIfLinked() },
                         async {
                             predictionAccountStatusFetcher(
                                 PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),

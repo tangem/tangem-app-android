@@ -19,7 +19,6 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRunner
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationState
-import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -30,7 +29,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -46,23 +44,8 @@ internal class ObservePolymarketFastTradingUseCaseTest {
         every { runner.observe(USER_WALLET_ID) } returns MutableStateFlow(PolymarketSessionKeyOperationState.IDLE)
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN a device state and nothing running WHEN observe THEN activation is offered as expected`(
-        model: ActivationModel,
-    ) = runTest {
-        // Arrange
-        every { stateService.observe(USER_WALLET_ID) } returns flowOf(overview(model.deviceState).right())
-
-        // Act
-        val actual = useCase(USER_WALLET_ID).first()
-
-        // Assert
-        assertThat(actual.isActivationOffered).isEqualTo(model.isOffered)
-    }
-
     @Test
-    fun `GIVEN reenable and extend running WHEN observe THEN activation is not offered`() = runTest {
+    fun `GIVEN reenable and extend running WHEN observe THEN the running operation is exposed`() = runTest {
         // Arrange
         val operation = PolymarketSessionKeyOperation(
             id = 1,
@@ -82,11 +65,10 @@ internal class ObservePolymarketFastTradingUseCaseTest {
 
         // Assert
         assertThat(actual.operation).isEqualTo(operation)
-        assertThat(actual.isActivationOffered).isFalse()
     }
 
     @Test
-    fun `GIVEN the overview failed WHEN observe THEN activation is not offered`() = runTest {
+    fun `GIVEN the overview failed WHEN observe THEN the error is exposed`() = runTest {
         // Arrange
         every { stateService.observe(USER_WALLET_ID) } returns flowOf(PolymarketWalletError.Network.left())
 
@@ -94,24 +76,8 @@ internal class ObservePolymarketFastTradingUseCaseTest {
         val actual = useCase(USER_WALLET_ID).first()
 
         // Assert
-        assertThat(actual.isActivationOffered).isFalse()
+        assertThat(actual.overview).isEqualTo(PolymarketWalletError.Network.left())
     }
-
-    private fun provideTestModels() = listOf(
-        ActivationModel(PolymarketSessionKeyDeviceState.OfferEnable, isOffered = true),
-        ActivationModel(PolymarketSessionKeyDeviceState.Reenable(KEY), isOffered = true),
-        ActivationModel(PolymarketSessionKeyDeviceState.RepairByRenewal(KEY), isOffered = true),
-        ActivationModel(PolymarketSessionKeyDeviceState.Replace.ByRevocation(KEY), isOffered = true),
-        ActivationModel(PolymarketSessionKeyDeviceState.Replace.ByOverwrite(KEY), isOffered = true),
-        ActivationModel(PolymarketSessionKeyDeviceState.Active(KEY, isRenewDue = false), isOffered = false),
-        ActivationModel(PolymarketSessionKeyDeviceState.Disabled(KEY, isRenewDue = false), isOffered = false),
-        ActivationModel(PolymarketSessionKeyDeviceState.RenewalRequired(KEY), isOffered = false),
-        ActivationModel(PolymarketSessionKeyDeviceState.Enabling(KEY), isOffered = false),
-        ActivationModel(PolymarketSessionKeyDeviceState.Revoking(KEY), isOffered = false),
-        ActivationModel(PolymarketSessionKeyDeviceState.WaitingForPrevious(KEY), isOffered = false),
-    )
-
-    data class ActivationModel(val deviceState: PolymarketSessionKeyDeviceState, val isOffered: Boolean)
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
@@ -136,6 +102,7 @@ internal class ObservePolymarketFastTradingUseCaseTest {
                 sessionKeys = listOf(KEY),
             ),
             localKeyAddress = KEY.address,
+            deviceId = "this-device",
             assessment = PolymarketSessionKeyAssessment(
                 deviceState = deviceState,
                 reconciliation = PolymarketSessionKeyReconciliation.Unavailable,

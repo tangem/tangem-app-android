@@ -37,8 +37,10 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampCurrencyUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampSecondaryFieldErrorUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 internal fun OnrampAmountContent(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier

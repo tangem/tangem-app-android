@@ -54,6 +54,14 @@ fun disableMoneyAccountKeyDerivationWithAccessCode() {
     System.clearProperty(DERIVE_WITH_ACCESS_CODE_KEY)
 }
 
+fun enableMoneyAccountKeyDerivationForCards() {
+    System.setProperty(DERIVE_FOR_COLD_WALLETS_KEY, "1")
+}
+
+fun disableMoneyAccountKeyDerivationForCards() {
+    System.clearProperty(DERIVE_FOR_COLD_WALLETS_KEY)
+}
+
 fun BaseTestCase.openMoneyAccount(accessCode: String = "") {
     openMainWithMoneyAccountWallet(accessCode = accessCode)
     step("Click on 'Money account' row") {
@@ -64,11 +72,13 @@ fun BaseTestCase.openMoneyAccount(accessCode: String = "") {
 
 // The row renders before the account status settles, and a tap in that window is swallowed.
 @OptIn(ExperimentalTestApi::class)
-fun BaseTestCase.clickMoneyAccountRowUntilDetailsOpen() {
+fun BaseTestCase.clickMoneyAccountRowUntilDetailsOpen(rowText: String? = null) {
     var detailsBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { detailsBalance = balanceMatcher }
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-        runCatching { onMoneyAccountScreen { clickMainRow() } }
+        runCatching {
+            onMoneyAccountScreen { if (rowText == null) clickMainRow() else clickMainRowWithText(rowText) }
+        }
         runCatching {
             composeTestRule.waitUntilAtLeastOneExists(checkNotNull(detailsBalance), DETAILS_OPEN_TIMEOUT_MILLIS)
         }.isSuccess
@@ -281,11 +291,11 @@ fun BaseTestCase.returnToMainFromMoneyAccount() {
 }
 
 @OptIn(ExperimentalTestApi::class)
-fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String) {
+fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String, isMultiWallet: Boolean = false) {
     var rowWithBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithBalance = mainRowWithTextMatcher(balance) }
     step("Refresh 'Main' until the 'Money account' row shows '$balance'") {
-        refreshMainUntil {
+        refreshMainUntil(isMultiWallet) {
             composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
         }
     }
@@ -304,10 +314,10 @@ fun BaseTestCase.refreshMainUntilMoneyAccountCacheIcon() {
 }
 
 // A pull can land before the switched mock reaches the app, so pull until the expected change shows up.
-private fun BaseTestCase.refreshMainUntil(awaitChange: () -> Unit) {
+private fun BaseTestCase.refreshMainUntil(isMultiWallet: Boolean = false, awaitChange: () -> Unit) {
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
         closeFinishWalletActivationSheetIfShown()
-        pullToRefreshMainScreen()
+        if (isMultiWallet) pullToRefreshDisplayedWallet() else pullToRefreshMainScreen()
         runCatching(awaitChange).isSuccess
     }
 }
@@ -501,8 +511,32 @@ private const val MONEY_ACCOUNT_ADDRESS_HEX = "5aab90356b4cd7fb64f7f70dc6fe063a7
 private const val GASLESS_SIGN_ENDPOINT_PATTERN = "/gasless/api/v[12]/transaction/sign"
 private const val IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key"
 private const val DERIVE_WITH_ACCESS_CODE_KEY = "uitest.moneyaccount.derive_with_access_code"
+private const val DERIVE_FOR_COLD_WALLETS_KEY = "uitest.moneyaccount.derive_for_cold_wallets"
 private const val POLYGON_USDC_CONTRACT = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
 private const val ERC20_TRANSFER_SELECTOR = "0xa9059cbb"
 private const val USDC_DECIMALS = 6
 private const val ABI_WORD_HEX_LENGTH = 64
 private const val HEX_RADIX = 16
+
+fun BaseTestCase.assertMoneyAccountRowOfDisplayedWallet(balance: String) {
+    step("Assert 'Money account' row with '$balance' is displayed") {
+        awaitSuccess { onMoneyAccountScreen { mainRowWithText(balance).assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.openMoneyAccountFromRowWithBalance(balance: String) {
+    step("Click on 'Money account' row with '$balance'") { clickMoneyAccountRowUntilDetailsOpen(rowText = balance) }
+}
+
+fun BaseTestCase.assertMoneyAccountData(fiatBalance: String, senderEnd: String, otherWalletSenderEnd: String) {
+    val receivedTitle = getResourceString(CoreResR.string.common_received)
+    step("Assert 'Money account' balance is '$fiatBalance'") {
+        awaitSuccess { onMoneyAccountScreen { balance.assertTextEquals(fiatBalance) } }
+    }
+    step("Assert '$receivedTitle' transaction from '$senderEnd' is displayed") {
+        awaitSuccess { onTxHistoryScreen { transactionItemWithText(receivedTitle, senderEnd).assertIsDisplayed() } }
+    }
+    step("Assert '$receivedTitle' transaction from '$otherWalletSenderEnd' is not displayed") {
+        onTxHistoryScreen { transactionItemWithText(receivedTitle, otherWalletSenderEnd).assertDoesNotExist() }
+    }
+}

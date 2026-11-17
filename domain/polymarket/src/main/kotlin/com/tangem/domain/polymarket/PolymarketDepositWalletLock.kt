@@ -1,15 +1,48 @@
 package com.tangem.domain.polymarket
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import java.util.concurrent.ConcurrentHashMap
 
 class PolymarketDepositWalletLock {
 
-    private val mutexes = ConcurrentHashMap<UserWalletId, Mutex>()
+    private val holders = ConcurrentHashMap<UserWalletId, MutableStateFlow<Holder?>>()
 
     /** @param action must not take the lock of the same wallet again: the lock is not reentrant */
-    suspend fun <T> withLock(userWalletId: UserWalletId, action: suspend () -> T): T =
-        mutexes.getOrPut(userWalletId) { Mutex() }.withLock { action() }
+    suspend fun <T> withSessionKeyOperation(userWalletId: UserWalletId, action: suspend () -> T): T {
+        val holder = holderOf(userWalletId)
+        while (!holder.compareAndSet(expect = null, update = Holder.SESSION_KEY_OPERATION)) {
+            holder.first { it == null }
+        }
+        return holder.releasedAfter(action)
+    }
+
+    suspend fun <T> withBatchOrBusy(userWalletId: UserWalletId, action: suspend () -> T): Either<Busy, T> {
+        val holder = holderOf(userWalletId)
+        while (!holder.compareAndSet(expect = null, update = Holder.BATCH)) {
+            when (holder.value) {
+                Holder.SESSION_KEY_OPERATION -> return Busy.left()
+                Holder.BATCH -> holder.first { it != Holder.BATCH }
+                null -> Unit
+            }
+        }
+        return holder.releasedAfter(action).right()
+    }
+
+    private fun holderOf(userWalletId: UserWalletId): MutableStateFlow<Holder?> =
+        holders.getOrPut(userWalletId) { MutableStateFlow(null) }
+
+    private suspend fun <T> MutableStateFlow<Holder?>.releasedAfter(action: suspend () -> T): T = try {
+        action()
+    } finally {
+        value = null
+    }
+
+    data object Busy
+
+    private enum class Holder { SESSION_KEY_OPERATION, BATCH }
 }

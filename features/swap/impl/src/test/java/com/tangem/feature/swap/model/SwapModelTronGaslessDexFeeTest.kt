@@ -75,10 +75,9 @@ internal class SwapModelTronGaslessDexFeeTest : SwapModelTestBase() {
             }
 
         @Test
-        fun `GIVEN EVM DEX swap and EVM gasless toggle on WHEN loadFeeExtended THEN loads gasless fee for quoted swap data`() =
+        fun `GIVEN EVM DEX swap and EVM gasless supported WHEN loadFeeExtended THEN loads gasless fee for quoted swap data`() =
             runTest {
                 // Arrange
-                every { swapFeatureToggles.isEvmGaslessDexSwapEnabled } returns true
                 every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
                 val fromStatus = swapCurrencyStatus(currency = token(Blockchain.Ethereum))
                 val model = createLoadedModel(fromStatus)
@@ -108,7 +107,7 @@ internal class SwapModelTronGaslessDexFeeTest : SwapModelTestBase() {
         ) = runTest {
             // Arrange
             every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns model.isToggleEnabled
-            every { swapFeatureToggles.isEvmGaslessDexSwapEnabled } returns false
+            every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
             val fromStatus = swapCurrencyStatus(currency = token(model.blockchain))
             val swapModel = createLoadedModel(fromStatus)
 

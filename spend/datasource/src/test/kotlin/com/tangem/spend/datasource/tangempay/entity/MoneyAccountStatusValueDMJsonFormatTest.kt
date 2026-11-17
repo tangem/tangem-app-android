@@ -66,6 +66,46 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
+    fun `GIVEN balance cached with yield_supply_status WHEN decode THEN the field is ignored`() {
+        // Arrange
+        val cached = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
+            """"balance":{"crypto_amount":"101.56","deposit_address":"0xabc","currency_code":"USD",""" +
+            """"fiat_rate":"0.95","yield_supply_status":{"is_active":true,"is_initialized":true,""" +
+            """"is_allowed_to_spend":false,"effective_protocol_balance":"50.5"}}}"""
+
+        // Act
+        val actual = json.decodeFromString(MoneyAccountStatusValueDM.serializer(), cached)
+
+        // Assert
+        val expected = MoneyAccountStatusValueDM.ActiveAccount(
+            customerId = "cust-2",
+            productInstanceId = "pi-2",
+            balance = BALANCE,
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN active account cached without is_kyc_additional_info_required WHEN decode THEN flag is false`() {
+        // Arrange
+        val cached = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
+            """"balance":$BALANCE_JSON}"""
+
+        // Act
+        val actual = json.decodeFromString(MoneyAccountStatusValueDM.serializer(), cached)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            MoneyAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-2",
+                productInstanceId = "pi-2",
+                balance = BALANCE,
+                isKycAdditionalInfoRequired = false,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
         // Act
         val error = runCatching {
@@ -99,7 +139,17 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
                 balance = BALANCE,
             ),
             json = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
-                """"balance":$BALANCE_JSON}""",
+                """"balance":$BALANCE_JSON,"is_kyc_additional_info_required":false}""",
+        ),
+        FormatModel(
+            status = MoneyAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-3",
+                productInstanceId = "pi-3",
+                balance = null,
+                isKycAdditionalInfoRequired = true,
+            ),
+            json = """{"__type":"active_account","customer_id":"cust-3","product_instance_id":"pi-3",""" +
+                """"balance":null,"is_kyc_additional_info_required":true}""",
         ),
     )
 

@@ -80,6 +80,8 @@ import com.tangem.core.ui.ds2.accountrow.Section
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.expandable.EXPANDABLE_ROW_REVEAL_DURATION_MILLIS
 import com.tangem.core.ui.ds2.expandable.ExpandableRowRevealItem
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.tokenrow.Network
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow as TangemTokenRowV2
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
@@ -886,6 +888,7 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
         itemContent = { index, item ->
             PredefinedTokenItem(
                 state = item,
+                isRedesignedTokenRowsEnabled = state.isRedesignedTokenRowsEnabled,
                 modifier = Modifier
                     .roundedShapeItemDecoration(
                         currentIndex = index,
@@ -899,9 +902,16 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
     )
 }
 
-// TODO [REDACTED_TASK_KEY] Move to TangemTokenRow once it supports a network subtitle and a trailing action
 @Composable
-private fun PredefinedTokenItem(state: PredefinedTokenItemUM, modifier: Modifier = Modifier) {
+private fun PredefinedTokenItem(
+    state: PredefinedTokenItemUM,
+    isRedesignedTokenRowsEnabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (isRedesignedTokenRowsEnabled) {
+        PredefinedTokenRow(state = state, modifier = modifier)
+        return
+    }
     val tokenRowUM = remember(state) {
         val iconState = CurrencyIconState.TokenIcon(
             url = state.iconUrl,
@@ -935,6 +945,39 @@ private fun PredefinedTokenItem(state: PredefinedTokenItemUM, modifier: Modifier
         TangemTokenRow(
             tokenRowUM = tokenRowUM,
             isBalanceHidden = false,
+            modifier = Modifier.weight(1f),
+        )
+        SecondaryTangemButton(
+            onClick = state.onAddClick,
+            modifier = Modifier.padding(start = 8.dp, end = 16.dp),
+            text = resourceReference(R.string.common_add),
+            size = TangemButtonSize.X9,
+            shape = TangemButtonShape.Default,
+        )
+    }
+}
+
+@Composable
+private fun PredefinedTokenRow(state: PredefinedTokenItemUM, modifier: Modifier = Modifier) {
+    val icon = remember(state) {
+        TangemTokenIcon.UiState.Token(
+            TangemTokenIcon.State(
+                url = state.iconUrl,
+                topIcon = getActiveIconRes(Blockchain.fromNetworkId(state.networkId) ?: Blockchain.Unknown),
+            ),
+        )
+    }
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TangemTokenRowV2.Network(
+            icon = icon,
+            title = stringReference(state.symbol),
+            network = resourceReference(
+                id = R.string.domain_receive_assets_onboarding_network_name,
+                formatArgs = wrappedList(state.networkName),
+            ),
             modifier = Modifier.weight(1f),
         )
         SecondaryTangemButton(

@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 
 /**
  * Internal navigation routes for the Polymarket feature stack.
@@ -37,7 +38,14 @@ internal sealed interface PolymarketRoute : Route {
 
     data class History(val userWalletId: UserWalletId) : PolymarketRoute
 
-    data class FastTradingSettings(val userWalletId: UserWalletId) : PolymarketRoute
+    sealed interface FastTrading : PolymarketRoute
+
+    data class FastTradingSettings(val userWalletId: UserWalletId) : FastTrading
+
+    data class FastTradingActivation(
+        val userWalletId: UserWalletId,
+        val action: PolymarketFastTradingActivationComponent.Action,
+    ) : FastTrading
 
     data class Positions(val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : PolymarketRoute
 
@@ -61,6 +69,7 @@ internal sealed interface PolymarketRoute : Route {
         val marketId: String? = null,
         val assetId: String? = null,
         val categoryLabel: String? = null,
+        val eventType: String? = null,
     ) : PolymarketRoute
 
     /**

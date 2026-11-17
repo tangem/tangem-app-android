@@ -2,8 +2,6 @@ package com.tangem.domain.walletmanager
 
 import arrow.core.Either
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
@@ -289,19 +287,6 @@ interface WalletManagersFacade {
     suspend fun getPsbtFee(userWalletId: UserWalletId, network: Network, psbtBase64: String): BigDecimal?
 
     /**
-     * Builds + signs (one signing session, no broadcast) the two Tron gasless transactions and returns
-     * each as a TronWeb-compatible signed-JSON string in input order. Returns `null` if the wallet
-     * manager is unavailable, the network is not Tron (the manager does not implement the gasless
-     * signing contract), or signing fails.
-     */
-    suspend fun signTronGaslessTransactions(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionDataList: List<TransactionData>,
-        signer: TransactionSigner,
-    ): List<String>?
-
-    /**
      * Returns the multiplier between the [currency] amount shown to the user and its on-chain amount, or `null` when
      * the two coincide. Only Solana Token-2022 mints with `scaledUiAmountConfig` declare one.
      *
@@ -312,29 +297,6 @@ interface WalletManagersFacade {
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
     ): Either<Throwable, BigDecimal?>
-
-    /**
-     * Signs a provider-built Solana transaction for the gasless [feePayer] (account index 0), without
-     * broadcasting. Returns `null` if the wallet manager is unavailable or is not Solana.
-     */
-    suspend fun signSolanaGaslessTransaction(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionData: TransactionData,
-        feePayer: String,
-        signer: TransactionSigner,
-    ): Result<SolanaGaslessSignedTransaction>?
-
-    /**
-     * Simulates a provider-built Solana transaction as if [feePayer] paid for it, without signing. Returns `null` if
-     * the wallet manager is unavailable or is not Solana.
-     */
-    suspend fun simulateSolanaGaslessTransaction(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionData: TransactionData,
-        feePayer: String,
-    ): Result<SolanaGaslessSimulation>?
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 

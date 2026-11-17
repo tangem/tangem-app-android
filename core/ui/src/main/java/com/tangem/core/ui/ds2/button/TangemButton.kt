@@ -25,7 +25,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
  *
- * Version: 1.3.0
+ * Version: 1.3.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
@@ -50,7 +50,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param variant Visual style. See [TangemButton.Variant].
  * @param size Token-driven size preset controlling height, padding, and icon size.
  *   See [TangemButton.Size].
- * @param isLoading When `true`, hides the content and shows a centered loader.
+ * @param isLoading When `true`, hides the content and shows a centered loader. TalkBack keeps the
+ *   label and adds an "In progress" state.
  * @param isEnabled When `false`, the button is dimmed by the variant's disabled alpha and clicks
  *   are ignored.
  * @param isDimmed When `true`, the button takes the disabled appearance but still routes clicks to
@@ -68,6 +69,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  *   label text for screen readers.
  * @param interactionSource Interaction source for press/focus state. A focused state draws the
  *   variant's focus ring around the button.
+ * @param onLongClick Invoked on a long press. `null` leaves long presses unhandled; ignored while
+ *   [isEnabled] is `false`. TalkBack exposes it as the button's long-press action.
  * @param onClick Invoked when the button is clicked.
  */
 @Composable
@@ -84,6 +87,7 @@ fun TangemButton(
     loadingText: TextReference? = null,
     contentDescription: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     TangemButtonContainer(
@@ -100,12 +104,43 @@ fun TangemButton(
         contentDescription = contentDescription,
         interactionSource = interactionSource,
         onClick = onClick,
+        onLongClick = onLongClick,
+    )
+}
+
+/**
+ * [TangemButton] driven by a [TangemButtonUM], for screens that keep button state inside their own UI
+ * models. Renders and behaves exactly like the parameter-based overload.
+ *
+ * Version: 1.3.2
+ *
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
+ *
+ * @param buttonUM Button content, style, state and click handlers. See [TangemButtonUM].
+ * @param modifier Pass `Modifier.fillMaxWidth()` (or any width modifier) to switch to a fixed-width layout.
+ */
+@Composable
+fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
+    TangemButton(
+        modifier = modifier,
+        variant = buttonUM.variant,
+        size = buttonUM.size,
+        isLoading = buttonUM.isLoading,
+        isEnabled = buttonUM.isEnabled,
+        isDimmed = buttonUM.isDimmed,
+        iconStart = buttonUM.iconStart,
+        iconEnd = buttonUM.iconEnd,
+        text = buttonUM.text,
+        loadingText = buttonUM.loadingText,
+        contentDescription = buttonUM.contentDescription,
+        onLongClick = buttonUM.onLongClick,
+        onClick = buttonUM.onClick,
     )
 }
 
 object TangemButton {
 
-    val version = DsVersion(major = 1, minor = 3, patch = 0)
+    val version = DsVersion(major = 1, minor = 3, patch = 2)
 
     /**
      * Visual style of the button.
@@ -260,8 +295,9 @@ private fun PreviewHoldRow(variant: TangemButton.HoldVariant) {
                 contentDescription = null,
                 interactionSource = remember { MutableInteractionSource() },
                 hold = HoldToConfirmSpec(
-                    progress = { progress },
+                    state = remember { HoldToConfirmState(initialFill = progress) },
                     overlayColor = variant.holdOverlayColor(),
+                    hint = stringReference("Tap and hold"),
                     isActionEnabled = true,
                     onConfirm = {},
                 ),

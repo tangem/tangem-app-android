@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.overview
 import com.tangem.features.earn.api.overview.EarnHeadline
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import javax.inject.Inject
 
 /**
@@ -36,10 +37,7 @@ internal class EarnHeadlineSelector @Inject constructor(
      * of the winner: the For You card opens it on click.
      */
     fun select(candidates: List<EarnProductSummary>): EarnHeadline? {
-        val winner = candidates
-            .filter { it.isLive }
-            .minWithOrNull(order)
-            ?: return null
+        val winner = winnerOf(candidates) ?: return null
         val rate = winner.rate ?: return null
 
         return EarnHeadline(
@@ -50,6 +48,10 @@ internal class EarnHeadlineSelector @Inject constructor(
             route = winner.route,
         )
     }
+
+    /** The summary [select] builds the headline from: the rule is the same, the banner reads its product too. */
+    fun winnerOf(candidates: List<EarnProductSummary>): EarnProductSummary? =
+        candidates.filter { it.isLive }.minWithOrNull(order)
 
     /**
      * The best of the active products: the `Auto` redirect of the picker leads to it. Rate sources are not passed

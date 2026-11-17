@@ -26,6 +26,8 @@ import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingMarket
 import com.tangem.features.earn.lending.impl.provider.LendingPosition
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -67,7 +69,6 @@ internal class AaveLendingProviderTest {
         assetResolver = mockk(),
         markets = AaveMarkets(yieldSupplyRepository),
         moduleReader = AaveModuleReader(yieldTransactions),
-        minDepositProvider = mockk(),
         apyHistoryLoader = mockk(),
         yieldSupplyRepository = yieldSupplyRepository,
         networkStatusSupplier = networkStatusSupplier,
@@ -121,15 +122,53 @@ internal class AaveLendingProviderTest {
     }
 
     @Test
-    fun `GIVEN inactive market WHEN market THEN closed with rate kept`() = runTest {
+    fun `GIVEN market with Yield Mode off WHEN market THEN open with its rate`() = runTest {
         // Arrange
         markets.value = listOf(wethMarket(isActive = false))
 
         // Act & Assert
         provider.market(userWalletId, asset).test {
             val actual = expectMostRecentItem()
-            assertThat(actual.isOpen).isFalse()
-            assertThat(actual.rate).isEqualTo(apy("0.03"))
+            val expected = LendingMarket(
+                rate = apy("0.03"),
+                isOpen = true,
+                deposit = LendingDepositGate.Loading,
+                position = null,
+                maxWithdraw = null,
+                providerState = AaveModuleRead(
+                    status = null,
+                    version = YieldModuleVersionStatus.UpToDate,
+                    withdrawLiquidity = BigDecimal("10"),
+                ),
+                source = StatusSource.CACHE,
+            )
+            assertThat(actual).isEqualTo(expected)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN network without Yield Module support WHEN market THEN closed with its rate`() = runTest {
+        // Arrange
+        coEvery { yieldSupplyRepository.isYieldSupplySupported(userWalletId, eth) } returns false
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            val actual = expectMostRecentItem()
+            val expected = LendingMarket(
+                rate = apy("0.03"),
+                isOpen = false,
+                deposit = LendingDepositGate.Loading,
+                position = null,
+                maxWithdraw = null,
+                providerState = AaveModuleRead(
+                    status = null,
+                    version = YieldModuleVersionStatus.UpToDate,
+                    withdrawLiquidity = BigDecimal("10"),
+                ),
+                source = StatusSource.CACHE,
+            )
+            assertThat(actual).isEqualTo(expected)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -366,7 +405,7 @@ internal class AaveLendingProviderTest {
         val actual = provider.refresh(userWalletId, asset)
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("backend"))
     }
 
     @Test
@@ -378,7 +417,31 @@ internal class AaveLendingProviderTest {
         val actual = provider.refresh(userWalletId, asset)
 
         // Assert
-        assertThat(actual.isLeft()).isTrue()
+        assertEitherLeft(actual, IllegalStateException("rpc"))
+    }
+
+    @Test
+    fun `GIVEN status refresh succeeds WHEN refreshPosition THEN Right without markets update`() = runTest {
+        // Act
+        val actual = provider.refreshPosition(userWalletId, asset)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 0) { yieldSupplyRepository.updateMarkets() }
+        coVerify(exactly = 1) { statusFetcher(YieldModuleStatusFetcher.Params(userWalletId, setOf(weth))) }
+    }
+
+    @Test
+    fun `GIVEN status refresh fails WHEN refreshPosition THEN Left`() = runTest {
+        // Arrange
+        val error = IllegalStateException("rpc")
+        coEvery { statusFetcher(any()) } returns error.left()
+
+        // Act
+        val actual = provider.refreshPosition(userWalletId, asset)
+
+        // Assert
+        assertThat(actual).isEqualTo(error.left())
     }
 
     private fun wethMarket(isActive: Boolean = true, campaign: YieldIncentiveCampaign? = null) = YieldMarketToken(
@@ -398,15 +461,10 @@ internal class AaveLendingProviderTest {
         totalApyEst = BigDecimal(totalApyEst),
     )
 
-    private fun wethStatus(balance: String) = YieldModuleStatus(
+    private fun wethStatus(balance: String) = MockYieldSupply.moduleStatus(
         networkId = eth.network.id,
         tokenAddress = WETH.lowercase(),
-        isActive = true,
-        isInitialized = true,
-        isAllowedToSpend = true,
         effectiveProtocolBalance = BigDecimal(balance),
-        effectiveBalance = null,
-        source = StatusSource.ACTUAL,
     )
 
     private fun apy(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)

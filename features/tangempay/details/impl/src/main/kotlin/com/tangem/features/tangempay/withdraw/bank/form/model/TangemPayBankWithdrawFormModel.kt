@@ -60,7 +60,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         ),
     )
 
-    private val state = MutableStateFlow(FormState())
+    private val state = MutableStateFlow(FormState(locked = form.lockedValues))
 
     private val fieldsReportedAsFilled = mutableSetOf<BankWithdrawFormField>()
 
@@ -131,12 +131,13 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     private fun onValueChange(field: BankWithdrawFormField, value: String) {
+        val input = if (field == BankWithdrawFormField.Clabe) value.filter { it in '0'..'9' } else value
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
         // Typing replaces whatever was picked, so the name is blanked instead of dropped: a dropped key would
         // fall through to the draft and resurface the previous pick's name.
         state.update { current ->
             current.copy(
-                edits = current.edits + (field to value),
+                edits = current.edits + (field to input),
                 displayNameEdits = current.displayNameEdits + (field to ""),
                 errors = current.errors - staleFields,
             )
@@ -184,7 +185,10 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         // The field being typed in never blurs before Continue, so its fill is reported here instead.
         state.value.focusedField?.let(::reportFieldFilled)
         val values = currentValues()
-        val errors = BankWithdrawFormValidator.validateAll(fields = form.fields, values = values)
+        val errors = BankWithdrawFormValidator.validateAll(
+            fields = form.fields.filterNot(form.lockedValues::containsKey),
+            values = values,
+        )
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors, focusedField = null) }
         } else {

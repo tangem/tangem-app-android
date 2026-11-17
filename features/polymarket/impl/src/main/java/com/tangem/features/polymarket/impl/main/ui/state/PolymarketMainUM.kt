@@ -7,6 +7,7 @@ import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedSc
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -29,4 +30,5 @@ internal data class PolymarketMainUM(
     val isAwaitingFunds: Boolean = false,
     val isRegionRestricted: Boolean = false,
     val isFastTradingSettingsAvailable: Boolean = false,
+    val fastTradingBanner: PolymarketFastTradingBannerUM? = null,
 )

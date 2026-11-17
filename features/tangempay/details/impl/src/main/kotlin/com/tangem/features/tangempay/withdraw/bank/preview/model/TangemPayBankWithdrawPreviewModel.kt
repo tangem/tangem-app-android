@@ -26,13 +26,24 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.joda.time.DateTime
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -47,6 +58,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     analytics: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
@@ -56,9 +68,11 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val completion = completionFactory.create(
         sourceAccount = params.sourceAccount,
         scope = modelScope,
-        onOrderCreated = params.onOrderCreated,
-        onDestinationChanged = params.onDestinationChanged,
-        onNetworkFeeChanged = params.onNetworkFeeChanged,
+        callbacks = BankWithdrawCompletionFactory.Callbacks(
+            onOrderCreated = params.onOrderCreated,
+            onDestinationChanged = params.onDestinationChanged,
+            onNetworkFeeChanged = params.onNetworkFeeChanged,
+        ),
     )
 
     private val umFactory = TangemPayBankWithdrawPreviewUMFactory(
@@ -75,7 +89,10 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private val state = MutableStateFlow(PreviewState(isColdWallet = resolveIsColdWallet(), isBalanceHidden = true))
 
-    private val sendJobHolder = JobHolder()
+    /** Shared by prepare and send, so a quote request in progress never runs beside another for a newer draft. */
+    private val completionJobHolder = JobHolder()
+
+    private var isQuoteFailure = false
 
     private val isSending: Boolean get() = state.value.isSending
 
@@ -89,7 +106,16 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         getBalanceHidingSettingsUseCase.isBalanceHidden()
             .onEach { isBalanceHidden -> state.update { it.copy(isBalanceHidden = isBalanceHidden) } }
             .launchIn(modelScope)
+        lockedQuotes()
+            .onEach { quote -> state.update { it.copy(quote = quote) } }
+            .launchIn(modelScope)
+        requoteWhenLockRunsOut()
         withdrawAnalytics.onConfirmationScreenOpened()
+        params.draft
+            .map(BankWithdrawDraft::toOrderRequest)
+            .distinctUntilChanged()
+            .onEach { prepare() }
+            .launchIn(modelScope)
     }
 
     /** The wallet cannot change while the wizard is open, and a lookup failure keeps the historic card icon. */
@@ -101,22 +127,68 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         ifRight = { wallet -> wallet.isColdWallet },
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun lockedQuotes(): Flow<LockedQuote?> = completion.quote.flatMapLatest { quote ->
+        when {
+            quote == null -> flowOf(null)
+            !quote.isLockTrusted(currentTimeProvider.nowMillis()) -> flowOf(LockedQuote(quote, secondsLeft = null))
+            else -> secondsLeftUntil(quote.sendDeadline).map { secondsLeft -> LockedQuote(quote, secondsLeft) }
+        }
+    }
+
+    private fun secondsLeftUntil(deadline: DateTime): Flow<Long> = flow {
+        var millisLeft = deadline.millis - currentTimeProvider.nowMillis()
+        while (millisLeft > 0) {
+            val secondsLeft = (millisLeft + MILLIS_PER_SECOND - 1) / MILLIS_PER_SECOND
+            emit(secondsLeft)
+            delay(timeMillis = millisLeft - (secondsLeft - 1) * MILLIS_PER_SECOND)
+            millisLeft = deadline.millis - currentTimeProvider.nowMillis()
+        }
+        emit(0L)
+    }
+
+    /**
+     * Terms that ran out are replaced as soon as the screen is idle, so Pay never sends on them: on the spot, or once a
+     * send in flight ends without sending. A failure on screen keeps them, and Retry replaces them instead.
+     */
+    private fun requoteWhenLockRunsOut() {
+        state
+            .map { it.completion == CompletionState.Idle && it.quote?.secondsLeft == 0L }
+            .distinctUntilChanged()
+            .filter { hasRunOut -> hasRunOut }
+            .onEach { prepare() }
+            .launchIn(modelScope)
+    }
+
+    private fun prepare() {
+        if (isSending) return
+        val draft = params.draft.value
+        modelScope.launch {
+            completion.prepare(draft) { completionState ->
+                isQuoteFailure = completionState is CompletionState.Failed
+                state.update { it.copy(completion = completionState) }
+            }
+        }.saveIn(completionJobHolder)
+    }
+
     private fun onSendClick() {
         if (isSending) return
         withdrawAnalytics.onSendClicked()
         complete()
     }
 
+    /** Retry after terms that never arrived only asks for them again: nothing was sent, so no send is reported. */
     private fun onRetryClick() {
         if (isSending) return
-        complete()
+        if (isQuoteFailure) prepare() else complete()
     }
 
     private fun complete() {
+        isQuoteFailure = false
         val draft = params.draft.value
         modelScope.launch {
             completion.complete(draft = draft) { completionState -> onCompletionState(completionState, draft) }
-        }.saveIn(sendJobHolder)
+        }.saveIn(completionJobHolder)
     }
 
     private fun onCompletionState(completionState: CompletionState, draft: BankWithdrawDraft) {
@@ -176,3 +248,4 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 }
 
 private const val TAG = "TangemPayBankWithdrawPreviewModel"
+private const val MILLIS_PER_SECOND = 1_000L

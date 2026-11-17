@@ -7,7 +7,6 @@ import com.tangem.common.extensions.clickNearScreenBottom
 import com.tangem.common.utils.assertUrlOpened
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.common.utils.stubUrlOpening
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.assertMoneyAccountMenuHasTermsAndSupportOnly
 import com.tangem.scenarios.openMoneyAccount
@@ -20,10 +19,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountMenuTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val eligibilityState = "PaeraCustomer"
     private val moneyAccountScenario = "tangem_pay_money_account"

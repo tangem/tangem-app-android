@@ -21,9 +21,11 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -33,6 +35,7 @@ import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents.Compa
 import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
+import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.resetDerivationIndex
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateButton
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateColorSelect
@@ -40,11 +43,13 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateIconSelect
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateName
 import com.tangem.features.account.createedit.error.AccountFeatureError
+import com.tangem.features.account.createedit.wallet.AccountCreateWalletSelector
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -60,6 +65,10 @@ internal class AccountCreateEditModel @Inject constructor(
     private val getUnoccupiedAccountIndexUseCase: GetUnoccupiedAccountIndexUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    userWalletsListRepository: UserWalletsListRepository,
+    singleAccountListSupplier: SingleAccountListSupplier,
+    portfolioFetcherFactory: PortfolioFetcher.Factory,
+    portfolioSelectorController: PortfolioSelectorController,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountCreateEditComponent.Params>()
@@ -68,9 +77,24 @@ internal class AccountCreateEditModel @Inject constructor(
     val uiState: StateFlow<AccountCreateEditUM>
         field = MutableStateFlow(value = getInitialState())
 
+    /** Only creation offers a wallet choice; an edited account stays in its wallet */
+    val walletSelector: AccountCreateWalletSelector? = (params as? AccountCreateEditComponent.Params.Create)
+        ?.let { create ->
+            AccountCreateWalletSelector(
+                initialWalletId = create.userWalletId,
+                scope = modelScope,
+                userWalletsListRepository = userWalletsListRepository,
+                singleAccountListSupplier = singleAccountListSupplier,
+                portfolioFetcherFactory = portfolioFetcherFactory,
+                portfolioSelectorController = portfolioSelectorController,
+            )
+        }
+
+    private var derivationInfoJob: Job? = null
+
     init {
         when (params) {
-            is AccountCreateEditComponent.Params.Create -> updateDerivationInfo(userWalletId = params.userWalletId)
+            is AccountCreateEditComponent.Params.Create -> observeWalletSelection()
             is AccountCreateEditComponent.Params.Edit -> {
                 val derivationIndex = params.account.derivationIndex.value
                 val event = AccountSettingsAnalyticEvents.AccountEditScreenOpened(derivationIndex)
@@ -125,7 +149,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = addCryptoPortfolioUseCase(
-            userWalletId = params.userWalletId,
+            userWalletId = walletSelector?.selectedWalletId?.value ?: params.userWalletId,
             accountName = name,
             icon = icon,
             derivationIndex = derivationIndex,
@@ -254,7 +278,8 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun AccountCreateEditUM.validateNewState(): AccountCreateEditUM {
         val isValidName = this.account.name.isValidName()
         val isAvailableForConfirm = when (params) {
-            is AccountCreateEditComponent.Params.Create -> isValidName
+            // The index belongs to the selected wallet and is reloaded whenever the wallet changes
+            is AccountCreateEditComponent.Params.Create -> isValidName && account.derivationInfo.index != null
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
                 val oldIcon = CryptoPortfolioIconConverter.convert(params.account.icon)
@@ -276,16 +301,30 @@ internal class AccountCreateEditModel @Inject constructor(
             colorsState = umBuilder.initColorsUM(::onColorSelect),
             iconsState = umBuilder.initIconsUM(::onIconSelect),
             buttonState = umBuilder.initButtonUM(::onConfirmClick),
+            wallet = null,
             onCloseClick = ::onCloseClick,
         )
     }
 
+    private fun observeWalletSelection() {
+        val selector = walletSelector ?: return
+        selector.walletRow
+            .onEach { wallet -> uiState.update { it.copy(wallet = wallet) } }
+            .launchIn(modelScope)
+        selector.selectedWalletId
+            .onEach(::updateDerivationInfo)
+            .launchIn(modelScope)
+    }
+
     private fun updateDerivationInfo(userWalletId: UserWalletId) {
-        modelScope.launch(dispatchers.default) {
+        derivationInfoJob?.cancel()
+        // The previous wallet's index must not be submitted while the new one is loading
+        uiState.update { it.resetDerivationIndex().validateNewState() }
+        derivationInfoJob = modelScope.launch(dispatchers.default) {
             getUnoccupiedAccountIndexUseCase(userWalletId = userWalletId)
                 .onRight { derivationIndex ->
                     uiState.update {
-                        it.updateDerivationIndex(derivationIndex = derivationIndex.value)
+                        it.updateDerivationIndex(derivationIndex = derivationIndex.value).validateNewState()
                     }
                 }
                 .onLeft { cause ->

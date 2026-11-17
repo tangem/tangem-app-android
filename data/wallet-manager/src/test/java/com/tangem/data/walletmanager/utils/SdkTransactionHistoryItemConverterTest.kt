@@ -16,6 +16,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterWithNativeCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
+import com.tangem.domain.models.currency.CryptoCurrency
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SdkTransactionHistoryItemConverterTest {
@@ -28,16 +33,7 @@ internal class SdkTransactionHistoryItemConverterTest {
         )
     }
 
-    private val converter = SdkTransactionHistoryItemConverter(
-        smartContractMethods = emptyMap(),
-        yieldSupplyAddresses = emptySet(),
-        gaslessFeeAddresses = emptySet(),
-        jointRefundReceiver = null,
-        currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum),
-        networkTokens = emptySet(),
-        getCachedTokenInfoUseCase = mockk(relaxed = true),
-        currencyAddresses = emptyList(),
-    )
+    private val converter = createConverter()
 
     @ParameterizedTest
     @ProvideTestModels
@@ -84,16 +80,12 @@ internal class SdkTransactionHistoryItemConverterTest {
     fun `GIVEN a joint token transfer record WHEN convert THEN the row is what the Safe did`() {
         // Arrange — the token's record carries the calldata of the Safe execution that sent it
         val usdt = MockCryptoCurrencyFactory().createToken(Blockchain.Ethereum).copy(network = jointNetwork)
-        val jointConverter = SdkTransactionHistoryItemConverter(
+        val jointConverter = createConverter(
             smartContractMethods = mapOf(
                 "0x6a761202" to SmartContractMethod(info = "Safe", source = null, name = "execTransaction"),
             ),
-            yieldSupplyAddresses = emptySet(),
-            gaslessFeeAddresses = emptySet(),
-            jointRefundReceiver = null,
             currency = usdt,
             networkTokens = setOf(usdt),
-            getCachedTokenInfoUseCase = mockk(relaxed = true),
             currencyAddresses = listOf(Address(SAFE_ADDRESS)),
         )
         val item = TransactionHistoryItem(
@@ -144,16 +136,13 @@ internal class SdkTransactionHistoryItemConverterTest {
     fun `GIVEN a joint token transfer refunded in that token WHEN convertList THEN the refund is its fee`() {
         // Arrange — the token's history lists the Safe's two transfers of one execution as two records
         val usdc = MockCryptoCurrencyFactory().createToken(Blockchain.Ethereum).copy(network = jointNetwork)
-        val converter = SdkTransactionHistoryItemConverter(
+        val converter = createConverter(
             smartContractMethods = mapOf(
                 "0x6a761202" to SmartContractMethod(info = "Safe", source = null, name = "execTransaction"),
             ),
-            yieldSupplyAddresses = emptySet(),
-            gaslessFeeAddresses = emptySet(),
             jointRefundReceiver = RELAYER,
             currency = usdc,
             networkTokens = setOf(usdc),
-            getCachedTokenInfoUseCase = mockk(relaxed = true),
             currencyAddresses = listOf(Address(SAFE_ADDRESS)),
         )
 
@@ -262,14 +251,8 @@ internal class SdkTransactionHistoryItemConverterTest {
     @Test
     fun `GIVEN a personal account paying the relayer address WHEN convertList THEN an ordinary transfer`() {
         // Arrange
-        val converter = SdkTransactionHistoryItemConverter(
-            smartContractMethods = emptyMap(),
-            yieldSupplyAddresses = emptySet(),
-            gaslessFeeAddresses = emptySet(),
-            jointRefundReceiver = null,
+        val converter = createConverter(
             currency = MockCryptoCurrencyFactory().ethereum,
-            networkTokens = emptySet(),
-            getCachedTokenInfoUseCase = mockk(relaxed = true),
             currencyAddresses = listOf(Address(SAFE_ADDRESS)),
         )
 
@@ -280,16 +263,198 @@ internal class SdkTransactionHistoryItemConverterTest {
         assertThat((actual.single() as TxInfo.Single).type).isEqualTo(TxInfo.TransactionType.Transfer)
     }
 
-    private fun jointCoinConverter() = SdkTransactionHistoryItemConverter(
+    @ParameterizedTest
+    @MethodSource("provideLendingCalls")
+    fun `GIVEN lending call alone WHEN convert THEN lending row sent by the wallet`(model: LendingCallModel) {
+        // Arrange
+        val call = item(
+            type = contractMethod(model.callData),
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.Contract(YIELD_MODULE_ADDRESS),
+            amount = model.value,
+            fee = CALL_FEE,
+        )
+
+        // Act
+        val actual = lendingConverter.convert(call)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            TxInfo.Single(
+                txHash = TX_HASH,
+                timestampInMillis = 0L,
+                isOutgoing = true,
+                destinationType = TxInfo.DestinationType.Single(TxInfo.AddressType.Contract(YIELD_MODULE_ADDRESS)),
+                sourceType = TxInfo.SourceType.Single(SENDER),
+                interactionAddressType = TxInfo.InteractionAddressType.Contract(YIELD_MODULE_ADDRESS),
+                status = TxInfo.TransactionStatus.Confirmed,
+                type = model.expectedType,
+                amount = model.expectedAmount,
+                fee = CALL_FEE.toSdkAmount(),
+            ),
+        )
+    }
+
+    private fun provideLendingCalls() = listOf(
+        LendingCallModel(
+            callData = EthereumYieldSupplyEnterWithNativeCallData.METHOD_ID,
+            value = HALF,
+            expectedType = TxInfo.TransactionType.Lending.Deposit,
+            expectedAmount = HALF,
+        ),
+        LendingCallModel(
+            callData = WITHDRAW_ONE_ETHER_CALLDATA,
+            value = BigDecimal.ZERO,
+            expectedType = TxInfo.TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = ONE_ETHER),
+            expectedAmount = ONE_ETHER,
+        ),
+        LendingCallModel(
+            callData = EthereumYieldSupplyExitNativeCallData.METHOD_ID,
+            value = BigDecimal.ZERO,
+            expectedType = TxInfo.TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null),
+            expectedAmount = BigDecimal.ZERO,
+        ),
+    )
+
+    @ParameterizedTest
+    @MethodSource("providePayoutOrders")
+    fun `GIVEN withdrawal call and module payout WHEN convertList THEN one lending row with the call fee`(
+        isPayoutFirst: Boolean,
+    ) {
+        // Arrange
+        val call = item(
+            type = contractMethod(EthereumYieldSupplyExitNativeCallData.METHOD_ID),
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.Contract(YIELD_MODULE_ADDRESS),
+            amount = BigDecimal.ZERO,
+            fee = CALL_FEE,
+        )
+        // The internal transfer that pays the withdrawn coin out of the module, under the call's hash
+        val payout = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = false,
+            destination = TransactionHistoryItem.AddressType.User(SENDER),
+            source = YIELD_MODULE_ADDRESS,
+            amount = HALF,
+        )
+        val items = if (isPayoutFirst) listOf(payout, call) else listOf(call, payout)
+
+        // Act
+        val actual = lendingConverter.convertList(items).single()
+
+        // Assert
+        assertThat(actual.type).isEqualTo(TxInfo.TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null))
+        assertThat(listOf(actual.isOutgoing, actual.amount, actual.fee))
+            .containsExactly(true, HALF, CALL_FEE.toSdkAmount())
+            .inOrder()
+    }
+
+    private fun providePayoutOrders() = listOf(false, true)
+
+    @ParameterizedTest
+    @MethodSource("providePayoutOrders")
+    fun `GIVEN a DEX call and its coin payout on a personal coin WHEN convertList THEN only the call row`(
+        isPayoutFirst: Boolean,
+    ) {
+        // Arrange
+        val call = item(
+            type = contractMethod(SWAP_CALLDATA),
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.Contract(DEX_ROUTER),
+            amount = BigDecimal.ZERO,
+            fee = CALL_FEE,
+        )
+        val payout = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = false,
+            destination = TransactionHistoryItem.AddressType.User(SENDER),
+            source = DEX_ROUTER,
+            amount = HALF,
+        )
+        val items = if (isPayoutFirst) listOf(payout, call) else listOf(call, payout)
+
+        // Act
+        val actual = lendingConverter.convertList(items)
+
+        // Assert
+        assertThat(actual).containsExactly(lendingConverter.convert(call))
+    }
+
+    @Test
+    fun `GIVEN only internal transfers on a personal coin WHEN convertList THEN they stay merged`() {
+        // Arrange
+        val incoming = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = false,
+            destination = TransactionHistoryItem.AddressType.User(SENDER),
+            source = DEX_ROUTER,
+            amount = BigDecimal.ONE,
+        )
+        val outgoing = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.User(RECIPIENT),
+            source = SENDER,
+            amount = HALF,
+        )
+
+        // Act
+        val actual = lendingConverter.convertList(listOf(incoming, outgoing)).single()
+
+        // Assert
+        assertThat(actual).isInstanceOf(TxInfo.MultiTransfer::class.java)
+        assertThat(listOf(actual.type, actual.isOutgoing, actual.amount))
+            .containsExactly(TxInfo.TransactionType.Transfer, false, HALF)
+            .inOrder()
+    }
+
+    private val lendingConverter = createConverter(
+        smartContractMethods = mapOf(
+            EthereumYieldSupplyEnterWithNativeCallData.METHOD_ID to yieldModuleMethod("enterProtocolByOwnerWithNative"),
+            EthereumYieldSupplyWithdrawNativeCallData.METHOD_ID to yieldModuleMethod("withdrawNative"),
+            EthereumYieldSupplyExitNativeCallData.METHOD_ID to yieldModuleMethod("withdrawAndDeactivateNative"),
+        ),
+        currencyAddresses = listOf(Address(SENDER)),
+    )
+
+    private fun yieldModuleMethod(name: String) = SmartContractMethod(info = "yieldModule", source = null, name = name)
+
+    private fun contractMethod(callData: String) =
+        TransactionHistoryItem.TransactionType.ContractMethod(id = callData.take(SELECTOR_LENGTH), callData = callData)
+
+    private fun Amount.toSdkAmount() = SdkAmount(currencySymbol = currencySymbol, value = value, decimals = decimals)
+
+    @Suppress("LongParameterList")
+    private fun createConverter(
+        smartContractMethods: Map<String, SmartContractMethod> = emptyMap(),
+        jointRefundReceiver: String? = null,
+        currency: CryptoCurrency = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum),
+        networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+        currencyAddresses: List<Address> = emptyList(),
+    ) = SdkTransactionHistoryItemConverter(
+        smartContractMethods = smartContractMethods,
+        yieldSupplyAddresses = emptySet(),
+        gaslessFeeAddresses = emptySet(),
+        jointRefundReceiver = jointRefundReceiver,
+        currency = currency,
+        networkTokens = networkTokens,
+        getCachedTokenInfoUseCase = mockk(relaxed = true),
+        currencyAddresses = currencyAddresses,
+    )
+
+    internal data class LendingCallModel(
+        val callData: String,
+        val value: BigDecimal,
+        val expectedType: TxInfo.TransactionType,
+        val expectedAmount: BigDecimal,
+    )
+
+    private fun jointCoinConverter() = createConverter(
         smartContractMethods = mapOf(
             "0x6a761202" to SmartContractMethod(info = "Safe", source = null, name = "execTransaction"),
         ),
-        yieldSupplyAddresses = emptySet(),
-        gaslessFeeAddresses = emptySet(),
         jointRefundReceiver = RELAYER,
         currency = MockCryptoCurrencyFactory().ethereum.copy(network = jointNetwork),
-        networkTokens = emptySet(),
-        getCachedTokenInfoUseCase = mockk(relaxed = true),
         currencyAddresses = listOf(Address(SAFE_ADDRESS)),
     )
 
@@ -345,18 +510,24 @@ internal class SdkTransactionHistoryItemConverterTest {
         fee = Amount(value = BigDecimal("0.0001"), blockchain = Blockchain.Ethereum),
     )
 
-    private fun item(type: TransactionHistoryItem.TransactionType, isOutgoing: Boolean) = TransactionHistoryItem(
-        txHash = "0xhash",
+    @Suppress("LongParameterList")
+    private fun item(
+        type: TransactionHistoryItem.TransactionType,
+        isOutgoing: Boolean,
+        destination: TransactionHistoryItem.AddressType = TransactionHistoryItem.AddressType.User(RECIPIENT),
+        source: String = SENDER,
+        amount: BigDecimal = BigDecimal.ONE,
+        fee: Amount = Amount(value = BigDecimal.ZERO, blockchain = Blockchain.Ethereum),
+    ) = TransactionHistoryItem(
+        txHash = TX_HASH,
         timestamp = 0L,
         isOutgoing = isOutgoing,
-        destinationType = TransactionHistoryItem.DestinationType.Single(
-            addressType = TransactionHistoryItem.AddressType.User(RECIPIENT),
-        ),
-        sourceType = TransactionHistoryItem.SourceType.Single(SENDER),
+        destinationType = TransactionHistoryItem.DestinationType.Single(addressType = destination),
+        sourceType = TransactionHistoryItem.SourceType.Single(source),
         status = TransactionHistoryItem.TransactionStatus.Confirmed,
         type = type,
-        amount = Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum),
-        fee = Amount(value = BigDecimal.ZERO, blockchain = Blockchain.Ethereum),
+        amount = Amount(value = amount, blockchain = Blockchain.Ethereum),
+        fee = fee,
     )
 
     internal data class InteractionModel(
@@ -366,6 +537,17 @@ internal class SdkTransactionHistoryItemConverterTest {
     )
 
     private companion object {
+        const val TX_HASH = "0xhash"
+        const val SELECTOR_LENGTH = 10
+        const val YIELD_MODULE_ADDRESS = "0x4444444444444444444444444444444444444444"
+        const val DEX_ROUTER = "0x1111111254eeb25477b68fb85ed929f73a960582"
+        const val SWAP_CALLDATA = "0x07ed2379"
+        val HALF: BigDecimal = BigDecimal("0.5")
+        val ONE_ETHER: BigDecimal = BigDecimal.ONE.setScale(Blockchain.Ethereum.decimals())
+        val WITHDRAW_ONE_ETHER_CALLDATA: String = EthereumYieldSupplyWithdrawNativeCallData(
+            Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum),
+        ).dataHex
+        val CALL_FEE = Amount(value = BigDecimal("0.001"), blockchain = Blockchain.Ethereum)
         const val SENDER = "0x2c6e7c809ac1adf71c6dd0d67d488d2938eff69a"
         const val SAFE_ADDRESS = "0x4cd2b9a4197dd56e8bde666691a18b2bfa9d3c74"
         val REFUND: BigDecimal = BigDecimal("0.2")

@@ -60,6 +60,11 @@ internal class MarketingCampaignConverter : Converter<CampaignDto, MarketingCamp
         partnerLabel = dto.partnerLabel,
         buttonText = dto.buttonText,
         hasGlow = dto.hasGlow,
+        replacesSlot = when (dto.replacesSlot) {
+            "best" -> MarketingBanner.RecommendedSlot.BEST
+            "fastest" -> MarketingBanner.RecommendedSlot.FASTEST
+            else -> null
+        },
     )
 
     private fun MarketingBanner.hasCallToAction(): Boolean =

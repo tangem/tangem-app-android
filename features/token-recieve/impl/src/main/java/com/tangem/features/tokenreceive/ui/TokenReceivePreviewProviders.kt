@@ -106,6 +106,7 @@ internal class TokenReceiveWarningContentProvider : PreviewParameterProvider<War
                 iconState = iconState,
                 onWarningAcknowledged = {},
                 network = "Ethereum",
+                networkLabel = "ERC20",
             ),
         )
 }

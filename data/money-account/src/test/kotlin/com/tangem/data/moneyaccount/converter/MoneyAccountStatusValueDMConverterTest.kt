@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import io.mockk.every
 import io.mockk.mockk
@@ -21,7 +22,14 @@ internal class MoneyAccountStatusValueDMConverterTest {
         every { create(USER_WALLET_ID) } returns cryptoCurrency
     }
 
-    private val converter = MoneyAccountStatusValueDMConverter(moneyAccountCurrencyFactory)
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk {
+        every { isKycAdditionalInfoEnabled } returns true
+    }
+
+    private val converter = MoneyAccountStatusValueDMConverter(
+        moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
+    )
 
     @Test
     fun `GIVEN active account WHEN cached and restored THEN product instance kept and bank off-ramp unknown`() {
@@ -39,6 +47,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             productInstanceId = "instance-1",
             isBankOfframpAvailable = true,
             error = null,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act
@@ -77,6 +86,23 @@ internal class MoneyAccountStatusValueDMConverterTest {
         assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
     }
 
+    @Test
+    fun `GIVEN not started onboarding WHEN cached and restored THEN empty from cache`() {
+        // Arrange
+        val notStarted = MoneyAccountStatusValue.Onboarding.NotStarted(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(notStarted)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Empty)
+        assertThat(restored).isEqualTo(MoneyAccountStatusValue.Empty)
+    }
+
     @ParameterizedTest
     @EnumSource(MoneyAccountStatusValue.Onboarding.Activating.Step::class)
     fun `GIVEN activating onboarding WHEN cached and restored THEN step kept from cache`(
@@ -107,6 +133,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             customerId = "customer-1",
             productInstanceId = "instance-1",
             error = MoneyAccountStatusValue.Error.NotSynced,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act
@@ -115,6 +142,43 @@ internal class MoneyAccountStatusValueDMConverterTest {
         // Assert
         assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, error = null))
     }
+
+    @Test
+    fun `GIVEN active account with flag WHEN cached and restored AND toggle on THEN flag kept`() {
+        // Arrange
+        val active = activeWithKycAdditionalInfoRequired()
+
+        // Act
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
+
+        // Assert
+        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN active account with flag WHEN cached and restored AND toggle off THEN flag dropped`() {
+        // Arrange
+        val active = activeWithKycAdditionalInfoRequired()
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
+
+        // Act
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
+
+        // Assert
+        assertThat(restored).isEqualTo(
+            active.copy(source = StatusSource.CACHE, isKycAdditionalInfoRequired = false),
+        )
+    }
+
+    private fun activeWithKycAdditionalInfoRequired() = MoneyAccountStatusValue.Account.Active(
+        source = StatusSource.ACTUAL,
+        cryptoCurrency = cryptoCurrency,
+        balance = null,
+        customerId = "customer-1",
+        productInstanceId = "instance-1",
+        error = null,
+        isKycAdditionalInfoRequired = true,
+    )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")

@@ -25,6 +25,7 @@ internal enum class BankWithdrawFormField(
     // A null hint is deliberate: Compose has no organisation-name type, and neither the account and routing
     // numbers nor the fields that only ever open a picker are data a password manager fills.
     val contentType: ContentType? = null,
+    val helperText: TextReference? = null,
 ) {
     AccountNumber(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_account_number),
@@ -35,6 +36,12 @@ internal enum class BankWithdrawFormField(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_routing_number),
         placeholder = stringReference(NUMBER_PLACEHOLDER),
         kind = BankWithdrawFieldKind.TextField(KeyboardType.Number, KeyboardCapitalization.None),
+    ),
+    Clabe(
+        label = resourceReference(R.string.virtual_account_requisites_clabe),
+        placeholder = stringReference(CLABE_PLACEHOLDER),
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Number, KeyboardCapitalization.None),
+        helperText = resourceReference(R.string.tangempay_withdraw_bank_field_clabe_hint),
     ),
     FirstName(
         label = resourceReference(R.string.tangempay_order_data_first_name),
@@ -129,4 +136,5 @@ private fun BankWithdrawFormField.isFreeTextRegion(values: Map<BankWithdrawFormF
 private val FREE_TEXT_REGION_KIND = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words)
 
 private const val NUMBER_PLACEHOLDER = "000000000000"
+private const val CLABE_PLACEHOLDER = "000000000000000000"
 private const val POSTAL_CODE_PLACEHOLDER = "0000"

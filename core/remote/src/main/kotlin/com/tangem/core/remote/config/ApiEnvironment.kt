@@ -15,30 +15,10 @@ enum class ApiEnvironment {
     DEV,
     DEV_2,
     DEV_3,
+    DEV_4,
+    DEV_5,
+    DEV_6,
     STAGE,
-    STAGE_2,
-    STAGE_3,
     MOCK,
     PROD,
-
-    /** Replacement for [DEV] */
-    DEV_NEW,
-
-    /** Replacement for [DEV_2] */
-    DEV_2_NEW,
-
-    /** Replacement for [DEV_3] */
-    DEV_3_NEW,
-
-    /** Replacement for [STAGE] (backend name: stage1) */
-    DEV_4_NEW,
-
-    /** Replacement for [STAGE_2] (backend name: stage2) */
-    DEV_5_NEW,
-
-    /** Replacement for [STAGE_3] (backend name: stage3) */
-    DEV_6_NEW,
-
-    /** Temporary host for checking [PROD] before the switch */
-    PROD_NEW,
 }

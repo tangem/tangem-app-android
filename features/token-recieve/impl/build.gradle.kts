@@ -24,6 +24,7 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.kotlin.serialization)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.zxing.qrCore)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -41,6 +42,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
 
     /** Domain modules */
@@ -49,6 +51,12 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
 
+    /** Libs */
+    implementation(projects.libs.crypto)
+
     /** Feature Apis */
     implementation(projects.features.tokenRecieve.api)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

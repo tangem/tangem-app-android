@@ -18,10 +18,12 @@ dependencies {
     implementation(projects.features.send.api)
 
     /** Common */
+    implementation(projects.common)
     implementation(projects.common.ui)
 
     /** Core */
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
@@ -41,6 +43,9 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.wallets)
 
     /** SDK */
     implementation(tangemDeps.blockchain)
@@ -52,10 +57,13 @@ dependencies {
     implementation(deps.kotlin.serialization.core)
 
     /** Compose */
+    implementation(deps.compose.coil)
+    implementation(deps.jodatime)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
     /** Other */

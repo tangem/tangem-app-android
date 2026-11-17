@@ -12,12 +12,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.tangempay.usecase.GetCurrentTariffUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.tangempay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.openTrustedLink
@@ -43,10 +45,15 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
+    getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), TangemPaySelectPlanClickIntents {
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
-    private val umFactory = TangemPaySelectPlanUMFactory(mode = params.mode, clicks = this)
+    private val umFactory = TangemPaySelectPlanUMFactory(
+        mode = params.mode,
+        clicks = this,
+        isColdWallet = getUserWalletUseCase(params.userWalletId).getOrNull()?.isColdWallet == true,
+    )
     private var data = TangemPaySelectPlanData()
 
     private val analyticsProducts = (params.mode as? TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder)
@@ -54,10 +61,12 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         ?.let(TangemPayAnalyticsEvents.ProductSet::of)
 
     private val analyticsContext = when (params.mode) {
-        TangemPaySelectPlanComponent.Mode.ChangePlan -> TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
-        TangemPaySelectPlanComponent.Mode.TiersOnboarding,
-        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder,
-        -> TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+        TangemPaySelectPlanComponent.Mode.ChangePlan -> {
+            TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
+        }
+        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> {
+            TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+        }
     }
 
     val state: StateFlow<TangemPaySelectPlanUM>
@@ -115,7 +124,6 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         )
 
         when (val mode = params.mode) {
-            TangemPaySelectPlanComponent.Mode.TiersOnboarding -> applyTransition(transition)
             TangemPaySelectPlanComponent.Mode.ChangePlan -> {
                 analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
                 updateData { it.copy(isConfirm = true) }
@@ -169,14 +177,10 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         modelScope.launch {
             submitTariffTransitionUseCase(params.userWalletId, transition).fold(
                 ifRight = {
-                    when {
-                        transition.type == TangemPayTariffPlanTransition.Type.UPGRADE -> {
-                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
-                        }
-                        params.mode == TangemPaySelectPlanComponent.Mode.TiersOnboarding -> {
-                            router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
-                        }
-                        else -> router.pop()
+                    if (transition.type == TangemPayTariffPlanTransition.Type.UPGRADE) {
+                        router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
+                    } else {
+                        router.pop()
                     }
                 },
                 ifLeft = {
@@ -205,7 +209,12 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 }
             }.onRight {
-                router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess)
+                router.replaceAll(
+                    AppRoute.Wallet,
+                    AppRoute.TangemPayOnboardingSuccess(
+                        product = AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY,
+                    ),
+                )
             }
         }
     }

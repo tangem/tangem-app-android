@@ -1,6 +1,5 @@
 package com.tangem.domain.polymarket.sports
 
-import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import java.time.Instant
@@ -10,19 +9,19 @@ import kotlin.time.TimeSource
 
 internal class PolymarketSportsMerger(private val time: TimeSource) {
 
-    private var events = emptyMap<String, PolymarketEvent>()
+    private var events = emptyMap<String, PolymarketSportsEvent>()
     private val scores = mutableMapOf<String, Entry>()
     private var resnapshotRevision = 0L
     private var hasConnected = false
 
-    fun setEvents(value: List<PolymarketEvent>): Set<String> {
+    fun setEvents(value: List<PolymarketSportsEvent>): Set<String> {
         events = value.filter { it.gameId?.toLongOrNull() != null }.associate { incoming ->
             val previous = events[incoming.id]
             val shouldKeepPrevious = previous?.gameId == incoming.gameId && previous?.dataFetchedAt != null &&
                 (incoming.dataFetchedAt == null || incoming.dataFetchedAt < previous.dataFetchedAt)
             incoming.id to if (shouldKeepPrevious) requireNotNull(previous) else incoming
         }
-        val gameIds = events.values.mapNotNullTo(mutableSetOf(), PolymarketEvent::gameId)
+        val gameIds = events.values.mapNotNullTo(mutableSetOf(), PolymarketSportsEvent::gameId)
         scores.keys.retainAll(gameIds)
         return gameIds
     }
@@ -76,7 +75,7 @@ internal class PolymarketSportsMerger(private val time: TimeSource) {
         resnapshotRevision = resnapshotRevision,
     )
 
-    private fun game(event: PolymarketEvent): PolymarketSportsState.Game {
+    private fun game(event: PolymarketSportsEvent): PolymarketSportsState.Game {
         val entry = scores[event.gameId]
         val score = entry?.score
         val isStale = isStale(entry, event)
@@ -117,10 +116,10 @@ internal class PolymarketSportsMerger(private val time: TimeSource) {
         }
     }
 
-    private fun keepsFinalResult(score: PolymarketLiveScore, event: PolymarketEvent): Boolean =
+    private fun keepsFinalResult(score: PolymarketLiveScore, event: PolymarketSportsEvent): Boolean =
         score.isEnded == true && event.isEnded != true
 
-    private fun isStale(entry: Entry?, event: PolymarketEvent): Boolean {
+    private fun isStale(entry: Entry?, event: PolymarketSportsEvent): Boolean {
         if (entry == null) return false
         val isLive = entry.score.isLive ?: event.isLive
         val isEnded = entry.score.isEnded ?: event.isEnded == true

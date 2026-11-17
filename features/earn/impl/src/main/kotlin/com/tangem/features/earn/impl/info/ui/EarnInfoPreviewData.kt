@@ -11,18 +11,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.ImageReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.api.ui.EarnRowUM
-import com.tangem.features.earn.impl.info.EarnInfoTexts
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
@@ -36,9 +38,7 @@ internal object EarnInfoPreviewData {
         subtitle = stringReference("Ethereum in Mainnet"),
         balanceFiat = stringReference("\$5,200.52"),
         balanceCrypto = stringReference("ETH 1.482"),
-        earned = EarnInfoTexts.earnedChip(amount = "\$2,150.32"),
         rewards = null,
-        staleNotice = null,
         tabs = EarnInfoTab.entries.toImmutableList(),
         myFunds = EarnInfoUM.MyFundsUM(
             provider = stringReference("Aave"),
@@ -77,22 +77,20 @@ internal object EarnInfoPreviewData {
     )
 
     fun withoutBenefitsAndDetails(): EarnInfoUM = full().copy(
-        earned = null,
         tabs = persistentListOf(EarnInfoTab.MyFunds),
         benefits = persistentListOf(),
         details = persistentListOf(),
     )
 
     fun stale(): EarnInfoUM = full().copy(
-        staleNotice = EarnInfoTexts.staleNotice(asOf = "Nov 9, 2026, 9:41 AM"),
         secondary = persistentListOf(button(text = "Withdraw", type = TangemButtonType.Secondary, isDimmed = true)),
         primary = button(text = "Add funds", type = TangemButtonType.Primary, isDimmed = true),
     )
 
     fun withRewards(): EarnInfoUM = full().copy(
         rewards = EarnInfoUM.RewardsUM(
-            title = EarnInfoTexts.rewardsTitle(amount = "\$30"),
-            description = EarnInfoTexts.rewardsDescription,
+            title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$30")),
+            description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
             claim = button(text = "Claim", type = TangemButtonType.Primary),
         ),
     )
@@ -129,7 +127,11 @@ private fun ChartPlaceholder() {
 @Composable
 private fun PreviewContent(state: EarnInfoUM, chart: (@Composable () -> Unit)? = { ChartPlaceholder() }) {
     TangemThemePreviewRedesign {
-        EarnInfoContent(state = state, chart = chart)
+        EarnInfoContent(
+            state = state,
+            chart = chart,
+            pullToRefresh = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+        )
     }
 }
 

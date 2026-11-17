@@ -131,6 +131,12 @@ interface JointAccountRepository {
         signature: String,
     ): Either<JointOperationSignError, JointOperation?>
 
+    /**
+     * The joint accounts of the wallet exactly as the last fetch stored them. The supplier hands a fresh list over
+     * with a delay, so a caller that has just fetched and needs that very answer reads it here.
+     */
+    suspend fun getStoredJointAccounts(userWalletId: UserWalletId): List<JointAccount>
+
     /** Cancels the operation when the caller is its initiator, records a decline otherwise */
     suspend fun rejectOperation(
         userWalletId: UserWalletId,

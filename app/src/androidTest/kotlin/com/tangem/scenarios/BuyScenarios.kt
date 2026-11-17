@@ -10,7 +10,6 @@ import com.tangem.common.utils.assertUrlOpened
 import com.tangem.common.utils.stubUrlOpening
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onBuyTokenDetailsScreen
-import com.tangem.screens.onDialog
 import com.tangem.screens.onMarketsTokenDetailsScreen
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOnrampSuccessScreen
@@ -30,9 +29,6 @@ fun BaseTestCase.openBuyScreenFromTokenDetails(tokenTitle: String, fiatAmount: S
     step("Click on 'Buy' button") {
         onAddFundsBottomSheet { buyButton.clickWithAssertion() }
     }
-    step("Click on 'Confirm' button in 'Dialog'") {
-        onDialog { confirmButton.clickWithAssertion() }
-    }
     step("Write fiat amount = '$fiatAmount'") {
         onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
     }
@@ -50,9 +46,6 @@ fun BaseTestCase.openBuyScreenFromTokenContextMenu(tokenTitle: String, fiatAmoun
     step("Click on 'Buy' button in token context menu") {
         onTokenActionsBottomSheet { buyButton.clickWithAssertion() }
     }
-    step("Click on 'Confirm' button in 'Dialog'") {
-        onDialog { confirmButton.clickWithAssertion() }
-    }
     step("Write fiat amount = '$fiatAmount'") {
         onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
     }
@@ -67,9 +60,6 @@ fun BaseTestCase.openBuyScreenFromAddFunds(tokenTitle: String, fiatAmount: Strin
     }
     step("Click on 'Buy' button") {
         onAddFundsBottomSheet { buyTokenButton.clickWithAssertion() }
-    }
-    step("Click on 'Confirm' button in 'Dialog'") {
-        onDialog { confirmButton.clickWithAssertion() }
     }
     step("Write fiat amount = '$fiatAmount'") {
         onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
@@ -151,10 +141,18 @@ fun BaseTestCase.openBuyScreenFromMarkets(tokenName: String, fiatAmount: String)
     step("Click on 'Buy' button") {
         awaitSuccess { onAddFundsBottomSheet { buyTokenButton.clickWithAssertion() } }
     }
-    step("Click on 'Confirm' button in 'Dialog'") {
-        onDialog { confirmButton.clickWithAssertion() }
-    }
     step("Write fiat amount = '$fiatAmount'") {
         onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
+    }
+}
+
+fun BaseTestCase.openProviderPageByBuyButton(providerPageUrl: String) {
+    step("Stub opening of the provider page") {
+        stubUrlOpening(providerPageUrl)
+    }
+    step("Click on 'Buy' button and assert provider page is opened") {
+        onBuyTokenDetailsScreen {
+            buyButton.clickAndWaitFor(composeTestRule) { assertUrlOpened(providerPageUrl, times = 1) }
+        }
     }
 }

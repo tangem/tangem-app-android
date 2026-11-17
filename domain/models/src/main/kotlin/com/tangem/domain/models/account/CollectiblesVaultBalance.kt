@@ -12,14 +12,17 @@ import kotlinx.serialization.Serializable
  *
  * @property usdcToken    the token the vault holds, built from the mint its on-chain config names
  * @property usdcAmount   the token's amount, already scaled by the mint's decimals
- * @property ataAddress   the vault's associated token account — where a top-up is sent. The vault itself is a PDA
- *                        of the gacha program, and a transfer addressed to it is refused
+ * @property vaultAddress the vault PDA of the gacha program, shown to external senders: a wallet deriving the
+ *                        token account from it lands in [ataAddress]
+ * @property ataAddress   the vault's associated token account — where an in-app top-up is sent, since the SDK
+ *                        refuses a program-owned PDA as a recipient
  * @property usdcFiatRate rate of [usdcToken] into the app's currency, `null` until the quote answers
  */
 @Serializable
 data class CollectiblesVaultBalance(
     val usdcToken: CryptoCurrency.Token,
     val usdcAmount: SerializedBigDecimal,
+    val vaultAddress: String,
     val ataAddress: String,
     val usdcFiatRate: SerializedBigDecimal? = null,
 ) {
@@ -40,7 +43,7 @@ data class CollectiblesVaultBalance(
         value = depositCryptoCurrencyStatusValue(
             amount = usdcAmount,
             fiatRate = usdcFiatRate,
-            depositAddress = ataAddress,
+            depositAddress = vaultAddress,
             source = source,
         ),
     )

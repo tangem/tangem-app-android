@@ -39,6 +39,7 @@ import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.side
 import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountFractionsRow
@@ -111,6 +112,7 @@ internal fun PlacePredictionAmountContent(
             )
             PredictionNotificationsBlock(
                 notifications = state.notifications,
+                side = state.order.side,
                 onRetryClick = intents::onQuoteRetryClick,
             )
             TangemSurface(color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {

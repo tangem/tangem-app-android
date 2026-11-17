@@ -7,6 +7,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.CustomerName
 
 /**
  * Bank off-ramp catalog: the recipients the customer has saved and the routes a withdrawal can take.
@@ -25,4 +26,6 @@ interface BankOfframpRepository {
         userWalletId: UserWalletId,
         product: TangemPayProduct,
     ): Either<BankOfframpError, BankOfframpOptions>
+
+    suspend fun getCustomerName(userWalletId: UserWalletId): Either<BankOfframpError, CustomerName>
 }

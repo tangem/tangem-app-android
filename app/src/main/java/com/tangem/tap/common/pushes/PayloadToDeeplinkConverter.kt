@@ -1,10 +1,7 @@
 package com.tangem.tap.common.pushes
 
 import android.os.Bundle
-import com.tangem.common.routing.DeepLinkRoute
-import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.DeepLinkBuilder
-import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
@@ -17,9 +14,11 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.utils.converter.Converter
 
@@ -144,8 +143,7 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val type = payload[TYPE_KEY]
         if (walletId.isNullOrEmpty() || type.isNullOrEmpty()) return null
 
-        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
-            setAction(DeepLinkRoute.PayAppMain.host)
+        return deepLinkBuilder(key = TangemPayMainDeepLinkHandler.TANGEM_DEEPLINK_KEY).apply {
             payload.forEach { (key, value) -> addQueryParam(key, value) }
         }.build()
     }

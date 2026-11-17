@@ -5,9 +5,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.interactor.ReconcilePolymarketSessionKeysInteractor
 import com.tangem.domain.polymarket.model.PolymarketWalletError
+import com.tangem.domain.polymarket.model.newestPerAddress
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
@@ -55,23 +57,28 @@ class PolymarketSessionKeyStateService(
             refreshes.tryEmit(Unit)
             return
         }
-        scope.launch {
-            reconcile(userWalletId).onLeft { error ->
-                TangemLogger.e("Polymarket session keys of an unobserved wallet could not be reconciled: $error")
-            }
-        }
+        reconcileUnobserved(userWalletId)
     }
 
     suspend fun refreshAndAwait(userWalletId: UserWalletId, timeout: Duration = REFRESH_AWAIT_TIMEOUT) {
         val wallet = wallets[userWalletId]
         if (wallet == null || wallet.refreshes.subscriptionCount.value == 0) {
-            refresh(userWalletId)
+            val reconciliation = reconcileUnobserved(userWalletId)
+            if (withTimeoutOrNull(timeout) { reconciliation.join() } == null) {
+                TangemLogger.i("Polymarket session keys not reconciled within $timeout, moving on")
+            }
             return
         }
         val requestedCycle = wallet.startedCycles.get() + 1
         wallet.refreshes.tryEmit(Unit)
         val refreshed = withTimeoutOrNull(timeout) { wallet.cycles.first { it.number >= requestedCycle } }
         if (refreshed == null) TangemLogger.i("Polymarket session keys not refreshed within $timeout, moving on")
+    }
+
+    private fun reconcileUnobserved(userWalletId: UserWalletId): Job = scope.launch {
+        reconcile(userWalletId).onLeft { error ->
+            TangemLogger.e("Polymarket session keys of an unobserved wallet could not be reconciled: $error")
+        }
     }
 
     private inner class WalletState(userWalletId: UserWalletId) {
@@ -187,7 +194,7 @@ class PolymarketSessionKeyStateService(
                 isFailureLogged = false
                 elapsedChangeRetries = 0
                 restarts = 0
-                isSettling = loaded.wallet.sessionKeys.any { key -> key.status.isSettling() }
+                isSettling = loaded.wallet.sessionKeys.newestPerAddress().any { key -> key.status.isSettling() }
                 nextChangeAt = loaded.assessment.nextChangeAt
                 true
             },

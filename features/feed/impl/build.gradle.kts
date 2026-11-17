@@ -100,6 +100,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.pagination)
 
     /* Common */

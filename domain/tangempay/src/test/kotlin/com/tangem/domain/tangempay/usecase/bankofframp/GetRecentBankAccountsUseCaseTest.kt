@@ -36,7 +36,7 @@ internal class GetRecentBankAccountsUseCaseTest {
         coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
         // Assert
         val expected = RecentBankAccounts(
@@ -48,17 +48,32 @@ internal class GetRecentBankAccountsUseCaseTest {
     }
 
     @Test
-    fun `GIVEN SPEI recipients among saved accounts WHEN invoke THEN they neither show nor count as more`() = runTest {
+    fun `GIVEN SPEI recipients WHEN invoke without SPEI THEN they neither show nor count as more`() = runTest {
         // Arrange
         val usd = List(3) { bankAccount(id = "usd-$it", displayName = "usd-$it") }
         val spei = bankAccount(id = "spei", details = bankAccountDetails(rail = BankRail.SPEI))
         coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns (listOf(spei) + usd).right()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
         // Assert
         assertThat(actual).isEqualTo(RecentBankAccounts(recents = usd, hasMoreAccounts = false).right())
+    }
+
+    @Test
+    fun `GIVEN SPEI recipients WHEN invoke with SPEI THEN they show and count as more`() = runTest {
+        // Arrange
+        val usd = List(3) { bankAccount(id = "usd-$it", displayName = "usd-$it") }
+        val spei = bankAccount(id = "spei", details = bankAccountDetails(rail = BankRail.SPEI))
+        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns (listOf(spei) + usd).right()
+
+        // Act
+        val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = true)
+
+        // Assert
+        val expected = RecentBankAccounts(recents = listOf(spei) + usd.take(2), hasMoreAccounts = true)
+        assertThat(actual).isEqualTo(expected.right())
     }
 
     @Test
@@ -67,7 +82,7 @@ internal class GetRecentBankAccountsUseCaseTest {
         coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns BankOfframpError.Unknown(cause = null).left()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpError.Unknown(cause = null).left())
@@ -82,7 +97,7 @@ internal class GetRecentBankAccountsUseCaseTest {
             coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
 
             // Act
-            val actual = useCase(TEST_USER_WALLET_ID)
+            val actual = useCase(TEST_USER_WALLET_ID, includeSpeiRecipients = false)
 
             // Assert
             val expected = RecentBankAccounts(

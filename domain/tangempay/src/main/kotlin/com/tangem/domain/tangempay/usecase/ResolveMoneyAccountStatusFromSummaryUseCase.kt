@@ -5,13 +5,21 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.MoneyAccountStatusValue.Onboarding.Activating.Step as ActivatingStep
 import com.tangem.domain.tangempay.model.CustomerSummary
 import com.tangem.domain.tangempay.model.MoneyAccountActivationState
+import com.tangem.domain.tangempay.model.PaymentAccountActivationState
 import com.tangem.domain.tangempay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 
-class ResolveMoneyAccountStatusFromSummaryUseCase {
+class ResolveMoneyAccountStatusFromSummaryUseCase(
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+) {
 
     operator fun invoke(summary: CustomerSummary): MoneyAccountStatusValue? {
-        return when (val state = TangemPayCustomerStateConverter.convert(summary)) {
+        val state = TangemPayCustomerStateConverter.convert(
+            value = summary,
+            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
+        )
+        return when (state) {
             TangemPayCustomerState.KycRequired,
             TangemPayCustomerState.KycInProgress,
             TangemPayCustomerState.KycDeclined,
@@ -21,22 +29,44 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
                 MoneyAccountStatusValue.Empty
             }
             is TangemPayCustomerState.Former -> {
-                account(state.moneyAccount, summary, isFormer = true)
+                account(
+                    moneyAccount = state.moneyAccount,
+                    paymentAccount = state.paymentAccount,
+                    summary = summary,
+                    isFormer = true,
+                )
             }
             is TangemPayCustomerState.Accounts,
             -> {
-                account(state.moneyAccount, summary, isFormer = false)
+                account(
+                    moneyAccount = state.moneyAccount,
+                    paymentAccount = state.paymentAccount,
+                    summary = summary,
+                    isFormer = false,
+                )
             }
         }
     }
 
     private fun account(
-        state: MoneyAccountActivationState,
+        paymentAccount: PaymentAccountActivationState,
+        moneyAccount: MoneyAccountActivationState,
         summary: CustomerSummary,
         isFormer: Boolean,
     ): MoneyAccountStatusValue? {
-        return when (state) {
-            MoneyAccountActivationState.NotStarted,
+        return when (moneyAccount) {
+            MoneyAccountActivationState.NotStarted -> {
+                val hasPayAccount = paymentAccount is PaymentAccountActivationState.Completed
+                if (isFormer || !hasPayAccount) {
+                    MoneyAccountStatusValue.Empty
+                } else {
+                    MoneyAccountStatusValue.Onboarding.NotStarted(
+                        source = StatusSource.ACTUAL,
+                        customerId = summary.customerId,
+                    )
+                }
+            }
+
             MoneyAccountActivationState.Unavailable,
             is MoneyAccountActivationState.AwaitingKyc,
             -> {
@@ -55,7 +85,7 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
             is MoneyAccountActivationState.Issuing -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = summary.customerId,
-                step = when (state.step) {
+                step = when (moneyAccount.step) {
                     MoneyAccountActivationState.Issuing.Step.ISSUING -> ActivatingStep.ISSUING
                     MoneyAccountActivationState.Issuing.Step.AWAITING_DEPOSIT -> ActivatingStep.AWAITING_DEPOSIT
                 },

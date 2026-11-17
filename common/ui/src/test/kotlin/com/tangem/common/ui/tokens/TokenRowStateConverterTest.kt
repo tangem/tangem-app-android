@@ -103,6 +103,49 @@ internal class TokenRowStateConverterTest {
         assertThat(actual.priceChange).isNull()
     }
 
+    @Test
+    fun `GIVEN subtitle WHEN convert loaded status THEN network variant keeps balances and drops the price`() {
+        // Arrange
+        val status = CryptoCurrencyStatus(currency = coin, value = loaded())
+        val subtitle = stringReference("Ethereum network")
+
+        // Act
+        val actual = converter.convert(currencyStatus = status, onClick = null, subtitle = subtitle)
+
+        // Assert
+        val content = converter.convert(currencyStatus = status, onClick = null) as TangemTokenRow.State.Content
+        assertThat(actual).isEqualTo(
+            TangemTokenRow.State.Network(
+                id = content.id,
+                icon = content.icon,
+                title = content.title,
+                network = subtitle,
+                fiatBalance = content.fiatBalance,
+                cryptoBalance = content.cryptoBalance,
+                isBalanceFlickering = content.isBalanceFlickering,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN subtitle WHEN convert unreachable status THEN unreachable variant is kept`() {
+        // Arrange
+        val status = CryptoCurrencyStatus(
+            currency = coin,
+            value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+        )
+
+        // Act
+        val actual = converter.convert(
+            currencyStatus = status,
+            onClick = null,
+            subtitle = stringReference("Ethereum network"),
+        )
+
+        // Assert
+        assertThat(actual).isInstanceOf(TangemTokenRow.State.Unreachable::class.java)
+    }
+
     private fun provideTestModels() = listOf(
         VariantModel(value = CryptoCurrencyStatus.Loading, expected = TangemTokenRow.State.Shimmer::class),
         VariantModel(value = loaded(), expected = TangemTokenRow.State.Content::class),

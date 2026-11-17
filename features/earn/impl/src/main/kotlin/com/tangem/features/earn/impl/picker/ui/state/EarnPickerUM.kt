@@ -3,9 +3,9 @@ package com.tangem.features.earn.impl.picker.ui.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.earn.api.ui.EarnRowUM
+import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -20,7 +20,6 @@ internal data class EarnPickerUM(
     val products: ImmutableList<EarnProductCardUM>,
     val content: ContentUM,
     val cta: TangemButtonUM,
-    val ctaHint: TextReference?,
     val onClose: () -> Unit,
 ) {
 
@@ -33,7 +32,7 @@ internal data class EarnPickerUM(
 
         data class Ready(
             val description: TextReference,
-            val incentive: TangemBadgeUM?,
+            val incentive: EarnIncentiveUM?,
             val sections: ImmutableList<EarnPickerTab>,
             val benefits: ImmutableList<EarnBenefitUM>,
             val details: ImmutableList<EarnRowUM>,

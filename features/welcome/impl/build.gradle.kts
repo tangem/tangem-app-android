@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.wallet.api)
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.introduction.api)
 
     /** Core */
     implementation(projects.core.decompose)
@@ -57,4 +58,7 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
     implementation(tangemDeps.card.core)
     api(projects.domain.common)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

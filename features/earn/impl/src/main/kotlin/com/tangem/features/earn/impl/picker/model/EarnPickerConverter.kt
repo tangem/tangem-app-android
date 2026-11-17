@@ -1,17 +1,15 @@
 package com.tangem.features.earn.impl.picker.model
 
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_16
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnProductCardUM
-import com.tangem.features.earn.impl.ui.toIncentiveBadge
+import com.tangem.features.earn.impl.ui.toIncentiveUM
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
@@ -51,13 +49,12 @@ internal class EarnPickerConverter @Inject constructor(
         )
 
         return EarnPickerUM(
-            title = EarnPickerTexts.title,
-            subtitle = EarnPickerTexts.subtitle,
+            title = resourceReference(R.string.earn_yield_picker_title),
+            subtitle = resourceReference(R.string.earn_yield_picker_subtitle),
             barTitle = product.title,
             products = products(summaries, selectedId, intents),
             content = content(product, state, intents),
-            cta = button.button,
-            ctaHint = button.hint,
+            cta = button,
             onClose = intents::onCloseClick,
         )
     }
@@ -72,13 +69,12 @@ internal class EarnPickerConverter @Inject constructor(
         )
 
         return EarnPickerUM(
-            title = EarnPickerTexts.title,
-            subtitle = EarnPickerTexts.subtitle,
-            barTitle = EarnPickerTexts.title,
+            title = resourceReference(R.string.earn_yield_picker_title),
+            subtitle = resourceReference(R.string.earn_yield_picker_subtitle),
+            barTitle = resourceReference(R.string.earn_yield_picker_title),
             products = persistentListOf(),
             content = content,
-            cta = button.button,
-            ctaHint = button.hint,
+            cta = button,
             onClose = intents::onCloseClick,
         )
     }
@@ -108,7 +104,7 @@ internal class EarnPickerConverter @Inject constructor(
             EarnProductState.Unavailable -> ContentUM.Unavailable(onRetryClick = { intents.onRetryClick(product) })
             is EarnProductState.Ready -> ContentUM.Ready(
                 description = state.description,
-                incentive = state.incentiveRate.toIncentiveBadge(iconEnd = TangemIconUM.Icon(Icons.ic_info_16)),
+                incentive = state.incentiveRate.toIncentiveUM(onClick = intents::onIncentiveClick),
                 sections = EarnPickerTab.entries.filter { it.isAvailableIn(state) }.toImmutableList(),
                 benefits = state.benefits.map { block -> block.toBenefitUM() }.toImmutableList(),
                 details = state.details.map {

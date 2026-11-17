@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.FetchingSource
-import com.tangem.domain.tokens.TokensFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,12 +21,10 @@ internal class BalanceContributionsRefresherTest {
 
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val balanceFetchingOperations: BalanceFetchingOperations = mockk()
-    private val tokensFeatureToggles: TokensFeatureToggles = mockk()
 
     private val refresher = BalanceContributionsRefresher(
         singleAccountListSupplier = singleAccountListSupplier,
         balanceFetchingOperations = balanceFetchingOperations,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -38,8 +35,7 @@ internal class BalanceContributionsRefresherTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(singleAccountListSupplier, balanceFetchingOperations, tokensFeatureToggles)
-        every { tokensFeatureToggles.isPluggableBalanceSourcesEnabled } returns true
+        clearMocks(singleAccountListSupplier, balanceFetchingOperations)
         coEvery { balanceFetchingOperations.fetchAll(any(), any(), any()) } returns emptyMap()
         coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns accountList(
             currencies = listOf(ethereum, ethereumToken, cardano),
@@ -61,19 +57,6 @@ internal class BalanceContributionsRefresherTest {
                 )
             }
         }
-
-    @Test
-    fun `GIVEN pluggable balance sources disabled WHEN invoke THEN nothing is fetched`() = runTest {
-        // Arrange
-        every { tokensFeatureToggles.isPluggableBalanceSourcesEnabled } returns false
-
-        // Act
-        refresher(userWalletId = userWalletId, network = ethereum.network)
-
-        // Assert
-        coVerify(exactly = 0) { balanceFetchingOperations.fetchAll(any(), any(), any()) }
-        coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
-    }
 
     @Test
     fun `GIVEN no currency on the network WHEN invoke THEN nothing is fetched`() = runTest {

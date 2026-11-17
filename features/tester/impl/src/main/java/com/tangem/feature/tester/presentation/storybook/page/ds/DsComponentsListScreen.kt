@@ -30,6 +30,8 @@ import com.tangem.core.ui.ds2.filter.TangemFilterGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.scorescale.TangemScoreScale
+import com.tangem.core.ui.ds2.pagination.TangemPagination
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
@@ -65,6 +67,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.filter.tangemFil
 import com.tangem.feature.tester.presentation.storybook.page.ds.footer.tangemFooterStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.pagination.tangemPaginationStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.menu.tangemMenuStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.tangemMessageBubbleStoryFactory
@@ -80,6 +83,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.ta
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.tangemToggleBadgeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangemTokenIconStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.scorescale.tangemScoreScaleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.tangemTokenRowMarketStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.tangemTokenRowV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
@@ -98,6 +102,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("☑️ TangemCheckbox", TangemCheckbox.version, tangemCheckboxV2StoryFactory),
     DsStoryItem("🎚️ TangemSwitch", TangemSwitch.version, tangemSwitchStoryFactory),
     DsStoryItem("⭕ TangemCheckmark", TangemCheckmark.version, tangemCheckmarkStoryFactory),
+    DsStoryItem("⚫ TangemPagination", TangemPagination.version, tangemPaginationStoryFactory),
     DsStoryItem("🎨 TangemTokenIcon", TangemTokenIcon.version, tangemTokenIconStoryFactory),
     DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
     DsStoryItem("🪙 TangemTokenRow", TangemTokenRow.version, tangemTokenRowV2StoryFactory),
@@ -123,6 +128,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("🎛️ TangemFilterGroup", TangemFilterGroup.version, tangemFilterGroupStoryFactory),
     DsStoryItem("📑 TangemTabNavigation", TangemTabNavigation.version, tangemTabNavigationStoryFactory),
     DsStoryItem("🎚️ TangemSegmentedControl", TangemSegmentedControl.version, tangemSegmentedControlStoryFactory),
+    DsStoryItem("🔢 TangemScoreScale", TangemScoreScale.version, tangemScoreScaleStoryFactory),
     DsStoryItem("🔤 Text styles", null, textStyleStoryFactory),
 )
 

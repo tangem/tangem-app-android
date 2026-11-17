@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -17,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -32,6 +34,8 @@ class UserTokensSaverTest {
     private val walletServerBinder: WalletServerBinder = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val walletTokensLocalStore: WalletTokensLocalStore = mockk(relaxUnitFun = true)
+    private val supportedAccountTypes: SupportedAccountTypes = mockk { every { query } returns SUPPORTED_TYPES }
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -42,6 +46,8 @@ class UserTokensSaverTest {
         pushTokensRetryerPool = mockk(),
         walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         jointAccountFeatureToggles = jointAccountFeatureToggles,
+        walletTokensLocalStore = walletTokensLocalStore,
+        supportedAccountTypes = supportedAccountTypes,
     )
 
     @BeforeEach
@@ -53,6 +59,7 @@ class UserTokensSaverTest {
             walletServerBinder,
             eTagsStore,
             jointAccountFeatureToggles,
+            walletTokensLocalStore,
         )
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
         coEvery { eTagsStore.getSyncOrNull(any(), any()) } returns null
@@ -195,7 +202,7 @@ class UserTokensSaverTest {
             preconditionFailed(),
             ApiResponse.Success(Unit),
         )
-        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
+        coEvery { tangemTechApi.getFilteredAccounts(userWalletId) } returns ApiResponse.Success(
             data = createAccountsV2Response(tokens = listOf(pushedToken, peerToken)),
             headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
         )
@@ -207,7 +214,7 @@ class UserTokensSaverTest {
         val merged = response.copy(tokens = listOf(pushedToken, peerToken))
         coVerifyOrder {
             tangemTechApi.saveTokens(userWalletId.stringValue, response, STALE_ETAG)
-            tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
+            tangemTechApi.getFilteredAccounts(userWalletId)
             eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, FRESH_ETAG)
             tangemTechApi.saveTokens(userWalletId.stringValue, merged, FRESH_ETAG)
         }
@@ -228,7 +235,9 @@ class UserTokensSaverTest {
         userTokensSaver.push(userWalletId = userWalletId, response = response, onFailSend = { onFailSendCalled = true })
 
         // Assert
-        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV2(walletId = any()) }
+        coVerify(exactly = 0) {
+            tangemTechApi.getWalletAccountsV2(walletId = any(), eTag = any(), supportedAccountTypes = any())
+        }
         assert(onFailSendCalled) { "onFailSend callback should be called when 412 recovery is disabled" }
     }
 
@@ -255,7 +264,7 @@ class UserTokensSaverTest {
             preconditionFailed(),
             ApiResponse.Success(Unit),
         )
-        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
+        coEvery { tangemTechApi.getFilteredAccounts(userWalletId) } returns ApiResponse.Success(
             data = createAccountsV2Response(tokens = listOf(token)),
             headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
         )
@@ -264,7 +273,7 @@ class UserTokensSaverTest {
         userTokensSaver.push(userWalletId = userWalletId, response = response)
 
         // Assert
-        coVerify(exactly = 1) { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) }
+        coVerify(exactly = 1) { tangemTechApi.getFilteredAccounts(userWalletId) }
         coVerify(exactly = 3) { tangemTechApi.saveTokens(any(), any(), any()) }
     }
 
@@ -288,7 +297,7 @@ class UserTokensSaverTest {
             )
             // The same token, but as GET returns it: without the accountId the owning account implies
             coEvery {
-                tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
+                tangemTechApi.getFilteredAccounts(userWalletId)
             } returns ApiResponse.Success(
                 data = createAccountsV2Response(tokens = listOf(pushedToken.copy(accountId = null))),
                 headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
@@ -315,7 +324,7 @@ class UserTokensSaverTest {
             preconditionFailed(),
             preconditionFailed(),
         )
-        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
+        coEvery { tangemTechApi.getFilteredAccounts(userWalletId) } returns ApiResponse.Success(
             data = createAccountsV2Response(tokens = emptyList()),
         )
 
@@ -339,7 +348,7 @@ class UserTokensSaverTest {
         var onFailSendCalled = false
         coEvery { enricher(userWalletId, response) } returns response
         coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returns preconditionFailed()
-        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns
+        coEvery { tangemTechApi.getFilteredAccounts(userWalletId) } returns
             ApiResponse.Error(ApiResponseError.UnknownException(Exception("boom"))) as
             ApiResponse<GetWalletAccountsV2Response>
 
@@ -349,6 +358,120 @@ class UserTokensSaverTest {
         // Assert
         coVerify(exactly = 1) { tangemTechApi.saveTokens(any(), any(), any()) }
         assert(onFailSendCalled) { "onFailSend callback should be called when the 412 recovery fails" }
+    }
+
+    @Test
+    fun `GIVEN 412 with peer tokens WHEN push THEN they are stored locally before the fresh etag`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val peerToken = createPeerToken()
+        val response = stubStaleWriteRecovery(
+            userWalletId = userWalletId,
+            pushedTokens = listOf(createToken()),
+            remoteTokens = listOf(peerToken),
+            mergedWriteResult = ApiResponse.Success(Unit),
+        )
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // Assert
+        coVerifyOrder {
+            walletTokensLocalStore.addRemoteTokens(userWalletId = userWalletId, tokens = listOf(peerToken))
+            eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, FRESH_ETAG)
+            tangemTechApi.saveTokens(userWalletId.stringValue, any(), FRESH_ETAG)
+        }
+    }
+
+    @Test
+    fun `GIVEN 412 and merged write fails WHEN push THEN peer tokens are still stored locally`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val peerToken = createPeerToken()
+        val response = stubStaleWriteRecovery(
+            userWalletId = userWalletId,
+            pushedTokens = listOf(createToken()),
+            remoteTokens = listOf(peerToken),
+            mergedWriteResult = preconditionFailed(),
+        )
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // Assert
+        coVerify(exactly = 1) {
+            walletTokensLocalStore.addRemoteTokens(userWalletId = userWalletId, tokens = listOf(peerToken))
+        }
+    }
+
+    @Test
+    fun `GIVEN 412 with no remote only tokens WHEN merging THEN local store is untouched`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val response = stubStaleWriteRecovery(
+            userWalletId = userWalletId,
+            pushedTokens = listOf(createToken()),
+            remoteTokens = emptyList(),
+            mergedWriteResult = ApiResponse.Success(Unit),
+        )
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // Assert
+        coVerify(exactly = 0) { walletTokensLocalStore.addRemoteTokens(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN local store write fails WHEN merging after 412 THEN etag is kept and push fails`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val response = stubStaleWriteRecovery(
+            userWalletId = userWalletId,
+            pushedTokens = listOf(createToken()),
+            remoteTokens = listOf(createPeerToken()),
+            mergedWriteResult = ApiResponse.Success(Unit),
+        )
+        coEvery { walletTokensLocalStore.addRemoteTokens(any(), any()) } throws IOException("disk full")
+        var onFailSendCalled = false
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response, onFailSend = { onFailSendCalled = true })
+
+        // Assert
+        coVerify(exactly = 0) { eTagsStore.store(any(), any(), any()) }
+        coVerify(exactly = 1) { tangemTechApi.saveTokens(any(), any(), any()) }
+        assert(onFailSendCalled) { "onFailSend callback should be called when the merged tokens are not stored" }
+    }
+
+    private fun stubStaleWriteRecovery(
+        userWalletId: UserWalletId,
+        pushedTokens: List<UserTokensResponse.Token>,
+        remoteTokens: List<UserTokensResponse.Token>,
+        mergedWriteResult: ApiResponse<Unit>,
+    ): UserTokensResponse {
+        stubUserWallet(userWalletId)
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        coEvery {
+            eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+        } returnsMany listOf(STALE_ETAG, FRESH_ETAG)
+
+        val response = createResponse(tokens = pushedTokens)
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
+            preconditionFailed(),
+            mergedWriteResult,
+        )
+        coEvery { tangemTechApi.getFilteredAccounts(userWalletId) } returns ApiResponse.Success(
+            data = createAccountsV2Response(tokens = pushedTokens + remoteTokens),
+            headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
+        )
+
+        return response
+    }
+
+    private fun createPeerToken(): UserTokensResponse.Token {
+        return createToken().copy(id = "polygon", networkId = "polygon")
     }
 
     private fun stubUserWallet(userWalletId: UserWalletId) {
@@ -419,7 +542,13 @@ class UserTokensSaverTest {
         )
     }
 
+    private suspend fun TangemTechApi.getFilteredAccounts(userWalletId: UserWalletId) = getWalletAccountsV2(
+        walletId = userWalletId.stringValue,
+        supportedAccountTypes = SUPPORTED_TYPES,
+    )
+
     private companion object {
+        const val SUPPORTED_TYPES = "crypto,joint"
         const val STALE_ETAG = """{"a":1,"t":1}"""
         const val FRESH_ETAG = """{"a":1,"t":2}"""
     }

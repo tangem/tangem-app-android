@@ -1,12 +1,11 @@
 package com.tangem.features.staking.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.model.StakingAvailability
@@ -19,7 +18,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class StakingDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
@@ -30,7 +28,6 @@ internal class StakingDeepLinkHandler @Inject constructor(
         val networkId = queryParams[NETWORK_ID_KEY]
         val tokenId = queryParams[TOKEN_ID_KEY]
 
-        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         val selectedUserWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId
         val rawWalletId = queryParams[WALLET_ID_KEY]
         val walletId = if (rawWalletId != null) UserWalletId.fromHexOrNull(rawWalletId) else selectedUserWalletId
@@ -75,7 +72,7 @@ internal class StakingDeepLinkHandler @Inject constructor(
                 return@launch
             }
 
-            appRouter.push(
+            request.router.push(
                 AppRoute.Staking(
                     userWalletId = selectedUserWalletId,
                     cryptoCurrency = cryptoCurrency,

@@ -32,8 +32,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.components.haze.hazeEffectTangem
-import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -43,6 +41,7 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
+import com.tangem.features.earn.impl.ui.EarnIncentiveBadge
 import com.tangem.features.earn.impl.widgets.calculator.model.CalculatorInput
 import com.tangem.features.earn.impl.widgets.calculator.model.EarnCalculatorConverter
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
@@ -58,15 +57,20 @@ internal fun EarnCalculatorContent(state: EarnCalculatorUM, modifier: Modifier =
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        state.incentive?.let { badge ->
-            TangemBadge(text = badge.text, variant = badge.variant, status = badge.status, size = badge.size)
+        state.incentive?.let { incentive ->
+            EarnIncentiveBadge(incentive = incentive)
             Spacer(modifier = Modifier.height(12.dp))
         }
         Headline(text = state.total.resolveReference())
         Spacer(modifier = Modifier.height(8.dp))
         EarnedRow(state = state)
         Spacer(modifier = Modifier.height(24.dp))
-        EarnProjectionBars(bars = state.bars, axisLabels = state.axisLabels)
+        EarnProjectionBars(
+            bars = state.bars,
+            axisLabels = state.axisLabels,
+            selectedBar = state.selectedBar,
+            onBarSelect = state.onBarSelected,
+        )
         Spacer(modifier = Modifier.height(24.dp))
         EarnStepper(state = state.initialBalance)
         Box(
@@ -144,7 +148,7 @@ private fun HorizonPicker(horizon: EarnHorizonSelectUM, textStyle: TextStyle) {
         TangemMenu(
             isExpanded = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false },
-            modifier = Modifier.hazeEffectTangem { blurRadius = 10.dp },
+            modifier = if (LocalEarnCalculatorOnGlass.current) Modifier.frostedMenuBase() else Modifier,
             isSelectable = true,
         ) {
             horizon.items.forEach { item ->
@@ -178,9 +182,11 @@ private fun EarnCalculatorContentPreview() {
                 input = input,
                 appCurrency = AppCurrency.Default,
                 incentiveRate = EarnProductRate(fraction = BigDecimal("0.014"), type = EarnRateType.APY),
+                onIncentiveClick = {},
                 onInitialStep = {},
                 onTopUpStep = {},
                 onHorizonSelect = {},
+                onBarSelected = {},
             ),
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)

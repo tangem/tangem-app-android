@@ -21,6 +21,8 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.models.YieldModuleAddresses
+import com.tangem.domain.yield.supply.models.YieldModulePreparation
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -283,20 +285,56 @@ internal class DefaultYieldSupplyTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
         amount: BigDecimal,
+        wrapIntoUpgrade: Boolean,
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         runSuspendCatching {
             val walletManager = getWalletManager(userWalletId, network)
-            val moduleAddress = walletManager.getYieldModuleAddress()
-                .takeUnless { it == EthereumUtils.ZERO_ADDRESS }
-                ?: walletManager.calculateYieldModuleAddress()
+            val callData = YieldSupplyContractCallDataProviderFactory.getEnterWithNativeCallData()
             createNativeTransaction(
                 walletManager = walletManager,
-                moduleAddress = moduleAddress,
+                moduleAddress = walletManager.getExistingOrCalculatedYieldModuleAddress(),
                 value = amount,
-                callData = wrapWithUpgradeIfNeeded(
+                callData = if (wrapIntoUpgrade) wrapWithUpgradeIfNeeded(walletManager, callData) else callData,
+            )
+        }.logErrorUnlessCancellation().getOrThrow()
+    }
+
+    override suspend fun createNativePreparationTransaction(
+        userWalletId: UserWalletId,
+        network: Network,
+        wrappedToken: CryptoCurrency.Token,
+        preparation: YieldModulePreparation,
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
+        runSuspendCatching {
+            val walletManager = getWalletManager(userWalletId, network)
+            val blockchain = walletManager.wallet.blockchain
+            val moduleCallData = when (preparation) {
+                YieldModulePreparation.Deploy -> return@runSuspendCatching createFactoryTransaction(
                     walletManager = walletManager,
-                    callData = YieldSupplyContractCallDataProviderFactory.getEnterWithNativeCallData(),
-                ),
+                    cryptoCurrency = wrappedToken,
+                    callData = YieldSupplyContractCallDataProviderFactory.getNativeDeployCallData(
+                        walletAddress = walletManager.wallet.address,
+                        wrappedNativeAddress = wrappedToken.contractAddress,
+                        blockchain = blockchain,
+                    ),
+                    amount = Amount(value = BigDecimal.ZERO, blockchain = blockchain),
+                )
+                YieldModulePreparation.InitToken ->
+                    YieldSupplyContractCallDataProviderFactory.getNativeInitTokenCallData(
+                        wrappedNativeAddress = wrappedToken.contractAddress,
+                        blockchain = blockchain,
+                    )
+                YieldModulePreparation.ReactivateToken ->
+                    YieldSupplyContractCallDataProviderFactory.getNativeReactivateTokenCallData(
+                        wrappedNativeAddress = wrappedToken.contractAddress,
+                        blockchain = blockchain,
+                    )
+            }
+            createNativeTransaction(
+                walletManager = walletManager,
+                moduleAddress = walletManager.getExistingOrCalculatedYieldModuleAddress(),
+                value = BigDecimal.ZERO,
+                callData = wrapWithUpgradeIfNeeded(walletManager, moduleCallData),
             )
         }.logErrorUnlessCancellation().getOrThrow()
     }
@@ -337,6 +375,20 @@ internal class DefaultYieldSupplyTransactionRepository(
         }.logErrorUnlessCancellation().getOrThrow()
     }
 
+    override suspend fun getNativeYieldModuleAddresses(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): YieldModuleAddresses = withContext(dispatchers.io) {
+        runSuspendCatching {
+            val walletManager = getWalletManager(userWalletId, network)
+            YieldModuleAddresses(
+                moduleAddress = walletManager.getExistingOrCalculatedYieldModuleAddress(),
+                factoryAddress = walletManager.getYieldSupplyContractAddresses()?.factoryContractAddress
+                    ?: error("Factory contract address is null"),
+            )
+        }.logErrorUnlessCancellation().getOrThrow()
+    }
+
     override suspend fun getWithdrawLiquidity(userWalletId: UserWalletId, token: CryptoCurrency.Token): BigDecimal =
         withContext(dispatchers.io) {
             runSuspendCatching {
@@ -346,6 +398,9 @@ internal class DefaultYieldSupplyTransactionRepository(
                 )
             }.logErrorUnlessCancellation().getOrThrow()
         }
+
+    private suspend fun WalletManager.getExistingOrCalculatedYieldModuleAddress(): String =
+        getYieldModuleAddress().takeUnless { it == EthereumUtils.ZERO_ADDRESS } ?: calculateYieldModuleAddress()
 
     private suspend fun getWalletManager(userWalletId: UserWalletId, network: Network): WalletManager =
         walletManagersFacade.getOrCreateWalletManager(
@@ -523,7 +578,20 @@ internal class DefaultYieldSupplyTransactionRepository(
             walletAddress = walletManager.wallet.address,
             maxNetworkFee = maxNetworkFee,
         )
+        return createFactoryTransaction(
+            walletManager = walletManager,
+            cryptoCurrency = cryptoCurrency,
+            callData = callData,
+            amount = amount,
+        )
+    }
 
+    private fun createFactoryTransaction(
+        walletManager: WalletManager,
+        cryptoCurrency: CryptoCurrency.Token,
+        callData: SmartContractCallData,
+        amount: Amount,
+    ): TransactionData.Uncompiled {
         val factoryContractAddress = walletManager.getYieldSupplyContractAddresses()?.factoryContractAddress
             ?: error("Factory contract address is null")
 

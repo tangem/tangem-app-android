@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.sports
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -17,7 +18,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a tennis match WHEN REST and socket update THEN scores use the period of the selected source`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent(score = "3-2", period = "S1")))
+        setEvents(listOf(createSportsEvent(score = "3-2", period = "S1")))
         val initial = game()
 
         // Act
@@ -25,7 +26,7 @@ internal class PolymarketSportsMergerTest {
         val afterFirstSet = game()
         merger.update(createSportsScore(score = "6-4, 2-3", period = "S2", timestamp = 120))
         val secondSet = game()
-        merger.setEvents(listOf(createSportsEvent(score = "3-2", period = "S1", fetchedAt = Instant.ofEpochSecond(105))))
+        setEvents(listOf(createSportsEvent(score = "3-2", period = "S1", fetchedAt = Instant.ofEpochSecond(105))))
         val afterOlderRest = game()
         time += 61.seconds
 
@@ -43,7 +44,7 @@ internal class PolymarketSportsMergerTest {
         val event = createSportsEvent(score = "2-1")
 
         // Act
-        merger.setEvents(listOf(event, createSportsEvent(id = "other", gameId = null)))
+        setEvents(listOf(event, createSportsEvent(id = "other", gameId = null)))
 
         // Assert
         assertThat(merger.snapshot()).isEqualTo(PolymarketSportsState(mapOf("event" to expected(2, 1, "Q1"))))
@@ -53,16 +54,16 @@ internal class PolymarketSportsMergerTest {
     fun `GIVEN a socket update WHEN REST polls arrive out of order THEN the freshest source wins`() {
         // Arrange
         val event = createSportsEvent()
-        merger.setEvents(listOf(event))
+        setEvents(listOf(event))
         merger.update(createSportsScore())
 
         // Act
-        merger.setEvents(listOf(event.copy(score = "0-1", dataFetchedAt = Instant.ofEpochSecond(105))))
+        setEvents(listOf(event.copy(score = "0-1", dataFetchedAt = Instant.ofEpochSecond(105))))
         val socketWins = game()
-        merger.setEvents(listOf(event.copy(score = "2-1", period = "Q3", dataFetchedAt = Instant.ofEpochSecond(120))))
+        setEvents(listOf(event.copy(score = "2-1", period = "Q3", dataFetchedAt = Instant.ofEpochSecond(120))))
         val restWins = game()
         merger.update(createSportsScore(score = "0-1", timestamp = 109))
-        merger.setEvents(listOf(event))
+        setEvents(listOf(event))
 
         // Assert
         assertThat(socketWins).isEqualTo(expected(1, 0))
@@ -73,7 +74,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN two live games WHEN only one repeats THEN only the silent game falls back to REST`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent(), createSportsEvent(id = "other", gameId = "2")))
+        setEvents(listOf(createSportsEvent(), createSportsEvent(id = "other", gameId = "2")))
         merger.update(createSportsScore())
         merger.update(createSportsScore(gameId = "2"))
         time += 50.seconds
@@ -95,9 +96,9 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN REST newer than cached socket data WHEN a partial frame arrives THEN omitted fields retain the freshest value`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = "1-0"))
-        merger.setEvents(listOf(createSportsEvent(score = "2-0", fetchedAt = Instant.ofEpochSecond(120))))
+        setEvents(listOf(createSportsEvent(score = "2-0", fetchedAt = Instant.ofEpochSecond(120))))
 
         // Act
         merger.update(createSportsScore(score = null, period = "Q3", live = null, ended = null, timestamp = 130))
@@ -109,11 +110,11 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a metadata only frame WHEN REST later provides a score THEN the empty frame cannot mask it`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = null, period = null, live = null, ended = null, timestamp = 130))
 
         // Act
-        merger.setEvents(listOf(createSportsEvent(score = "2-0", fetchedAt = Instant.ofEpochSecond(120))))
+        setEvents(listOf(createSportsEvent(score = "2-0", fetchedAt = Instant.ofEpochSecond(120))))
 
         // Assert
         assertThat(game()).isEqualTo(expected(2, 0, "Q1"))
@@ -122,7 +123,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a score update WHEN an older socket frame follows THEN it cannot roll back the score`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = "2-1", timestamp = 120))
 
         // Act
@@ -135,7 +136,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a live score WHEN a partial ended frame arrives THEN the final score is retained without expiry`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = "3-1"))
 
         // Act
@@ -149,11 +150,11 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a final socket result WHEN newer REST still reports live THEN the final result is retained`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = "2-0", period = "FT", live = false, ended = true))
 
         // Act
-        merger.setEvents(listOf(createSportsEvent(score = "1-0", fetchedAt = Instant.ofEpochSecond(130))))
+        setEvents(listOf(createSportsEvent(score = "1-0", fetchedAt = Instant.ofEpochSecond(130))))
         time += 120.seconds
         val afterRest = game()
         merger.update(createSportsScore(score = null, period = null, live = null, ended = null, timestamp = 140))
@@ -167,13 +168,11 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a final socket result WHEN REST supplies a newer final correction THEN the correction is shown`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = "2-0", period = "FT", live = false, ended = true))
 
         // Act
-        merger.setEvents(
-            listOf(createSportsEvent(score = "2-1", live = false, ended = true, period = "FT", fetchedAt = Instant.ofEpochSecond(130))),
-        )
+        setEvents(listOf(createSportsEvent(score = "2-1", live = false, ended = true, period = "FT", fetchedAt = Instant.ofEpochSecond(130))))
 
         // Assert
         assertThat(game()).isEqualTo(expected(2, 1, "FT").copy(isLive = false, isEnded = true))
@@ -182,9 +181,9 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN a final socket result WHEN a newer socket frame explicitly reopens the match THEN it is applied`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        setEvents(listOf(createSportsEvent()))
         merger.update(createSportsScore(score = "2-0", period = "FT", live = false, ended = true))
-        merger.setEvents(listOf(createSportsEvent(fetchedAt = Instant.ofEpochSecond(130))))
+        setEvents(listOf(createSportsEvent(fetchedAt = Instant.ofEpochSecond(130))))
 
         // Act
         merger.update(createSportsScore(score = "2-1", period = "Q3", live = true, ended = false, timestamp = 140))
@@ -197,13 +196,13 @@ internal class PolymarketSportsMergerTest {
     fun `GIVEN a removed game WHEN it is loaded again THEN old socket state does not leak into it`() {
         // Arrange
         val event = createSportsEvent()
-        merger.setEvents(listOf(event))
+        setEvents(listOf(event))
         merger.update(createSportsScore())
 
         // Act
-        merger.setEvents(emptyList())
+        setEvents(emptyList())
         merger.update(createSportsScore(score = "2-1"))
-        merger.setEvents(listOf(event))
+        setEvents(listOf(event))
 
         // Assert
         assertThat(game()).isEqualTo(expected(0, 0, "Q1"))
@@ -212,7 +211,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN an unknown REST timestamp WHEN a frame arrives THEN the socket supplies the score`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent(fetchedAt = null)))
+        setEvents(listOf(createSportsEvent(fetchedAt = null)))
 
         // Act
         merger.update(createSportsScore())
@@ -224,7 +223,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN an unparseable socket score WHEN it replaces REST THEN no invented numbers are shown`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent(score = "2-1")))
+        setEvents(listOf(createSportsEvent(score = "2-1")))
 
         // Act
         merger.update(createSportsScore(score = "unknown"))
@@ -237,7 +236,7 @@ internal class PolymarketSportsMergerTest {
     @ValueSource(strings = ["CAN", "POST", "INT", "AB", "int", "Post"])
     fun `GIVEN a suspended live frame and prematch REST WHEN merging THEN provider phase and period remain separate`(period: String) {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent(live = false)))
+        setEvents(listOf(createSportsEvent(live = false)))
 
         // Act
         merger.update(createSportsScore(period = period))
@@ -252,7 +251,7 @@ internal class PolymarketSportsMergerTest {
         val event = createSportsEvent(score = "0-0", live = false, period = null)
 
         // Act
-        merger.setEvents(listOf(event))
+        setEvents(listOf(event))
 
         // Assert
         assertThat(game()).isEqualTo(expected(0, 0, null).copy(score = null, isLive = false))
@@ -261,7 +260,7 @@ internal class PolymarketSportsMergerTest {
     @Test
     fun `GIVEN two events for one game WHEN a score arrives THEN both cards share the game state`() {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent(), createSportsEvent(id = "other")))
+        setEvents(listOf(createSportsEvent(), createSportsEvent(id = "other")))
 
         // Act
         merger.update(createSportsScore())
@@ -277,7 +276,7 @@ internal class PolymarketSportsMergerTest {
         val home = createSportsTeam("Home", "home")
         val away = createSportsTeam("Away", "away")
         val teams = if (homeFirst) listOf(home, away) else listOf(away, home)
-        merger.setEvents(listOf(createSportsEvent(score = "2-1", teams = teams)))
+        setEvents(listOf(createSportsEvent(score = "2-1", teams = teams)))
         val restScore = game().score
 
         // Act
@@ -293,7 +292,7 @@ internal class PolymarketSportsMergerTest {
         // Arrange
         val away = createSportsTeam("Away")
         val home = createSportsTeam("Home")
-        merger.setEvents(listOf(createSportsEvent(teams = listOf(away, home))))
+        setEvents(listOf(createSportsEvent(teams = listOf(away, home))))
 
         // Act
         merger.update(createSportsScore(score = "3-1").copy(homeTeam = "Home", awayTeam = "Away"))
@@ -308,7 +307,7 @@ internal class PolymarketSportsMergerTest {
     fun `GIVEN ambiguous provider team count WHEN scores are merged THEN orientation is not invented`() {
         // Arrange
         val teams = listOf(createSportsTeam("Home", "home"), createSportsTeam("Away", "away"), createSportsTeam("Other"))
-        merger.setEvents(listOf(createSportsEvent(teams = teams)))
+        setEvents(listOf(createSportsEvent(teams = teams)))
 
         // Act
         merger.update(createSportsScore(score = "3-1"))
@@ -316,6 +315,8 @@ internal class PolymarketSportsMergerTest {
         // Assert
         assertThat(game().score).isNull()
     }
+
+    private fun setEvents(events: List<PolymarketEvent>) = merger.setEvents(events.map(PolymarketSportsEvent::from))
 
     private fun game() = merger.snapshot().events.getValue("event")
 

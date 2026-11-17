@@ -5,7 +5,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openMainWithMoneyAccountWallet
 import com.tangem.scenarios.openTokenDetailsFromAccountSection
@@ -17,15 +16,10 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountWalletHistoryTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val eligibilityState = "PaeraCustomer"
     private val moneyAccountScenario = "tangem_pay_money_account"
@@ -35,7 +29,6 @@ class MoneyAccountWalletHistoryTest : BaseTestCase() {
     private val externalAddressStart = "0x4444"
 
     @AllureId("13369")
-    @Ignore("[REDACTED_JIRA]")
     @DisplayName("Wallet history: a transfer to the Money account is labelled 'USD account'")
     @Test
     fun transferToAccountIsLabelledUsdAccountTest() {
@@ -90,7 +83,6 @@ class MoneyAccountWalletHistoryTest : BaseTestCase() {
     }
 
     @AllureId("13726")
-    @Ignore("[REDACTED_JIRA]")
     @DisplayName("Wallet history: a swap into the Money account USDC is labelled 'USD account'")
     @Test
     fun swapToAccountIsLabelledUsdAccountTest() {

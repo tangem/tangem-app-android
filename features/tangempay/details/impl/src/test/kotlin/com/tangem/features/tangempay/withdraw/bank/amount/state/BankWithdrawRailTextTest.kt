@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
-import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import org.junit.jupiter.api.Test
@@ -50,33 +49,36 @@ internal class BankWithdrawRailTextTest {
         assertThat(actual).isEqualTo(resourceReference(R.string.tangempay_bank_transfer_fee_fedwire))
     }
 
-    @Test
-    fun `GIVEN zero days WHEN toTextReference THEN same business day`() {
+    @ParameterizedTest
+    @MethodSource("provideEtaModels")
+    fun `GIVEN rail and delivery days WHEN toEtaReference THEN the rail's delivery time shown`(model: EtaModel) {
+        // Arrange
+        val destination = offrampDestination(rail = model.rail, minDays = model.minDays, maxDays = model.maxDays)
+
         // Act
-        val actual = OfframpEta(minDays = 0, maxDays = 0).toTextReference()
+        val actual = destination.toEtaReference()
 
         // Assert
-        assertThat(actual).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_eta_same_business_day))
+        assertThat(actual).isEqualTo(model.expected)
     }
 
-    @Test
-    fun `GIVEN equal days WHEN toTextReference THEN plural`() {
-        // Act
-        val actual = OfframpEta(minDays = 2, maxDays = 2).toTextReference()
-
-        // Assert
-        assertThat(actual).isEqualTo(
-            pluralReference(R.plurals.tangempay_withdraw_bank_eta_business_days, count = 2, formatArgs = wrappedList(2)),
+    @ParameterizedTest
+    @MethodSource("provideFeeTextModels")
+    fun `GIVEN rail fee and amount WHEN feeText THEN a percentage fee becomes one figure once an amount is entered`(
+        model: FeeTextModel,
+    ) {
+        // Arrange
+        val destination = offrampDestination(
+            fee = model.railFee,
+            calculationType = model.calculationType,
+            fixedFeeAmount = model.fixedFeeAmount,
         )
-    }
 
-    @Test
-    fun `GIVEN range WHEN toTextReference THEN range string`() {
         // Act
-        val actual = OfframpEta(minDays = 1, maxDays = 3).toTextReference()
+        val actual = destination.feeText(amount = model.amount, networkFee = BigDecimal("0.01"))
 
         // Assert
-        assertThat(actual).isEqualTo(resourceReference(R.string.tangempay_order_type_delivery_eta_range, wrappedList(1, 3)))
+        assertThat(actual).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
@@ -97,6 +99,113 @@ internal class BankWithdrawRailTextTest {
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideRailTotalFeeModels")
+    fun `GIVEN rail WHEN totalFee THEN a route fee goes on top and a SPEI fee comes out of the amount`(
+        model: RailTotalFeeModel,
+    ) {
+        // Act
+        val actual = offrampDestination(rail = model.rail, fee = BigDecimal("1.00")).totalFee(BigDecimal("0.03"))
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideEtaModels() = listOf(
+        EtaModel(
+            rail = BankRail.SPEI,
+            minDays = 0,
+            maxDays = 0,
+            expected = resourceReference(R.string.tangempay_withdraw_bank_eta_within_minutes),
+        ),
+        EtaModel(
+            rail = BankRail.WIRE,
+            minDays = 0,
+            maxDays = 0,
+            expected = resourceReference(R.string.tangempay_withdraw_bank_eta_same_business_day),
+        ),
+        EtaModel(
+            rail = BankRail.SPEI,
+            minDays = 1,
+            maxDays = 1,
+            expected = pluralReference(
+                id = R.plurals.tangempay_withdraw_bank_eta_business_days,
+                count = 1,
+                formatArgs = wrappedList(1),
+            ),
+        ),
+        EtaModel(
+            rail = BankRail.ACH,
+            minDays = 2,
+            maxDays = 2,
+            expected = pluralReference(
+                id = R.plurals.tangempay_withdraw_bank_eta_business_days,
+                count = 2,
+                formatArgs = wrappedList(2),
+            ),
+        ),
+        EtaModel(
+            rail = BankRail.ACH,
+            minDays = 1,
+            maxDays = 3,
+            expected = resourceReference(R.string.tangempay_order_type_delivery_eta_range, wrappedList(1, 3)),
+        ),
+    )
+
+    internal data class EtaModel(val rail: BankRail, val minDays: Int, val maxDays: Int, val expected: TextReference)
+
+    private fun provideFeeTextModels() = listOf(
+        FeeTextModel(
+            railFee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+            amount = BigDecimal("500"),
+            expected = "$5.51",
+        ),
+        FeeTextModel(
+            railFee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            amount = BigDecimal("500"),
+            expected = "$5.01",
+        ),
+        FeeTextModel(
+            railFee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+            amount = null,
+            expected = "$0.51 + 1%",
+        ),
+        FeeTextModel(
+            railFee = BigDecimal("1"),
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+            amount = BigDecimal.ZERO,
+            expected = "$0.51 + 1%",
+        ),
+        FeeTextModel(
+            railFee = BigDecimal("1.00"),
+            calculationType = FeeCalculationType.FIXED,
+            amount = BigDecimal("500"),
+            expected = "$1.01",
+        ),
+    )
+
+    internal data class FeeTextModel(
+        val railFee: BigDecimal,
+        val calculationType: FeeCalculationType,
+        val amount: BigDecimal?,
+        val expected: String,
+        val fixedFeeAmount: BigDecimal? = null,
+    )
+
+    private fun provideRailTotalFeeModels() = listOf(
+        RailTotalFeeModel(rail = BankRail.ACH, expected = BigDecimal("1.03")),
+        RailTotalFeeModel(rail = BankRail.WIRE, expected = BigDecimal("1.03")),
+        RailTotalFeeModel(rail = BankRail.SPEI, expected = BigDecimal("0.03")),
+    )
+
+    internal data class RailTotalFeeModel(val rail: BankRail, val expected: BigDecimal)
 
     private fun provideBuiltInLabelModels() = listOf(
         BuiltInLabelModel(rail = BankRail.ACH, expected = resourceReference(R.string.tangempay_bank_transfer_fee_ach)),

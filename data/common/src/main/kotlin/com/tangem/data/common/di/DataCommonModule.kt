@@ -81,6 +81,8 @@ internal object DataCommonModule {
         appScope: AppCoroutineScope,
         walletAccountsETags: WalletAccountsETags,
         jointAccountFeatureToggles: JointAccountFeatureToggles,
+        walletTokensLocalStore: WalletTokensLocalStore,
+        supportedAccountTypes: SupportedAccountTypes,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -93,6 +95,8 @@ internal object DataCommonModule {
             walletServerBinder = walletServerBinder,
             walletAccountsETags = walletAccountsETags,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
+            walletTokensLocalStore = walletTokensLocalStore,
+            supportedAccountTypes = supportedAccountTypes,
         )
     }
 

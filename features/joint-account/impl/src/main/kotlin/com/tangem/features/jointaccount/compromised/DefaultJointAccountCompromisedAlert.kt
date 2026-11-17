@@ -32,8 +32,8 @@ internal class DefaultJointAccountCompromisedAlert @Inject constructor(
     override fun show(userWalletId: UserWalletId) {
         uiMessageSender.send(
             DialogMessage(
-                title = resourceReference(CoreUiR.string.joint_account_compromised_title),
-                message = resourceReference(CoreUiR.string.joint_account_compromised_message),
+                title = resourceReference(CoreUiR.string.joint_account_compromised_title_v2),
+                message = resourceReference(CoreUiR.string.joint_account_compromised_message_v2),
                 firstActionBuilder = {
                     EventMessageAction(
                         title = resourceReference(CoreUiR.string.common_contact_support),

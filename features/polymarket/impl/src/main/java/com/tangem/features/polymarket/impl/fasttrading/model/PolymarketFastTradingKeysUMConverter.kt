@@ -6,10 +6,15 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
+import com.tangem.domain.polymarket.model.PolymarketSessionSigner
+import com.tangem.domain.polymarket.model.newestPerAddress
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperation
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationStage
+import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingActivateBannerUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyRowUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyStatusUM
@@ -36,67 +41,148 @@ internal class PolymarketFastTradingKeysUMConverter(
         .withZone(clock.zone)
 
     fun convert(overview: PolymarketSessionKeyOverview, operation: PolymarketSessionKeyOperation?): FastTradingKeysUM {
-        val now = clock.instant()
         val reconciliation = overview.assessment.reconciliation as? PolymarketSessionKeyReconciliation.Checked
-        val missingOnExchange = reconciliation?.missingOnExchange.orEmpty()
-        val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
-        val localKeyAddress = overview.localKeyAddress
+        val localKeyAddress = overview.localKeyAddress?.lowercase()
+        val now = clock.instant()
+        val lapsedOwnRecord = overview.wallet.sessionKeys
+            .newestPerAddress()
+            .firstOrNull { it.address.lowercase() == localKeyAddress }
+            ?.takeIf { it.isLapsedAt(now) }
         val foreignSigners = reconciliation?.foreignSigners.orEmpty()
-        val listedSigners = reconciliation?.listedSigners.orEmpty()
-        val foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() }
-
-        val shownKeys = overview.wallet.sessionKeys
+            .filterNot { signer -> lapsedOwnRecord != null && signer.isLapsedCopyOf(lapsedOwnRecord, now) }
+        val deviceState = overview.assessment.deviceState
+        val submittedOperation = operation?.takeIf { it.stage != PolymarketSessionKeyOperationStage.SIGNING }
+        val rowOperation = operation?.takeIf { it.request.isStartedFromRow } ?: submittedOperation
+        val context = RowContext(
+            now = now,
+            submittedOperation = submittedOperation,
+            rowOperation = rowOperation,
+            operationTarget = rowOperation?.targetAddress?.lowercase(),
+            localKeyAddress = localKeyAddress,
+            reactivatedAddress = (deviceState as? PolymarketSessionKeyDeviceState.Reenable)
+                ?.sessionKey?.address?.lowercase(),
+            missingOnExchange = reconciliation?.missingOnExchange.orEmpty(),
+            listedSigners = reconciliation?.listedSigners.orEmpty(),
+            foreignAddresses = foreignSigners.mapTo(mutableSetOf()) { it.address.lowercase() },
+        )
+        val rows = overview.wallet.sessionKeys
+            .newestPerAddress()
             .filter { it.status != PolymarketSessionKeyStatus.REVOKED }
-            .map { it.address.lowercase() to it }
-        val shownAddresses = shownKeys.mapTo(mutableSetOf()) { (address, _) -> address }
-        val rows = shownKeys
-            .map { (address, key) ->
-                val isOwn = key.address.equals(localKeyAddress, ignoreCase = true)
-                val isForeign = address in foreignAddresses
-                val status = submittedOperation?.statusFor(key.address, isOwn)
-                    ?: if (isForeign) FastTradingKeyStatusUM.UnknownSigner else key.status(now, missingOnExchange)
-                val deviceName = key.deviceName?.let(::stringReference)
-                    ?: resourceReference(R.string.prediction_session_key_unknown_device)
-                key.address to FastTradingKeyRowUM(
-                    id = key.address,
-                    deviceName = deviceName,
-                    status = status,
-                    isExpiringSoon = !isForeign && key.isExpiringSoon(now),
-                    actions = actionsFor(
-                        revoke = revokeOf(
-                            address = key.address,
-                            subject = if (isForeign) {
-                                FastTradingKeyActionUM.RevokeSubject.UnknownSigner
-                            } else {
-                                FastTradingKeyActionUM.RevokeSubject.Device(deviceName)
-                            },
-                        ),
-                        status = status,
-                        isListed = address in listedSigners,
-                    ),
-                )
-            }
-        val ownRow = rows.firstOrNull { (address, _) -> address.equals(localKeyAddress, ignoreCase = true) }?.second
+            .map { key -> keyRowOf(key, context) }
+        val ownRow = rows.firstOrNull { it.isThisDevice }?.takeIf { it.isShownOnThisDevice }
+        val isActivationInBanner = deviceState.isActivationOffered() && ownRow?.isReactivationInRow != true
 
         return FastTradingKeysUM(
             isUnknownSignersWarningShown = foreignSigners.isNotEmpty(),
-            unknownSigners = foreignSigners
-                .filter { it.address.lowercase() !in shownAddresses }
-                .map { signer ->
-                    val revoke = revokeOf(signer.address, FastTradingKeyActionUM.RevokeSubject.UnknownSigner)
-                    val isRevoking = submittedOperation?.statusFor(signer.address, isOwn = false) ==
-                        FastTradingKeyStatusUM.Revoking
-                    FastTradingUnknownSignerUM(
-                        address = signer.address,
-                        actions = if (isRevoking) persistentListOf() else persistentListOf(revoke),
-                        isRevoking = isRevoking,
-                    )
-                }
-                .toImmutableList(),
-            thisDevice = ownRow ?: submittedOperation?.pendingThisDeviceRow(),
-            otherDevices = rows.map { it.second }.filter { it !== ownRow }.toImmutableList(),
+            unknownSigners = unknownSignersOf(foreignSigners, rows.mapTo(mutableSetOf()) { it.address }, context),
+            thisDevice = thisDeviceRowsOf(listOfNotNull(ownRow), context).toImmutableList(),
+            activateBanner = activateBannerOf(isActivationInBanner, operation),
+            otherDevices = rows.filterNot { it.isThisDevice }.map { it.row }.toImmutableList(),
             areActionsEnabled = operation == null,
         )
+    }
+
+    private fun keyRowOf(key: PolymarketSessionKey, context: RowContext): KeyRow {
+        val address = key.address.lowercase()
+        val isForeign = address in context.foreignAddresses
+        val isThisDevice = address == context.localKeyAddress
+        val baseStatus = if (isForeign) FastTradingKeyStatusUM.UnknownSigner else key.status(context)
+        val deviceName = key.deviceName?.let(::stringReference)
+            ?: resourceReference(R.string.prediction_session_key_unknown_device)
+        val revoke = revokeOf(
+            address = key.address,
+            subject = if (isForeign) {
+                FastTradingKeyActionUM.RevokeSubject.UnknownSigner
+            } else {
+                FastTradingKeyActionUM.RevokeSubject.Device(deviceName)
+            },
+        )
+        val isExpiringSoon = !isForeign && key.isExpiringSoon(context.now)
+        val isListed = address in context.listedSigners
+        val baseActions = if (isThisDevice) {
+            thisDeviceActionsFor(
+                revoke = revoke,
+                status = baseStatus,
+                isListed = isListed,
+                isExpiringSoon = isExpiringSoon,
+                isReactivationOffered = address == context.reactivatedAddress,
+            )
+        } else {
+            actionsFor(revoke = revoke, status = baseStatus, isListed = isListed)
+        }
+        val operationStatus = context.operationStatusFor(address)
+        return KeyRow(
+            address = address,
+            isThisDevice = isThisDevice,
+            isShownOnThisDevice = baseStatus.isShownOnThisDevice(baseActions),
+            isReactivationInRow = FastTradingKeyActionUM.Reactivate in baseActions,
+            row = FastTradingKeyRowUM(
+                id = key.address,
+                deviceName = deviceName,
+                status = operationStatus ?: baseStatus,
+                isExpiringSoon = isExpiringSoon,
+                actions = if (operationStatus == null) baseActions else persistentListOf(),
+            ),
+        )
+    }
+
+    private fun unknownSignersOf(
+        foreignSigners: List<PolymarketSessionSigner>,
+        shownAddresses: Set<String>,
+        context: RowContext,
+    ): ImmutableList<FastTradingUnknownSignerUM> = foreignSigners
+        .filter { it.address.lowercase() !in shownAddresses }
+        .map { signer ->
+            val revoke = revokeOf(signer.address, FastTradingKeyActionUM.RevokeSubject.UnknownSigner)
+            val isRevoking = context.operationStatusFor(signer.address.lowercase()) ==
+                FastTradingKeyStatusUM.Revoking
+            FastTradingUnknownSignerUM(
+                address = signer.address,
+                actions = if (isRevoking) persistentListOf() else persistentListOf(revoke),
+                isRevoking = isRevoking,
+            )
+        }
+        .toImmutableList()
+
+    private fun thisDeviceRowsOf(keyRows: List<KeyRow>, context: RowContext): List<FastTradingKeyRowUM> {
+        val isTracked = keyRows.any { it.address == context.operationTarget } && !context.isRevokingAnotherKey()
+        val pendingRow = context.submittedOperation?.takeUnless { isTracked }?.pendingThisDeviceRow()
+        return listOfNotNull(pendingRow) + keyRows.map { it.row }
+    }
+
+    private fun RowContext.isRevokingAnotherKey(): Boolean {
+        val operation = rowOperation ?: return false
+        return operation.request.isActivation && operation.stage in REVOCATION_STAGES &&
+            operationTarget != localKeyAddress
+    }
+
+    private fun activateBannerOf(
+        isActivationOffered: Boolean,
+        operation: PolymarketSessionKeyOperation?,
+    ): FastTradingActivateBannerUM? = when {
+        !isActivationOffered -> null
+        operation == null -> FastTradingActivateBannerUM(isLoading = false, isEnabled = true)
+        operation.request.isStartedFromRow -> null
+        !operation.request.isActivation -> FastTradingActivateBannerUM(isLoading = false, isEnabled = false)
+        operation.stage == PolymarketSessionKeyOperationStage.SIGNING -> {
+            FastTradingActivateBannerUM(isLoading = true, isEnabled = false)
+        }
+        else -> null
+    }
+
+    private fun PolymarketSessionKeyDeviceState.isActivationOffered(): Boolean = when (this) {
+        PolymarketSessionKeyDeviceState.OfferEnable,
+        is PolymarketSessionKeyDeviceState.Reenable,
+        is PolymarketSessionKeyDeviceState.RepairByRenewal,
+        is PolymarketSessionKeyDeviceState.Replace,
+        -> true
+        is PolymarketSessionKeyDeviceState.Enabling,
+        is PolymarketSessionKeyDeviceState.Revoking,
+        is PolymarketSessionKeyDeviceState.Active,
+        is PolymarketSessionKeyDeviceState.Disabled,
+        is PolymarketSessionKeyDeviceState.RenewalRequired,
+        is PolymarketSessionKeyDeviceState.WaitingForPrevious,
+        -> false
     }
 
     private fun revokeOf(address: String, subject: FastTradingKeyActionUM.RevokeSubject) =
@@ -124,19 +210,50 @@ internal class PolymarketFastTradingKeysUMConverter(
         -> persistentListOf()
     }
 
-    private fun PolymarketSessionKey.status(now: Instant, missingOnExchange: Set<String>): FastTradingKeyStatusUM =
-        when (status) {
-            PolymarketSessionKeyStatus.PENDING -> FastTradingKeyStatusUM.Activating
-            PolymarketSessionKeyStatus.REVOKING -> FastTradingKeyStatusUM.Revoking
-            PolymarketSessionKeyStatus.FAILED -> FastTradingKeyStatusUM.ActivationFailed
-            PolymarketSessionKeyStatus.EXPIRED -> FastTradingKeyStatusUM.Expired(
-                at = validUntil?.let(dateFormatter::format),
-            )
-            PolymarketSessionKeyStatus.ACTIVE -> activeStatus(now, missingOnExchange)
-            PolymarketSessionKeyStatus.REVOKED,
-            PolymarketSessionKeyStatus.UNKNOWN,
-            -> FastTradingKeyStatusUM.Unknown
+    private fun thisDeviceActionsFor(
+        revoke: FastTradingKeyActionUM.Revoke,
+        status: FastTradingKeyStatusUM,
+        isListed: Boolean,
+        isExpiringSoon: Boolean,
+        isReactivationOffered: Boolean,
+    ): ImmutableList<FastTradingKeyActionUM> {
+        val reactivate = FastTradingKeyActionUM.Reactivate.takeIf { isReactivationOffered }
+        val revokeIfListed = revoke.takeIf { isListed }
+        val actions = when (status) {
+            is FastTradingKeyStatusUM.Active,
+            is FastTradingKeyStatusUM.Paused,
+            -> listOfNotNull(FastTradingKeyActionUM.Extend.takeIf { isExpiringSoon }, revoke)
+            is FastTradingKeyStatusUM.Expired -> listOfNotNull(reactivate ?: revokeIfListed)
+            FastTradingKeyStatusUM.ReconnectNeeded,
+            FastTradingKeyStatusUM.Unknown,
+            -> listOfNotNull(reactivate, revokeIfListed)
+            else -> actionsFor(revoke = revoke, status = status, isListed = isListed)
         }
+        return actions.toImmutableList()
+    }
+
+    private fun FastTradingKeyStatusUM.isShownOnThisDevice(actions: List<FastTradingKeyActionUM>): Boolean =
+        when (this) {
+            FastTradingKeyStatusUM.ActivationFailed,
+            is FastTradingKeyStatusUM.Expired,
+            FastTradingKeyStatusUM.ReconnectNeeded,
+            FastTradingKeyStatusUM.Unknown,
+            -> actions.isNotEmpty()
+            else -> true
+        }
+
+    private fun PolymarketSessionKey.status(context: RowContext): FastTradingKeyStatusUM = when (status) {
+        PolymarketSessionKeyStatus.PENDING -> FastTradingKeyStatusUM.Activating
+        PolymarketSessionKeyStatus.REVOKING -> FastTradingKeyStatusUM.Revoking
+        PolymarketSessionKeyStatus.FAILED -> FastTradingKeyStatusUM.ActivationFailed
+        PolymarketSessionKeyStatus.EXPIRED -> FastTradingKeyStatusUM.Expired(
+            at = validUntil?.let(dateFormatter::format),
+        )
+        PolymarketSessionKeyStatus.ACTIVE -> activeStatus(context.now, context.missingOnExchange)
+        PolymarketSessionKeyStatus.REVOKED,
+        PolymarketSessionKeyStatus.UNKNOWN,
+        -> FastTradingKeyStatusUM.Unknown
+    }
 
     private fun PolymarketSessionKey.activeStatus(
         now: Instant,
@@ -153,18 +270,41 @@ internal class PolymarketFastTradingKeysUMConverter(
         }
     }
 
+    private fun PolymarketSessionKey.isLapsedAt(now: Instant): Boolean = when (status) {
+        PolymarketSessionKeyStatus.EXPIRED,
+        PolymarketSessionKeyStatus.UNKNOWN,
+        -> true
+        PolymarketSessionKeyStatus.ACTIVE -> validUntil?.isAfter(now) != true
+        PolymarketSessionKeyStatus.PENDING,
+        PolymarketSessionKeyStatus.REVOKING,
+        PolymarketSessionKeyStatus.REVOKED,
+        PolymarketSessionKeyStatus.FAILED,
+        -> false
+    }
+
+    private fun PolymarketSessionSigner.isLapsedCopyOf(record: PolymarketSessionKey, now: Instant): Boolean {
+        val until = validUntil ?: return false
+        return address.equals(record.address, ignoreCase = true) &&
+            !until.isAfter(now) &&
+            until.epochSecond == record.validUntil?.epochSecond &&
+            scopes.normalized() == record.scopes.normalized()
+    }
+
+    private fun List<String>.normalized(): Set<String> = mapTo(mutableSetOf()) { it.uppercase() }
+
     private fun PolymarketSessionKey.isExpiringSoon(now: Instant): Boolean {
         val until = validUntil ?: return false
         val isLive = status == PolymarketSessionKeyStatus.ACTIVE && until.isAfter(now)
-        return isLive && Duration.between(now, until) <= EXPIRY_WARNING_WINDOW
+        return isLive && Duration.between(now, until) <= PolymarketSessionKeyAssessor.EXTENSION_OFFER_WINDOW
     }
 
-    private fun PolymarketSessionKeyOperation.statusFor(address: String, isOwn: Boolean): FastTradingKeyStatusUM? {
-        if (!address.equals(targetAddress, ignoreCase = true)) return null
-        return when (val request = request) {
+    private fun RowContext.operationStatusFor(address: String): FastTradingKeyStatusUM? {
+        val operation = rowOperation ?: return null
+        if (address != operationTarget) return null
+        return when (val request = operation.request) {
             PolymarketSessionKeyOperationRequest.Activate,
             PolymarketSessionKeyOperationRequest.Reactivate,
-            -> if (!isOwn && stage in REVOCATION_STAGES) {
+            -> if (isRevokingAnotherKey()) {
                 FastTradingKeyStatusUM.Revoking
             } else {
                 FastTradingKeyStatusUM.Activating
@@ -180,14 +320,10 @@ internal class PolymarketFastTradingKeysUMConverter(
     }
 
     private fun PolymarketSessionKeyOperation.pendingThisDeviceRow(): FastTradingKeyRowUM? {
-        val status = when (request) {
-            PolymarketSessionKeyOperationRequest.Activate,
-            PolymarketSessionKeyOperationRequest.Reactivate,
-            -> FastTradingKeyStatusUM.Activating
-            PolymarketSessionKeyOperationRequest.Extend -> FastTradingKeyStatusUM.Extending
-            is PolymarketSessionKeyOperationRequest.Revoke,
-            is PolymarketSessionKeyOperationRequest.SetEnabled,
-            -> return null
+        val status = when {
+            request.isActivation -> FastTradingKeyStatusUM.Activating
+            request == PolymarketSessionKeyOperationRequest.Extend -> FastTradingKeyStatusUM.Extending
+            else -> return null
         }
         return FastTradingKeyRowUM(
             id = THIS_DEVICE_PENDING_ROW_ID,
@@ -198,10 +334,37 @@ internal class PolymarketFastTradingKeysUMConverter(
         )
     }
 
+    private data class RowContext(
+        val now: Instant,
+        val submittedOperation: PolymarketSessionKeyOperation?,
+        val rowOperation: PolymarketSessionKeyOperation?,
+        val operationTarget: String?,
+        val localKeyAddress: String?,
+        val reactivatedAddress: String?,
+        val missingOnExchange: Set<String>,
+        val listedSigners: Set<String>,
+        val foreignAddresses: Set<String>,
+    )
+
+    private data class KeyRow(
+        val address: String,
+        val isThisDevice: Boolean,
+        val isShownOnThisDevice: Boolean,
+        val isReactivationInRow: Boolean,
+        val row: FastTradingKeyRowUM,
+    )
+
     private companion object {
-        val EXPIRY_WARNING_WINDOW: Duration = Duration.ofDays(30)
         const val THIS_DEVICE_PENDING_ROW_ID = "this_device_pending"
         val REVOCATION_STAGES =
             setOf(PolymarketSessionKeyOperationStage.REVOKING, PolymarketSessionKeyOperationStage.REVOKED)
     }
 }
+
+private val PolymarketSessionKeyOperationRequest.isStartedFromRow: Boolean
+    get() = this == PolymarketSessionKeyOperationRequest.Extend ||
+        this == PolymarketSessionKeyOperationRequest.Reactivate
+
+private val PolymarketSessionKeyOperationRequest.isActivation: Boolean
+    get() = this == PolymarketSessionKeyOperationRequest.Activate ||
+        this == PolymarketSessionKeyOperationRequest.Reactivate

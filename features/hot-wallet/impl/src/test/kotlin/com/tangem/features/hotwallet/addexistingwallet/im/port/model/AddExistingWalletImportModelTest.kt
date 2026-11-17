@@ -8,11 +8,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.test.core.ProvideTestModels
@@ -40,11 +44,20 @@ internal class AddExistingWalletImportModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val callbacks: AddExistingWalletImportComponent.ModelCallbacks = mockk(relaxed = true)
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
     private val mnemonic: Mnemonic = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(mnemonicRepository, hotWalletImporter, uiMessageSender, analyticsEventHandler, callbacks)
+        clearMocks(
+            mnemonicRepository,
+            hotWalletImporter,
+            uiMessageSender,
+            analyticsEventHandler,
+            callbacks,
+            hotWalletFeatureToggles,
+        )
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
         every { mnemonicRepository.words } returns WORDS
         every { mnemonicRepository.generateMnemonic(PHRASE) } returns mnemonic
         coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any(), any()) } returns WALLET_ID.right()
@@ -134,6 +147,49 @@ internal class AddExistingWalletImportModelTest {
         importModel.onDestroy()
     }
 
+    @Test
+    fun `GIVEN the wallet is already in the app WHEN the phrase imported THEN the already added dialog shows`() = runTest {
+        // Arrange
+        coEvery {
+            hotWalletImporter.import(any(), any(), any(), any(), any(), any(), any())
+        } returns HotWalletImportError.AlreadySaved.left()
+        val importModel = createModel(AddExistingWalletImportComponent.Params(callbacks))
+
+        // Act
+        importPhrase(importModel)
+
+        // Assert
+        val message = slot<DialogMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        assertThat(message.captured.title)
+            .isEqualTo(resourceReference(R.string.user_wallet_list_error_wallet_already_saved_title))
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(R.string.user_wallet_list_error_wallet_already_saved))
+        verify(exactly = 0) { callbacks.onWalletImported(any()) }
+        importModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN toggle off AND the wallet is already in the app WHEN the phrase imported THEN the snackbar shows as before`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery {
+                hotWalletImporter.import(any(), any(), any(), any(), any(), any(), any())
+            } returns HotWalletImportError.AlreadySaved.left()
+            val importModel = createModel(AddExistingWalletImportComponent.Params(callbacks))
+
+            // Act
+            importPhrase(importModel)
+
+            // Assert
+            val message = slot<SnackbarMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.message)
+                .isEqualTo(resourceReference(R.string.hw_import_seed_phrase_already_imported))
+            importModel.onDestroy()
+        }
+
     private fun provideTestModels() = listOf(
         SourceModel(
             name = "default source",
@@ -163,6 +219,7 @@ internal class AddExistingWalletImportModelTest {
             hotWalletImporter = hotWalletImporter,
             uiMessageSender = uiMessageSender,
             analyticsEventHandler = analyticsEventHandler,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
         advanceUntilIdle()
         return model

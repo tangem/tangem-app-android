@@ -25,6 +25,7 @@ import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
@@ -86,7 +87,11 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.FiatCurrencyChosen(currency.code))
         modelScope.launch {
             saveDefaultCurrencyUseCase.invoke(currency)
-            dismiss()
+                .onRight { dismiss() }
+                .onLeft { error ->
+                    TangemLogger.e("Unable to save currency: $error")
+                    analyticsEventHandler.sendOnrampErrorEvent(error, params.cryptoCurrency.symbol)
+                }
         }
     }
 

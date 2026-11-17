@@ -3,6 +3,8 @@ package com.tangem.domain.polymarket.sessionkey
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
+import com.tangem.domain.polymarket.model.newestFor
+import com.tangem.domain.polymarket.model.newestPerAddress
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState.Replace
 import java.time.Duration
 import java.time.Instant
@@ -11,6 +13,7 @@ object PolymarketSessionKeyAssessor {
 
     internal val SIGNING_EXPIRY_MARGIN: Duration = Duration.ofMinutes(10)
     private val READINESS_GRACE: Duration = Duration.ofMinutes(10)
+    val EXTENSION_OFFER_WINDOW: Duration = Duration.ofDays(30)
 
     fun assess(snapshot: PolymarketSessionKeySnapshot): PolymarketSessionKeyAssessment {
         val reconciliation = reconcile(snapshot)
@@ -22,11 +25,15 @@ object PolymarketSessionKeyAssessor {
     }
 
     private fun nextChangeAt(snapshot: PolymarketSessionKeySnapshot): Instant? {
-        val activeKeys = snapshot.sessionKeys.filter { it.status == PolymarketSessionKeyStatus.ACTIVE }
-        val own = snapshot.sessionKeys
-            .firstOrNull { it.address == snapshot.localKeyAddress }
-            ?.takeIf { it.status == PolymarketSessionKeyStatus.ACTIVE }
-        val ownBoundaries = listOfNotNull(own?.validUntil?.minus(SIGNING_EXPIRY_MARGIN), own?.renewAfter)
+        val activeKeys = snapshot.sessionKeys
+            .newestPerAddress()
+            .filter { it.status == PolymarketSessionKeyStatus.ACTIVE }
+        val own = snapshot.ownRecord()?.takeIf { it.status == PolymarketSessionKeyStatus.ACTIVE }
+        val ownBoundaries = listOfNotNull(
+            own?.validUntil?.minus(SIGNING_EXPIRY_MARGIN),
+            own?.validUntil?.minus(EXTENSION_OFFER_WINDOW),
+            own?.renewAfter,
+        )
         val expiries = activeKeys.mapNotNull { it.validUntil }
         val readinessGraces = if (snapshot.signers == null) {
             emptyList()
@@ -43,11 +50,11 @@ object PolymarketSessionKeyAssessor {
         val missingOnExchange = (reconciliation as? PolymarketSessionKeyReconciliation.Checked)
             ?.missingOnExchange
             .orEmpty()
-        val own = snapshot.localKeyAddress?.let { local -> snapshot.sessionKeys.firstOrNull { it.address == local } }
+        val own = snapshot.ownRecord()
 
         own?.let { resolveLiveOwnState(it, snapshot.now, missingOnExchange) }?.let { return it }
 
-        val previous = snapshot.sessionKeys.firstOrNull { it.isLivePreviousOf(snapshot) }
+        val previous = snapshot.sessionKeys.newestPerAddress().firstOrNull { it.isLivePreviousOf(snapshot) }
         if (previous != null) {
             return when {
                 previous.status != PolymarketSessionKeyStatus.ACTIVE -> {
@@ -61,11 +68,14 @@ object PolymarketSessionKeyAssessor {
         return when {
             own == null -> PolymarketSessionKeyDeviceState.OfferEnable
             own.status == PolymarketSessionKeyStatus.FAILED && snapshot.signers.orEmpty().any {
-                it.address == own.address
+                it.address.equals(own.address, ignoreCase = true)
             } -> PolymarketSessionKeyDeviceState.RepairByRenewal(own)
             else -> PolymarketSessionKeyDeviceState.Reenable(own)
         }
     }
+
+    private fun PolymarketSessionKeySnapshot.ownRecord(): PolymarketSessionKey? =
+        localKeyAddress?.let(sessionKeys::newestFor)
 
     private fun resolveLiveOwnState(
         own: PolymarketSessionKey,
@@ -90,7 +100,7 @@ object PolymarketSessionKeyAssessor {
     }
 
     private fun PolymarketSessionKey.isLivePreviousOf(snapshot: PolymarketSessionKeySnapshot): Boolean {
-        if (deviceId != snapshot.deviceId || address == snapshot.localKeyAddress) return false
+        if (deviceId != snapshot.deviceId || address.equals(snapshot.localKeyAddress, ignoreCase = true)) return false
         return when (status) {
             PolymarketSessionKeyStatus.PENDING,
             PolymarketSessionKeyStatus.REVOKING,
@@ -107,16 +117,16 @@ object PolymarketSessionKeyAssessor {
     private fun reconcile(snapshot: PolymarketSessionKeySnapshot): PolymarketSessionKeyReconciliation {
         val signers = snapshot.signers ?: return PolymarketSessionKeyReconciliation.Unavailable
         val listed = signers.mapTo(mutableSetOf()) { it.address.lowercase() }
-        val records = snapshot.sessionKeys.groupBy { it.address.lowercase() }
-        val missingOnExchange = records
+        val newestRecords = snapshot.sessionKeys.newestPerAddress().associateBy { it.address.lowercase() }
+        val missingOnExchange = newestRecords
             .filterKeys { it !in listed }
             .values
-            .flatten()
             .filter { it.isSettledActiveAt(snapshot.now) }
             .mapTo(mutableSetOf()) { it.address }
+            .plus(listOfNotNull(snapshot.ownRecordListedWithOtherTerms(signers)?.address))
         return PolymarketSessionKeyReconciliation.Checked(
             foreignSigners = signers.filter { signer ->
-                isForeign(signer, records[signer.address.lowercase()]?.maxByOrNull { it.createdAt }, snapshot)
+                isForeign(signer, newestRecords[signer.address.lowercase()], snapshot)
             },
             missingOnExchange = missingOnExchange,
             listedSigners = listed,
@@ -134,7 +144,7 @@ object PolymarketSessionKeyAssessor {
             PolymarketSessionKeyStatus.REVOKING,
             -> false
             PolymarketSessionKeyStatus.ACTIVE ->
-                record.isPastReadinessGraceAt(snapshot.now) && !signer.hasTermsOf(record)
+                record.isPastReadinessGraceAt(snapshot.now) && !signer.carriesTermsOf(record)
             PolymarketSessionKeyStatus.FAILED -> !record.address.equals(snapshot.localKeyAddress, ignoreCase = true)
             PolymarketSessionKeyStatus.REVOKED,
             PolymarketSessionKeyStatus.EXPIRED,
@@ -143,11 +153,13 @@ object PolymarketSessionKeyAssessor {
         }
     }
 
-    private fun PolymarketSessionSigner.hasTermsOf(record: PolymarketSessionKey): Boolean {
-        return scopes.normalized() == record.scopes.normalized() && validUntil == record.validUntil
+    private fun PolymarketSessionKeySnapshot.ownRecordListedWithOtherTerms(
+        signers: List<PolymarketSessionSigner>,
+    ): PolymarketSessionKey? {
+        val own = ownRecord()?.takeIf { it.isSettledActiveAt(now) } ?: return null
+        val listings = signers.filter { signer -> signer.address.equals(own.address, ignoreCase = true) }
+        return own.takeIf { listings.isNotEmpty() && listings.none { listing -> listing.carriesTermsOf(own) } }
     }
-
-    private fun List<String>.normalized(): Set<String> = mapTo(mutableSetOf()) { it.uppercase() }
 
     private fun PolymarketSessionKey.isSettledActiveAt(now: Instant): Boolean =
         status == PolymarketSessionKeyStatus.ACTIVE && !isExpiredAt(now) && isPastReadinessGraceAt(now)

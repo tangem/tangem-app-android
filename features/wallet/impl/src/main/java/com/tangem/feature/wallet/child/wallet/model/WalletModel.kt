@@ -63,6 +63,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
@@ -81,7 +82,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.Kyc
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
@@ -149,7 +149,6 @@ internal class WalletModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val mcpRequestService: McpRequestService,
-    private val mcpFeatureToggles: McpFeatureToggles,
     private val allServicesFeatureToggles: AllServicesFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
@@ -160,6 +159,7 @@ internal class WalletModel @Inject constructor(
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+    private val walletTangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -201,6 +201,7 @@ internal class WalletModel @Inject constructor(
         restoreTrackingContextOnResume()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        walletTangemPayAnalyticsEventSender.observeSelectedWallet(modelScope)
         subscribeJointAccountPolling()
         subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
@@ -219,6 +220,7 @@ internal class WalletModel @Inject constructor(
     fun onResume() {
         suggestToEnableBiometrics()
         suggestToOpenMarketsOnResume()
+        walletTangemPayAnalyticsEventSender.onResume()
     }
 
     fun onDialogShown() {
@@ -714,11 +716,9 @@ internal class WalletModel @Inject constructor(
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
-        otherWallets
-            .filterNot(UserWallet::isLocked)
-            .onEach { userWallet ->
-                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-            }
+        otherWallets.forEach { userWallet ->
+            modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             val direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
@@ -897,8 +897,6 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun fetchWalletContent(userWallet: UserWallet, forceUpdate: Boolean = false) {
-        if (userWallet.isLocked) return
-
         /*
          * Updating the balance of the current wallet is an essential part of InitializationWallets,
          * so the coroutine is launched in the current context
@@ -954,9 +952,7 @@ internal class WalletModel @Inject constructor(
                 )
             }
             is QrSendTarget.McpAuthorization -> {
-                if (mcpFeatureToggles.isMcpEnabled) {
-                    mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
-                }
+                mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
             }
             is QrSendTarget.DeepLink -> deeplinkLauncher.launch(target.uri, shouldReportFailure = false)
             is QrSendTarget.Single -> {

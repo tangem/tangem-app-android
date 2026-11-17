@@ -12,6 +12,7 @@ import com.tangem.core.error.ext.tangemError
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -180,13 +181,77 @@ internal class GachaVaultErrorMappingTest {
                 ),
                 TangemErrorModel(
                     error = cardError,
-                    expected = CollectiblesAccountError.CardError(code = cardError.code, message = cardError.customMessage),
+                    expected = CollectiblesAccountError.CardError(
+                        code = cardError.code,
+                        message = cardError.customMessage,
+                    ),
                 ),
             )
         }
     }
 
     data class TangemErrorModel(val error: TangemError, val expected: Any)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SolanaGaslessErrorToVaultFailure {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a gasless error WHEN toVaultFailure THEN it is mapped`(model: GaslessErrorModel) {
+            // Act
+            val actual = model.error.toVaultFailure()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            GaslessErrorModel(
+                error = SolanaGaslessError.MaybeSent(signature = "sig"),
+                expected = CollectiblesAccountError.MaybeSent(txHash = "sig"),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.MaybeSent(signature = null),
+                expected = CollectiblesAccountError.MaybeSent(txHash = null),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.Unauthorized,
+                expected = vault(GachaVaultError.SponsorUnavailable),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.Disabled,
+                expected = vault(GachaVaultError.SponsorUnavailable),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.ServiceUnavailable(
+                    code = "SPONSOR_LOW_BALANCE",
+                    isSponsorshipUnavailable = true,
+                ),
+                expected = vault(GachaVaultError.SponsorUnavailable),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.Unknown("boom"),
+                expected = vault(GachaVaultError.SponsorUnavailable),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.RateLimited(isPerWallet = true),
+                expected = vault(GachaVaultError.SponsorRateLimited),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.Rejected(code = "PROGRAM_NOT_ALLOWED"),
+                expected = vault(GachaVaultError.SponsorRejected(reason = "PROGRAM_NOT_ALLOWED")),
+            ),
+            GaslessErrorModel(
+                error = SolanaGaslessError.BlockhashExpired,
+                expected = vault(GachaVaultError.TransactionExpired),
+            ),
+        )
+
+        private fun vault(error: GachaVaultError) = CollectiblesAccountError.Vault(error = error)
+    }
+
+    data class GaslessErrorModel(val error: SolanaGaslessError, val expected: CollectiblesAccountError)
 
     private fun CollectiblesAccountError.flatten(): Any = when (this) {
         is CollectiblesAccountError.Vault -> error.errorCode

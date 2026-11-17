@@ -13,7 +13,7 @@ import java.math.BigDecimal
 
 /**
  * Guards the stored JSON format of every [PaymentAccountStatusValueDM] subtype. The expected strings are what the
- * store writes to `payment_account_statuses_v2`, so statuses cached by one app version must read back unchanged in
+ * store writes to `payment_account_statuses_v3`, so statuses cached by one app version must read back unchanged in
  * the next one.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -55,6 +55,30 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
+    fun `GIVEN active_account JSON without is_kyc_additional_info_required WHEN decode THEN flag is false`() {
+        // Arrange
+        val storedBeforeFlag = """{"__type":"active_account","customer_id":"cust-1","currency_code":"USD",""" +
+            """"payment_account_address":"0xpay","fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":"0.99",""" +
+            """"cards":[$CARD_JSON]}"""
+
+        // Act
+        val actual = json.decodeFromString(PaymentAccountStatusValueDM.serializer(), storedBeforeFlag)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PaymentAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-1",
+                currencyCode = "USD",
+                paymentAccountAddress = "0xpay",
+                fiatBalance = FIAT_BALANCE,
+                fiatRate = BigDecimal("0.99"),
+                cards = listOf(CARD),
+                isKycAdditionalInfoRequired = false,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
         // Act
         val error = runCatching {
@@ -72,7 +96,6 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
             status = PaymentAccountStatusValueDM.UnderReview(kycStatus = KycStatus.PENDING, customerId = "cust-1"),
             json = """{"__type":"kyc_status","kyc_status":"in_progress","customer_id":"cust-1"}""",
         ),
-        FormatModel(status = PaymentAccountStatusValueDM.IssuingCard, json = """{"__type":"issuing_card"}"""),
         FormatModel(
             status = PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = "cust-1",
@@ -84,7 +107,21 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
             ),
             json = """{"__type":"active_account","customer_id":"cust-1","currency_code":"USD",""" +
                 """"payment_account_address":"0xpay","fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":"0.99",""" +
-                """"cards":[$CARD_JSON]}""",
+                """"cards":[$CARD_JSON],"is_kyc_additional_info_required":false}""",
+        ),
+        FormatModel(
+            status = PaymentAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-3",
+                currencyCode = "USD",
+                paymentAccountAddress = null,
+                fiatBalance = FIAT_BALANCE,
+                fiatRate = null,
+                cards = emptyList(),
+                isKycAdditionalInfoRequired = true,
+            ),
+            json = """{"__type":"active_account","customer_id":"cust-3","currency_code":"USD",""" +
+                """"payment_account_address":null,"fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":null,""" +
+                """"cards":[],"is_kyc_additional_info_required":true}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.ActiveAccount(
@@ -96,7 +133,8 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
                 cards = emptyList(),
             ),
             json = """{"__type":"active_account","customer_id":"cust-2","currency_code":null,""" +
-                """"payment_account_address":null,"fiat_balance":null,"fiat_rate":null,"cards":[]}""",
+                """"payment_account_address":null,"fiat_balance":null,"fiat_rate":null,"cards":[],""" +
+                """"is_kyc_additional_info_required":false}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.CardIssueFailed(customerId = "cust-1"),

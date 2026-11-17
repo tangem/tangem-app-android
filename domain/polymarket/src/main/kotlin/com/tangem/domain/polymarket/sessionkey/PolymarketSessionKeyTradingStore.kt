@@ -9,8 +9,12 @@ interface PolymarketSessionKeyTradingStore {
 
     suspend fun markReadyOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String, validUntil: Instant)
 
+    fun markAuthorized(userWalletId: UserWalletId, sessionKeyAddress: String)
+
     /** @param sessionKeyAddress a refused key stays refused and is not marked ready */
     suspend fun restoreReadyOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String, validUntil: Instant)
+
+    suspend fun forgetReadyOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String)
 
     fun isMissingOnExchange(userWalletId: UserWalletId, sessionKeyAddress: String): Boolean
 

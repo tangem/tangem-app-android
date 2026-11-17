@@ -1,18 +1,15 @@
 package com.tangem.data.polymarket.store
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
-import com.tangem.test.core.datastore.MockStateDataStore
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 internal class DefaultPolymarketSessionKeyTradingStoreTest {
 
-    private val dataStore = MockStateDataStore<Map<String, PolymarketSessionKeyReadinessDTO>>(default = emptyMap())
-    private val store = DefaultPolymarketSessionKeyTradingStore(readinessDataStore = dataStore)
+    private val store = DefaultPolymarketSessionKeyTradingStore()
 
     @Test
     fun `GIVEN nothing recorded WHEN isReadyOnExchange THEN false`() = runTest {
@@ -64,6 +61,78 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
+    fun `GIVEN a missing key WHEN marked ready THEN it is no longer missing`() = runTest {
+        // Arrange
+        store.setReconciliation(WALLET_A, checked(missing = setOf(KEY)))
+        val missingBefore = store.isMissingOnExchange(WALLET_A, KEY)
+
+        // Act
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Assert
+        assertThat(missingBefore).isTrue()
+        assertThat(store.isMissingOnExchange(WALLET_A, KEY)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a refused and missing key WHEN authorized again THEN it is neither refused nor missing nor ready`() =
+        runTest {
+            // Arrange
+            store.markRefused(WALLET_A, KEY)
+            store.setReconciliation(WALLET_A, checked(missing = setOf(KEY)))
+
+            // Act
+            store.markAuthorized(WALLET_A, KEY.uppercase().replace("0X", "0x"))
+
+            // Assert
+            assertThat(store.isRefused(WALLET_A, KEY)).isFalse()
+            assertThat(store.isMissingOnExchange(WALLET_A, KEY)).isFalse()
+            assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+        }
+
+    @Test
+    fun `GIVEN a ready key WHEN authorized again THEN it is ready only after it is marked ready again`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Act
+        store.markAuthorized(WALLET_A, KEY.uppercase().replace("0X", "0x"))
+        val readyAfterAuthorization = store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Assert
+        assertThat(readyAfterAuthorization).isFalse()
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN another key ready WHEN a key is authorized THEN the ready key is kept`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)
+
+        // Act
+        store.markAuthorized(WALLET_A, KEY)
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a key refused on both wallets WHEN authorized on one THEN the other wallet keeps the refusal`() =
+        runTest {
+            // Arrange
+            store.markRefused(WALLET_A, KEY)
+            store.markRefused(WALLET_B, KEY)
+
+            // Act
+            store.markAuthorized(WALLET_A, KEY)
+
+            // Assert
+            assertThat(store.isRefused(WALLET_A, KEY)).isFalse()
+            assertThat(store.isRefused(WALLET_B, KEY)).isTrue()
+        }
+
+    @Test
     fun `GIVEN a key not refused WHEN readiness is restored THEN it is ready`() = runTest {
         // Act
         store.restoreReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
@@ -83,6 +152,31 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
         // Assert
         assertThat(store.isRefused(WALLET_A, KEY)).isTrue()
         assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a ready key WHEN its readiness is forgotten THEN it is not ready and not refused`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Act
+        store.forgetReadyOnExchange(WALLET_A, KEY.uppercase().replace("0X", "0x"))
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+        assertThat(store.isRefused(WALLET_A, KEY)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN another key ready WHEN a key readiness is forgotten THEN the ready key is kept`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)
+
+        // Act
+        store.forgetReadyOnExchange(WALLET_A, KEY)
+
+        // Assert
+        assertThat(store.isReadyOnExchange(WALLET_A, OTHER_KEY, VALID_UNTIL)).isTrue()
     }
 
     @Test
@@ -121,7 +215,7 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
     }
 
     @Test
-    fun `GIVEN a ready key WHEN refused THEN a restarted store does not see it ready`() = runTest {
+    fun `GIVEN a key ready on two wallets WHEN refused on one THEN only the other wallet keeps it ready`() = runTest {
         // Arrange
         store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
         store.markReadyOnExchange(WALLET_B, KEY, VALID_UNTIL)
@@ -130,9 +224,20 @@ internal class DefaultPolymarketSessionKeyTradingStoreTest {
         store.markRefused(WALLET_A, KEY.uppercase().replace("0X", "0x"))
 
         // Assert
-        val restarted = DefaultPolymarketSessionKeyTradingStore(readinessDataStore = dataStore)
+        assertThat(store.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
+        assertThat(store.isReadyOnExchange(WALLET_B, KEY, VALID_UNTIL)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a ready key WHEN the store is created anew THEN nothing is ready until reconciliation`() = runTest {
+        // Arrange
+        store.markReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)
+
+        // Act
+        val restarted = DefaultPolymarketSessionKeyTradingStore()
+
+        // Assert
         assertThat(restarted.isReadyOnExchange(WALLET_A, KEY, VALID_UNTIL)).isFalse()
-        assertThat(restarted.isReadyOnExchange(WALLET_B, KEY, VALID_UNTIL)).isTrue()
     }
 
     @Test

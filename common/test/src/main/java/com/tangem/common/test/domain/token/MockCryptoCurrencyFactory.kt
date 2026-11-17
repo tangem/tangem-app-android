@@ -167,6 +167,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
             Blockchain.BSC, Blockchain.BSCTestnet -> Network.StandardType.BEP20
             Blockchain.Binance, Blockchain.BinanceTestnet -> Network.StandardType.BEP2
             Blockchain.Tron, Blockchain.TronTestnet -> Network.StandardType.TRC20
+            Blockchain.Chiliz, Blockchain.ChilizTestnet -> Network.StandardType.CAP20
             else -> Network.StandardType.Unspecified(blockchain.name)
         }
     }

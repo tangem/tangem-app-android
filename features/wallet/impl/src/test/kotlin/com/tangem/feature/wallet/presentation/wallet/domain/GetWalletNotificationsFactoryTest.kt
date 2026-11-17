@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -56,7 +57,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import com.tangem.features.wallet.WalletFeatureToggles
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -72,6 +72,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -96,7 +97,6 @@ internal class GetWalletNotificationsFactoryTest {
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase = mockk()
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase = mockk()
-    private val walletFeatureToggles: WalletFeatureToggles = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
     private val currencyFactory = MockCryptoCurrencyFactory()
@@ -126,7 +126,6 @@ internal class GetWalletNotificationsFactoryTest {
         checkHotWalletUpgradeBannerUseCase = checkHotWalletUpgradeBannerUseCase,
         isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
         getWalletLinkStatusUseCase = getWalletLinkStatusUseCase,
-        walletFeatureToggles = walletFeatureToggles,
         walletLinkProgressHolder = walletLinkProgressHolder,
     )
 
@@ -152,7 +151,6 @@ internal class GetWalletNotificationsFactoryTest {
             checkHotWalletUpgradeBannerUseCase,
             isSocialBackupCompletedUseCase,
             getWalletLinkStatusUseCase,
-            walletFeatureToggles,
             clickIntents,
             coldResolver,
             coldWallet,
@@ -180,8 +178,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { getUpgradeBannerClosureTimestampUseCase(any()) } returns flowOf(null)
         coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns false.right()
         every { isSocialBackupCompletedUseCase.flow(any()) } returns flowOf(false)
-        every { walletFeatureToggles.isWalletLinkingEnabled } returns true
-        every { getWalletLinkStatusUseCase(any()) } returns flowOf(true)
+        every { getWalletLinkStatusUseCase(any<UserWallet>()) } returns flowOf(true)
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -232,20 +229,6 @@ internal class GetWalletNotificationsFactoryTest {
             LinkBannerModel(isHotWallet = false),
             LinkBannerModel(isHotWallet = true),
         )
-
-        @Test
-        fun `GIVEN toggle disabled WHEN create THEN link status is not read and no banner is shown`() = runTest {
-            // Arrange
-            every { walletFeatureToggles.isWalletLinkingEnabled } returns false
-            every { getWalletLinkStatusUseCase(any()) } returns flowOf(false)
-
-            // Act
-            val result = factory.create(coldWallet, clickIntents).first().notifications
-
-            // Assert
-            assertThat(result).isEmpty()
-            verify(exactly = 0) { getWalletLinkStatusUseCase(any()) }
-        }
 
         @Test
         fun `GIVEN link status unreadable WHEN create THEN notifications are emitted without the banner`() = runTest {
@@ -1142,6 +1125,32 @@ internal class GetWalletNotificationsFactoryTest {
         // Non-actionable statuses produce no TangemPay notification.
         TangemPayModel(value = PaymentAccountStatusValue.Loading),
     )
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN not synced payment account WHEN create THEN tangem icon shown only for cold wallet`(
+        isColdWallet: Boolean,
+    ) = runTest {
+        // Arrange
+        val paymentStatus = AccountStatus.Payment(
+            account = mockk<Account.Payment>(relaxed = true),
+            value = PaymentAccountStatusValue.Error.NotSynced,
+        )
+        stubAccountStatusList(balance = LOADED_NON_ZERO, accountStatuses = listOf(paymentStatus))
+        val wallet = if (isColdWallet) coldWallet else hotWallet
+
+        // Act
+        val result = factory.create(wallet, clickIntents).first().notifications
+
+        // Assert
+        val banner = result.filterIsInstance<WalletNotificationUM.TangemPayRefreshNeeded>().single()
+        val icon = banner.messageUM.buttonsUM.single().tangemIconUM
+        if (isColdWallet) {
+            assertThat(icon).isInstanceOf(TangemIconUM.Icon::class.java)
+        } else {
+            assertThat(icon).isNull()
+        }
+    }
 
     @Test
     fun `GIVEN no payment account status WHEN create THEN no tangem-pay banner is shown`() = runTest {

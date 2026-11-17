@@ -102,20 +102,6 @@ internal class YieldSupplyContributionTest {
     }
 
     @Test
-    fun `GIVEN any yield supply WHEN kind THEN it is the yield supply discriminator`() {
-        // Arrange
-        val contribution = YieldSupplyContribution(status = mockk(relaxed = true), source = StatusSource.ACTUAL)
-
-        // Act
-        val actual = contribution.kind
-
-        // Assert — the literal, not the constant: comparing the constant to itself can never fail, and `kind` is
-        // the cross-module discriminator, so its value is part of the contract
-        assertThat(actual).isEqualTo("yield_supply")
-        assertThat(YieldSupplyContribution.CONTRIBUTION_KIND).isEqualTo("yield_supply")
-    }
-
-    @Test
     fun `GIVEN a cached network status WHEN source THEN it is carried over from the network status`() {
         // Arrange — the status itself has no freshness, so a hardcoded ACTUAL would go unnoticed without this
         val contribution = YieldSupplyContribution(status = mockk(relaxed = true), source = StatusSource.ONLY_CACHE)

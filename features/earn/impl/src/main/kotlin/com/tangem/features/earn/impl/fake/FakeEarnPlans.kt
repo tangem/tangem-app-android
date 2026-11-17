@@ -18,7 +18,6 @@ internal data class FakeDepositPlan(
     override val notice: TextReference?,
     override val isEstimate: Boolean,
     val actionId: String,
-    val isFeeRefreshed: Boolean = false,
 ) : EarnPlan
 
 internal data class FakeVerifiedPlan(override val plan: EarnPlan) : VerifiedPlan

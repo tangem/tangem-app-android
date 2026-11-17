@@ -16,17 +16,14 @@ import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
-import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,20 +33,18 @@ internal class JoinJointAccountUseCaseTest {
     private val repository: JointAccountRepository = mockk()
     private val signer: JointAccountSigner = mockk()
     private val fetcher: SingleJointAccountListFetcher = mockk()
-    private val supplier: SingleJointAccountListSupplier = mockk()
     private val accountListFetcher: SingleAccountListFetcher = mockk()
 
     private val useCase = JoinJointAccountUseCase(
         repository = repository,
         signer = signer,
         fetcher = fetcher,
-        supplier = supplier,
         accountListFetcher = accountListFetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, signer, fetcher, supplier, accountListFetcher)
+        clearMocks(repository, signer, fetcher, accountListFetcher)
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
         coEvery { accountListFetcher.invoke(params = any()) } returns Unit.right()
         coEvery { signer.sign(userWalletId = any(), input = any()) } returns signResult().right()
@@ -67,7 +62,7 @@ internal class JoinJointAccountUseCaseTest {
         } returns account().right()
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(account().right())
@@ -98,10 +93,10 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { repository.join(any(), any(), any()) } returns conflict.left()
         // The backend returns checksummed addresses; the comparison must not depend on the case
         val own = account(memberAddress = OWNER_ADDRESS.lowercase())
-        every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(otherAccount(), own))
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(otherAccount(), own)
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(own.right())
@@ -116,10 +111,10 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { repository.join(any(), any(), any()) } returns conflict.left()
         coEvery { accountListFetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
         val own = account()
-        every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(own))
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(own)
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(own.right())
@@ -130,10 +125,10 @@ internal class JoinJointAccountUseCaseTest {
         // Arrange
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
         coEvery { repository.join(any(), any(), any()) } returns conflict.left()
-        every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(otherAccount()))
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(otherAccount())
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountJoinError.InvalidInvite(cause = conflict).left())
@@ -149,7 +144,7 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { fetcher.invoke(params = any()) } returns cause.left()
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
@@ -164,7 +159,7 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { fetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(joined.right())
@@ -179,7 +174,7 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { accountListFetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(joined.right())
@@ -192,7 +187,7 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { signer.sign(WALLET_ID, any()) } returns TangemSdkError.UserCancelled().left()
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountFlowError.UserCancelled.left())
@@ -207,7 +202,7 @@ internal class JoinJointAccountUseCaseTest {
             coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns -1
 
             // Act
-            val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+            val actual = join()
 
             // Assert
             val expected = JointAccountFlowError.InvalidDerivationIndex(
@@ -224,7 +219,7 @@ internal class JoinJointAccountUseCaseTest {
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } throws cause
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
@@ -232,18 +227,80 @@ internal class JoinJointAccountUseCaseTest {
     }
 
     @Test
-    fun `GIVEN join request fails WHEN invoke THEN Failed`() = runTest {
+    fun `GIVEN join request fails and the wallet is in no such account WHEN invoke THEN Failed`() = runTest {
         // Arrange
         val cause = IllegalStateException("500")
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
         coEvery { repository.join(any(), any(), any()) } throws cause
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(otherAccount())
 
         // Act
-        val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
+        val actual = join()
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
     }
+
+    @Test
+    fun `GIVEN answer lost but the join is recorded WHEN invoke THEN the account is returned`() = runTest {
+        // Arrange
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { repository.join(any(), any(), any()) } throws IllegalStateException("timeout")
+        val own = account(memberAddress = OWNER_ADDRESS.lowercase())
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(otherAccount(), own)
+
+        // Act
+        val actual = join()
+
+        // Assert
+        assertThat(actual).isEqualTo(own.right())
+    }
+
+    @Test
+    fun `GIVEN answer lost and refresh fails WHEN invoke THEN Failed with the join cause`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("timeout")
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { repository.join(any(), any(), any()) } throws cause
+        coEvery { fetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
+
+        // Act
+        val actual = join()
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
+    }
+
+    @Test
+    fun `GIVEN conflict on a repeated join with a new owner address WHEN invoke THEN account found by creator`() =
+        runTest {
+            // Arrange — the first attempt took the slot with another owner address, its answer was lost
+            coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 1
+            coEvery { repository.join(any(), any(), any()) } returns conflict.left()
+            val joined = account(memberAddress = "0x2222222222222222222222222222222222222222").let { account ->
+                val creator = JointAccount.Member(
+                    name = "Alice",
+                    address = CREATOR_ADDRESS.lowercase(),
+                    role = JointAccount.Role.CREATOR,
+                )
+                account.copy(members = listOf(creator) + account.members)
+            }
+            coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(otherAccount(), joined)
+
+            // Act
+            val actual = join()
+
+            // Assert
+            assertThat(actual).isEqualTo(joined.right())
+        }
+
+    private suspend fun join() = useCase(
+        userWalletId = WALLET_ID,
+        inviteId = INVITE_ID,
+        config = config(),
+        creatorAddress = CREATOR_ADDRESS,
+        memberName = NAME,
+    )
 
     private fun config() = JointAccountConfig(
         name = "Family",
@@ -278,6 +335,7 @@ internal class JoinJointAccountUseCaseTest {
         val WALLET_ID = UserWalletId("011121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0E0F")
         val conflict = IllegalStateException("409 Conflict")
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
+        const val CREATOR_ADDRESS = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF"
         const val SIGNATURE = "0xdeadbeef"
         const val NAME = " Bob "
         const val INVITE_ID = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"

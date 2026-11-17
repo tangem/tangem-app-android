@@ -25,6 +25,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.StakingRegionUnavailableBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.earn.api.EarnBannerComponent
 import com.tangem.features.jointaccount.slotbusy.JointOperationSlotBusyComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
@@ -51,6 +52,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     private val jointOperationSlotBusyComponentFactory: JointOperationSlotBusyComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     marketingBannerComponentFactory: MarketingBannerComponent.Factory,
+    earnBannerComponentFactory: EarnBannerComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -98,6 +100,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         ),
     )
 
+    private val earnBannerComponent = earnBannerComponentFactory.create(
+        context = child("earnBanner"),
+        params = EarnBannerComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = params.currency,
+        ),
+    )
+
     private val marketingBannerComponent = marketingBannerComponentFactory.create(
         context = child("tokenDetailsMarketingBanner"),
         params = MarketingBannerComponent.Params.Standalone(
@@ -120,10 +130,12 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             txHistoryComponent = txHistoryComponent,
             jointCosignRequestsComponent = jointCosignRequestsComponent,
             marketingBannerComponent = marketingBannerComponent,
+            earnBannerComponent = earnBannerComponent,
             modifier = modifier,
         )
 
         bottomSheet.child?.instance?.BottomSheet()
+        earnBannerComponent.BottomSheet()
         txHistoryComponent.Content(modifier)
         jointCosignRequestsComponent.Content(modifier)
     }

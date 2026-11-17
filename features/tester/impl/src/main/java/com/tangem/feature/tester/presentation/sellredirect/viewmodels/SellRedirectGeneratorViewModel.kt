@@ -7,7 +7,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.core.navigation.deeplink.DeepLinkScheme
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.offramp.model.PendingOfframp
 import com.tangem.domain.offramp.repository.OfframpRepository
@@ -129,7 +129,7 @@ internal class SellRedirectGeneratorViewModel @Inject constructor(
         const val DEFAULT_AMOUNT = "1"
         const val DEFAULT_ADDRESS = "test-deposit-address"
 
-        // Host and query keys expected by DefaultSellRedirectDeepLinkHandler; kept in sync with it.
+        // Host and query keys expected by SellRedirectDeepLinkHandler; kept in sync with it.
         const val SELL_REDIRECT_HOST = "redirect_sell"
         const val TRANSACTION_ID_KEY = "transactionId"
         const val CURRENCY_ID_KEY = "currency_id"

@@ -5,12 +5,12 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -40,13 +40,12 @@ import org.junit.jupiter.params.ParameterizedTest
 
 internal class StakingDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
     private val supplier: MultiWalletCryptoCurrenciesSupplier = mockk()
     private val availabilityUseCase: GetStakingAvailabilityUseCase = mockk()
 
     private val handler = StakingDeepLinkHandler(
-        appRouter = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         multiWalletCryptoCurrenciesSupplier = supplier,
         getStakingAvailabilityUseCase = availabilityUseCase,
@@ -67,7 +66,7 @@ internal class StakingDeepLinkHandlerTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, getSelectedWalletSyncUseCase, supplier, availabilityUseCase)
+        clearMocks(router, getSelectedWalletSyncUseCase, supplier, availabilityUseCase)
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery {
             supplier.getSyncOrNull(MultiWalletCryptoCurrenciesProducer.Params(wallet.walletId), any())
@@ -82,7 +81,7 @@ internal class StakingDeepLinkHandlerTest {
         handle(params)
 
         // Assert
-        verify(exactly = 1) { appRouter.push(expectedRoute, any()) }
+        verify(exactly = 1) { router.push(expectedRoute, any()) }
     }
 
     @Test
@@ -94,7 +93,7 @@ internal class StakingDeepLinkHandlerTest {
         handle(params)
 
         // Assert
-        verify(exactly = 1) { appRouter.push(expectedRoute, any()) }
+        verify(exactly = 1) { router.push(expectedRoute, any()) }
     }
 
     @Test
@@ -114,7 +113,7 @@ internal class StakingDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 1) {
-            appRouter.push(
+            router.push(
                 AppRoute.Staking(
                     userWalletId = wallet.walletId,
                     cryptoCurrency = ethereum,
@@ -200,7 +199,7 @@ internal class StakingDeepLinkHandlerTest {
         handle(params + (WALLET_ID_KEY to wallet.walletId.stringValue))
 
         // Assert
-        verify(exactly = 1) { appRouter.push(expectedRoute, any()) }
+        verify(exactly = 1) { router.push(expectedRoute, any()) }
     }
 
     @Test
@@ -245,13 +244,19 @@ internal class StakingDeepLinkHandlerTest {
 
     private fun TestScope.handle(queryParams: Map<String, String>) {
         handler.handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = this, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = this,
+                isFromOnNewIntent = false,
+                router = router,
+            ),
         )
         advanceUntilIdle()
     }
 
     private fun verifyNothingPushed() {
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     internal data class UnavailableModel(val availability: StakingAvailability)

@@ -31,8 +31,6 @@ internal class PaymentAccountStatusExtTest {
     private fun provideTestModels() = listOf(
         TariffPlanModel(value = loadedWith(), expected = PLAN),
         TariffPlanModel(value = loadedWith(plan = null), expected = null),
-        TariffPlanModel(value = inactiveWith(), expected = PLAN),
-        TariffPlanModel(value = awaitingPlanSelectionWith(), expected = PLAN),
         TariffPlanModel(value = PaymentAccountStatusValue.Loading, expected = null),
         TariffPlanModel(value = PaymentAccountStatusValue.Empty, expected = null),
         TariffPlanModel(value = PaymentAccountStatusValue.NotCreated, expected = null),
@@ -48,7 +46,6 @@ internal class PaymentAccountStatusExtTest {
             expected = PLAN,
         ),
         TariffPlanModel(value = mockk<PaymentAccountStatusValue.UnderReview>(relaxed = true), expected = null),
-        TariffPlanModel(value = mockk<PaymentAccountStatusValue.IssuingCard>(relaxed = true), expected = null),
         TariffPlanModel(value = mockk<PaymentAccountStatusValue.Deactivated>(relaxed = true), expected = null),
     )
 
@@ -61,17 +58,6 @@ internal class PaymentAccountStatusExtTest {
         mockk(relaxed = true) {
             every { tariffPlan } returns plan?.let { tariffPlanState(tariff = it) }
         }
-
-    private fun inactiveWith(plan: TangemPayCustomerTariffPlan = PLAN): PaymentAccountStatusValue.Inactive =
-        mockk(relaxed = true) {
-            every { tariffPlan } returns tariffPlanState(tariff = plan)
-        }
-
-    private fun awaitingPlanSelectionWith(
-        plan: TangemPayCustomerTariffPlan = PLAN,
-    ): PaymentAccountStatusValue.AwaitingPlanSelection = mockk(relaxed = true) {
-        every { tariffPlan } returns plan
-    }
 
     internal data class TariffPlanModel(
         val value: PaymentAccountStatusValue,

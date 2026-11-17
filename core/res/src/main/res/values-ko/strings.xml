@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="hw_upgrade_to_cold_badge">콜드 지갑으로 업그레이드</string>
   <string name="money_account_add_funds_bank_description">은행 계좌에서 ACH/Wire 또는 SPEI로 USD 수취</string>
   <string name="money_account_add_funds_receive_description">Polygon 네트워크의 USDC를 계좌 주소로 전송</string>
   <string name="money_account_add_funds_swap_description">지갑의 암호화폐로 USD 계좌에 입금</string>
@@ -295,6 +296,8 @@
   <string name="prediction_withdraw_status_sent_description">전송에 최대 %1$d분이 소요될 수 있습니다.</string>
   <string name="prediction_withdraw_status_sent_title">출금 전송됨</string>
   <string name="tangempay_cancel_kyc">상태 숨기기</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">카드가 Google Wallet에 추가됨</string>
+  <string name="tangempay_card_page_closing_banner_description">보통 최대 5분 정도 걸립니다</string>
   <string name="tangempay_cashback_accruals_pay_description">거래가 캐시백 프로그램 규정을 준수하는지 확인한 후, 다음 달 11일까지 지급됩니다</string>
   <string name="tangempay_kyc_rejected_button_text">상태 숨기기</string>
   <string name="tangempay_pay_support">고객 지원</string>

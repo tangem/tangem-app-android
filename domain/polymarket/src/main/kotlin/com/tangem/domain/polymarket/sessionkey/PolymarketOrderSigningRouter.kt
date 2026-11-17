@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.utils.logging.TangemLogger
 import java.time.Clock
+import java.time.Duration
 
 class PolymarketOrderSigningRouter(
     private val polymarketRepository: PolymarketRepository,
@@ -35,10 +36,13 @@ class PolymarketOrderSigningRouter(
         return PredictionOrderSigningRoute.Session(identity = identity)
     }
 
-    suspend fun canSignWithSessionKey(userWalletId: UserWalletId): Boolean {
-        val sessionKeyAddress = sessionKeyStore.heldAddress(userWalletId) ?: return false
+    suspend fun sessionKeySigningWindow(userWalletId: UserWalletId): Duration? {
+        val sessionKeyAddress = sessionKeyStore.heldAddress(userWalletId) ?: return null
         val tradability = tradability(userWalletId = userWalletId, sessionKeyAddress = sessionKeyAddress)
-        return tradability is PolymarketSessionKeyTradability.Tradable
+        if (tradability !is PolymarketSessionKeyTradability.Tradable) return null
+
+        val signingDeadline = tradability.validUntil - PolymarketSessionKeyAssessor.SIGNING_EXPIRY_MARGIN
+        return Duration.between(clock.instant(), signingDeadline).takeIf { window -> window > Duration.ZERO }
     }
 
     suspend fun reportRefused(
@@ -46,10 +50,7 @@ class PolymarketOrderSigningRouter(
         identity: PolymarketClobIdentity.Session,
         error: PredictionPlaceOrderError,
     ) {
-        TangemLogger.e(
-            "The exchange refused the order signed with session key ${identity.address}, " +
-                "signing it with the owner key: $error",
-        )
+        TangemLogger.e("The exchange refused the order signed with session key ${identity.address}: $error")
         tradingStore.markRefused(addresses.userWalletId, identity.address)
     }
 
@@ -58,9 +59,7 @@ class PolymarketOrderSigningRouter(
         identity: PolymarketClobIdentity.Session,
         failure: PredictionOrderFailure,
     ) {
-        TangemLogger.e(
-            "Session key ${identity.address} could not sign the order, signing it with the owner key: $failure",
-        )
+        TangemLogger.e("Session key ${identity.address} could not sign the order: $failure")
         tradingStore.markRefused(addresses.userWalletId, identity.address)
     }
 
@@ -72,7 +71,7 @@ class PolymarketOrderSigningRouter(
     )
 
     private fun owner(reason: String): PredictionOrderSigningRoute {
-        TangemLogger.i("Polymarket order signed with the owner key: $reason")
+        TangemLogger.i("The session key cannot sign the Polymarket order: $reason")
         return PredictionOrderSigningRoute.Owner
     }
 }

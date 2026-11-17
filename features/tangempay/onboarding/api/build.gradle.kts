@@ -9,8 +9,12 @@ android {
 }
 
 dependencies {
+    /** Common */
+    api(projects.common.routing)
+
     /** Core */
     api(projects.core.decompose)
+    api(projects.core.navigation)
     api(projects.core.ui)
 
     /** Domain */

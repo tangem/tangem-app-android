@@ -113,6 +113,7 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
         val BALANCE_DTO = CollectiblesVaultBalanceDTO(
             usdcAmount = USDC,
             usdcMint = MockCollectibles.USDC_MINT,
+            vaultAddress = MockCollectibles.VAULT_ADDRESS,
             usdcAtaAddress = MockCollectibles.USDC_ATA_ADDRESS,
         )
     }

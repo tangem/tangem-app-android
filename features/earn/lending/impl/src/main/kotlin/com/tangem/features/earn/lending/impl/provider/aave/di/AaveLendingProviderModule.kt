@@ -1,8 +1,10 @@
 package com.tangem.features.earn.lending.impl.provider.aave.di
 
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
+import com.tangem.features.earn.lending.impl.provider.LendingTransactions
 import com.tangem.features.earn.lending.impl.provider.aave.AaveAssetResolver
 import com.tangem.features.earn.lending.impl.provider.aave.AaveLendingProvider
+import com.tangem.features.earn.lending.impl.provider.aave.AaveLendingTransactions
 import com.tangem.features.earn.lending.impl.provider.aave.DefaultAaveAssetResolver
 import dagger.Binds
 import dagger.Module
@@ -15,6 +17,9 @@ internal interface AaveLendingProviderModule {
 
     @Binds
     fun bindLendingProvider(impl: AaveLendingProvider): LendingProvider
+
+    @Binds
+    fun bindLendingTransactions(impl: AaveLendingTransactions): LendingTransactions
 
     @Binds
     fun bindAssetResolver(impl: DefaultAaveAssetResolver): AaveAssetResolver

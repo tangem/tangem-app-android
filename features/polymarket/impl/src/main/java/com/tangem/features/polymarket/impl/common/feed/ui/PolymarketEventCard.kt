@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
-import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
+import com.tangem.features.polymarket.impl.common.toButtonAppearance
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
@@ -166,15 +166,10 @@ private fun EventOutcomes(outcomes: ImmutableList<PolymarketOutcomeUM>, isExpand
                     .testTag(PredictionTestTags.OUTCOME_BUTTON),
                 title = outcome.title,
                 price = outcome.price,
-                appearance = when (outcome.accent) {
-                    PolymarketOutcomeAccent.Info -> PolymarketOutcomeButton.Appearance.Info
-                    PolymarketOutcomeAccent.Error -> PolymarketOutcomeButton.Appearance.Error
-                    PolymarketOutcomeAccent.Neutral -> PolymarketOutcomeButton.Appearance.Neutral
-                    null -> if (index == 0) {
-                        PolymarketOutcomeButton.Appearance.Info
-                    } else {
-                        PolymarketOutcomeButton.Appearance.Error
-                    }
+                appearance = outcome.accent?.toButtonAppearance() ?: if (index == 0) {
+                    PolymarketOutcomeButton.Appearance.Info
+                } else {
+                    PolymarketOutcomeButton.Appearance.Error
                 },
                 size = PolymarketOutcomeButton.Size.X9,
                 onClick = outcome.onClick,

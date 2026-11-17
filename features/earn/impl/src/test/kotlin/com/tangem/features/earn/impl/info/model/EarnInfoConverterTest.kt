@@ -2,12 +2,14 @@ package com.tangem.features.earn.impl.info.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.res.R as CoreR
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -24,8 +26,6 @@ import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeReadyState
 import com.tangem.features.earn.impl.info.EarnInfoActions
-import com.tangem.features.earn.impl.info.EarnInfoTexts
-import com.tangem.features.earn.impl.info.label
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoTab
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
@@ -37,6 +37,7 @@ import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
+import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
@@ -54,11 +55,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 
 internal class EarnInfoConverterTest {
 
@@ -102,13 +98,13 @@ internal class EarnInfoConverterTest {
         }
 
         @Test
-        fun `GIVEN position Known WHEN convert THEN title is product title, subtitle is the network name, my funds come from the provider and position`() {
+        fun `GIVEN position Known WHEN convert THEN title is product title, subtitle is the Ethereum in Mainnet text, my funds come from the provider and position`() {
             // Act
             val actual = requireNotNull(convert())
 
             // Assert
             assertThat(actual.title).isEqualTo(product.title)
-            assertThat(actual.subtitle).isEqualTo(stringReference(ethereum.network.name))
+            assertThat(actual.subtitle).isEqualTo(resourceReference(CoreR.string.lending_position_subtitle))
             assertThat(actual.myFunds.copy(rows = persistentListOf(), onHowItWorksClick = null)).isEqualTo(
                 EarnInfoUM.MyFundsUM(
                     provider = product.provider.title,
@@ -242,8 +238,11 @@ internal class EarnInfoConverterTest {
 
             // Assert
             val expected = EarnInfoUM.RewardsUM(
-                title = EarnInfoTexts.rewardsTitle(fiatText(rewards.amount.multiply(RATE))),
-                description = EarnInfoTexts.rewardsDescription,
+                title = resourceReference(
+                    R.string.yield_module_rewards_banner_title,
+                    wrappedList(fiatText(rewards.amount.multiply(RATE))),
+                ),
+                description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
                 claim = TangemButtonUM(text = rewards.claimAction.label, type = TangemButtonType.Primary, onClick = NoOp),
             )
             assertThat(actual.copy(claim = actual.claim.noOpClick())).isEqualTo(expected)
@@ -286,7 +285,7 @@ internal class EarnInfoConverterTest {
     inner class Freshness {
 
         @Test
-        fun `GIVEN stale freshness WHEN convert THEN staleNotice contains the formatted time and both buttons are dimmed with the out-of-date reason`() {
+        fun `GIVEN stale freshness WHEN convert THEN both buttons are dimmed with the out-of-date reason`() {
             // Arrange
             val state = ready.copy(
                 freshness = EarnFreshness(asOf = Instant.parse("2026-11-09T12:00:00Z"), isStale = true),
@@ -294,21 +293,18 @@ internal class EarnInfoConverterTest {
             )
 
             // Act
-            val actual = requireNotNull(convert(ready = state, locale = Locale.US, zoneId = ZoneOffset.UTC))
+            val actual = requireNotNull(convert(ready = state))
             actual.primary.onClick()
             actual.secondary.single().onClick()
 
             // Assert
-            val notice = (actual.staleNotice as TextReference.Str).value
-            assertThat(notice).contains("2026")
-            assertThat(notice).contains("12:00")
             assertThat(actual.primary.isDimmed).isTrue()
             assertThat(actual.secondary.single().isDimmed).isTrue()
             assertThat(calls).containsExactly(Call.Blocked(OUT_OF_DATE_BLOCK), Call.Blocked(OUT_OF_DATE_BLOCK))
         }
 
         @Test
-        fun `GIVEN fresh data WHEN convert THEN staleNotice is null and the buttons are not dimmed`() {
+        fun `GIVEN fresh data WHEN convert THEN the buttons are not dimmed`() {
             // Arrange
             val state = ready.copy(freshness = EarnFreshness(asOf = Instant.parse("2026-11-09T12:00:00Z"), isStale = false))
 
@@ -316,7 +312,6 @@ internal class EarnInfoConverterTest {
             val actual = requireNotNull(convert(ready = state))
 
             // Assert
-            assertThat(actual.staleNotice).isNull()
             assertThat(actual.primary.isDimmed).isFalse()
             assertThat(actual.secondary.single().isDimmed).isFalse()
         }
@@ -328,7 +323,7 @@ internal class EarnInfoConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN product and position freshness WHEN convert THEN the oldest stale time is shown and every action follows it`(
+        fun `GIVEN product and position freshness WHEN convert THEN every action follows the stale source`(
             model: StaleModel,
         ) {
             // Arrange
@@ -349,37 +344,37 @@ internal class EarnInfoConverterTest {
                 name = "stale position, fresh product",
                 productFreshness = EarnFreshness(asOf = NEWER, isStale = false),
                 positionFreshness = EarnFreshness(asOf = OLDER, isStale = true),
-                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+                expected = StaleState(isDimmed = true),
             ),
             StaleModel(
-                name = "stale product newer than the stale position",
+                name = "stale product, fresh position",
+                productFreshness = EarnFreshness(asOf = OLDER, isStale = true),
+                positionFreshness = EarnFreshness(asOf = NEWER, isStale = false),
+                expected = StaleState(isDimmed = true),
+            ),
+            StaleModel(
+                name = "stale product and stale position",
                 productFreshness = EarnFreshness(asOf = NEWER, isStale = true),
                 positionFreshness = EarnFreshness(asOf = OLDER, isStale = true),
-                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
-            ),
-            StaleModel(
-                name = "stale product older than the stale position",
-                productFreshness = EarnFreshness(asOf = OLDER, isStale = true),
-                positionFreshness = EarnFreshness(asOf = NEWER, isStale = true),
-                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+                expected = StaleState(isDimmed = true),
             ),
             StaleModel(
                 name = "stale position, no product freshness",
                 productFreshness = null,
                 positionFreshness = EarnFreshness(asOf = OLDER, isStale = true),
-                expected = StaleState(notice = noticeAt(OLDER), isDimmed = true),
+                expected = StaleState(isDimmed = true),
             ),
             StaleModel(
                 name = "both fresh",
                 productFreshness = EarnFreshness(asOf = NEWER, isStale = false),
                 positionFreshness = EarnFreshness(asOf = OLDER, isStale = false),
-                expected = StaleState(notice = null, isDimmed = false),
+                expected = StaleState(isDimmed = false),
             ),
             StaleModel(
                 name = "no freshness",
                 productFreshness = null,
                 positionFreshness = null,
-                expected = StaleState(notice = null, isDimmed = false),
+                expected = StaleState(isDimmed = false),
             ),
         )
     }
@@ -388,13 +383,12 @@ internal class EarnInfoConverterTest {
     inner class Balance {
 
         @Test
-        fun `GIVEN fiat rate null WHEN convert THEN balanceFiat is the dash and earned is the dash`() {
+        fun `GIVEN fiat rate null WHEN convert THEN balanceFiat is the dash`() {
             // Act
             val actual = requireNotNull(convert(status = status(fiatRate = null)))
 
             // Assert
             assertThat(actual.balanceFiat).isEqualTo(stringReference(StringsSigns.DASH_SIGN))
-            assertThat(actual.earned).isEqualTo(EarnInfoTexts.earnedChip(StringsSigns.DASH_SIGN))
         }
 
         @Test
@@ -421,27 +415,66 @@ internal class EarnInfoConverterTest {
         }
 
         @Test
-        fun `GIVEN earned null WHEN convert THEN earned is null`() {
-            // Arrange
-            val state = readyWith(position.copy(earned = null))
-
+        fun `GIVEN hidden balance WHEN convert THEN balance and rewards amounts are masked`() {
             // Act
-            val actual = requireNotNull(convert(ready = state))
+            val actual = requireNotNull(convert(isBalanceHidden = true))
 
             // Assert
-            assertThat(actual.earned).isNull()
+            assertThat(listOf(actual.balanceFiat, actual.balanceCrypto, actual.rewards?.title))
+                .containsExactly(
+                    stringReference("***"),
+                    stringReference("***"),
+                    resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("***")),
+                )
+                .inOrder()
         }
 
         @Test
-        fun `GIVEN earned and rate WHEN convert THEN earned is fiat-converted`() {
+        fun `GIVEN hidden balance WHEN convert THEN only the amounts of my funds are masked`() {
             // Arrange
-            val earned = requireNotNull(position.earned)
+            val positionRows = listOf(
+                EarnRow(stringReference("Total balance"), EarnValue.Amount(BigDecimal("1.482"))),
+                EarnRow(stringReference("Status"), EarnValue.Text(stringReference("Active"))),
+                EarnRow(stringReference("Position"), EarnValue.Link(stringReference("0xABC"), "https://scan.io/0xABC")),
+            )
+            val state = readyWith(position.copy(rows = positionRows))
 
             // Act
-            val actual = requireNotNull(convert())
+            val actual = requireNotNull(convert(ready = state, isBalanceHidden = true))
 
             // Assert
-            assertThat(actual.earned).isEqualTo(EarnInfoTexts.earnedChip(fiatText(earned.multiply(RATE))))
+            assertThat(actual.myFunds.rows.map { it.value })
+                .containsExactly(stringReference("***"), stringReference("Active"), stringReference("0xABC"))
+                .inOrder()
+        }
+
+        @Test
+        fun `GIVEN shown balance WHEN convert THEN an amount row is formatted like the header balance`() {
+            // Arrange
+            val amount = BigDecimal("1.482")
+            val positionRows = listOf(EarnRow(stringReference("Total balance"), EarnValue.Amount(amount)))
+            val state = readyWith(position.copy(cryptoAmount = amount, rows = positionRows))
+
+            // Act
+            val actual = requireNotNull(convert(ready = state, isBalanceHidden = false))
+
+            // Assert
+            assertThat(actual.myFunds.rows.single().value).isEqualTo(actual.balanceCrypto)
+            assertThat(actual.balanceCrypto).isEqualTo(stringReference(cryptoText(amount)))
+        }
+
+        @Test
+        fun `GIVEN hidden balance and an amount in the details WHEN convert THEN the amount is shown`() {
+            // Arrange
+            val minimum = BigDecimal("0.01")
+            val detailRows = listOf(EarnRow(stringReference("Minimum deposit"), EarnValue.Amount(minimum)))
+            val state = readyWith(position).copy(details = detailRows)
+
+            // Act
+            val actual = requireNotNull(convert(ready = state, isBalanceHidden = true))
+
+            // Assert
+            assertThat(actual.details.single().value).isEqualTo(stringReference(cryptoText(minimum)))
         }
     }
 
@@ -497,15 +530,6 @@ internal class EarnInfoConverterTest {
             ).inOrder()
         }
 
-        @Test
-        fun `GIVEN tabs WHEN label THEN every tab has a caption`() {
-            // Act
-            val actual = EarnInfoTab.entries.map { it.label() }
-
-            // Assert
-            assertThat(actual).containsNoDuplicates()
-        }
-
         private fun provideTestModels() = listOf(
             TabsModel(
                 hasBenefits = true,
@@ -534,18 +558,16 @@ internal class EarnInfoConverterTest {
             // Arrange
             val state = readyWith(position.copy(rewards = null)).copy(
                 apyPeriods = emptyList(),
-                howItWorks = null,
                 freshness = null,
             )
 
             // Act
-            val actual = convert(ready = state)
+            val actual = convert(ready = state, product = withHowItWorks(null))
 
             // Assert
             assertThat(actual).isNotNull()
             assertThat(actual?.myFunds?.onHowItWorksClick).isNull()
             assertThat(actual?.rewards).isNull()
-            assertThat(actual?.staleNotice).isNull()
         }
 
         @Test
@@ -555,7 +577,7 @@ internal class EarnInfoConverterTest {
                 title = stringReference("How it works"),
                 entries = listOf(EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied"))),
             )
-            val actual = requireNotNull(convert(ready = ready.copy(howItWorks = howItWorks)))
+            val actual = requireNotNull(convert(product = withHowItWorks(howItWorks)))
 
             // Act
             actual.myFunds.onHowItWorksClick?.invoke()
@@ -570,7 +592,7 @@ internal class EarnInfoConverterTest {
             val howItWorks = EarnHowItWorks(title = stringReference("How it works"), entries = emptyList())
 
             // Act
-            val actual = requireNotNull(convert(ready = ready.copy(howItWorks = howItWorks)))
+            val actual = requireNotNull(convert(product = withHowItWorks(howItWorks)))
 
             // Assert
             assertThat(actual.myFunds.onHowItWorksClick).isNull()
@@ -611,7 +633,6 @@ internal class EarnInfoConverterTest {
                 description = stringReference("Earn variable yield on ETH by staking with P2P."),
                 projection = DefaultEarnProjection(netRate = BigDecimal("0.027")),
                 benefits = listOf(benefit),
-                howItWorks = null,
                 details = details,
                 limits = EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null),
                 apyPeriods = emptyList(),
@@ -630,7 +651,7 @@ internal class EarnInfoConverterTest {
             )
 
             // Act
-            val actual = requireNotNull(convert(ready = pooledStaking))
+            val actual = requireNotNull(convert(ready = pooledStaking, product = withHowItWorks(null)))
 
             // Assert
             assertThat(actual.myFunds).isEqualTo(
@@ -643,9 +664,7 @@ internal class EarnInfoConverterTest {
                 ),
             )
             assertThat(actual.balanceCrypto).isEqualTo(stringReference(cryptoText(BigDecimal("0.5"))))
-            assertThat(actual.earned).isEqualTo(EarnInfoTexts.earnedChip(fiatText(BigDecimal("0.01").multiply(RATE))))
             assertThat(actual.rewards).isNull()
-            assertThat(actual.staleNotice).isNull()
             assertThat(actual.secondary).isEmpty()
             assertThat(actual.tabs)
                 .containsExactly(EarnInfoTab.MyFunds, EarnInfoTab.Benefits, EarnInfoTab.Details)
@@ -668,19 +687,22 @@ internal class EarnInfoConverterTest {
         }
     }
 
+    private fun withHowItWorks(content: EarnHowItWorks?): EarnProduct = object : EarnProduct by product {
+        override val howItWorks: EarnHowItWorks? = content
+    }
+
     private fun convert(
         ready: EarnProductState.Ready = this.ready,
+        product: EarnProduct = this.product,
         status: CryptoCurrencyStatus = status(),
-        locale: Locale = Locale.US,
-        zoneId: ZoneId = ZoneOffset.UTC,
+        isBalanceHidden: Boolean = false,
     ): EarnInfoUM? = converter.convert(
         product = product,
         status = status,
         appCurrency = AppCurrency.Default,
+        isBalanceHidden = isBalanceHidden,
         ready = ready,
         callbacks = callbacks,
-        locale = locale,
-        zoneId = zoneId,
     )
 
     private fun readyWith(position: EarnPosition) = ready.copy(position = EarnPositionState.Known(position))
@@ -710,22 +732,16 @@ internal class EarnInfoConverterTest {
     private fun EarnRow.textOf(): TextReference = when (val rowValue = value) {
         is EarnValue.Text -> rowValue.text
         is EarnValue.Link -> rowValue.text
+        is EarnValue.Amount -> stringReference(cryptoText(rowValue.value))
+        is EarnValue.YearlyFiatEarnings -> stringReference(rowValue.value.toPlainString())
     }
 
     private fun TangemButtonUM.noOpClick() = copy(onClick = NoOp)
 
     private fun EarnInfoUM.staleState() = StaleState(
-        notice = staleNotice,
         isPrimaryDimmed = primary.isDimmed,
         isSecondaryDimmed = secondary.single().isDimmed,
         isClaimDimmed = requireNotNull(rewards).claim.isDimmed,
-    )
-
-    private fun noticeAt(asOf: Instant): TextReference = EarnInfoTexts.staleNotice(
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-            .withLocale(Locale.US)
-            .withZone(ZoneOffset.UTC)
-            .format(java.time.Instant.ofEpochMilli(asOf.toEpochMilliseconds())),
     )
 
     internal data class StaleModel(
@@ -738,12 +754,11 @@ internal class EarnInfoConverterTest {
     }
 
     internal data class StaleState(
-        val notice: TextReference?,
         val isPrimaryDimmed: Boolean,
         val isSecondaryDimmed: Boolean,
         val isClaimDimmed: Boolean,
     ) {
-        constructor(notice: TextReference?, isDimmed: Boolean) : this(notice, isDimmed, isDimmed, isDimmed)
+        constructor(isDimmed: Boolean) : this(isDimmed, isDimmed, isDimmed)
     }
 
     internal data class TabsModel(

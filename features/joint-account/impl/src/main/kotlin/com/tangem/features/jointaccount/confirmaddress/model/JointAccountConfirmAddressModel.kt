@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -24,6 +25,8 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.features.jointaccount.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -59,6 +62,8 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val confirmJointAccountUseCase: ConfirmJointAccountUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val pollingCoordinator: JointAccountPollingCoordinator,
 ) : Model() {
@@ -69,6 +74,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         field = MutableStateFlow(
             JointAccountConfirmAddressUM(
                 address = null,
+                shareMessage = null,
                 buttonIcon = userWalletsListRepository
                     .getSyncOrNull(id = params.userWalletId)
                     ?.let(::walletInterationIcon)
@@ -100,7 +106,9 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         jointAccountListSupplier(userWalletId = params.userWalletId)
             .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId }?.safeAddress }
             .distinctUntilChanged()
-            .onEach { address -> uiState.update { it.copy(address = address) } }
+            .onEach { address ->
+                uiState.update { it.copy(address = address, shareMessage = address?.let(::shareMessage)) }
+            }
             .launchIn(modelScope)
     }
 
@@ -112,10 +120,13 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onShareClick() {
-        val address = uiState.value.address ?: return
+    private fun shareMessage(address: String) = resourceReference(
+        id = CoreUiR.string.joint_account_confirm_address_share_message,
+        formatArgs = wrappedList(address),
+    )
 
-        shareManager.shareText(text = address)
+    private fun onShareClick(message: String) {
+        shareManager.shareText(text = message)
     }
 
     private fun onMismatchClick() {
@@ -153,9 +164,17 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             return
         }
 
+        if (!ensureWalletLinked()) return
+
         confirmJointAccountUseCase(account = account)
             .onLeft(::onConfirmError)
             .onRight(::onConfirmed)
+    }
+
+    private suspend fun ensureWalletLinked(): Boolean {
+        val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull() ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
     }
 
     private suspend fun findAccount(): Account.Joint? {

@@ -44,6 +44,7 @@ private fun previewLanding(mode: TangemPayCampaignUM.Landing.Mode, isCtaLoading:
     cardArtUrl = PREVIEW_CARD_ART_URL,
     mode = mode,
     isCtaLoading = isCtaLoading,
+    isCtaIconShown = mode == TangemPayCampaignUM.Landing.Mode.NoPay,
     onGetCardClick = {},
     onCloseClick = {},
 )

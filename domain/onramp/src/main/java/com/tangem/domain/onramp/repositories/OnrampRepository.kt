@@ -34,6 +34,7 @@ interface OnrampRepository {
     ): OnrampTransaction
 
     // cache
+    suspend fun getCachedCountryByIp(): OnrampCountry?
     suspend fun saveDefaultCurrency(currency: OnrampCurrency)
     suspend fun saveSelectedCurrency(currency: OnrampCurrency)
     suspend fun getSelectedCurrencySync(): OnrampCurrency?

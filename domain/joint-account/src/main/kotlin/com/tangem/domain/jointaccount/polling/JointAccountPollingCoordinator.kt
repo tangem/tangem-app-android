@@ -4,10 +4,14 @@ import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
@@ -36,8 +40,10 @@ import kotlin.time.Duration.Companion.seconds
  * should the producer coroutine still die for some other reason, it retries after [POLL_INTERVAL] rather than
  * leaving the wallet's ticker dead in [tickers] for the rest of the process.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class JointAccountPollingCoordinator(
     private val fetcher: SingleJointAccountListFetcher,
+    private val isWalletLinked: (UserWalletId) -> Flow<Boolean>,
     private val appScope: AppCoroutineScope,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -47,21 +53,28 @@ class JointAccountPollingCoordinator(
 
     fun poll(walletId: UserWalletId): Flow<Unit> = tickers.computeIfAbsent(walletId, ::createTicker)
 
-    private fun createTicker(walletId: UserWalletId): Flow<Unit> = flow {
+    private fun createTicker(walletId: UserWalletId): Flow<Unit> = isWalletLinked(walletId)
+        .distinctUntilChanged()
+        .flatMapLatest { isLinked -> if (isLinked) ticks(walletId) else emptyFlow() }
+        .retryWhen { cause, _ ->
+            TangemLogger.e("Joint account polling ticker crashed for wallet $walletId, retrying", cause)
+            delay(POLL_INTERVAL)
+            true
+        }
+        .shareIn(
+            scope = appScope,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = STOP_TIMEOUT_MILLIS),
+            replay = 0,
+        )
+
+    private fun ticks(walletId: UserWalletId): Flow<Unit> = flow {
         while (currentCoroutineContext().isActive) {
             awaitNextFetch(walletId)
             fetch(walletId)
             emit(Unit)
         }
-    }.retryWhen { cause, _ ->
-        TangemLogger.e("Joint account polling ticker crashed for wallet $walletId, retrying", cause)
-        delay(POLL_INTERVAL)
-        true
-    }.shareIn(
-        scope = appScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = STOP_TIMEOUT_MILLIS),
-        replay = 0,
-    )
+    }
+
     private suspend fun awaitNextFetch(walletId: UserWalletId) {
         val elapsedSinceLastFetch = lastFetchAt[walletId]?.let { now() - it } ?: 0L
         val remaining = POLL_INTERVAL.inWholeMilliseconds - elapsedSinceLastFetch

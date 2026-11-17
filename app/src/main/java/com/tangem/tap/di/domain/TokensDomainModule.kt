@@ -15,8 +15,6 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.stories.StoriesRepository
 import com.tangem.domain.tokens.*
@@ -29,7 +27,6 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -167,14 +164,10 @@ internal object TokensDomainModule {
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         balanceContributionFetchers: Set<@JvmSuppressWildcards BalanceContributionFetcher>,
-        tokensFeatureToggles: TokensFeatureToggles,
-        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
-        stakingIdFactory: StakingIdFactory,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -187,14 +180,10 @@ internal object TokensDomainModule {
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             balanceContributionFetchers = balanceContributionFetchers,
-            tokensFeatureToggles = tokensFeatureToggles,
-            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-            stakingIdFactory = stakingIdFactory,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             collectiblesFeatureToggles = collectiblesFeatureToggles,
             dispatchers = dispatchers,
         )

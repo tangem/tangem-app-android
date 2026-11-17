@@ -1,36 +1,55 @@
 package com.tangem.features.earn.flow.impl.model
 
 import arrow.core.left
+import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.earn.flow.api.EarnFlowComponent
+import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
+import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
@@ -44,6 +63,7 @@ import com.tangem.features.earn.product.api.session.EarnTxStatus
 import com.tangem.features.earn.product.api.session.EarnVerification
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -57,7 +77,11 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -71,6 +95,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -90,6 +115,13 @@ internal class EarnFlowModelTest {
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk(relaxed = true)
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val shareManager: ShareManager = mockk(relaxed = true)
+    private val blogUrlBuilder: TangemBlogUrlBuilder = mockk()
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -118,7 +150,18 @@ internal class EarnFlowModelTest {
             saveBlockchainErrorUseCase,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
+            urlOpener,
+            shareManager,
+            blogUrlBuilder,
+            getExplorerTransactionUrlUseCase,
+            getUserWalletUseCase,
+            getAccountCurrencyStatusUseCase,
+            isAccountsModeEnabledUseCase,
         )
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns TEST_LEARN_MORE_URL
+        every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Hot> { every { name } returns "Wallet" }.right()
         mockkObject(CryptoCurrencyStatusOperations)
         with(CryptoCurrencyStatusOperations) {
             every { accountStatusList.getCryptoCurrencyStatus(currency = testEthereum) } returns testStatus().some()
@@ -141,6 +184,9 @@ internal class EarnFlowModelTest {
             EarnSigningStep.Done(txRef, testResult()),
         )
         every { session.track(ref = any()) } returns flowOf(EarnTxStatus(TxInfo.TransactionStatus.Confirmed))
+        every {
+            getExplorerTransactionUrlUseCase.invoke(txHash = any(), currency = any())
+        } returns TEST_EXPLORER_URL.right()
     }
 
     @AfterEach
@@ -309,6 +355,8 @@ internal class EarnFlowModelTest {
                 coEvery { session.maxAmount(action = any()) } returns BigDecimal("1.000000000000000001").right()
                 val model = createModel(action = Deposit())
                 advanceUntilIdle()
+                model.onFeeResult(testFeeContent("0"))
+                advanceUntilIdle()
 
                 // Act
                 model.onPercentClick(25)
@@ -335,7 +383,7 @@ internal class EarnFlowModelTest {
                 // Assert
                 assertThat(model.initialStep).isEqualTo(EarnFlowStep.Confirm)
                 coVerify(exactly = 1) {
-                    session.prepare(action = TestClaim, amount = null, fee = EarnFeeSelection(testFee("0.00033"), null))
+                    session.prepare(action = TestClaim, amount = null, fee = testFeeSelection("0.00033"))
                 }
                 coVerify(exactly = 0) { session.maxAmount(action = any()) }
                 assertThat(model.confirm.value).isNotNull()
@@ -399,7 +447,7 @@ internal class EarnFlowModelTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN entered amount and fee WHEN submit THEN prepare gets the amount after deduction`(
+        fun `GIVEN amount entered before fee WHEN fee arrives and submit THEN field and prepare stay within Max`(
             model: DeductionModel,
         ) = runTest {
             // Arrange
@@ -418,10 +466,10 @@ internal class EarnFlowModelTest {
                 session.prepare(
                     action = Deposit(),
                     amount = EarnAmount.Exact(BigDecimal(model.expected)),
-                    fee = EarnFeeSelection(testFee(model.fee), null),
+                    fee = testFeeSelection(model.fee),
                 )
             }
-            assertThat(flow.state.value.enteredAmount).isEqualTo(BigDecimal(model.entered ?: "2.01"))
+            assertThat(flow.state.value.enteredAmount).isEqualTo(BigDecimal(model.expected))
             flow.onDestroy()
         }
 
@@ -433,7 +481,254 @@ internal class EarnFlowModelTest {
         )
 
         @Test
-        fun `GIVEN Max and fee not below balance WHEN amount screen THEN total exceeds balance and no prepare`() =
+        fun `GIVEN fee estimate WHEN Max THEN amount is balance less fee`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.0004"))
+            advanceUntilIdle()
+
+            // Act
+            model.onMaxValueClick()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("2.0096"))
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("providePercentModels")
+        fun `GIVEN fee estimate WHEN percent THEN share of balance less fee`(model: PercentModel) = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Act
+            flow.onPercentClick(model.percent)
+
+            // Assert
+            assertThat(flow.state.value.enteredAmount).isEqualToIgnoringScale(BigDecimal(model.expected))
+            flow.onDestroy()
+        }
+
+        private fun providePercentModels() = listOf(
+            PercentModel(percent = 25, expected = "0.5"),
+            PercentModel(percent = 50, expected = "1"),
+            PercentModel(percent = 75, expected = "1.5"),
+            PercentModel(percent = 100, expected = "2"),
+        )
+
+        @Test
+        fun `GIVEN no fee yet WHEN percent THEN share is set once the fee arrives`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            model.onPercentClick(25)
+            val beforeFee = model.state.value.enteredAmount
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(beforeFee).isNull()
+            assertThat(model.state.value.enteredAmount).isEqualToIgnoringScale(BigDecimal("0.5"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN percent pending WHEN amount typed before fee THEN typed amount is kept`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onPercentClick(25)
+
+            // Act
+            model.onAmountValueChange("0.3")
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("0.3"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee estimate WHEN amount above Max typed THEN field shows error and is not reduced`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Act
+            model.onAmountValueChange("2.005")
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError).isTrue()
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("2.005"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max before fee WHEN fee arrives THEN fee is estimated again for the set amount`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onMaxValueClick()
+            clearMocks(feeSelectorReloadTrigger, answers = false)
+
+            // Act
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate(any()) }
+            coVerify(exactly = 0) { feeSelectorReloadTrigger.triggerLoadingState() }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount WHEN fee leaves nothing to deposit THEN field shows error and amount is kept`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+            model.onAmountValueChange("1")
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("2.02"))
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError to model.state.value.enteredAmount).isEqualTo(true to BigDecimal("1"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fiat Max WHEN the same fee arrives again THEN Max stays valid and exact`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.000333"))
+            advanceUntilIdle()
+            model.onCurrencyChangeClick(isFiat = true)
+            model.onMaxValueClick()
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("0.000333"))
+            advanceUntilIdle()
+
+            // Assert
+            val field = (model.state.value.amountState as AmountState.Data).amountTextField
+            assertThat(field.isError to model.state.value.enteredAmount).isEqualTo(false to BigDecimal("2.009667"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max tapped before Max loads WHEN fee then Max arrive THEN Max is set and fee estimated again`() =
+            runTest {
+                // Arrange
+                coEvery { session.maxAmount(action = any()) } coAnswers {
+                    delay(MAX_AMOUNT_DELAY_MS)
+                    TEST_BALANCE.right()
+                }
+                val model = createModel(action = Deposit())
+                runCurrent()
+                model.onMaxValueClick()
+                model.onFeeResult(testFeeContent("0.01"))
+                runCurrent()
+                clearMocks(feeSelectorReloadTrigger, answers = false)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("2.00"))
+                coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate(any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN fee caps amount below minimum on confirm WHEN confirm pressed THEN nothing is prepared`() = runTest {
+            // Arrange
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returnsMany listOf(
+                EarnSessionError.BelowMinimum(BigDecimal("1.95")).left(),
+                TestPlan().right(),
+            )
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.001"))
+            advanceUntilIdle()
+            model.onAmountValueChange("1")
+            model.onSubmit()
+            advanceUntilIdle()
+            model.onAmountValueChange("2")
+            model.onSubmit()
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.07"))
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.07"))
+            advanceUntilIdle()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.confirm.value?.primary?.isEnabled).isFalse()
+            coVerify(exactly = 2) { session.prepare(action = any(), amount = any(), fee = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount fits both fees WHEN fee rises THEN amount is kept`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+            model.onAmountValueChange("1")
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("0.02"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("1"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max WHEN fee rises on amount step THEN amount is capped to the new Max`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+            model.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+            model.onMaxValueClick()
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeResult(testFeeContent("0.02"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.enteredAmount).isEqualTo(BigDecimal("1.99"))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee not below balance WHEN Max THEN Max is zero with fee notice and no prepare`() =
             runTest {
                 // Arrange
                 val model = createModel(action = Deposit())
@@ -448,14 +743,15 @@ internal class EarnFlowModelTest {
 
                 // Assert
                 val amountUM = model.amount.value
-                assertThat(amountUM?.notifications).contains(NotificationUM.Error.TotalExceedsBalance)
+                assertThat(model.state.value.enteredAmount).isNull()
+                assertThat(amountUM?.notifications?.filterIsInstance<NotificationUM.Error.ExceedsBalance>()).hasSize(1)
                 assertThat(amountUM?.primary?.isEnabled).isFalse()
                 coVerify(exactly = 0) { session.prepare(action = any(), amount = any(), fee = any()) }
                 model.onDestroy()
             }
 
         @Test
-        fun `GIVEN Max deposited with fee A WHEN fee B on confirm THEN deduction is recalculated from entered amount`() =
+        fun `GIVEN Max deposited with fee A WHEN fee B on confirm THEN capped amount is prepared with fee B`() =
             runTest {
                 // Arrange
                 val model = createModel(action = Deposit())
@@ -475,7 +771,7 @@ internal class EarnFlowModelTest {
                     session.prepare(
                         action = Deposit(),
                         amount = EarnAmount.Exact(BigDecimal("2.009")),
-                        fee = EarnFeeSelection(testFee("0.001"), null),
+                        fee = testFeeSelection("0.001"),
                     )
                 }
                 assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
@@ -506,7 +802,7 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN Max WHEN fee on confirm exceeds balance THEN confirm is blocked`() = runTest {
+        fun `GIVEN Max WHEN fee on confirm exceeds balance THEN fee notice and confirm is blocked`() = runTest {
             // Arrange
             val model = createModel(action = Deposit())
             advanceUntilIdle()
@@ -522,10 +818,44 @@ internal class EarnFlowModelTest {
 
             // Assert
             val confirm = model.confirm.value
-            assertThat(confirm?.notifications?.filterIsInstance<NotificationUM.Error.TotalExceedsBalance>()).hasSize(1)
+            assertThat(confirm?.notifications?.filterIsInstance<NotificationUM.Error.ExceedsBalance>()).hasSize(1)
             assertThat(confirm?.primary?.isEnabled).isFalse()
+            assertThat(model.state.value.isPreparing).isFalse()
+            coVerify(exactly = 1) { session.prepare(action = any(), amount = any(), fee = any()) }
             model.onDestroy()
         }
+
+        @ParameterizedTest
+        @MethodSource("providePositionAmountModels")
+        fun `GIVEN amount from position WHEN submit THEN prepare and fee get the whole position only for the max`(
+            model: PositionAmountModel,
+        ) = runTest {
+            // Arrange
+            coEvery { session.loadFee(action = any(), amount = any()) } returns GetFeeError.UnknownError.left()
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Act
+            if (model.entered == null) flow.onMaxValueClick() else flow.onAmountValueChange(model.entered)
+            flow.loadFee()
+            flow.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            flow.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { session.loadFee(action = Withdraw(), amount = model.expected) }
+            coVerify(exactly = 1) {
+                session.prepare(action = Withdraw(), amount = model.expected, fee = testFeeSelection("0.00033"))
+            }
+            flow.onDestroy()
+        }
+
+        private fun providePositionAmountModels() = listOf(
+            PositionAmountModel(entered = null, expected = EarnAmount.Entire),
+            PositionAmountModel(entered = TEST_BALANCE.toPlainString(), expected = EarnAmount.Entire),
+            PositionAmountModel(entered = "0.5", expected = EarnAmount.Exact(BigDecimal("0.5"))),
+        )
 
         @Test
         fun `GIVEN amount from position WHEN fee arrives THEN subtraction use case is not asked`() = runTest {
@@ -542,6 +872,36 @@ internal class EarnFlowModelTest {
             coVerify(exactly = 0) {
                 isAmountSubtractAvailableUseCase.invoke(userWalletId = any(), currency = any(), maybeGaslessFee = any())
             }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee coin topped up WHEN account list updates THEN withdrawal fee warning disappears`() = runTest {
+            // Arrange
+            val accountStatusLists = MutableSharedFlow<AccountStatusList>(replay = 1)
+            every { singleAccountStatusListSupplier.invoke(testUserWalletId) } returns accountStatusLists
+            coEvery {
+                getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returnsMany listOf(testStatus(amount = BigDecimal("0.0001")).right(), testStatus().right())
+            accountStatusLists.emit(accountStatusList)
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+            model.onAmountValueChange("0.5")
+            model.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+            val warningsBeforeTopUp = model.amount.value?.notifications.orEmpty()
+                .filterIsInstance<NotificationUM.Error.ExceedsBalance>()
+
+            // Act
+            accountStatusLists.emit(accountStatusList)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(warningsBeforeTopUp).hasSize(1)
+            assertThat(
+                model.amount.value?.notifications.orEmpty().filterIsInstance<NotificationUM.Error.ExceedsBalance>(),
+            )
+                .isEmpty()
             model.onDestroy()
         }
     }
@@ -628,6 +988,28 @@ internal class EarnFlowModelTest {
             assertThat(model.amount.value?.notifications?.single())
                 .isInstanceOf(NotificationUM.Warning.NetworkFeeUnreachable::class.java)
             coVerify(exactly = 0) { session.prepare(action = any(), amount = any(), fee = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fast fee picked from choosable levels WHEN fee result THEN fee selection reports Max`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            val slow = testFee("0.0001")
+            val market = testFee("0.0002")
+            val fast = testFee("0.0003")
+            val content = testFeeContent("0.0003").copy(
+                fees = TransactionFee.Choosable(minimum = slow, normal = market, priority = fast),
+                feeItems = persistentListOf(FeeItem.Slow(slow), FeeItem.Market(market), FeeItem.Fast(fast)),
+                selectedFeeItem = FeeItem.Fast(fast),
+            )
+
+            // Act
+            model.onFeeResult(content)
+
+            // Assert
+            assertThat(model.state.value.feeSelection)
+                .isEqualTo(EarnFeeSelection(fee = fast, extended = null, feeType = AnalyticsParam.FeeType.Max))
             model.onDestroy()
         }
 
@@ -825,6 +1207,31 @@ internal class EarnFlowModelTest {
             // Assert
             verify(exactly = 1) { callback.onFinished(EarnFlowExit.Done) }
             assertThat(model.state.value.signing).isEqualTo(EarnSigningState.Idle)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sent and result not ready WHEN confirm shown THEN it keeps the sent plan rows and amount`() =
+            runTest {
+            // Arrange
+            val row = EarnRow(label = stringReference("Current APY"), value = EarnValue.Text(stringReference("5.5%")))
+            val plan = TestPlan(rows = listOf(row))
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns plan.right()
+            coEvery { session.verify(plan = any()) } returns EarnVerification.Verified(TestVerifiedPlan(plan))
+            every { session.execute(plan = any()) } returns flow {
+                emit(EarnSigningStep.Sent(txRef))
+                awaitCancellation()
+            }
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.plan).isNull()
+            assertThat(model.confirm.value?.rows?.map { it.label }).containsExactly(row.label)
+            assertThat(model.confirm.value?.amountCrypto).isNotEqualTo(TextReference.EMPTY)
             model.onDestroy()
         }
 
@@ -1031,6 +1438,233 @@ internal class EarnFlowModelTest {
         }
     }
 
+    @Nested
+    inner class WalletAndResultDetails {
+
+        @Test
+        fun `GIVEN deposit WHEN created THEN amount names the source wallet`() = runTest {
+            // Act
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Assert
+            val amountState = model.amount.value?.amountState as AmountState.Data
+            assertThat(amountState.accountTitleUM).isInstanceOf(AccountTitleUM.Text::class.java)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN withdrawal WHEN created THEN no source and the product heads the balance row`() = runTest {
+            // Act
+            val model = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.amount.value?.isFromPosition).isTrue()
+            assertThat((model.amount.value?.amountState as AmountState.Data).tokenName).isEqualTo(testFlowProduct.title)
+            coVerify(exactly = 0) { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN card wallet WHEN confirm shown THEN primary carries the Tangem logo`() = runTest {
+            // Arrange
+            every { getUserWalletUseCase.invoke(testUserWalletId) } returns mockk<UserWallet.Cold> { every { name } returns "Wallet" }.right()
+
+            // Act
+            val model = createConfirmedModel()
+
+            // Assert
+            assertThat(model.confirm.value?.primary?.tangemIconUM).isNotNull()
+            assertThat(model.confirm.value?.isHoldToConfirm).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN mobile wallet WHEN confirm shown THEN the action is held to confirm without the logo`() = runTest {
+            // Act
+            val model = createConfirmedModel()
+
+            // Assert
+            assertThat(model.confirm.value?.isHoldToConfirm).isTrue()
+            assertThat(model.confirm.value?.primary?.tangemIconUM).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN result without subtitle WHEN result shown THEN flow adds amount and date`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            val subtitle = model.result.value?.subtitle
+            assertThat(subtitle).isInstanceOf(TextReference.Combined::class.java)
+            assertThat(model.state.value.sentAmount).isEqualTo(TestPlan().expectedAmount)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two sent transactions WHEN result shown THEN the plan amount is kept`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Done(txRef, testResult()),
+            )
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.sentAmount).isEqualTo(TestPlan().expectedAmount)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN partly sent attempt failed WHEN retried with new amount THEN result keeps the retry amount`() =
+            runTest {
+                // Arrange
+                val retryPlan = TestPlan(expectedAmount = BigDecimal("0.8"))
+                coEvery { session.verify(plan = any()) } answers {
+                    EarnVerification.Verified(TestVerifiedPlan(firstArg()))
+                }
+                every { session.execute(plan = any()) } returnsMany listOf(
+                    flowOf(
+                        EarnSigningStep.Sent(txRef),
+                        EarnSigningStep.Failed(SendTransactionError.UserCancelledError),
+                    ),
+                    flowOf(EarnSigningStep.Sent(txRef), EarnSigningStep.Done(txRef, testResult())),
+                )
+                val model = createConfirmedModel()
+                model.onConfirmClick()
+                advanceUntilIdle()
+                coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns retryPlan.right()
+
+                // Act
+                model.onConfirmClick()
+                advanceUntilIdle()
+                model.onConfirmClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.sentAmount).isEqualTo(retryPlan.expectedAmount)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN result with subtitle WHEN result shown THEN product subtitle kept`() = runTest {
+            // Arrange
+            val subtitle = stringReference("Now earning")
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Done(txRef, testResult().copy(subtitle = subtitle)),
+            )
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.result.value?.subtitle).isEqualTo(subtitle)
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class Explorer {
+
+        @Test
+        fun `GIVEN result with explorer WHEN result shown THEN explorer opens the tx link`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Sent(txRef),
+                EarnSigningStep.Done(txRef, testResult().copy(isExplorerShown = true)),
+            )
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+            model.result.value?.explorer?.onExploreClick?.invoke()
+
+            // Assert
+            verify(exactly = 1) { getExplorerTransactionUrlUseCase.invoke(txHash = txRef.id, currency = testEthereum) }
+            verify(exactly = 1) { urlOpener.openUrl(TEST_EXPLORER_URL) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN result without explorer WHEN result shown THEN no link is built`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.result.value?.explorer).isNull()
+            verify(exactly = 0) { getExplorerTransactionUrlUseCase.invoke(txHash = any(), currency = any()) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class HowItWorks {
+
+        @Test
+        fun `GIVEN product with how it works WHEN info pressed THEN sheet shown`() = runTest {
+            // Arrange
+            val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
+            advanceUntilIdle()
+
+            // Act
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Assert
+            assertThat(model.howItWorks.value?.title).isEqualTo(testHowItWorks.title)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sheet shown WHEN dismissed THEN sheet hidden`() = runTest {
+            // Arrange
+            val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
+            advanceUntilIdle()
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Act
+            model.onHowItWorksDismiss()
+
+            // Assert
+            assertThat(model.howItWorks.value).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sheet shown WHEN learn more pressed THEN the link of its post is built and opened`() = runTest {
+            // Arrange
+            val model = createModel(flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks))
+            advanceUntilIdle()
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Act
+            model.howItWorks.value?.onLearnMoreClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(TEST_LEARN_MORE_URL) }
+            model.onDestroy()
+        }
+    }
+
     private suspend fun TestScope.createConfirmedModel(): EarnFlowModel {
         val model = createModel(action = Deposit())
         advanceUntilIdle()
@@ -1048,15 +1682,21 @@ internal class EarnFlowModelTest {
         factories: Map<String, EarnSession.Factory> = mapOf(
             testFlowProduct.productId.value to EarnSession.Factory { session },
         ),
+        flowProduct: EarnFlowProduct = testFlowProduct,
     ): EarnFlowModel = EarnFlowModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(testParams(action, callback)),
+        paramsContainer = MutableParamsContainer(testParams(action, callback).copy(flowProduct = flowProduct)),
         sessionFactories = EarnSessionFactories(factories),
         statuses = EarnFlowStatuses(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
             isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
+        ),
+        wallet = EarnFlowWallet(
+            getUserWalletUseCase = getUserWalletUseCase,
+            getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
+            isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
         ),
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         messageSender = messageSender,
@@ -1067,7 +1707,27 @@ internal class EarnFlowModelTest {
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         ),
+        links = EarnFlowLinks(
+            urlOpener = urlOpener,
+            shareManager = shareManager,
+            getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+            blogUrlBuilder = blogUrlBuilder,
+        ),
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
+
+    data class PercentModel(val percent: Int, val expected: String)
+
+    data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
 }
+
+private const val MAX_AMOUNT_DELAY_MS = 1_000L
+private const val TEST_EXPLORER_URL = "https://etherscan.io/tx/0xhash"
+private const val TEST_LEARN_MORE_URL = "https://tangem.com/blog/yield-mode"
+
+private val testHowItWorks = EarnHowItWorks(
+    title = stringReference("How it works"),
+    entries = listOf(EarnTextBlock(title = stringReference("Supply"), description = stringReference("Lend"))),
+    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
+)

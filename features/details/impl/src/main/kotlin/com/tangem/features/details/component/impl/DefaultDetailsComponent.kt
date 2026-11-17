@@ -1,5 +1,7 @@
 package com.tangem.features.details.component.impl
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -12,6 +14,8 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.model.DetailsModel
 import com.tangem.features.details.ui.DetailsScreen
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.introduction.AddWalletComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,6 +24,8 @@ internal class DefaultDetailsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: DetailsComponent.Params,
     userWalletListComponentFactory: UserWalletListComponent.Factory,
+    hotWalletFeatureToggles: HotWalletFeatureToggles,
+    addWalletComponentFactory: AddWalletComponent.Factory,
 ) : DetailsComponent, AppComponentContext by context {
 
     private val model: DetailsModel = getOrCreateModel(params)
@@ -30,17 +36,34 @@ internal class DefaultDetailsComponent @AssistedInject constructor(
 
     private val userWalletListComponent = userWalletListComponentFactory.create(
         context = child(key = "user_wallet_list_component"),
+        params = UserWalletListComponent.Params(onAddWalletSheetRequest = ::openAddWalletSheet),
     )
+
+    private val addWalletComponent: AddWalletComponent? = if (hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
+        addWalletComponentFactory.create(
+            context = child(key = "add_wallet"),
+            params = AddWalletComponent.Params(callbacks = userWalletListComponent.addWalletCallbacks),
+        )
+    } else {
+        null
+    }
+
+    private fun openAddWalletSheet() {
+        addWalletComponent?.open()
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        DetailsScreen(
-            modifier = modifier,
-            state = state,
-            userWalletListBlockContent = userWalletListComponent,
-        )
+        Box(modifier = modifier) {
+            DetailsScreen(
+                modifier = Modifier.fillMaxSize(),
+                state = state,
+                userWalletListBlockContent = userWalletListComponent,
+            )
+            addWalletComponent?.Content(modifier = Modifier.fillMaxSize())
+        }
     }
 
     @AssistedFactory

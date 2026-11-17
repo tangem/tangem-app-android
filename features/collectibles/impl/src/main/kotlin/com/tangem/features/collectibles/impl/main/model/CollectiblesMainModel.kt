@@ -111,6 +111,7 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var vaultStatus: CollectiblesVaultBalance? = null
 
+    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
     private var sessionKeyAddress: String? = null
 
     private var pendingPacks: List<CollectiblePendingPack> = emptyList()
@@ -177,7 +178,7 @@ internal class CollectiblesMainModel @Inject constructor(
         modelScope.launch { dismissCollectiblePendingPackUseCase(txId) }
     }
 
-    // TODO testing only, remove once Gasless pays the spin fee
+    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
     private fun loadSessionKey() {
         modelScope.launch {
             val key = sessionKey.getPublicKeyOrNull(AccountId.forCollectiblesAccount(params.userWalletId))
@@ -347,9 +348,8 @@ internal class CollectiblesMainModel @Inject constructor(
         )
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onCollectionClick() {
-        // TODO([REDACTED_TASK_KEY]): the collection screen is not built yet.
+        router.push(CollectiblesRoute.Inventory)
     }
 
     @Suppress("EmptyFunctionBlock")
@@ -367,6 +367,7 @@ internal class CollectiblesMainModel @Inject constructor(
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
     }
 
+    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
     private fun onSessionKeyClick() {
         onMenuDismiss()
         sessionKeyAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }

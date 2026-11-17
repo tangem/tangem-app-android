@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -7,6 +8,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
@@ -14,6 +16,8 @@ import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.CustomerName
+import com.tangem.domain.tangempay.repository.BankOfframpRepository
 import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
@@ -37,13 +41,16 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -53,7 +60,10 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
+    private val speiAvailability = BankWithdrawSpeiAvailability(moneyAccountFeatureToggles)
     private val onWithdrawSent: () -> Unit = mockk(relaxed = true)
+    private val bankOfframpRepository: BankOfframpRepository = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @BeforeEach
@@ -64,10 +74,115 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
             getTangemPayRegionsUseCase,
             analytics,
             onWithdrawSent,
+            bankOfframpRepository,
         )
-        coEvery { getBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns emptyList<BankAccount>().right()
         coEvery { getTangemPayCountriesUseCase() } returns emptyList<TangemPayCountry>().right()
         coEvery { getTangemPayRegionsUseCase(any()) } returns emptyList<TangemPayRegion>().right()
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
+        coEvery { bankOfframpRepository.getCustomerName(userWalletId) } returns PROFILE_NAME.right()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNameNeedModels")
+    fun `GIVEN entry and offered rails WHEN model created THEN only a new personal SPEI recipient loads the name`(
+        model: NameNeedModel,
+    ) {
+        // Act
+        val withdrawModel = createModel(model.entry, options = model.options)
+
+        // Assert
+        assertThat(withdrawModel.customerName.value).isEqualTo(model.expected)
+        coVerify(exactly = model.expectedRequests) { bankOfframpRepository.getCustomerName(any()) }
+        withdrawModel.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNameAnswerModels")
+    fun `GIVEN name answer WHEN loaded THEN a full name is trimmed and anything less is unreachable`(
+        model: NameAnswerModel,
+    ) {
+        // Arrange
+        coEvery { bankOfframpRepository.getCustomerName(userWalletId) } returns model.answer
+
+        // Act
+        val withdrawModel = createModel(BankWithdrawEntry.NewPersonal, options = SPEI_OPTIONS)
+
+        // Assert
+        assertThat(withdrawModel.customerName.value).isEqualTo(model.expected)
+        withdrawModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unreachable name WHEN retried THEN it is requested again and loads`() {
+        // Arrange
+        coEvery { bankOfframpRepository.getCustomerName(userWalletId) } returnsMany listOf(
+            BankOfframpError.Unknown(cause = null).left(),
+            PROFILE_NAME.right(),
+        )
+        val withdrawModel = createModel(BankWithdrawEntry.NewPersonal, options = SPEI_OPTIONS)
+
+        // Act
+        withdrawModel.onRetryCustomerName()
+
+        // Assert
+        assertThat(withdrawModel.customerName.value).isEqualTo(LOADED_NAME)
+        coVerify(exactly = 2) { bankOfframpRepository.getCustomerName(userWalletId) }
+        withdrawModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN name request pending WHEN opened and when retried THEN the name is loading until it answers`() {
+        // Arrange
+        val firstAnswer = CompletableDeferred<Either<BankOfframpError, CustomerName>>()
+        val secondAnswer = CompletableDeferred<Either<BankOfframpError, CustomerName>>()
+        val answers = ArrayDeque(listOf(firstAnswer, secondAnswer))
+        coEvery { bankOfframpRepository.getCustomerName(userWalletId) } coAnswers { answers.removeFirst().await() }
+        val withdrawModel = createModel(BankWithdrawEntry.NewPersonal, options = SPEI_OPTIONS)
+        val whileOpening = withdrawModel.customerName.value
+        firstAnswer.complete(BankOfframpError.Unknown(cause = null).left())
+
+        // Act
+        withdrawModel.onRetryCustomerName()
+        val whileRetrying = withdrawModel.customerName.value
+        secondAnswer.complete(PROFILE_NAME.right())
+
+        // Assert
+        assertThat(whileOpening).isEqualTo(CustomerNameState.Loading)
+        assertThat(whileRetrying).isEqualTo(CustomerNameState.Loading)
+        assertThat(withdrawModel.customerName.value).isEqualTo(LOADED_NAME)
+        withdrawModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN loaded name WHEN retried THEN nothing is requested again`() {
+        // Arrange
+        val withdrawModel = createModel(BankWithdrawEntry.NewPersonal, options = SPEI_OPTIONS)
+
+        // Act
+        withdrawModel.onRetryCustomerName()
+
+        // Assert
+        coVerify(exactly = 1) { bankOfframpRepository.getCustomerName(userWalletId) }
+        withdrawModel.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideLockedRecipientModels")
+    fun `GIVEN rail and name WHEN recipient values locked THEN only a SPEI recipient gets the loaded name`(
+        model: LockedRecipientModel,
+    ) {
+        // Arrange
+        coEvery { bankOfframpRepository.getCustomerName(userWalletId) } returns model.answer
+        val withdrawModel = createModel(BankWithdrawEntry.NewPersonal, options = SPEI_OPTIONS)
+        withdrawModel.onAmountConfirmed(achAmountResult().copy(destination = offrampDestination(rail = model.rail)))
+
+        // Act
+        val actual = withdrawModel.lockedRecipientValues()
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+        withdrawModel.onDestroy()
     }
 
     @Test
@@ -96,7 +211,7 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     fun `GIVEN saved entry WHEN model created THEN recipient loaded into draft`() {
         // Arrange
         val saved = bankAccount(id = "acc-2")
-        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(bankAccount(id = "acc-1"), saved).right()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(bankAccount(id = "acc-1"), saved).right()
 
         // Act
         val model = createModel(BankWithdrawEntry.Saved("acc-2"))
@@ -107,9 +222,24 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     }
 
     @Test
+    fun `GIVEN options without SPEI WHEN saved entry is a CLABE recipient THEN neither selected nor suggested`() {
+        // Arrange
+        val clabe = bankAccount(id = "acc-2", rail = BankRail.SPEI)
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(bankAccount(id = "acc-1"), clabe).right()
+
+        // Act
+        val model = createModel(BankWithdrawEntry.Saved("acc-2"))
+
+        // Assert
+        assertThat(model.draft.value.recipient).isNull()
+        assertThat(model.savedAccounts.value.map { it.id }).containsExactly("acc-1")
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN saved entry WHEN accounts fail THEN recipient stays null`() {
         // Arrange
-        coEvery { getBankAccountsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns BankOfframpError.Unknown(null).left()
 
         // Act
         val model = createModel(BankWithdrawEntry.Saved("acc-2"))
@@ -123,13 +253,13 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     fun `GIVEN new personal entry WHEN model created THEN saved accounts loaded once`() {
         // Arrange
         val accounts = listOf(bankAccount(id = "acc-1"), bankAccount(id = "acc-2"))
-        coEvery { getBankAccountsUseCase(userWalletId) } returns accounts.right()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns accounts.right()
 
         // Act
         val model = createModel(BankWithdrawEntry.NewPersonal)
 
         // Assert
-        coVerify(exactly = 1) { getBankAccountsUseCase(userWalletId) }
+        coVerify(exactly = 1) { getBankAccountsUseCase(userWalletId, any()) }
         assertThat(model.savedAccounts.value).containsExactlyElementsIn(accounts).inOrder()
         assertThat(model.draft.value).isEqualTo(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
         model.onDestroy()
@@ -138,7 +268,7 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     @Test
     fun `GIVEN accounts fail WHEN model created THEN saved accounts stay empty`() {
         // Arrange
-        coEvery { getBankAccountsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns BankOfframpError.Unknown(null).left()
 
         // Act
         val model = createModel(BankWithdrawEntry.NewPersonal)
@@ -287,6 +417,22 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
             ),
         )
         model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSpeiRecipientsModels")
+    fun `GIVEN source account and MXN toggle WHEN model created THEN CLABE recipients loaded only with SPEI`(
+        model: SpeiRecipientsModel,
+    ) {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns model.isMxnEnabled
+
+        // Act
+        val wizard = createModel(BankWithdrawEntry.NewPersonal, sourceAccount = model.sourceAccount)
+
+        // Assert
+        coVerify(exactly = 1) { getBankAccountsUseCase(userWalletId, model.expectedIncludeSpei) }
+        wizard.onDestroy()
     }
 
     @Test
@@ -497,7 +643,7 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     @Test
     fun `GIVEN saved entry WHEN model created THEN nothing prefetched`() {
         // Arrange
-        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(bankAccount(id = "acc-2")).right()
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns listOf(bankAccount(id = "acc-2")).right()
 
         // Act
         val model = createModel(BankWithdrawEntry.Saved("acc-2"))
@@ -551,6 +697,93 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
             displayNames = values.associate { (field, _) -> field to "" },
         )
 
+    private fun provideNameNeedModels() = listOf(
+        NameNeedModel(
+            entry = BankWithdrawEntry.NewPersonal,
+            options = SPEI_OPTIONS,
+            expected = LOADED_NAME,
+            expectedRequests = 1,
+        ),
+        NameNeedModel(
+            entry = BankWithdrawEntry.NewPersonal,
+            options = bankWithdrawOptions(),
+            expected = CustomerNameState.NotNeeded,
+            expectedRequests = 0,
+        ),
+        NameNeedModel(
+            entry = BankWithdrawEntry.NewBusiness,
+            options = SPEI_OPTIONS,
+            expected = CustomerNameState.NotNeeded,
+            expectedRequests = 0,
+        ),
+        NameNeedModel(
+            entry = BankWithdrawEntry.Saved(bankAccountId = "acc-1"),
+            options = SPEI_OPTIONS,
+            expected = CustomerNameState.NotNeeded,
+            expectedRequests = 0,
+        ),
+        NameNeedModel(
+            entry = BankWithdrawEntry.SeeAll,
+            options = SPEI_OPTIONS,
+            expected = CustomerNameState.NotNeeded,
+            expectedRequests = 0,
+        ),
+    )
+
+    data class NameNeedModel(
+        val entry: BankWithdrawEntry,
+        val options: BankWithdrawOptions,
+        val expected: CustomerNameState,
+        val expectedRequests: Int,
+    )
+
+    private fun provideNameAnswerModels() = listOf(
+        NameAnswerModel(
+            answer = CustomerName(firstName = " José ", lastName = "Hernández ").right(),
+            expected = LOADED_NAME,
+        ),
+        NameAnswerModel(
+            answer = CustomerName(firstName = "José", lastName = " ").right(),
+            expected = CustomerNameState.Unreachable,
+        ),
+        NameAnswerModel(
+            answer = CustomerName(firstName = null, lastName = "Hernández").right(),
+            expected = CustomerNameState.Unreachable,
+        ),
+        NameAnswerModel(
+            answer = BankOfframpError.Unknown(cause = null).left(),
+            expected = CustomerNameState.Unreachable,
+        ),
+    )
+
+    data class NameAnswerModel(
+        val answer: Either<BankOfframpError, CustomerName>,
+        val expected: CustomerNameState,
+    )
+
+    private fun provideLockedRecipientModels() = listOf(
+        LockedRecipientModel(
+            rail = BankRail.SPEI,
+            answer = PROFILE_NAME.right(),
+            expected = mapOf(
+                BankWithdrawFormField.FirstName to "José",
+                BankWithdrawFormField.LastName to "Hernández",
+            ),
+        ),
+        LockedRecipientModel(rail = BankRail.ACH, answer = PROFILE_NAME.right(), expected = emptyMap()),
+        LockedRecipientModel(
+            rail = BankRail.SPEI,
+            answer = BankOfframpError.Unknown(cause = null).left(),
+            expected = emptyMap(),
+        ),
+    )
+
+    data class LockedRecipientModel(
+        val rail: BankRail,
+        val answer: Either<BankOfframpError, CustomerName>,
+        val expected: Map<BankWithdrawFormField, String>,
+    )
+
     private fun achAmountResult() = BankWithdrawAmountResult(
         amount = BigDecimal("500"),
         source = bankWithdrawSource(),
@@ -561,12 +794,40 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     private fun wireDestination() =
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0)
 
-    private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
+    private fun provideSpeiRecipientsModels() = listOf(
+        SpeiRecipientsModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+            isMxnEnabled = true,
+            expectedIncludeSpei = true,
+        ),
+        SpeiRecipientsModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+            isMxnEnabled = false,
+            expectedIncludeSpei = false,
+        ),
+        SpeiRecipientsModel(
+            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+            isMxnEnabled = true,
+            expectedIncludeSpei = false,
+        ),
+    )
+
+    data class SpeiRecipientsModel(
+        val sourceAccount: BankWithdrawSourceAccount,
+        val isMxnEnabled: Boolean,
+        val expectedIncludeSpei: Boolean,
+    )
+
+    private fun createModel(
+        entry: BankWithdrawEntry,
+        sourceAccount: BankWithdrawSourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+        options: BankWithdrawOptions = bankWithdrawOptions(),
+    ): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawComponent.Params(
-                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+                sourceAccount = sourceAccount,
                 entry = entry,
-                options = MutableStateFlow(bankWithdrawOptions()),
+                options = MutableStateFlow(options),
                 onCloseFlow = {},
                 onWithdrawSent = onWithdrawSent,
             ),
@@ -575,6 +836,16 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
         getBankAccountsUseCase = getBankAccountsUseCase,
         getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
         getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,
+        speiAvailability = speiAvailability,
+        bankOfframpRepository = bankOfframpRepository,
         analytics = analytics,
     )
+
+    private companion object {
+        val PROFILE_NAME = CustomerName(firstName = "José", lastName = "Hernández")
+        val LOADED_NAME = CustomerNameState.Loaded(firstName = "José", lastName = "Hernández")
+        val SPEI_OPTIONS = bankWithdrawOptions(
+            destinations = listOf(offrampDestination(), offrampDestination(rail = BankRail.SPEI)),
+        )
+    }
 }

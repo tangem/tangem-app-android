@@ -8,6 +8,7 @@ import com.tangem.domain.jointaccount.model.JointOperationFetchResult
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.domain.wallets.usecase.GetWalletLinkStatusUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,15 +29,19 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class JointOperationPollerTest {
 
     private val repository: JointOperationHistoryRepository = mockk()
+    private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase = mockk()
     private val stored = MutableStateFlow<FinishedJointOperation?>(null)
+    private val isLinked = MutableStateFlow(true)
 
-    private val poller = JointOperationPoller(repository)
+    private val poller = JointOperationPoller(repository, getWalletLinkStatusUseCase)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository)
+        clearMocks(repository, getWalletLinkStatusUseCase)
         stored.value = null
+        isLinked.value = true
         every { repository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns stored
+        every { getWalletLinkStatusUseCase(USER_WALLET_ID) } returns isLinked
     }
 
     @Test
@@ -126,6 +131,55 @@ internal class JointOperationPollerTest {
         // Assert
         assertThat(polling.await()).isEqualTo(JointOperationPoller.End.GONE)
         coVerify(exactly = 2) { repository.fetchOperation(USER_WALLET_ID, OPERATION_ID) }
+    }
+
+    @Test
+    fun `GIVEN a wallet not linked to the device WHEN polled THEN nothing is fetched`() = runTest {
+        // Arrange
+        isLinked.value = false
+
+        // Act
+        val polling = backgroundScope.async { poller.poll(USER_WALLET_ID, OPERATION_ID) }
+        runCurrent()
+        advanceTimeBy(JointOperationPoller.POLL_INTERVAL * 3)
+
+        // Assert
+        assertThat(polling.isActive).isTrue()
+        coVerify(exactly = 0) { repository.fetchOperation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a wallet not linked WHEN it gets linked THEN polling resumes`() = runTest {
+        // Arrange
+        isLinked.value = false
+        coEvery { repository.fetchOperation(USER_WALLET_ID, OPERATION_ID) } returns
+            JointOperationFetchResult.Gone.right()
+        val polling = backgroundScope.async { poller.poll(USER_WALLET_ID, OPERATION_ID) }
+        runCurrent()
+
+        // Act
+        isLinked.value = true
+        runCurrent()
+
+        // Assert
+        assertThat(polling.await()).isEqualTo(JointOperationPoller.End.GONE)
+        coVerify(exactly = 1) { repository.fetchOperation(USER_WALLET_ID, OPERATION_ID) }
+    }
+
+    @Test
+    fun `GIVEN a polled operation WHEN the link is lost THEN the next fetch waits for it`() = runTest {
+        // Arrange
+        coEvery { repository.fetchOperation(USER_WALLET_ID, OPERATION_ID) } returns
+            JointOperationFetchResult.NotModified.right()
+        backgroundScope.async { poller.poll(USER_WALLET_ID, OPERATION_ID) }
+        runCurrent()
+
+        // Act
+        isLinked.value = false
+        advanceTimeBy(JointOperationPoller.POLL_INTERVAL * 3)
+
+        // Assert
+        coVerify(exactly = 1) { repository.fetchOperation(USER_WALLET_ID, OPERATION_ID) }
     }
 
     private companion object {

@@ -6,26 +6,28 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
 import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFlowAction
@@ -53,23 +55,26 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
  * Runs one [EarnFlowAction] of a product through its [EarnSession]: amount, confirmation and result. The flow knows
  * neither the product's transactions nor the number of signing rounds: those live in the session's `execute`.
  */
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 @ModelScoped
 internal class EarnFlowModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     sessionFactories: EarnSessionFactories,
     private val statuses: EarnFlowStatuses,
+    private val wallet: EarnFlowWallet,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val messageSender: UiMessageSender,
     private val converter: EarnFlowConverter,
     private val support: EarnFlowSupport,
+    private val links: EarnFlowLinks,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -97,23 +102,29 @@ internal class EarnFlowModel @Inject constructor(
             action = action,
             product = params.flowProduct,
             clickIntents = this,
-            amountCallbacks = EarnAmountCallbacks(onPercentClick = ::onPercentClick, onSubmit = ::onSubmit),
-            confirmCallbacks = EarnConfirmCallbacks(onInfoClick = ::showInfo, onConfirm = ::onConfirmClick),
-            resultCallbacks = EarnResultCallbacks(onInfoClick = ::showInfo, onExit = ::finish),
+            amountCallbacks = EarnAmountCallbacks(
+                onPercentClick = ::onPercentClick,
+                onSubmit = ::onSubmit,
+                onHowItWorksClick = ::onHowItWorksClick,
+            ),
+            confirmCallbacks = EarnConfirmCallbacks(
+                onInfoClick = ::showInfo,
+                onConfirm = ::onConfirmClick,
+                onLegalClick = links::open,
+            ),
+            resultCallbacks = EarnResultCallbacks(
+                onInfoClick = ::showInfo,
+                onExit = ::finish,
+                onExploreClick = links::open,
+                onShareClick = links::share,
+            ),
             onFeeReload = ::onFeeReload,
         )
     }
 
-    private val amountInput = EarnAmountInput(
-        clickIntents = this,
-        accountTitle = when (amountSource) {
-            EarnActionInput.Amount.Source.Position -> AccountTitleUM.Text(params.flowProduct.title)
-            else -> AccountTitleUM.Text(resourceReference(R.string.common_amount))
-        },
-    )
+    private val amountInput = EarnAmountInput(clickIntents = this)
 
     private var feeJob: Job? = null
-    private var feeStatusJob: Job? = null
     private var prepareJob: Job? = null
     private var executeJob: Job? = null
 
@@ -124,6 +135,9 @@ internal class EarnFlowModel @Inject constructor(
 
     val result: StateFlow<EarnResultUM?> = state.map(::toResultUM).stateIn(modelScope, SharingStarted.Eagerly, null)
 
+    val howItWorks: StateFlow<EarnHowItWorksUM?>
+        field = MutableStateFlow(null)
+
     init {
         if (foundSession == null) {
             TangemLogger.e("Earn flow: product ${params.flowProduct.productId} has no shared flow")
@@ -132,6 +146,21 @@ internal class EarnFlowModel @Inject constructor(
         } else {
             subscribeOnStatuses()
             if (amountSource != null) loadMaxAmount()
+            val userWallet = wallet.userWallet(params.product)
+            state.update { flowState ->
+                flowState.copy(
+                    walletIcon = userWallet?.let(::walletInterationIcon),
+                    isHoldToConfirm = userWallet?.isHotWallet == true,
+                )
+            }
+            if (amountSource == EarnActionInput.Amount.Source.Wallet) loadSource(userWallet)
+        }
+    }
+
+    private fun loadSource(userWallet: UserWallet?) {
+        modelScope.launch {
+            val source = wallet.source(params.product, userWallet)
+            state.update { it.copy(source = source) }
         }
     }
 
@@ -155,18 +184,26 @@ internal class EarnFlowModel @Inject constructor(
         feeJob = modelScope.launch {
             val isSubtractAvailable = amountSource == EarnActionInput.Amount.Source.Wallet &&
                 statuses.isAmountSubtractAvailable(params.product, selection)
-            state.update { it.copy(isAmountSubtractAvailable = isSubtractAvailable) }
+            val deduction = selection.fee.amount.value?.takeIf { isSubtractAvailable } ?: BigDecimal.ZERO
+            val enteredBefore = state.value.enteredAmount
+            state.update { current ->
+                val withSubtract = current.copy(isAmountSubtractAvailable = isSubtractAvailable)
+                if (amountSource != null) amountInput.withFeeDeduction(withSubtract, deduction) else withSubtract
+            }
 
             val current = state.value
+            if (!isSameAmount(current.enteredAmount, enteredBefore)) refreshFeeEstimate()
             if (current.step == EarnFlowStep.Confirm && !current.signing.isExecuting) prepare()
         }
     }
 
     override fun onAmountValueChange(value: String) {
+        state.update { it.copy(pendingSharePercent = null) }
         amountInput.change(state.value, value)?.let(::updateAmount)
     }
 
     override fun onMaxValueClick() {
+        if (deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) return
         amountInput.max(state.value)?.let(::updateAmount)
     }
 
@@ -184,7 +221,21 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onPercentClick(percent: Int) {
+        if (deferShareUntilFee(percent)) return
         amountInput.percent(state.value, percent)?.let(::updateAmount)
+    }
+
+    private fun isSameAmount(first: BigDecimal?, second: BigDecimal?): Boolean =
+        if (first == null || second == null) first == second else first.compareTo(second) == 0
+
+    /**
+     * A wallet Max leaves room for the fee, so a tap before the first fee estimate, the Max or the card is set once all
+     * of them are there.
+     */
+    private fun deferShareUntilFee(percent: Int): Boolean {
+        val isWaiting = amountSource == EarnActionInput.Amount.Source.Wallet && !amountInput.isShareReady(state.value)
+        if (isWaiting) state.update { it.copy(pendingSharePercent = percent) }
+        return isWaiting
     }
 
     fun onSubmit() {
@@ -198,6 +249,7 @@ internal class EarnFlowModel @Inject constructor(
     fun onConfirmClick() {
         val current = state.value
         if (current.signing.isExecuting || current.isPreparing || feeJob?.isActive == true) return
+        if (current.isAmountInvalid) return
         val plan = current.plan?.takeIf { current.isPlanCurrent } ?: return prepare()
 
         state.update { it.copy(signing = EarnSigningState(stepLabel = null, isExecuting = true)) }
@@ -219,7 +271,7 @@ internal class EarnFlowModel @Inject constructor(
             current.signing.isExecuting -> Unit
             current.step == EarnFlowStep.Confirm && amountSource != null -> {
                 prepareJob?.cancel()
-                state.update { it.copy(step = EarnFlowStep.Amount, plan = null, isPreparing = false) }
+                state.update { it.copy(step = EarnFlowStep.Amount, plan = null, sentPlan = null, isPreparing = false) }
                 navigation.pop()
             }
             else -> finish(EarnFlowExit.Done)
@@ -232,17 +284,21 @@ internal class EarnFlowModel @Inject constructor(
 
     fun onFeeReload() = modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
 
+    fun onHowItWorksDismiss() {
+        howItWorks.value = null
+    }
+
+    private fun onHowItWorksClick() {
+        val content = params.flowProduct.howItWorks ?: return
+        howItWorks.value = content.toUM(onLearnMoreClick = { post -> modelScope.launch { links.openBlogPost(post) } })
+    }
+
     private fun subscribeOnStatuses() {
         statuses.currency(params.product)
-            .onEach { status ->
-                updateWithInitialAmount { it.copy(status = status) }
-                if (feeStatusJob == null && status.value !is CryptoCurrencyStatus.Loading) {
-                    feeStatusJob = modelScope.launch {
-                        val feeStatus = statuses.feeCurrency(params.product, status)
-                        state.update { it.copy(feeStatus = feeStatus) }
-                    }
-                }
-            }
+            .onEach { status -> updateWithInitialAmount { it.copy(status = status) } }
+            .launchIn(modelScope)
+        statuses.feeCurrency(params.product)
+            .onEach { feeStatus -> state.update { it.copy(feeStatus = feeStatus) } }
             .launchIn(modelScope)
         statuses.appCurrency()
             .onEach { appCurrency -> updateWithInitialAmount { it.copy(appCurrency = appCurrency) } }
@@ -269,17 +325,28 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     /** The amount card leaves its shimmer once balance, currency status and app currency are all known. */
+    /** A Max or percent tap waiting for the card is set here, so the fee is estimated again for that amount. */
     private fun updateWithInitialAmount(transform: (EarnFlowState) -> EarnFlowState) {
+        val enteredBefore = state.value.enteredAmount
         state.update { current ->
             val updated = transform(current)
             if (amountSource != null) amountInput.withInitial(updated) else updated
         }
+        if (!isSameAmount(state.value.enteredAmount, enteredBefore)) refreshFeeEstimate()
     }
 
     private fun updateAmount(amountState: AmountState) {
         prepareJob?.cancel()
         state.update { it.copy(amountState = amountState, isPreparing = false) }
         reloadFee()
+    }
+
+    /**
+     * The fee moved the amount, and the estimate follows it. Without the loading state the selector keeps the picked
+     * speed, custom fee and nonce; the amount already fits with the selected fee, so nothing waits for the estimate.
+     */
+    private fun refreshFeeEstimate() {
+        modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
     }
 
     private fun reloadFee() {
@@ -289,23 +356,42 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
-    private fun enteredSessionAmount(): EarnAmount? = state.value.enteredAmount?.let(EarnAmount::Exact)
+    private fun enteredSessionAmount(): EarnAmount? {
+        val current = state.value
+        return current.enteredAmount?.let { current.toSessionAmount(it) }
+    }
 
+    /**
+     * A position keeps accruing interest after [EarnFlowState.maxAmount] was read, so an exact max would fall short of
+     * it by the time the transaction is built and leave dust behind. The session resolves [EarnAmount.Entire] from
+     * its fresh state instead. A wallet max stays exact: the flow deducts the fee from it, the session does not.
+     */
+    private fun EarnFlowState.toSessionAmount(amount: BigDecimal): EarnAmount {
+        val max = maxAmount
+        val isEntirePosition = amountSource == EarnActionInput.Amount.Source.Position && max != null && amount >= max
+        return if (isEntirePosition) EarnAmount.Entire else EarnAmount.Exact(amount)
+    }
+
+    /** A fee that moved the amount out of its limits leaves nothing to prepare: the amount step fixes it */
     private fun prepare(onPrepared: () -> Unit = {}) {
         val current = state.value
+        if (current.isAmountInvalid) {
+            state.update { it.copy(isPreparing = false) }
+            return
+        }
         val selection = current.feeSelection ?: return
-        val amount = if (amountSource != null) EarnAmount.Exact(current.sendingAmount ?: return) else null
+        val amount = if (amountSource != null) current.toSessionAmount(current.sendingAmount ?: return) else null
 
         prepareJob?.cancel()
         state.update { it.copy(isPreparing = true) }
         prepareJob = modelScope.launch {
             session.prepare(action, amount, selection).fold(
                 ifLeft = { error ->
-                    state.update { it.copy(plan = null, planFee = null, isPreparing = false) }
+                    state.update { it.copy(plan = null, planFee = null, sentPlan = null, isPreparing = false) }
                     onPrepareFailed(error)
                 },
                 ifRight = { plan ->
-                    state.update { it.copy(plan = plan, planFee = selection, isPreparing = false) }
+                    state.update { it.copy(plan = plan, planFee = selection, sentPlan = null, isPreparing = false) }
                     onPrepared()
                 },
             )
@@ -343,6 +429,8 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun execute(plan: VerifiedPlan) {
         executeJob?.cancel()
+        // Taken from this execution: a retry after a partly sent attempt may carry a different amount.
+        val expectedAmount = plan.plan.expectedAmount
         executeJob = session.execute(plan)
             .onEach { step ->
                 when (step) {
@@ -350,7 +438,9 @@ internal class EarnFlowModel @Inject constructor(
                         it.copy(signing = EarnSigningState(stepLabel = step.stepLabel, isExecuting = true))
                     }
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
-                    is EarnSigningStep.Sent -> state.update { it.copy(plan = null, planFee = null) }
+                    is EarnSigningStep.Sent -> state.update {
+                        it.copy(plan = null, planFee = null, sentAmount = expectedAmount, sentPlan = plan.plan)
+                    }
                     is EarnSigningStep.Done -> showResult(step)
                     is EarnSigningStep.Failed -> onSigningFailed(step.error)
                 }
@@ -380,7 +470,13 @@ internal class EarnFlowModel @Inject constructor(
             current.copy(
                 signing = EarnSigningState.Idle,
                 result = done.result,
+                resultTimestamp = System.currentTimeMillis(),
                 txStatus = EarnTxStatus(TxInfo.TransactionStatus.Unconfirmed),
+                explorerUrl = if (done.result.isExplorerShown) {
+                    links.explorerUrl(done.ref, params.product.currency)
+                } else {
+                    null
+                },
             )
         }
         moveTo(EarnFlowStep.Result)

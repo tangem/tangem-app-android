@@ -5,6 +5,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.impl.di.EarnSupplierModule
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.core.getEmittedValues

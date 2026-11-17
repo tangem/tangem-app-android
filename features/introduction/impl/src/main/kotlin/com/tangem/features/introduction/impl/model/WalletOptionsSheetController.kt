@@ -53,6 +53,10 @@ internal abstract class WalletOptionsSheetController(
     /** Reported when the viewer leaves the options step without picking a row */
     protected abstract val optionsSheet: IntroductionProcess.SheetDismissed.Sheet
 
+    protected open val importAnalyticsSource: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.ImportWallet
+
+    protected open val isSelectedWalletUnrelated: Boolean = false
+
     private var cloudResolveJob: Job? = null
 
     val isShown: Boolean get() = host.haveWalletSheetConfig?.isShown == true
@@ -81,7 +85,10 @@ internal abstract class WalletOptionsSheetController(
 
     protected fun openImportStep() {
         analyticsEventHandler.send(
-            OnboardingAnalyticsEvent.Backup.ImportWalletRequest(cloudBackup = cloudBackupAvailability()),
+            OnboardingAnalyticsEvent.Backup.ImportWalletRequest(
+                cloudBackup = cloudBackupAvailability(),
+                isSelectedWalletUnrelated = isSelectedWalletUnrelated,
+            ),
         )
         showStep { importStep(isCloudLoading = false) }
     }
@@ -170,6 +177,7 @@ internal abstract class WalletOptionsSheetController(
             AppRoute.AddExistingWallet(
                 mode = mode,
                 shouldSendOnboardingStarted = true,
+                analyticsSource = importAnalyticsSource,
             ),
         )
     }

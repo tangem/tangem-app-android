@@ -143,13 +143,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
         )
     }
 
-    override suspend fun clearOrderId(customerWalletAddress: String) {
-        appPreferencesStore.editData { preferences ->
-            preferences[spendPreferencesKeys.getOrderIdKey(customerWalletAddress)] = ""
-            preferences.remove(spendPreferencesKeys.getCampaignOrderKey(customerWalletAddress))
-        }
-    }
-
     override suspend fun storeVirtualAccountOrderId(customerWalletAddress: String, vaOrderId: String) {
         appPreferencesStore.store(
             key = spendPreferencesKeys.getVirtualAccountOrderIdKey(customerWalletAddress),

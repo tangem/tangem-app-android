@@ -14,7 +14,6 @@ import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -22,7 +21,6 @@ import com.tangem.utils.logging.TangemLogger
  * service, which co-signs and broadcasts it. Returns the on-chain signature.
  */
 class CreateAndSendSolanaGaslessTransactionUseCase(
-    private val walletManagersFacade: WalletManagersFacade,
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val gaslessSignerProvider: GaslessSignerProvider,
@@ -38,12 +36,13 @@ class CreateAndSendSolanaGaslessTransactionUseCase(
             ?: raise(SendTransactionError.DataError("Solana gasless send called without a fee payer"))
         val network = sponsorship.network
         val signed = when (
-            val result = walletManagersFacade.signSolanaGaslessTransaction(
+            val result = solanaGaslessTransactionRepository.sign(
                 userWalletId = userWallet.walletId,
                 network = network,
                 transactionData = transactionData,
                 feePayer = sponsorship.feePayer,
                 signer = gaslessSignerProvider(userWallet),
+                sponsorsRent = sponsorship.isRentSponsored,
             )
         ) {
             is Result.Success -> result.data

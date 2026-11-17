@@ -38,20 +38,6 @@ internal class StakingBalanceContributionTest {
     }
 
     @Test
-    fun `GIVEN any staking data WHEN kind THEN it is the staking kind owned by this module`() {
-        // Arrange
-        val balance = stakeKit(items = listOf(balanceItem(amount = 1, type = BalanceType.STAKED)))
-
-        // Act
-        val actual = balance.kind
-
-        // Assert — the literal, not the constant: comparing the constant to itself can never fail, and `kind` is
-        // the cross-module discriminator, so its value is part of the contract
-        Truth.assertThat(actual).isEqualTo("staking")
-        Truth.assertThat(StakingBalance.CONTRIBUTION_KIND).isEqualTo("staking")
-    }
-
-    @Test
     fun `GIVEN cached staking data WHEN source THEN the balance source is exposed as the contribution source`() {
         // Arrange
         val balance = stakeKit(

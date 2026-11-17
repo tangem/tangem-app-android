@@ -80,6 +80,7 @@ internal class TangemPayBankWithdrawComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawRecipientsComponent.Params(
                 sourceAccount = params.sourceAccount,
+                options = params.options,
                 onRecipientSelected = { account ->
                     model.onRecipientSelected(account)
                     pushNext(from = config)
@@ -110,6 +111,7 @@ internal class TangemPayBankWithdrawComponent(
             step = config,
             componentContext = componentContext,
             fields = recipientFields(),
+            lockedValues = model.lockedRecipientValues(),
             returnToPreview = false,
         )
         TangemPayBankWithdrawInnerRoute.BankDetails -> formChild(
@@ -154,6 +156,7 @@ internal class TangemPayBankWithdrawComponent(
             step = step,
             componentContext = componentContext,
             fields = recipientFields(),
+            lockedValues = model.lockedRecipientValues(),
             returnToPreview = true,
         )
         BankWithdrawEditTarget.BankDetails -> formChild(
@@ -174,12 +177,14 @@ internal class TangemPayBankWithdrawComponent(
             sourceAccount = params.sourceAccount,
             draft = model.draft,
             options = params.options,
+            customerName = model.customerName,
             step = step,
             onContinue = { result ->
                 model.onAmountConfirmed(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
             onCloseFlow = params.onCloseFlow,
+            onRetryCustomerName = model::onRetryCustomerName,
         ),
     )
 
@@ -208,6 +213,7 @@ internal class TangemPayBankWithdrawComponent(
         componentContext: ComponentContext,
         fields: ImmutableList<BankWithdrawFormField>,
         returnToPreview: Boolean,
+        lockedValues: Map<BankWithdrawFormField, String> = emptyMap(),
     ): ComposableContentComponent = TangemPayBankWithdrawFormComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = TangemPayBankWithdrawFormComponent.Params(
@@ -215,6 +221,7 @@ internal class TangemPayBankWithdrawComponent(
             draft = model.draft,
             step = step,
             fields = fields,
+            lockedValues = lockedValues,
             savedAccounts = model.savedAccounts,
             onBack = model::onDetailsFilled,
             onContinue = { result ->
@@ -234,6 +241,7 @@ internal class TangemPayBankWithdrawComponent(
 
     private fun recipientFields(): ImmutableList<BankWithdrawFormField> = BankWithdrawFormFields.recipientDetails(
         isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
+        rail = model.draft.value.destination?.rail,
     )
 
     private fun onOrderSigned() {

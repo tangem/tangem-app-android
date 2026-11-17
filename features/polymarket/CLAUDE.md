@@ -22,7 +22,9 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
 
 ## Entry gate
 
-- Opening the gate prompts for nothing — no NFC, no biometrics (domain invariant 1).
+- Opening the gate prompts for nothing — no NFC, no biometrics (domain invariant 1) — except the device-link sheet
+  for a wallet known to be unlinked; a scan or unlock happens only on a tap there, and dismissing it closes the feature.
+- Main repeats the link check on open and closes the feature on refusal; actions inside the feature don't ask.
 - `Undetermined` is not "no account": a wallet onboarded on another device lands on Welcome too, and Start finds
   its account. Don't add copy that says "create".
 - `READ_ONLY` means a region restriction; such users still reach Main, browse and withdraw. Reuse it for another
@@ -41,9 +43,11 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
 
 ## Order flow
 
-- Two flows, chosen once per opening by `isPolymarketPhaseTwoEnabled`: single-step Order, or legacy
+- Two flows, chosen once per opening by `isPolymarketFastOrdersEnabled` (`TWI_1881_POLYMARKET_FAST_ORDERS_ENABLED`, also gates session keys): single-step Order, or legacy
   Amount → Summary. The quote engine, the submitter and the result screen are shared, so a change there reaches
   both flows.
+- The button shows the signer: the card/hold button signs with the owner only, the plain one with the session key
+  only. A plain button that cannot sign falls back to the owner button and signs nothing.
 - Signing uses the `PreparedPrediction` frozen at the tap, never the live screen: nothing may requote or reload
   the position under the signature, NFC pause/resume included.
 - A quote older than 30 s at the tap is refused, as on iOS.

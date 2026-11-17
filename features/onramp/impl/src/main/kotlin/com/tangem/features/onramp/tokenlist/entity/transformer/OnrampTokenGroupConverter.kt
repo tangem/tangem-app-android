@@ -106,11 +106,11 @@ internal class OnrampTokenGroupConverter(
     private fun toRow(currency: AccountCurrencyUM): OnrampTokenRowUM {
         val status = currency.cryptoCurrencyStatus
         return if (currency.isAvailable) {
-            // TODO [REDACTED_TASK_KEY] Show the ticker instead of the price once TangemTokenRow supports a text subtitle
             OnrampTokenRowUM.Available(
                 state = tokenRowStateConverter.convert(
                     currencyStatus = status,
                     onClick = { onItemClick(legacyItemConverter.convert(status), status) },
+                    subtitle = stringReference(status.currency.symbol),
                 ),
             )
         } else {

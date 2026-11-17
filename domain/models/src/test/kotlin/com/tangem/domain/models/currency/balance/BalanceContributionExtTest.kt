@@ -153,14 +153,12 @@ internal class BalanceContributionExtTest {
 /** Two unrelated implementations, so [contributionOrNull] has something to select *between*. */
 private data class Alpha(val id: String = "alpha", val delta: Int = 0) : BalanceContribution {
 
-    override val kind: String = "alpha"
     override val source: StatusSource = StatusSource.ACTUAL
     override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal(delta)
 }
 
 private data class Beta(val id: String = "beta", val delta: Int = 0) : BalanceContribution {
 
-    override val kind: String = "beta"
     override val source: StatusSource = StatusSource.ACTUAL
     override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal(delta)
 }

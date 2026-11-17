@@ -14,7 +14,10 @@ sealed interface PolymarketSessionKeyProgress {
 
     data class CheckingReadiness(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyProgress
 
-    /** @property result the key as the operation left it: `ACTIVE` and ready, or `REVOKED` after a revocation */
+    /**
+     * @property result the key as the operation left it: `ACTIVE` (ready only once Polymarket lists it), or `REVOKED`
+     * after a revocation
+     */
     data class Finished(
         val result: Either<PolymarketSessionKeyLifecycleError, PolymarketSessionKey>,
     ) : PolymarketSessionKeyProgress
@@ -44,6 +47,4 @@ sealed interface PolymarketSessionKeyLifecycleError : PolymarketError {
     ) : PolymarketSessionKeyLifecycleError
 
     data class OwnerCredentialsUnavailable(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
-
-    data class NotListedOnExchange(val sessionKey: PolymarketSessionKey) : PolymarketSessionKeyLifecycleError
 }

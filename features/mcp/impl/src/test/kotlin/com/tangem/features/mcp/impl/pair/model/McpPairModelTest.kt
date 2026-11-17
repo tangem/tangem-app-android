@@ -503,8 +503,6 @@ internal class McpPairModelTest {
         }
     }
 
-    /** [GetSelectedWalletSyncUseCase.invoke] is deprecated, but the pairing deep link carries no wallet. */
-    @Suppress("DEPRECATION")
     private fun MockKMatcherScope.selectedWalletOfTheApp() = getSelectedWalletSyncUseCase()
 
     private fun MockKMatcherScope.needsSyncAlert() = match<DialogMessage> { dialog ->

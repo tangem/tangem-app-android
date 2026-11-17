@@ -14,10 +14,10 @@ import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionCredentials
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
+import com.tangem.data.polymarket.store.DefaultPolymarketFastTradingBannerStore
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
-import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
 import com.tangem.data.polymarket.store.DefaultPolymarketSessionKeyTradingStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
@@ -28,6 +28,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
@@ -121,6 +122,31 @@ internal object PolymarketStorageModule {
 
     @Provides
     @Singleton
+    fun providePolymarketFastTradingBannerStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PolymarketFastTradingBannerStore {
+        return DefaultPolymarketFastTradingBannerStore(
+            dataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = MapSerializer(
+                            keySerializer = String.serializer(),
+                            valueSerializer = Long.serializer(),
+                        ),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "polymarket_fast_trading_banner_dismissals") },
+                scope = scope,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
     fun providePredictionWithdrawalStore(
         @ApplicationContext context: Context,
         scope: AppCoroutineScope,
@@ -165,25 +191,8 @@ internal object PolymarketStorageModule {
 
     @Provides
     @Singleton
-    fun providePolymarketSessionKeyTradingStore(
-        @ApplicationContext context: Context,
-        scope: AppCoroutineScope,
-        dataStoreFactory: AppDataStoreFactory,
-    ): PolymarketSessionKeyTradingStore {
-        return DefaultPolymarketSessionKeyTradingStore(
-            readinessDataStore = dataStoreFactory.create(
-                serializer = KotlinxDataStoreSerializer(
-                    defaultValue = emptyMap(),
-                    serializer = MapSerializer(
-                        keySerializer = String.serializer(),
-                        valueSerializer = PolymarketSessionKeyReadinessDTO.serializer(),
-                    ),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "polymarket_session_key_readiness") },
-                scope = scope,
-            ),
-        )
-    }
+    fun providePolymarketSessionKeyTradingStore(): PolymarketSessionKeyTradingStore =
+        DefaultPolymarketSessionKeyTradingStore()
 
     @SuppressLint("HardwareIds")
     @Provides

@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -14,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.retryer.Retryer
 import com.tangem.utils.retryer.RetryerPool
@@ -29,6 +31,8 @@ class UserTokensSaver(
     private val pushTokensRetryerPool: RetryerPool,
     private val walletAccountsETags: WalletAccountsETags,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val walletTokensLocalStore: WalletTokensLocalStore,
+    private val supportedAccountTypes: SupportedAccountTypes,
 ) {
 
     suspend fun push(
@@ -126,8 +130,10 @@ class UserTokensSaver(
     ) {
         safeApiCall(
             call = {
-                val accountsResponse = tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
-                storeETag(userWalletId = userWalletId, apiResponse = accountsResponse)
+                val accountsResponse = tangemTechApi.getWalletAccountsV2(
+                    walletId = userWalletId.stringValue,
+                    supportedAccountTypes = supportedAccountTypes.query,
+                )
 
                 // The raw response carries no accountId on the tokens — it is implied by the owning account,
                 // the same way DefaultWalletAccountsFetcher enriches it after every GET
@@ -139,10 +145,16 @@ class UserTokensSaver(
                 // Token.equals compares the identity fields (network, derivation, contract), which is exactly
                 // the dedup key here: our push stays authoritative, remote-only tokens are appended
                 val pushedTokens = response.tokens.toSet()
-                val merged = response.copy(
-                    tokens = response.tokens + remoteTokens.filterNot { it in pushedTokens },
-                )
+                val remoteOnlyTokens = remoteTokens.filterNot { it in pushedTokens }
+                val merged = response.copy(tokens = response.tokens + remoteOnlyTokens)
 
+                if (remoteOnlyTokens.isNotEmpty()) {
+                    runSuspendCatching {
+                        walletTokensLocalStore.addRemoteTokens(userWalletId = userWalletId, tokens = remoteOnlyTokens)
+                    }.getOrElse { raise(ApiResponseError.UnknownException(it)) }
+                }
+
+                storeETag(userWalletId = userWalletId, apiResponse = accountsResponse)
                 saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
             },
             onError = { error ->

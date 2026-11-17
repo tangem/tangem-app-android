@@ -234,7 +234,6 @@ internal class YieldSupplyContributionExtTest {
     }
 
     private object OtherContribution : BalanceContribution {
-        override val kind: String = "other"
         override val source: StatusSource = StatusSource.CACHE
         override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal.ZERO
     }

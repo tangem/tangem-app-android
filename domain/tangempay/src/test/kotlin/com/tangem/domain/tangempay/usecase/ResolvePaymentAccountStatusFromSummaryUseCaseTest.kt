@@ -22,6 +22,7 @@ import com.tangem.domain.tangempay.model.CustomerSummary.CustomerStatus
 import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -45,6 +46,7 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase = mockk()
     private val paymentAccountStatusCache: PaymentAccountStatusCache = mockk()
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val useCase = ResolvePaymentAccountStatusFromSummaryUseCase(
         onboardingRepository = onboardingRepository,
@@ -52,6 +54,7 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
         tangemPayCurrencyFactory = tangemPayCurrencyFactory,
         getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
         paymentAccountStatusCache = paymentAccountStatusCache,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -65,7 +68,9 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
             tangemPayCurrencyFactory,
             getTangemPayFiatRateUseCase,
             paymentAccountStatusCache,
+            tangemPayFeatureToggles,
         )
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns residency
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns TangemPayApiError.Unspecified.left()
         coEvery { paymentAccountStatusCache.getSyncOrNull(userWalletId) } returns null
@@ -79,6 +84,25 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN toggle off AND active customer with kyc in progress WHEN invoke THEN under review`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
+        val summary = summary(customerStatus = CustomerStatus.ACTIVE, kycStatus = SummaryKycStatus.IN_PROGRESS)
+
+        // Act
+        val actual = useCase(userWalletId = userWalletId, summary = summary)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PaymentAccountStatusValue.UnderReview(
+                source = StatusSource.ACTUAL,
+                kycStatus = KycStatus.PENDING,
+                customerId = CUSTOMER_ID,
+            ),
+        )
     }
 
     @Suppress("LongMethod")
@@ -99,6 +123,34 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
                 customerStatus = CustomerStatus.FORMER,
                 kycStatus = SummaryKycStatus.APPROVED,
                 payment = PaymentAccount.Activation.Status.COMPLETED,
+            ),
+            expected = null,
+        ),
+        ResolveModel(
+            name = "active customer with kyc in progress and completed account requires full fetch",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                payment = PaymentAccount.Activation.Status.COMPLETED,
+            ),
+            expected = null,
+        ),
+        ResolveModel(
+            name = "cdd: money only customer has no payment tile",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                payment = PaymentAccount.Activation.Status.NOT_STARTED,
+                banking = MoneyAccount.Activation.Status.COMPLETED,
+            ),
+            expected = PaymentAccountStatusValue.Empty,
+        ),
+        ResolveModel(
+            name = "cdd: payment issuing requires full fetch",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                payment = PaymentAccount.Activation.Status.PROCESSING,
             ),
             expected = null,
         ),
@@ -171,6 +223,37 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
                 payment = PaymentAccount.Activation.Status.FAILED,
                 paymentStep = PaymentAccount.Activation.Step.ISSUING,
                 paymentFailureReason = PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
+            ),
+            expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
+        ),
+        ResolveModel(
+            name = "deposit timeout returns to verified",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
+            ),
+            expected = verified(),
+        ),
+        ResolveModel(
+            name = "deposit timeout with completed money account returns to verified",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
+                banking = MoneyAccount.Activation.Status.COMPLETED,
+            ),
+            expected = verified(),
+        ),
+        ResolveModel(
+            name = "technical failure shows card issue failure",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.ISSUING,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.TECHNICAL,
             ),
             expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
         ),

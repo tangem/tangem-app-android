@@ -7,11 +7,11 @@ import arrow.core.Either
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -691,6 +691,7 @@ class PromoDeeplinkHandlerTest {
         queryParams = queryParams,
         scope = this,
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 
     private fun runActivationErrorCase(

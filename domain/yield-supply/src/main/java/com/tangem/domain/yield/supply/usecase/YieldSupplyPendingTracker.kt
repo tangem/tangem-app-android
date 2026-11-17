@@ -1,5 +1,6 @@
 package com.tangem.domain.yield.supply.usecase
 
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -27,7 +28,8 @@ import java.util.concurrent.ConcurrentHashMap
  * - The checker runs every [CHECK_INTERVAL_MS] and queries repository for the current pending tx hashes.
  * - If none of the stored hashes are pending anymore for a tracked entry, it triggers a single-network status refresh
  *   via [singleNetworkStatusFetcher] (plus the token's Yield Module position via [yieldModuleStatusFetcher]
- *   under [TokensFeatureToggles.isYieldContributionEnabled]) and removes the entry from tracking.
+ *   under [TokensFeatureToggles.isYieldContributionEnabled]) and removes the entry from tracking. A currency of
+ *   the Money account is refreshed by its holder via [nonPortfolioCurrenciesFetcher] instead.
  * - The periodic job stops automatically when there is nothing left to track.
  *
  * When an entry carries a [DepositContext], the tracker also enrols the module in auto top-up by telling the
@@ -35,10 +37,12 @@ import java.util.concurrent.ConcurrentHashMap
  * deposit as the client, so it is deferred until the client's own deposit has settled — announcing it while
  * that transaction is still in flight makes the two race, and the loser reverts with `ZeroAmount()`.
  */
+@Suppress("LongParameterList")
 class YieldSupplyPendingTracker(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher,
     private val yieldModuleStatusFetcher: YieldModuleStatusFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
     private val coroutineScope: AppCoroutineScope,
@@ -62,6 +66,7 @@ class YieldSupplyPendingTracker(
 
     private data class TrackedEntry(
         val cryptoCurrency: CryptoCurrency,
+        val isHeldOutsidePortfolio: Boolean,
         val txIds: Set<String>,
         val depositContext: DepositContext? = null,
         val attempts: Int = 0,
@@ -78,18 +83,22 @@ class YieldSupplyPendingTracker(
      * own deposit has settled. Left null by flows that enrol nothing, such as a standalone approve or a stop.
      * It replaces any context already tracked: a stop requested while a deposit is still settling must cancel
      * that enrolment, otherwise the settled deposit would re-activate a protocol the user just deactivated.
+     * @param isHeldOutsidePortfolio whether [cryptoCurrency] is held outside the portfolio (the Money account); only
+     * the account holding it is refreshed once settled.
      */
     suspend fun addPending(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         txIds: List<String>,
         depositContext: DepositContext? = null,
+        isHeldOutsidePortfolio: Boolean = false,
     ) {
         val key = TrackedKey(userWalletId, cryptoCurrency.id)
         trackedEntries.compute(key) { _, existing ->
             if (existing == null) {
                 TrackedEntry(
                     cryptoCurrency = cryptoCurrency,
+                    isHeldOutsidePortfolio = isHeldOutsidePortfolio,
                     txIds = txIds.toSet(),
                     depositContext = depositContext,
                 )
@@ -149,6 +158,7 @@ class YieldSupplyPendingTracker(
         }
 
         val networksToFetch = mutableSetOf<SingleNetworkStatusFetcher.Params>()
+        val moneyNetworksToFetch = mutableSetOf<SingleNetworkStatusFetcher.Params>()
         val tokensToFetch = mutableMapOf<UserWalletId, MutableSet<CryptoCurrency.Token>>()
 
         for (key in keysSnapshot) {
@@ -171,28 +181,40 @@ class YieldSupplyPendingTracker(
                 }
             }
 
-            networksToFetch.add(
-                SingleNetworkStatusFetcher.Params(
-                    userWalletId = key.userWalletId,
-                    network = entry.cryptoCurrency.network,
-                ),
+            val networkParams = SingleNetworkStatusFetcher.Params(
+                userWalletId = key.userWalletId,
+                network = entry.cryptoCurrency.network,
             )
-            (entry.cryptoCurrency as? CryptoCurrency.Token)?.let { token ->
-                tokensToFetch.getOrPut(key.userWalletId, ::mutableSetOf).add(token)
+            if (entry.isHeldOutsidePortfolio) {
+                moneyNetworksToFetch.add(networkParams)
+            } else {
+                networksToFetch.add(networkParams)
+                (entry.cryptoCurrency as? CryptoCurrency.Token)?.let { token ->
+                    tokensToFetch.getOrPut(key.userWalletId, ::mutableSetOf).add(token)
+                }
             }
         }
 
-        refresh(networksToFetch = networksToFetch, tokensToFetch = tokensToFetch)
+        refresh(
+            networksToFetch = networksToFetch,
+            moneyNetworksToFetch = moneyNetworksToFetch,
+            tokensToFetch = tokensToFetch,
+        )
 
         stopAutomaticCheckingIfEmpty()
     }
 
     private suspend fun refresh(
         networksToFetch: Set<SingleNetworkStatusFetcher.Params>,
+        moneyNetworksToFetch: Set<SingleNetworkStatusFetcher.Params>,
         tokensToFetch: Map<UserWalletId, Set<CryptoCurrency.Token>>,
     ) {
         for (params in networksToFetch) {
             singleNetworkStatusFetcher(params)
+        }
+
+        for (params in moneyNetworksToFetch) {
+            nonPortfolioCurrenciesFetcher.fetch(userWalletId = params.userWalletId, network = params.network)
         }
 
         if (!tokensFeatureToggles.isYieldContributionEnabled) return

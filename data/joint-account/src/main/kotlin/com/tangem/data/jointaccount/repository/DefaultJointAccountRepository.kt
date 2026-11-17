@@ -21,7 +21,9 @@ import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
+import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.store.datasource.jointaccount.JointWalletNotLinkedResolver
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
@@ -56,6 +58,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val safeTxConverter: SafeTxConverter,
     private val operationConverter: JointOperationConverter,
+    private val store: JointAccountsStore,
     private val dispatchers: CoroutineDispatcherProvider,
     @NetworkMoshi private val moshi: Moshi,
 ) : JointAccountRepository {
@@ -63,7 +66,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val logger = TangemLogger.withTag(tag = TAG)
     private val createErrorConverter = JointOperationCreateErrorConverter(moshi)
     private val signErrorConverter = JointOperationSignErrorConverter()
-    private val rejectErrorConverter = JointOperationRejectErrorConverter()
+    private val walletNotLinkedResolver = JointWalletNotLinkedResolver(moshi)
+    private val rejectErrorConverter = JointOperationRejectErrorConverter(walletNotLinkedResolver)
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
@@ -231,7 +235,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
             },
             onError = { error ->
                 val isSlotUnavailable = error is ApiResponseError.HttpException &&
-                    error.code in SLOT_UNAVAILABLE_CODES
+                    error.code in SLOT_UNAVAILABLE_CODES &&
+                    !walletNotLinkedResolver.isWalletNotLinked(error)
                 if (isSlotUnavailable) {
                     JointAccountInviteIssueError.SlotUnavailable(cause = error).left()
                 } else {
@@ -304,6 +309,10 @@ internal class DefaultJointAccountRepository @Inject constructor(
             },
             onError = { error -> signErrorConverter.convert(error).left() },
         )
+    }
+
+    override suspend fun getStoredJointAccounts(userWalletId: UserWalletId): List<JointAccount> {
+        return store.getSyncOrNull(userWalletId = userWalletId).orEmpty()
     }
 
     override suspend fun rejectOperation(
