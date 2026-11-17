@@ -1,9 +1,5 @@
 package com.tangem.features.tokenreceive.ui
 
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,19 +10,15 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.pagination.TangemPagination
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @Suppress("MagicNumber")
@@ -35,7 +27,6 @@ internal fun ReceiveAddressPager(state: ReceiveScreenUM, reveal: () -> Float, mo
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val sideInset = ((maxWidth - 274.dp) / 2).coerceAtLeast(0.dp)
         val pagerState = rememberPagerState { state.addresses.size }
-        val scope = rememberCoroutineScope()
         val onPageChange by rememberUpdatedState(state.onAddressPageChange)
         val progress = { pagerState.currentPage + pagerState.currentPageOffsetFraction }
 
@@ -56,7 +47,6 @@ internal fun ReceiveAddressPager(state: ReceiveScreenUM, reveal: () -> Float, mo
                     address = state.addresses[page],
                     iconState = state.iconState,
                     extrasHint = state.extrasHint,
-                    ensName = state.ensName.takeIf { page == 0 },
                     networkNotice = state.networkNotice,
                     reveal = reveal,
                     onCopyEnsClick = state.onCopyEnsClick,
@@ -66,24 +56,7 @@ internal fun ReceiveAddressPager(state: ReceiveScreenUM, reveal: () -> Float, mo
                     },
                 )
             }
-            TangemPagination(
-                pagerState = pagerState,
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    role = Role.Button,
-                ) {
-                    scope.launch {
-                        pagerState.animateScrollToPage(
-                            page = (pagerState.currentPage + 1) % pagerState.pageCount,
-                            animationSpec = tween(
-                                durationMillis = 600,
-                                easing = CubicBezierEasing(a = 0.8f, b = 0f, c = 0.2f, d = 1f),
-                            ),
-                        )
-                    }
-                },
-            )
+            TangemPagination(pagerState = pagerState)
         }
     }
 }

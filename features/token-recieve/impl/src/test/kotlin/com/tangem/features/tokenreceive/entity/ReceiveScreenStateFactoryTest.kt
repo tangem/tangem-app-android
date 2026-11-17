@@ -150,18 +150,19 @@ internal class ReceiveScreenStateFactoryTest {
             val actual = factory.createScreen(addresses = model.addresses)
 
             // Assert
-            assertThat(actual.addresses.map { Card(it.value, it.label, it.isDynamic) })
+            assertThat(actual.addresses.map { Card(it.value, it.label, it.isDynamic, it.ensName) })
                 .containsExactlyElementsIn(model.expected)
                 .inOrder()
         }
 
         private fun provideTestModels(): List<CardsModel> = listOf(
+            CardsModel(addresses = emptyList(), expected = emptyList()),
             CardsModel(
-                addresses = listOf(defaultAddress),
-                expected = listOf(Card(defaultAddress.value, label = null, isDynamic = false)),
+                addresses = listOf(ens, defaultAddress),
+                expected = listOf(Card(defaultAddress.value, label = null, isDynamic = false, ensName = ens.value)),
             ),
             CardsModel(
-                addresses = listOf(ens, defaultAddress, legacy),
+                addresses = listOf(defaultAddress, legacy),
                 expected = listOf(
                     Card(
                         value = defaultAddress.value,
@@ -170,45 +171,45 @@ internal class ReceiveScreenStateFactoryTest {
                             formatArgs = wrappedList("Bitcoin"),
                         ),
                         isDynamic = false,
+                        ensName = null,
                     ),
-                    Card(
-                        value = legacy.value,
-                        label = resourceReference(
-                            id = R.string.domain_receive_assets_legacy_address,
-                            formatArgs = wrappedList("Bitcoin"),
-                        ),
-                        isDynamic = false,
-                    ),
+                    Card(legacy.value, label = legacyDisplayName, isDynamic = false, ensName = null),
                 ),
             ),
             CardsModel(
-                addresses = listOf(dynamic),
+                addresses = listOf(ens, dynamic),
                 expected = listOf(
-                    Card(dynamic.value, label = resourceReference(R.string.dynamic_addresses), isDynamic = true),
+                    Card(
+                        value = dynamic.value,
+                        label = resourceReference(R.string.dynamic_addresses),
+                        isDynamic = true,
+                        ensName = null,
+                    ),
                 ),
             ),
         )
 
         @Test
-        fun `GIVEN legacy selected WHEN copy a card and the selected address THEN copies each its own address`() {
+        fun `GIVEN default and legacy WHEN copy a card the selected address and ens THEN each goes to its callback`() {
             // Arrange
             val factory = createFactory(currency = createCoin(Blockchain.Bitcoin))
             val copied = mutableListOf<ReceiveAddress>()
+            var selectedCopies = 0
 
             // Act
             val actual = factory.createScreen(
                 addresses = listOf(ens, defaultAddress, legacy),
-                selectedIndex = 1,
                 onCopyAddressClick = copied::add,
+                onCopySelectedAddressClick = { selectedCopies++ },
                 onCopyEnsClick = copied::add,
             )
-            actual.addresses.first().onCopyClick()
+            actual.addresses.last().onCopyClick()
             actual.onCopyAddressClick()
             actual.onCopyEnsClick()
 
             // Assert
-            assertThat(actual.ensName).isEqualTo(ens.value)
-            assertThat(copied).containsExactly(defaultAddress, legacy, ens).inOrder()
+            assertThat(copied).containsExactly(legacy, ens).inOrder()
+            assertThat(selectedCopies).isEqualTo(1)
         }
 
         @Test
@@ -222,14 +223,13 @@ internal class ReceiveScreenStateFactoryTest {
             actual.onCopyEnsClick()
 
             // Assert
-            assertThat(actual.ensName).isNull()
             assertThat(copied).isEmpty()
         }
     }
 
     data class CardsModel(val addresses: List<ReceiveAddress>, val expected: List<Card>)
 
-    data class Card(val value: String, val label: TextReference?, val isDynamic: Boolean)
+    data class Card(val value: String, val label: TextReference?, val isDynamic: Boolean, val ensName: String?)
 
     data class TextsModel(
         val currency: CryptoCurrency,
@@ -253,9 +253,14 @@ internal class ReceiveScreenStateFactoryTest {
 
     private val ens = ReceiveAddress(value = "cryptomonster.eth", type = ReceiveAddress.Type.Ens)
 
+    private val legacyDisplayName = resourceReference(
+        id = R.string.domain_receive_assets_legacy_address,
+        formatArgs = wrappedList("Bitcoin"),
+    )
+
     private val legacy = ReceiveAddress(
         value = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
-        type = ReceiveAddress.Type.Primary.Legacy(displayName = stringReference("Legacy")),
+        type = ReceiveAddress.Type.Primary.Legacy(displayName = legacyDisplayName),
     )
 
     private val dynamic = ReceiveAddress(
@@ -265,13 +270,13 @@ internal class ReceiveScreenStateFactoryTest {
 
     private fun ReceiveScreenStateFactory.createScreen(
         addresses: List<ReceiveAddress>,
-        selectedIndex: Int = 0,
         onCopyAddressClick: (ReceiveAddress) -> Unit = {},
+        onCopySelectedAddressClick: () -> Unit = {},
         onCopyEnsClick: (ReceiveAddress) -> Unit = {},
     ): ReceiveScreenUM = create(
         addresses = addresses,
-        selectedIndex = selectedIndex,
         onCopyAddressClick = onCopyAddressClick,
+        onCopySelectedAddressClick = onCopySelectedAddressClick,
         onCopyEnsClick = onCopyEnsClick,
         onAddressPageChange = {},
     )

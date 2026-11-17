@@ -90,7 +90,6 @@ internal fun ReceiveAddressCard(
     address: ReceiveAddressUM,
     iconState: CurrencyIconState,
     extrasHint: ReceiveExtrasHint,
-    ensName: String?,
     networkNotice: TextReference,
     reveal: () -> Float,
     onCopyEnsClick: () -> Unit,
@@ -136,7 +135,6 @@ internal fun ReceiveAddressCard(
                 address = address,
                 iconState = iconState,
                 extrasHint = extrasHint,
-                ensName = ensName,
                 squeeze = squeeze,
                 pressDelayMillis = pressDelayMillis,
                 onCopyEnsClick = onCopyEnsClick,
@@ -151,11 +149,11 @@ private fun CardFace(
     address: ReceiveAddressUM,
     iconState: CurrencyIconState,
     extrasHint: ReceiveExtrasHint,
-    ensName: String?,
     squeeze: SqueezeState,
     pressDelayMillis: Long,
     onCopyEnsClick: () -> Unit,
 ) {
+    val ensName = address.ensName
     Column(
         modifier = Modifier
             .width(274.dp)

@@ -32,13 +32,12 @@ internal class ReceiveScreenStateFactory(
 
     fun create(
         addresses: List<ReceiveAddress>,
-        selectedIndex: Int,
         onCopyAddressClick: (ReceiveAddress) -> Unit,
+        onCopySelectedAddressClick: () -> Unit,
         onCopyEnsClick: (ReceiveAddress) -> Unit,
         onAddressPageChange: (Int) -> Unit,
     ): ReceiveScreenUM {
         val primaries = addresses.filter { it.type is ReceiveAddress.Type.Primary }
-        val selected = primaries[selectedIndex.coerceIn(primaries.indices)]
         val ens = addresses.firstOrNull { it.type == ReceiveAddress.Type.Ens }
         return ReceiveScreenUM(
             title = title(),
@@ -49,17 +48,17 @@ internal class ReceiveScreenStateFactory(
                     value = address.value,
                     label = label(address.type as ReceiveAddress.Type.Primary, isSingle = primaries.size == 1),
                     isDynamic = address.type is ReceiveAddress.Type.Primary.Dynamic,
+                    ensName = ens?.value?.takeIf { address.type is ReceiveAddress.Type.Primary.Default },
                     onCopyClick = { onCopyAddressClick(address) },
                 )
             }.toImmutableList(),
-            ensName = ens?.value,
             extrasHint = receiveExtrasHint(
                 shouldShowMemoDisclaimer = shouldShowMemoDisclaimer,
                 transactionExtrasType = cryptoCurrency.network.transactionExtrasType,
             ),
             networkNotice = networkNotice(),
             warnings = warnings,
-            onCopyAddressClick = { onCopyAddressClick(selected) },
+            onCopyAddressClick = onCopySelectedAddressClick,
             onCopyEnsClick = { ens?.let(onCopyEnsClick) },
             onAddressPageChange = onAddressPageChange,
         )
@@ -67,10 +66,7 @@ internal class ReceiveScreenStateFactory(
 
     private fun label(type: ReceiveAddress.Type.Primary, isSingle: Boolean): TextReference? = when (type) {
         is ReceiveAddress.Type.Primary.Dynamic -> resourceReference(R.string.dynamic_addresses)
-        is ReceiveAddress.Type.Primary.Legacy -> resourceReference(
-            id = R.string.domain_receive_assets_legacy_address,
-            formatArgs = wrappedList(cryptoCurrency.name),
-        )
+        is ReceiveAddress.Type.Primary.Legacy -> type.displayName
         is ReceiveAddress.Type.Primary.Default -> if (isSingle) {
             null
         } else {

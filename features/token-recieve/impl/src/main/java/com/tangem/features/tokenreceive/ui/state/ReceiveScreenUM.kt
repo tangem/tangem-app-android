@@ -11,7 +11,6 @@ internal data class ReceiveScreenUM(
     val subtitle: TextReference,
     val iconState: CurrencyIconState,
     val addresses: ImmutableList<ReceiveAddressUM>,
-    val ensName: String?,
     val extrasHint: ReceiveExtrasHint,
     val networkNotice: TextReference,
     val warnings: ImmutableList<NotificationUM>,
@@ -24,5 +23,6 @@ internal data class ReceiveAddressUM(
     val value: String,
     val label: TextReference?,
     val isDynamic: Boolean,
+    val ensName: String?,
     val onCopyClick: () -> Unit,
 )

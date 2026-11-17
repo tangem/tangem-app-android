@@ -50,20 +50,20 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
         ) {
             Header(state = state)
             val reveal = rememberNoticeReveal()
-            if (state.addresses.size > 1) {
-                SpacerH(16.dp)
-                ReceiveAddressPager(state = state, reveal = reveal)
-            } else {
+            val singleAddress = state.addresses.singleOrNull()
+            if (singleAddress != null) {
                 SpacerH(24.dp)
                 ReceiveAddressCard(
-                    address = state.addresses.first(),
+                    address = singleAddress,
                     iconState = state.iconState,
                     extrasHint = state.extrasHint,
-                    ensName = state.ensName,
                     networkNotice = state.networkNotice,
                     reveal = reveal,
                     onCopyEnsClick = state.onCopyEnsClick,
                 )
+            } else if (state.addresses.isNotEmpty()) {
+                SpacerH(16.dp)
+                ReceiveAddressPager(state = state, reveal = reveal)
             }
             if (state.warnings.isNotEmpty()) {
                 Column(
@@ -136,16 +136,17 @@ private fun Preview_TokenReceiveScreenContent() {
                         value = "bc1q44yecmh2ct4u6rgqrzhqvwc636ej2r240yqts6",
                         label = stringReference("Bitcoin address"),
                         isDynamic = false,
+                        ensName = null,
                         onCopyClick = {},
                     ),
                     ReceiveAddressUM(
                         value = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                         label = stringReference("Legacy Bitcoin Address"),
                         isDynamic = false,
+                        ensName = null,
                         onCopyClick = {},
                     ),
                 ),
-                ensName = null,
                 extrasHint = ReceiveExtrasHint.None,
                 networkNotice = stringReference("Send only BTC on Bitcoin network"),
                 warnings = persistentListOf(),

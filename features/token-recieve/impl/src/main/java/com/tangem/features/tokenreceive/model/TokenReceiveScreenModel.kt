@@ -17,10 +17,9 @@ import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -45,13 +44,14 @@ internal class TokenReceiveScreenModel @Inject constructor(
         warnings = params.warnings,
     )
 
-    private val selectedAddressIndex = MutableStateFlow(0)
+    private var selectedAddressIndex = 0
 
-    val state: StateFlow<ReceiveScreenUM> = combine(params.receiveState, selectedAddressIndex, ::createState)
+    val state: StateFlow<ReceiveScreenUM> = params.receiveState
+        .map(::createState)
         .stateIn(
             scope = modelScope,
             started = SharingStarted.Eagerly,
-            initialValue = createState(params.receiveState.value, selectedAddressIndex.value),
+            initialValue = createState(params.receiveState.value),
         )
 
     init {
@@ -59,7 +59,7 @@ internal class TokenReceiveScreenModel @Inject constructor(
             TokenReceiveNewAnalyticsEvent.ReceiveScreenOpened(
                 token = params.tokenName,
                 blockchainName = config.cryptoCurrency.network.name,
-                ensStatus = if (state.value.ensName != null) {
+                ensStatus = if (state.value.addresses.any { it.ensName != null }) {
                     AnalyticsParam.EmptyFull.Full
                 } else {
                     AnalyticsParam.EmptyFull.Empty
@@ -69,17 +69,20 @@ internal class TokenReceiveScreenModel @Inject constructor(
     }
 
     fun onShareClick() {
-        val addresses = state.value.addresses
-        params.callback.onShareClick(addresses[selectedAddressIndex.value.coerceIn(addresses.indices)].value)
+        selectedAddress()?.let { params.callback.onShareClick(it.value) }
     }
 
-    private fun createState(receiveState: TokenReceiveUM, selectedIndex: Int): ReceiveScreenUM = stateFactory.create(
+    private fun createState(receiveState: TokenReceiveUM): ReceiveScreenUM = stateFactory.create(
         addresses = receiveState.addresses,
-        selectedIndex = selectedIndex,
         onCopyAddressClick = ::copy,
+        onCopySelectedAddressClick = { selectedAddress()?.let(::copy) },
         onCopyEnsClick = ::copy,
-        onAddressPageChange = { selectedAddressIndex.value = it },
+        onAddressPageChange = { selectedAddressIndex = it },
     )
+
+    private fun selectedAddress(): ReceiveAddress? = params.receiveState.value.addresses
+        .filter { it.type is ReceiveAddress.Type.Primary }
+        .getOrNull(selectedAddressIndex)
 
     private fun copy(address: ReceiveAddress) {
         params.callback.onCopyClick(address = address, source = TokenReceiveCopyActionSource.Receive)
