@@ -27,12 +27,16 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.local)
     implementation(projects.core.media)
     implementation(projects.core.media.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+
+    /** Data */
+    implementation(projects.grow.datasource)
 
     /** Domain */
     implementation(projects.domain.account)
@@ -57,6 +61,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization)
 
     /** Compose */
     implementation(deps.compose.foundation)
