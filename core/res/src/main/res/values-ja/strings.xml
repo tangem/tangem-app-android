@@ -978,6 +978,7 @@
   <string name="hw_upgrade_start_description">ハードウェアウォレットへのアップグレードを行います。資産はコールドストレージで安全に保管されます。</string>
   <string name="hw_upgrade_start_title">Tangemウォレット</string>
   <string name="hw_upgrade_title">ハードウェアウォレットにアップグレード</string>
+  <string name="hw_upgrade_to_cold_badge">コールドウォレットにアップグレード</string>
   <string name="hw_upgrade_to_cold_banner_description">Tangemの業界最高クラスのハードウェアウォレットで、暗号資産を安全に保管しましょう。</string>
   <string name="hw_upgrade_to_cold_banner_title">ウォレットをハードウェアセキュリティにアップグレードする</string>
   <string name="hw_wallets_limit_alert_message">Tangemに追加できるモバイルウォレットは最大%1$s個です。新しいウォレットを追加するには、既存のモバイルウォレットを1つ削除してください。</string>
@@ -1372,7 +1373,7 @@
   <string name="mcp_swap_intent_processed_subtitle">%1$sを%2$sにスワップ</string>
   <string name="mobile_wallet_requires_min_os_warning_body">モバイルウォレットを作成するには、%1$sにアップデートする必要があります</string>
   <string name="mobile_wallet_requires_min_os_warning_title">モバイルウォレットを使用するには、%1$s以降が必要です</string>
-  <string name="money_account_add_funds_bank_description">銀行口座から ACH/Wire または SPEI で USD を受け取る</string>
+  <string name="money_account_add_funds_bank_description">米国の銀行からACHでUSDを、メキシコの銀行からSPEIでMXNを受け取る</string>
   <string name="money_account_add_funds_receive_description">Polygon の USDC を口座アドレスに送金</string>
   <string name="money_account_add_funds_swap_description">ウォレットの暗号資産でUSD口座に入金</string>
   <string name="money_account_balance_unavailable_description">残高の読み込みに問題が発生しています。しばらくしてから再試行してください。</string>
@@ -1385,7 +1386,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">入金後に開設されます</string>
   <string name="money_account_main_status_dialog_activating_description">口座の準備を進めています。しばらく時間がかかる場合があります</string>
-  <string name="money_account_main_status_dialog_activating_title">銀行口座を開設しています</string>
+  <string name="money_account_main_status_dialog_activating_title">USD口座を開設しています</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">対応地域の拡大に取り組んでいます。サポートが必要ですか？</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">対応地域の拡大に取り組んでいます。お困りですか？%s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">お住まいの地域ではまだご利用いただけません</string>
@@ -1402,7 +1403,7 @@
   <string name="money_account_main_status_verification">本人確認進行中…</string>
   <string name="money_account_onboarding_currency_card_caption">口座通貨</string>
   <string name="money_account_onboarding_description">通常の銀行口座と同じように使えます。ただし暗号資産を基盤とし、完全にあなたの管理下にあります。</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Payはフィンテック企業であり、銀行ではありません。銀行サービスはFDIC加盟のSSBが提供しています。SSBに預け入れられた資金は、適用される制限およびFDIC規則に従い、預金者1人あたり、保険対象銀行ごとに最大250,000米ドルまでFDIC保険の対象となります。</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Payは銀行ではありません。口座情報はSSB Bankが提供しています。資金はUSDCとして保有され、SSB Bankへの預金ではありません。USDCはFDICの保険対象ではありません。</string>
   <string name="money_account_onboarding_earn_card_caption">収益</string>
   <string name="money_account_onboarding_fees_error">手数料情報を読み込めませんでした。\nタップして再読み込み</string>
   <string name="money_account_onboarding_fees_notice">SWIFT送金には対応していません。送金された場合は返金されます</string>
@@ -2963,7 +2964,7 @@
   <string name="tangempay_tangem_visa_card">暗号資産をいつもの毎日で使える</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">ACH/Wire経由で銀行口座からUSDを受け取る</string>
+  <string name="tangempay_topup_bank_transfer_body">ACH経由で米国の銀行口座からUSDを受け取る</string>
   <string name="tangempay_topup_bank_transfer_pending_body">銀行口座情報を作成中...</string>
   <string name="tangempay_topup_bank_transfer_title">銀行口座から</string>
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
@@ -2991,7 +2992,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">支払い</string>
-  <string name="tangempay_unified_onboarding_payments_title">毎日の支払いにACH送金と電信送金</string>
+  <string name="tangempay_unified_onboarding_payments_title">毎日の支払いに銀行振込</string>
   <string name="tangempay_unified_onboarding_plan_caption">ひとつのプラン</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic は無料。</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus なら両方に加えて、さらに多くの特典</string>
@@ -3466,8 +3467,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
   <string name="warning_last_balance_updated_time">最終更新日は%sです</string>
-  <string name="warning_link_wallet_cold_message">ウォレットをTangemのサービスと同期して、セキュリティをさらに強化しましょう。</string>
-  <string name="warning_link_wallet_hot_message">ウォレットをTangemのサービスと同期して、セキュリティをさらに強化しましょう。</string>
+  <string name="warning_link_wallet_cold_message">カードを使って、Tangemのサービスに接続する際のセキュリティをさらに強化しましょう。</string>
+  <string name="warning_link_wallet_hot_message">Tangemのサービスに接続する際のセキュリティを、さらに強化しましょう。</string>
   <string name="warning_link_wallet_title">接続のセキュリティを強化</string>
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>

@@ -34,6 +34,7 @@ features/collectibles/
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
     packopenfailed/ — "Failed to open pack": the terminal status screen that replaces the confirm order
+    inventory/      — The user's cards, Buyback / Collection tabs. Mock data; search is not wired yet
 ```
 
 `packopening/` in detail:
@@ -95,6 +96,7 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
   │     last-slide continue / close → router.pop() → lands on Main
   ├─ CollectiblesRoute.Main(userWalletId)       → CollectiblesMainComponent       → CollectiblesMainModel
   │     menu "How it works" → router.push(Stories)
+  │     collection widget → router.push(Inventory)
   │     slot: TopUp (CollectiblesAddFundsComponent) / Receive (TokenReceiveComponent)
   │           / PaymentInProgress (CollectiblesPaymentInProgressSheetComponent)
   │           / PackUnopened (CollectiblesPackUnopenedSheetComponent)
@@ -115,6 +117,7 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
         AutoBuyback: "Open again", close, scrim tap and back → router.pop() to MachineDetails
         "Keep card" / a completed "Sell back" → router.pop() to MachineDetails
         OpenPackStep.Failed.OpenFailed → router.replaceCurrent(PackOpenFailed)
+  ├─ CollectiblesRoute.Inventory → CollectiblesInventoryComponent → CollectiblesInventoryModel (modal, close → router.pop())
   └─ CollectiblesRoute.PackOpenFailed → CollectiblesPackOpenFailedComponent (no model)
         terminal: close and system back → router.popTo(Main(id)); "Get assistance" is a stub ([REDACTED_TASK_KEY])
 ```

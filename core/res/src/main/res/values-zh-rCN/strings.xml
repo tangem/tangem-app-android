@@ -980,6 +980,7 @@
   <string name="hw_upgrade_start_description">您即将升级到我们的硬件钱包。它会将您的资产安全地存储在冷存储中。</string>
   <string name="hw_upgrade_start_title">Tangem钱包</string>
   <string name="hw_upgrade_title">升级到我们的硬件钱包</string>
+  <string name="hw_upgrade_to_cold_badge">升级到冷钱包</string>
   <string name="hw_upgrade_to_cold_banner_description">使用 Tangem 的顶级硬件钱包，确保您的加密货币安全。</string>
   <string name="hw_upgrade_to_cold_banner_title">将您的钱包升级到硬件安全级别</string>
   <string name="hw_wallets_limit_alert_message">在 Tangem 中，您最多可拥有 %1$s 个手机钱包。若要添加新钱包，请先删除一个已有的手机钱包。</string>
@@ -1375,7 +1376,7 @@
   <string name="mcp_swap_intent_processed_subtitle">交换 %1$s 到 %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">创建手机钱包前必须更新至 %1$s</string>
   <string name="mobile_wallet_requires_min_os_warning_title">手机钱包需要 %1$s 或更高版本</string>
-  <string name="money_account_add_funds_bank_description">通过 ACH/Wire 或 SPEI 从银行账户接收 USD</string>
+  <string name="money_account_add_funds_bank_description">通过 ACH 从美国的银行接收 USD，或通过 SPEI 从墨西哥的银行接收 MXN</string>
   <string name="money_account_add_funds_receive_description">将 Polygon 网络的 USDC 发送至账户地址</string>
   <string name="money_account_add_funds_swap_description">使用钱包中的加密资产为美元账户充值</string>
   <string name="money_account_balance_unavailable_description">加载余额时遇到问题。请稍后重试。</string>
@@ -1388,7 +1389,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">存款后开通</string>
   <string name="money_account_main_status_dialog_activating_description">我们正在为您准备账户，这可能需要一些时间</string>
-  <string name="money_account_main_status_dialog_activating_title">正在开设您的银行账户</string>
+  <string name="money_account_main_status_dialog_activating_title">正在开设您的美元账户</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">我们正在努力拓展至更多地区。需要帮助吗？</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">我们正在努力覆盖更多地区。需要帮助？%s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">您所在的地区暂不支持</string>
@@ -1405,7 +1406,7 @@
   <string name="money_account_main_status_verification">身份验证进行中…</string>
   <string name="money_account_onboarding_currency_card_caption">账户币种</string>
   <string name="money_account_onboarding_description">像普通银行账户一样使用。但由加密资产驱动，并完全由您掌控。</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay 是一家金融科技公司，而非银行。银行服务由 SSB 提供，SSB 为 FDIC 成员。存放于 SSB 的资金符合 FDIC 保险的承保条件，每位存款人在每家投保银行的保额最高为 250,000 美元，并受适用限制及 FDIC 规则约束。</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay 不是银行。账户信息由 SSB Bank 提供。资金以 USDC 形式持有，而非作为存款存放于 SSB Bank。USDC 不受 FDIC 保险保障。</string>
   <string name="money_account_onboarding_earn_card_caption">赚取收益</string>
   <string name="money_account_onboarding_fees_error">无法加载费用信息。\n点击重新加载</string>
   <string name="money_account_onboarding_fees_notice">不支持 SWIFT 转账。如果您发起 SWIFT 转账，款项将被退回</string>
@@ -2963,7 +2964,7 @@
   <string name="tangempay_tangem_visa_card">在现实生活中随心消费加密资产</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">通过 ACH/Wire 从银行账户接收美元</string>
+  <string name="tangempay_topup_bank_transfer_body">通过 ACH 从美国的银行账户接收美元</string>
   <string name="tangempay_topup_bank_transfer_pending_body">正在创建您的银行账户信息...</string>
   <string name="tangempay_topup_bank_transfer_title">从银行账户</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
@@ -2991,7 +2992,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">支付</string>
-  <string name="tangempay_unified_onboarding_payments_title">满足日常所需的ACH和电汇转账</string>
+  <string name="tangempay_unified_onboarding_payments_title">满足日常所需的银行转账</string>
   <string name="tangempay_unified_onboarding_plan_caption">一个套餐</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic 免费。</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus 涵盖两者，还有更多权益</string>
