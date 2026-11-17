@@ -7,6 +7,7 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.ApiResponseRaise
@@ -321,11 +322,15 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 )
                 response.bind()
 
-                val contentType = response.headers[CONTENT_TYPE_HEADER]?.firstOrNull()
-                if (contentType == null || contentType.contains(JSON_SUBTYPE, ignoreCase = true)) {
+                val mediaType = response.headers[CONTENT_TYPE_HEADER]?.firstOrNull()?.substringBefore(';')?.trim()
+                val isRecorded = when (mediaType) {
+                    null -> (response as? ApiResponse.Success)?.code == Code.NO_CONTENT
+                    else -> mediaType.endsWith(JSON_SUBTYPE, ignoreCase = true)
+                }
+                if (isRecorded) {
                     Unit.right()
                 } else {
-                    val cause = IllegalStateException("Unexpected answer to the refusal: $contentType")
+                    val cause = IllegalStateException("Unexpected answer to the refusal: $mediaType")
                     JointOperationRejectError.Failed(cause = cause).left()
                 }
             },
