@@ -512,6 +512,8 @@ internal class EarnFlowModel @Inject constructor(
             state = state::value,
             scope = modelScope,
             onClose = { finish(EarnFlowExit.Done) },
+            onSupportClick = {},
+            onCancel = {},
         )?.let(messageSender::send)
     }
 

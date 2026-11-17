@@ -15,6 +15,7 @@ class TransactionErrorDialogFactory @Inject constructor() {
         error: SendTransactionError,
         popBackStack: () -> Unit,
         onFailedTxEmailClick: (String) -> Unit,
+        onCancel: () -> Unit = {},
     ): DialogMessage? {
         return when (error) {
             is SendTransactionError.DemoCardError -> demoModeDialog(popBackStack)
@@ -22,26 +23,31 @@ class TransactionErrorDialogFactory @Inject constructor() {
                 causeTextReference = resourceReference(error.messageRes, wrappedList(error.args)),
                 code = error.code.toString(),
                 onConfirmClick = { onFailedTxEmailClick(error.code.toString()) },
+                onCancel = onCancel,
             )
             is SendTransactionError.BlockchainSdkError -> transactionErrorDialog(
                 cause = error.message,
                 code = error.code.toString(),
                 onConfirmClick = { onFailedTxEmailClick("${error.code}: ${error.message.orEmpty()}") },
+                onCancel = onCancel,
             )
             is SendTransactionError.DataError -> transactionErrorDialog(
                 cause = error.message,
                 code = "",
                 onConfirmClick = { onFailedTxEmailClick(error.message.orEmpty()) },
+                onCancel = onCancel,
             )
             is SendTransactionError.NetworkError -> transactionErrorDialog(
                 cause = error.message.orEmpty(),
                 code = error.code.orEmpty(),
                 onConfirmClick = { onFailedTxEmailClick(error.message.orEmpty()) },
+                onCancel = onCancel,
             )
             is SendTransactionError.UnknownError -> transactionErrorDialog(
                 cause = error.ex?.localizedMessage,
                 code = "",
                 onConfirmClick = { onFailedTxEmailClick(error.ex?.localizedMessage.orEmpty()) },
+                onCancel = onCancel,
             )
             is SendTransactionError.CreateAccountUnderfunded -> transactionErrorDialog(
                 causeTextReference = resourceReference(
@@ -78,6 +84,7 @@ class TransactionErrorDialogFactory @Inject constructor() {
         causeTextReference: TextReference? = null,
         code: String,
         onConfirmClick: () -> Unit,
+        onCancel: () -> Unit = {},
     ): DialogMessage = DialogMessage(
         title = resourceReference(id = R.string.send_alert_transaction_failed_title),
         message = resourceReference(
@@ -90,6 +97,6 @@ class TransactionErrorDialogFactory @Inject constructor() {
                 onClick = onConfirmClick,
             )
         },
-        secondActionBuilder = { cancelAction { } },
+        secondActionBuilder = { cancelAction { onCancel() } },
     )
 }
