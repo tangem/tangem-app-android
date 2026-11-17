@@ -4,13 +4,12 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampCountryByIpUseCase
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,17 +22,15 @@ import org.junit.jupiter.api.Test
 internal class OnrampRegionRestrictionResolverTest {
 
     private val getOnrampCountryByIpUseCase: GetOnrampCountryByIpUseCase = mockk()
-    private val featureTogglesManager: FeatureTogglesManager = mockk()
+    private val onrampFeatureToggles: OnrampFeatureToggles = mockk()
     private val userWallet: UserWallet = mockk()
 
-    private val resolver = OnrampRegionRestrictionResolver(getOnrampCountryByIpUseCase, featureTogglesManager)
+    private val resolver = OnrampRegionRestrictionResolver(getOnrampCountryByIpUseCase, onrampFeatureToggles)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getOnrampCountryByIpUseCase, featureTogglesManager)
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18954_ONRAMP_COUNTRY_BY_IP_ENABLED)
-        } returns true
+        clearMocks(getOnrampCountryByIpUseCase, onrampFeatureToggles)
+        every { onrampFeatureToggles.isCountryByIpEnabled } returns true
     }
 
     @Test
@@ -76,9 +73,7 @@ internal class OnrampRegionRestrictionResolverTest {
     @Test
     fun `GIVEN toggle disabled WHEN resolve THEN country is not requested`() = runTest {
         // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18954_ONRAMP_COUNTRY_BY_IP_ENABLED)
-        } returns false
+        every { onrampFeatureToggles.isCountryByIpEnabled } returns false
 
         // Act
         val actual = resolver.resolveRestrictedRegionName(userWallet)

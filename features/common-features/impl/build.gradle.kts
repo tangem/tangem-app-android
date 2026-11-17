@@ -14,6 +14,7 @@ dependencies {
     /** Api */
     api(projects.features.commonFeatures.api)
     implementation(projects.features.jointAccount.api)
+    implementation(projects.features.onramp.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
 
@@ -23,7 +24,6 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
     implementation(projects.core.pagination)
 
     /** Domain */
