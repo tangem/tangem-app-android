@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletsLimitReachedDialog
+import com.tangem.core.ui.message.dialog.Dialogs.walletAlreadyAddedDialog
 import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
@@ -335,12 +336,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
 
     private fun showAlreadyAdded() {
         uiState.value = buildCurrentStepUM()
-        uiMessageSender.send(
-            DialogMessage(
-                message = resourceReference(R.string.user_wallet_list_error_wallet_already_saved),
-                firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
-            ),
-        )
+        uiMessageSender.send(alreadyAddedDialog(hotWalletFeatureToggles.isMultipleHotWalletsEnabled))
     }
 
     private fun showWrongPassword() {
@@ -408,6 +404,15 @@ private fun errorDialog(error: CloudBackupError): DialogMessage {
     return DialogMessage(
         title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
         message = resourceReference(messageRes),
+        firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
+    )
+}
+
+private fun alreadyAddedDialog(isMultipleHotWalletsEnabled: Boolean) = if (isMultipleHotWalletsEnabled) {
+    walletAlreadyAddedDialog()
+} else {
+    DialogMessage(
+        message = resourceReference(R.string.user_wallet_list_error_wallet_already_saved),
         firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
     )
 }

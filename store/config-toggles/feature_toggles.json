@@ -49,7 +49,7 @@
     },
     {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "TWI_1732_PROMO_PAGE_ENABLED",
@@ -69,7 +69,7 @@
     },
     {
         "name": "AND_19355_DISCOVER_DEEPLINK_FILTERS_ENABLED",
-        "version": "undefined"
+        "version": "6.9"
     },
     {
         "name": "TWI_1958_ADD_FUNDS_RECEIVE_STAGE_1_ENABLED",
