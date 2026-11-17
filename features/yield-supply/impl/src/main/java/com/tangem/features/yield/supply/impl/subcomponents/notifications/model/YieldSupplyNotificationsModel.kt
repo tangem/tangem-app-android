@@ -17,6 +17,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateListener
 import com.tangem.lib.crypto.BlockchainUtils
@@ -27,7 +28,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class YieldSupplyNotificationsModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -36,6 +39,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
     private val router: Router,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val yieldSupplyNotificationsUpdateListener: YieldSupplyNotificationsUpdateListener,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
 ) : Model() {
 
     private val params: YieldSupplyNotificationsComponent.Params = paramsContainer.require()
@@ -144,11 +148,17 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
     }
 
     private fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
-        router.push(
-            AppRoute.CurrencyDetails(
-                userWalletId = params.userWalletId,
-                currency = cryptoCurrency,
-            ),
-        )
+        modelScope.launch {
+            // A currency held outside the portfolio (the Money account POL) has no token details screen
+            if (!currencyStatusResolver.isInPortfolio(userWalletId = params.userWalletId, currency = cryptoCurrency)) {
+                return@launch
+            }
+            router.push(
+                AppRoute.CurrencyDetails(
+                    userWalletId = params.userWalletId,
+                    currency = cryptoCurrency,
+                ),
+            )
+        }
     }
 }
