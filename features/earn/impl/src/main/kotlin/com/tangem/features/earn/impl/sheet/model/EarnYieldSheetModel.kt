@@ -1,5 +1,6 @@
 package com.tangem.features.earn.impl.sheet.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -51,7 +52,12 @@ internal class EarnYieldSheetModel @Inject constructor(
 
     private val productParams = EarnProduct.Params(params.userWalletId, params.cryptoCurrency)
 
-    private val navigator = HostEarnNavigator(router, params.userWalletId, params.cryptoCurrency)
+    private val navigator = HostEarnNavigator(
+        router = router,
+        userWalletId = params.userWalletId,
+        cryptoCurrency = params.cryptoCurrency,
+        source = AppRoute.EarnEntry.Source.YieldSheet,
+    )
 
     /** One handler per product for the lifetime of the sheet: a handler may keep state between clicks. */
     private val handlers = mutableMapOf<EarnProductId, EarnActionHandler>()

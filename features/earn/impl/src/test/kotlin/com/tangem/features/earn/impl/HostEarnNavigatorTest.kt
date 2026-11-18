@@ -26,7 +26,6 @@ internal class HostEarnNavigatorTest {
     private val router: Router = mockk(relaxed = true)
     private val userWalletId = UserWalletId("0123456789abcdef")
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
-    private val navigator = HostEarnNavigator(router = router, userWalletId = userWalletId, cryptoCurrency = currency)
 
     @BeforeEach
     fun resetMocks() {
@@ -37,7 +36,7 @@ internal class HostEarnNavigatorTest {
     @ProvideTestModels
     fun `GIVEN route WHEN navigate THEN router pushes the mapped route`(model: NavigateModel) {
         // Act
-        navigator.navigate(model.route)
+        navigator(model.source).navigate(model.route)
 
         // Assert
         verify(exactly = 1) { router.push(model.expected, any()) }
@@ -49,7 +48,7 @@ internal class HostEarnNavigatorTest {
         val route = EarnFlowRoute(productId = LENDING, action = Deposit())
 
         // Act
-        navigator.navigate(route)
+        navigator(AppRoute.EarnEntry.Source.YieldSheet).navigate(route)
 
         // Assert
         verify(exactly = 0) { router.push(any(), any()) }
@@ -57,29 +56,51 @@ internal class HostEarnNavigatorTest {
 
     private fun provideTestModels() = listOf(
         NavigateModel(
+            source = AppRoute.EarnEntry.Source.YieldSheet,
             route = EarnInfoRoute(productId = LENDING),
-            expected = yieldSheetEntry(AppRoute.EarnEntry.Start.Info(productId = LENDING)),
+            expected = entry(AppRoute.EarnEntry.Source.YieldSheet, AppRoute.EarnEntry.Start.Info(productId = LENDING)),
         ),
         NavigateModel(
+            source = AppRoute.EarnEntry.Source.EarnBanner,
+            route = EarnInfoRoute(productId = LENDING),
+            expected = entry(AppRoute.EarnEntry.Source.EarnBanner, AppRoute.EarnEntry.Start.Info(productId = LENDING)),
+        ),
+        NavigateModel(
+            source = AppRoute.EarnEntry.Source.YieldSheet,
             route = EarnPickerRoute(preselected = null, shouldRedirectToActive = true),
-            expected = yieldSheetEntry(AppRoute.EarnEntry.Start.Picker(preselected = null)),
+            expected = entry(AppRoute.EarnEntry.Source.YieldSheet, AppRoute.EarnEntry.Start.Picker(preselected = null)),
         ),
         NavigateModel(
+            source = AppRoute.EarnEntry.Source.YieldSheet,
             route = EarnPickerRoute(preselected = LENDING, shouldRedirectToActive = false),
-            expected = yieldSheetEntry(AppRoute.EarnEntry.Start.Picker(preselected = LENDING)),
+            expected = entry(
+                source = AppRoute.EarnEntry.Source.YieldSheet,
+                start = AppRoute.EarnEntry.Start.Picker(preselected = LENDING),
+            ),
         ),
-        NavigateModel(route = OtherRoute, expected = OtherRoute),
+        NavigateModel(source = AppRoute.EarnEntry.Source.EarnBanner, route = OtherRoute, expected = OtherRoute),
     )
 
-    private fun yieldSheetEntry(start: AppRoute.EarnEntry.Start) = AppRoute.EarnEntry(
+    private fun navigator(source: AppRoute.EarnEntry.Source) = HostEarnNavigator(
+        router = router,
         userWalletId = userWalletId,
         cryptoCurrency = currency,
-        source = AppRoute.EarnEntry.Source.YieldSheet,
+        source = source,
+    )
+
+    private fun entry(source: AppRoute.EarnEntry.Source, start: AppRoute.EarnEntry.Start) = AppRoute.EarnEntry(
+        userWalletId = userWalletId,
+        cryptoCurrency = currency,
+        source = source,
         start = start,
     )
 
-    internal data class NavigateModel(val route: Route, val expected: Route) {
-        override fun toString(): String = route.toString()
+    internal data class NavigateModel(
+        val source: AppRoute.EarnEntry.Source,
+        val route: Route,
+        val expected: Route,
+    ) {
+        override fun toString(): String = "$source: $route"
     }
 
     private object OtherRoute : Route
