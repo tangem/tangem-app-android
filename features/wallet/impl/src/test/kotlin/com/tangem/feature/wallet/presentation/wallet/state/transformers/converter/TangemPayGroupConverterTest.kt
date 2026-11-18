@@ -194,6 +194,7 @@ internal class TangemPayGroupConverterTest {
             formatArgs = wrappedList(accountsCount),
         ),
         balance = balance,
+        balanceCaption = stringReference("USD"),
         isBalanceFlickering = isBalanceFlickering,
         isExpanded = isExpanded,
         onClick = onClick,

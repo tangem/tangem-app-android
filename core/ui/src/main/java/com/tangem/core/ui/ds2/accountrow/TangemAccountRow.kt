@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -60,7 +61,7 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * shrinks that line into a compact heading. The account's [TangemTokenRow]s are emitted by the
  * host next to the row, not nested inside it.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
@@ -126,7 +127,77 @@ fun TangemAccountRow(
         label = label,
         description = description,
         balance = balance,
-        priceChange = priceChange,
+        balanceBottom = priceChange?.let { state -> { TangemPriceChange(state = state) } },
+        showUpdateWarning = showUpdateWarning,
+        isBalanceHidden = isBalanceHidden,
+        isBalanceFlickering = isBalanceFlickering,
+        showCompactBalance = showCompactBalance,
+        isExpanded = isExpanded,
+        collapseContentDescription = collapseContentDescription,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        isExpandable = isExpandable,
+        shape = shape,
+    )
+}
+
+/**
+ * Design-system v2 (DS3) **Account Row** — overload of [TangemAccountRow] with custom content under
+ * the collapsed balance in place of the price change. Layout, motion and press behavior are the same.
+ *
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
+ *
+ * @param avatar Leading account avatar, morphing from 40dp to 16dp as the row expands. See [TangemAvatar.UiState].
+ * @param title Account name. Single line, ellipsized.
+ * @param balanceBottom Content under the collapsed balance, e.g. the currency caption (`"USD"`). Fades out with the
+ * balance as the row expands; hidden while a badge is shown.
+ * @param modifier Modifier applied to the card. The card always fills the available width.
+ * @param label Leading subtitle text, e.g. the account count (`"2 accounts"`). `null` hides it.
+ * @param description Subtitle text after [label]. `null` hides it and the dot separating it from [label].
+ * @param balance Total fiat balance. Shown large at the end while collapsed and small next to the
+ * title while expanded. `null` hides it, the separator dot with it.
+ * @param showUpdateWarning Shows the cloud update-error icon before the collapsed balance.
+ * @param isBalanceHidden When `true`, [balance] is masked with stars.
+ * @param isBalanceFlickering Runs the blade animation over [balance] while it is being refreshed.
+ * @param showCompactBalance Whether [balance] also joins the compact heading while expanded.
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
+ * @param collapseContentDescription Accessibility label of the collapse arrow; supply it when the
+ * row is expandable so the affordance is announced.
+ * @param onClick Card click handler. `null` with no [onLongClick] makes the card non-interactive.
+ * @param onLongClick Card long-press handler. `null` disables long-press.
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
+ * items continue the card below.
+ */
+@Suppress("LongParameterList")
+@Composable
+fun TangemAccountRow(
+    avatar: TangemAvatar.UiState,
+    title: TextReference,
+    balanceBottom: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    label: TextReference? = null,
+    description: TextReference? = null,
+    balance: TextReference? = null,
+    showUpdateWarning: Boolean = false,
+    isBalanceHidden: Boolean = false,
+    isBalanceFlickering: Boolean = false,
+    showCompactBalance: Boolean = true,
+    isExpanded: Boolean = false,
+    collapseContentDescription: String? = null,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    isExpandable: Boolean = false,
+    shape: Shape = ExpandableCardShape,
+) {
+    AccountRowScaffold(
+        avatar = avatar,
+        title = title,
+        modifier = modifier,
+        label = label,
+        description = description,
+        balance = balance,
+        balanceBottom = balanceBottom,
         showUpdateWarning = showUpdateWarning,
         isBalanceHidden = isBalanceHidden,
         isBalanceFlickering = isBalanceFlickering,
@@ -143,7 +214,7 @@ fun TangemAccountRow(
 /** Public API surface of [TangemAccountRow]. */
 object TangemAccountRow {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /**
      * Action message under a [NotActive] row's heading, leading the user to activate the account.
@@ -535,7 +606,7 @@ fun TangemAccountRow.NotActive(
         label = label,
         description = description,
         balance = balance,
-        priceChange = priceChange,
+        balanceBottom = priceChange?.let { state -> { TangemPriceChange(state = state) } },
         isBalanceHidden = isBalanceHidden,
         isNotActive = true,
         actionMessage = actionMessage,
@@ -675,7 +746,7 @@ private fun AccountRowScaffold(
     label: TextReference? = null,
     description: TextReference? = null,
     balance: TextReference? = null,
-    priceChange: TangemPriceChange.State? = null,
+    balanceBottom: (@Composable () -> Unit)? = null,
     badge: TextReference? = null,
     hasBalanceError: Boolean = false,
     isNotActive: Boolean = false,
@@ -754,13 +825,12 @@ private fun AccountRowScaffold(
             )
         }
 
-        if (priceChange != null && badge == null) {
-            TangemPriceChange(
-                state = priceChange,
+        if (balanceBottom != null && badge == null) {
+            Box(
                 modifier = Modifier
                     .layoutId(ExpandableCardLayoutId.END_BOTTOM)
                     .graphicsLayer { alpha = pressAlpha * endAlpha * motion.endBottomAlpha },
-            )
+            ) { balanceBottom() }
         }
 
         if (balance != null && showCompactBalance && !isNotActive) {
@@ -847,6 +917,31 @@ private fun TangemAccountRowCollapsedPreview() {
             onClick = {},
         )
         TangemAccountRow.Shimmer()
+    }
+}
+
+@Preview(name = "Balance Bottom Light", showBackground = true, widthDp = 360)
+@Preview(name = "Balance Bottom Dark", showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemAccountRowBalanceBottomPreview() {
+    PreviewContainer { avatar ->
+        TangemAccountRow(
+            avatar = avatar,
+            title = stringReference("Pay"),
+            label = stringReference("2 accounts"),
+            balance = stringReference("$12,000.00"),
+            balanceBottom = {
+                Text(
+                    text = "USD",
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                    maxLines = 1,
+                )
+            },
+            isExpandable = true,
+            collapseContentDescription = "Collapse",
+            onClick = {},
+        )
     }
 }
 
