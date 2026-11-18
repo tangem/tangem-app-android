@@ -48,6 +48,10 @@
         "version": "6.9"
     },
     {
+        "name": "AND_19514_CATEGORY_FILTERS_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1958_ADD_FUNDS_RECEIVE_STAGE_1_ENABLED",
         "version": "undefined"
     },

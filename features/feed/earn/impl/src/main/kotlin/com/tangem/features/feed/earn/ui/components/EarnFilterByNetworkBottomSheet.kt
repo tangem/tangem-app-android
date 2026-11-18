@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +30,6 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.earn.impl.R
@@ -64,12 +62,12 @@ private fun ColumnScope.Content(content: EarnFilterByNetworkBottomSheetContentUM
             // TangemModal sizes the card from the content's intrinsic height; a window-tall intrinsic opens the
             // sheet expanded for any number of networks
             .height(LocalWindowInfo.current.containerDpSize.height)
-            .padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = 12.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         TangemTabNavigation(
             tabs = content.scopeTabs,
-            variant = TangemTabItem.Variant.Transparent,
+            variant = TangemTabItem.Variant.Material,
         )
 
         Box(modifier = Modifier.weight(1f)) {
@@ -101,17 +99,6 @@ private fun NetworksBlock(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
     ) {
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp, bottom = 8.dp),
-            text = stringResourceSafe(id = R.string.earn_filter_networks),
-            style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
         networks.fastForEach { item -> NetworkRow(item = item) }
 
         if (hasFooter) {
