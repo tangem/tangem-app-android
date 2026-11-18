@@ -109,6 +109,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
+import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
@@ -121,6 +122,7 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.logging.TangemLogger
@@ -195,6 +197,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
+    private val earnOverviewSupplier: EarnOverviewSupplier,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -1680,13 +1683,18 @@ internal class TokenDetailsModel @Inject constructor(
             }
         }
 
-        combine(
-            flow = statusFlow,
+        val isEarnBannerShownFlow = earnOverviewSupplier(userWalletId)
+            .map { overviews -> overviews[cryptoCurrency.id]?.banner != null }
+            .distinctUntilChanged()
+
+        combine6(
+            flow1 = statusFlow,
             flow2 = availabilityFlow,
             flow3 = entryInfoFlow,
             flow4 = selectedAppCurrencyFlow,
             flow5 = redesignStateController.isBalanceHidden,
-        ) { status, availability, entryInfo, appCurrency, isBalanceHidden ->
+            flow6 = isEarnBannerShownFlow,
+        ) { status, availability, entryInfo, appCurrency, isBalanceHidden, isEarnBannerShown ->
             redesignStateController.update(
                 UpdateStakingNotificationTransformer(
                     cryptoCurrencyStatus = status,
@@ -1694,6 +1702,7 @@ internal class TokenDetailsModel @Inject constructor(
                     stakingEntryInfo = entryInfo,
                     appCurrency = appCurrency,
                     isBalanceHidden = isBalanceHidden,
+                    isEarnBannerShown = isEarnBannerShown,
                     clickIntents = this,
                 ),
             )
