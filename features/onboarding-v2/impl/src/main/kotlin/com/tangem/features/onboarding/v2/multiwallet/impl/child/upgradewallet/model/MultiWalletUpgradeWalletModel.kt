@@ -94,7 +94,10 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
                 val privateInfo = exportSeedPhraseUseCase
                     .invoke(userWallet.hotWalletId)
                     .getOrElse { throwable ->
-                        TangemLogger.e("Unable to export seed phrase for wallet with id ${mode.userWalletId}", throwable)
+                        TangemLogger.e(
+                            "Unable to export seed phrase for wallet with id ${mode.userWalletId}",
+                            throwable,
+                        )
                         return@launch
                     }
 
