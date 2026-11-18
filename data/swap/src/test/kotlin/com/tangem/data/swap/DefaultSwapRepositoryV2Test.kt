@@ -97,7 +97,7 @@ internal class DefaultSwapRepositoryV2Test {
         )
 
         coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
+            tangemExpressApi.getPairs(any(), any(), any(), any())
         } returns ApiResponse.Success(listOf(swapPair))
 
         coEvery {
@@ -143,7 +143,7 @@ internal class DefaultSwapRepositoryV2Test {
         )
 
         coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
+            tangemExpressApi.getPairs(any(), any(), any(), any())
         } returns ApiResponse.Success(listOf(swapPair))
 
         coEvery {
@@ -177,7 +177,7 @@ internal class DefaultSwapRepositoryV2Test {
         )
 
         coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
+            tangemExpressApi.getPairs(any(), any(), any(), any())
         } returns ApiResponse.Success(emptyList())
 
         coEvery {
@@ -213,7 +213,7 @@ internal class DefaultSwapRepositoryV2Test {
         )
 
         coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
+            tangemExpressApi.getPairs(any(), any(), any(), any())
         } returns ApiResponse.Success(listOf(swapPair))
 
         coEvery {
@@ -248,7 +248,7 @@ internal class DefaultSwapRepositoryV2Test {
         )
 
         coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
+            tangemExpressApi.getPairs(any(), any(), any(), any())
         } returns ApiResponse.Success(listOf(swapPair))
 
         coEvery {
@@ -268,7 +268,7 @@ internal class DefaultSwapRepositoryV2Test {
         assertThat(result).hasSize(1)
 
         // SendWithSwap should call getPairs only once (forward), not twice (forward + reverse)
-        coVerify(exactly = 1) { tangemExpressApi.getPairs(any(), any(), any()) }
+        coVerify(exactly = 1) { tangemExpressApi.getPairs(any(), any(), any(), any()) }
     }
 
     // endregion
@@ -302,6 +302,7 @@ internal class DefaultSwapRepositoryV2Test {
                 rateType = any(),
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
             )
         } returns ApiResponse.Success(quoteResponse)
 
@@ -354,6 +355,7 @@ internal class DefaultSwapRepositoryV2Test {
                     rateType = any(),
                     userWalletId = any(),
                     refCode = any(),
+                    batchId = any(),
                 )
             } returns ApiResponse.Success(quoteResponse)
 
@@ -400,6 +402,7 @@ internal class DefaultSwapRepositoryV2Test {
                 rateType = any(),
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
             )
         } returns ApiResponse.Success(quoteResponse)
 
@@ -429,6 +432,7 @@ internal class DefaultSwapRepositoryV2Test {
                 rateType = "float",
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
             )
         }
     }
@@ -460,6 +464,7 @@ internal class DefaultSwapRepositoryV2Test {
                 rateType = any(),
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
             )
         } returns ApiResponse.Success(quoteResponse)
 
@@ -489,6 +494,7 @@ internal class DefaultSwapRepositoryV2Test {
                 rateType = "fixed",
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
             )
         }
     }
@@ -526,6 +532,7 @@ internal class DefaultSwapRepositoryV2Test {
                 rateType = any(),
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
             )
         }
     }
@@ -593,6 +600,7 @@ internal class DefaultSwapRepositoryV2Test {
         rateType = any(),
         userWalletId = any(),
         refCode = any(),
+        batchId = any(),
     )
 
     private fun createQuoteResponse(fromAmount: String) = ExchangeQuoteResponse(
@@ -615,7 +623,7 @@ internal class DefaultSwapRepositoryV2Test {
         val fromStatus = createCryptoCurrencyStatus(primaryCoin)
 
         coEvery {
-            tangemExpressApi.exchangeSent(any(), any(), any())
+            tangemExpressApi.exchangeSent(any(), any(), any(), any())
         } returns ApiResponse.Success(ExchangeSentResponseBody(txId = "tx-1", status = "ok"))
 
         // Act
@@ -633,12 +641,43 @@ internal class DefaultSwapRepositoryV2Test {
             tangemExpressApi.exchangeSent(
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
                 body = match { body ->
                     body.txId == "tx-1" &&
                         body.txHash == "0xHash" &&
                         body.payinAddress == "0xPayIn" &&
                         body.payinExtraId == null
                 },
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN card batch id WHEN swapTransactionSent THEN exchange-sent carries batch id header`() = runTest {
+        // Arrange
+        val fromStatus = createCryptoCurrencyStatus(primaryCoin)
+        every { expressUtils.getBatchId(userWallet) } returns "AF990015"
+        coEvery {
+            tangemExpressApi.exchangeSent(any(), any(), any(), any())
+        } returns ApiResponse.Success(ExchangeSentResponseBody(txId = "tx-1", status = "ok"))
+
+        // Act
+        repository.swapTransactionSent(
+            userWallet = userWallet,
+            fromCryptoCurrencyStatus = fromStatus,
+            payInAddress = "0xPayIn",
+            txId = "tx-1",
+            txHash = "0xHash",
+            txExtraId = null,
+        )
+
+        // Assert
+        coVerify(exactly = 1) {
+            tangemExpressApi.exchangeSent(
+                userWalletId = any(),
+                refCode = any(),
+                batchId = "AF990015",
+                body = any(),
             )
         }
     }
@@ -675,7 +714,7 @@ internal class DefaultSwapRepositoryV2Test {
         )
 
         coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
+            tangemExpressApi.getPairs(any(), any(), any(), any())
         } returns ApiResponse.Success(listOf(swapPair))
 
         coEvery {
@@ -718,7 +757,7 @@ internal class DefaultSwapRepositoryV2Test {
             ),
         )
 
-        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { tangemExpressApi.getPairs(any(), any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
         coEvery {
             expressRepository.getProviders(any(), any())
         } returns listOf(bridgeProvider, allowedBridgeProvider, cexProvider)
@@ -757,7 +796,7 @@ internal class DefaultSwapRepositoryV2Test {
             ),
         )
 
-        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { tangemExpressApi.getPairs(any(), any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
         coEvery { expressRepository.getProviders(any(), any()) } returns listOf(onrampProvider, cexProvider)
 
         // Act
@@ -794,7 +833,7 @@ internal class DefaultSwapRepositoryV2Test {
             ),
         )
 
-        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
+        coEvery { tangemExpressApi.getPairs(any(), any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
         coEvery { expressRepository.getProviders(any(), any()) } returns listOf(dexProvider, cexProvider)
 
         // Act
@@ -849,6 +888,7 @@ internal class DefaultSwapRepositoryV2Test {
                 userWalletId = any(),
                 partnerOperationType = any(),
                 refCode = any(),
+                batchId = any(),
                 toExtraId = any(),
                 quoteId = any(),
             )
@@ -900,6 +940,7 @@ internal class DefaultSwapRepositoryV2Test {
                 userWalletId = any(),
                 partnerOperationType = any(),
                 refCode = any(),
+                batchId = any(),
                 toExtraId = any(),
                 quoteId = any(),
             )

@@ -277,6 +277,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             rateType = rateType.name.lowercase(),
             userWalletId = userWallet.walletId.stringValue,
             refCode = expressUtils.getRefCode(userWallet = userWallet),
+            batchId = expressUtils.getBatchId(userWallet = userWallet),
         ).getOrThrow()
 
         val toTokenAmount = requireNotNull(response.toAmount.toBigDecimalOrNull()?.movePointLeft(response.toDecimals))
@@ -350,6 +351,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             userWalletId = userWallet.walletId.stringValue,
             partnerOperationType = expressOperationType.value,
             refCode = expressUtils.getRefCode(userWallet = userWallet),
+            batchId = expressUtils.getBatchId(userWallet = userWallet),
             toExtraId = toExtraId?.ifEmpty { null },
             quoteId = quoteId,
         ).getOrThrow()
@@ -388,6 +390,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             tangemExpressApi.exchangeSent(
                 userWalletId = userWallet.walletId.stringValue,
                 refCode = expressUtils.getRefCode(userWallet = userWallet),
+                batchId = expressUtils.getBatchId(userWallet = userWallet),
                 body = ExchangeSentRequestBody(
                     txId = txId,
                     fromNetwork = currency.network.rawId,
@@ -443,6 +446,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 tangemExpressApi.getPairs(
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
+                    batchId = expressUtils.getBatchId(userWallet = userWallet),
                     body = PairsRequestBody(
                         from = tokenInfoConverter.convertList(from),
                         to = tokenInfoConverter.convertList(to),
