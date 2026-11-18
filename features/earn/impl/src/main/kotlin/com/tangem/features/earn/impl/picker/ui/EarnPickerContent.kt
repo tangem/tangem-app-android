@@ -84,6 +84,7 @@ import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.session.EarnAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -128,6 +129,7 @@ internal fun EarnPickerContent(
         sections = sections,
         firstSectionIndex = firstSectionIndex,
         headerHeightPx = { barHeightPx + tabsHeightPx },
+        onTabClick = (state.content as? ContentUM.Ready)?.onTabClick ?: {},
     )
 
     Box(
@@ -225,19 +227,21 @@ private fun rememberSectionTabs(
     sections: ImmutableList<EarnPickerTab>,
     firstSectionIndex: Int,
     headerHeightPx: () -> Int,
+    onTabClick: (EarnPickerTab) -> Unit,
 ): ImmutableList<TangemTabItemUM> {
     val scope = rememberCoroutineScope()
     val active by remember(sections, firstSectionIndex) {
         derivedStateOf { listState.activeSection(sections, firstSectionIndex, headerHeightPx().toFloat()) }
     }
 
-    return remember(sections, active, firstSectionIndex) {
+    return remember(sections, active, firstSectionIndex, onTabClick) {
         sections.mapIndexed { position, section ->
             TangemTabItemUM.Content(
                 id = section.name,
                 label = section.label(),
                 isSelected = section == active,
                 onClick = {
+                    if (section != active) onTabClick(section)
                     scope.launch {
                         listState.animateScrollToItem(
                             index = firstSectionIndex + position,
@@ -557,8 +561,9 @@ private object PreviewData {
         override fun onRetryClick(product: EarnProduct) = Unit
         override fun onOverviewRetryClick() = Unit
         override fun onIncentiveClick() = Unit
-        override fun onInfoClick(info: EarnRowInfo) = Unit
-        override fun onLinkClick(url: String) = Unit
+        override fun onTabClick(tab: EarnPickerTab) = Unit
+        override fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?) = Unit
+        override fun onLinkClick(url: String, row: EarnRowKind?) = Unit
         override fun onCloseClick() = Unit
     }
     private val summaries = listOf(

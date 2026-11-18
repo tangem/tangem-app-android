@@ -56,15 +56,30 @@ internal class EarnCalculatorModel @Inject constructor(
     }
 
     fun onInitialStep(direction: Int) {
-        input.update { it.stepInitial(direction) }
+        if (updateInput { it.stepInitial(direction) }) {
+            params.callback.onInputChange(EarnCalculatorComponent.Input.InitialBalance)
+        }
     }
 
     fun onTopUpStep(direction: Int) {
-        input.update { it.stepMonthlyTopUp(direction) }
+        if (updateInput { it.stepMonthlyTopUp(direction) }) {
+            params.callback.onInputChange(EarnCalculatorComponent.Input.MonthlyTopUp)
+        }
     }
 
     fun onHorizonSelect(horizon: EarnHorizon) {
-        input.update { it.copy(horizon = horizon) }
+        if (updateInput { it.copy(horizon = horizon) }) {
+            params.callback.onHorizonChange(horizon)
+        }
+    }
+
+    private fun updateInput(transform: (CalculatorInput) -> CalculatorInput): Boolean {
+        val previous = input.value
+        val next = transform(previous)
+        if (next == previous) return false
+
+        input.value = next
+        return true
     }
 
     fun onBarSelected(index: Int?) {

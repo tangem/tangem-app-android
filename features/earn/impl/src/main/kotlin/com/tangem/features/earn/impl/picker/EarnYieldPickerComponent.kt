@@ -13,6 +13,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheet
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetComponent
@@ -83,6 +84,7 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
     data class Params(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
+        val source: EarnEntrySource,
         val preselected: EarnProductId?,
         val shouldRedirectToActive: Boolean,
     )

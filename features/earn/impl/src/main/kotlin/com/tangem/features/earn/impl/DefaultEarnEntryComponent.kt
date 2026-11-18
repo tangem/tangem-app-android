@@ -88,6 +88,7 @@ internal class DefaultEarnEntryComponent @AssistedInject constructor(
                 params = EarnYieldPickerComponent.Params(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = params.cryptoCurrency,
+                    source = params.source,
                     preselected = route.preselected,
                     shouldRedirectToActive = route.shouldRedirectToActive,
                 ),

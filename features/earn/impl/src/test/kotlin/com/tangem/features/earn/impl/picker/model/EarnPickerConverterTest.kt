@@ -27,6 +27,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -84,12 +85,16 @@ internal class EarnPickerConverterTest {
             calls += Call.Incentive
         }
 
-        override fun onInfoClick(info: EarnRowInfo) {
-            calls += Call.Info(info)
+        override fun onTabClick(tab: EarnPickerTab) {
+            calls += Call.Tab(tab)
         }
 
-        override fun onLinkClick(url: String) {
-            calls += Call.Link(url)
+        override fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?) {
+            calls += Call.Info(info, row)
+        }
+
+        override fun onLinkClick(url: String, row: EarnRowKind?) {
+            calls += Call.Link(url, row)
         }
 
         override fun onCloseClick() {
@@ -205,7 +210,7 @@ internal class EarnPickerConverterTest {
             val state = ready.copy(projection = null, benefits = emptyList(), details = emptyList(), incentiveRate = null)
 
             // Act
-            val actual = convert(state = state).content
+            val actual = convert(state = state).readyContent()
 
             // Assert
             val expected = ContentUM.Ready(
@@ -214,6 +219,7 @@ internal class EarnPickerConverterTest {
                 sections = persistentListOf(),
                 benefits = persistentListOf(),
                 details = persistentListOf(),
+                onTabClick = actual.onTabClick,
             )
             assertThat(actual).isEqualTo(expected)
         }
@@ -300,6 +306,46 @@ internal class EarnPickerConverterTest {
             assertThat(details[2].onInfoClick).isNull()
             assertThat(details[2].onValueClick).isNull()
             assertThat(calls).containsExactly(Call.Info(info), Call.Link("https://aave.com")).inOrder()
+        }
+
+        @Test
+        fun `GIVEN details with kinds WHEN tapping a row info THEN intents get the info and its kind`() {
+            // Arrange
+            val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
+            val risk = EarnRow(stringReference("risk"), EarnValue.Text(stringReference("Low")), info, EarnRowKind.Risk)
+            val state = ready.copy(details = listOf(risk))
+
+            // Act
+            convert(state = state).readyContent().details.single().onInfoClick?.invoke()
+
+            // Assert
+            assertThat(calls).containsExactly(Call.Info(info, EarnRowKind.Risk))
+        }
+
+        @Test
+        fun `GIVEN a link row with a kind WHEN tapping its value THEN intents get the url and the kind`() {
+            // Arrange
+            val value = EarnValue.Link(stringReference("Aave"), "https://aave.com")
+            val protocol = EarnRow(stringReference("Protocol"), value, kind = EarnRowKind.Protocol)
+            val state = ready.copy(details = listOf(protocol))
+
+            // Act
+            convert(state = state).readyContent().details.single().onValueClick?.invoke()
+
+            // Assert
+            assertThat(calls).containsExactly(Call.Link("https://aave.com", EarnRowKind.Protocol))
+        }
+
+        @Test
+        fun `GIVEN Ready WHEN onTabClick Benefits THEN intents get the tab`() {
+            // Arrange
+            val content = convert().readyContent()
+
+            // Act
+            content.onTabClick(EarnPickerTab.Benefits)
+
+            // Assert
+            assertThat(calls).containsExactly(Call.Tab(EarnPickerTab.Benefits))
         }
 
         @Test
@@ -431,8 +477,9 @@ internal class EarnPickerConverterTest {
         data class Retry(val product: EarnProduct) : Call
         data object OverviewRetry : Call
         data object Incentive : Call
-        data class Info(val info: EarnRowInfo) : Call
-        data class Link(val url: String) : Call
+        data class Tab(val tab: EarnPickerTab) : Call
+        data class Info(val info: EarnRowInfo, val row: EarnRowKind? = null) : Call
+        data class Link(val url: String, val row: EarnRowKind? = null) : Call
         data object Close : Call
     }
 }

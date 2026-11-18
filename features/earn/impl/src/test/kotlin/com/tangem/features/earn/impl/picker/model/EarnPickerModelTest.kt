@@ -7,6 +7,7 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
@@ -27,11 +28,14 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.R
+import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
+import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
@@ -49,15 +53,18 @@ import com.tangem.features.earn.impl.overview.createRate
 import com.tangem.features.earn.impl.overview.createSummary
 import com.tangem.features.earn.impl.picker.EarnPickerHeroVideo
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
+import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnProductCardUM
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
-import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
+import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnFreshness
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
@@ -65,6 +72,7 @@ import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -82,6 +90,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import io.mockk.verifyOrder
 import io.mockk.verifySequence
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -113,6 +122,7 @@ internal class EarnPickerModelTest {
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val videoFactory: LoopingVideoController.Factory = mockk()
     private val heroVideo: LoopingVideoController = mockk(relaxed = true)
     private val heroClipCache: RemoteClipCache = mockk()
@@ -128,7 +138,7 @@ internal class EarnPickerModelTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, uiMessageSender, urlOpener, overviewFetcher, summarySupplier, accountStatusListSupplier, accountStatusList)
+        clearMocks(router, uiMessageSender, urlOpener, analyticsEventHandler, overviewFetcher, summarySupplier, accountStatusListSupplier, accountStatusList)
         clearMocks(videoFactory, heroVideo)
         mockkObject(CryptoCurrencyStatusOperations)
         mockkObject(TangemLogger)
@@ -1211,6 +1221,303 @@ internal class EarnPickerModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN Auto with an active product WHEN frames THEN no Yield Picker Screen Opened`() = runTest {
+            // Arrange
+            val active = EarnPositionSummary(cryptoAmount = BigDecimal.ONE)
+            val frames = MutableStateFlow(
+                frame(summary(lending, position = active), summary(vault), source = StatusSource.CACHE),
+            )
+            val model = createModel(frames = frames, shouldRedirectToActive = true)
+
+            // Act
+            advanceUntilIdle()
+            frames.value = frame(summary(lending, position = active), summary(vault), source = StatusSource.ACTUAL)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.navigate(any(), any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.ScreenOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two products WHEN first visible frame and two more frames THEN one Yield Picker Screen Opened`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
+                val model = createModel(frames = frames)
+                advanceUntilIdle()
+
+                // Act
+                frames.value = frame(summary(lending), summary(vault), source = StatusSource.ONLY_CACHE)
+                advanceUntilIdle()
+                frames.value = frame(summary(lending, rate = "0.06"), summary(vault), source = StatusSource.ACTUAL)
+                advanceUntilIdle()
+
+                // Assert
+                val expected = EarnPickerAnalyticsEvent.ScreenOpened(
+                    source = EarnEntrySource.TokenPage,
+                    token = currency.symbol,
+                    product = "Lending",
+                    currentApy = "5.00",
+                    products = 2,
+                )
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.ScreenOpened>()) }
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN picker opened from the yield sheet WHEN first visible frame arrives THEN Screen Opened has that source`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
+                val model = createModel(frames = frames, source = EarnEntrySource.YieldSheet)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                val expected = EarnPickerAnalyticsEvent.ScreenOpened(
+                    source = EarnEntrySource.YieldSheet,
+                    token = currency.symbol,
+                    product = "Lending",
+                    currentApy = "5.00",
+                    products = 2,
+                )
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN preselected and a CACHE frame with one summary WHEN the ACTUAL frame adds a second THEN one event with Products 1`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(summary(lending), source = StatusSource.CACHE))
+                val model = createModel(frames = frames, preselected = lending.id)
+                advanceUntilIdle()
+
+                // Act
+                frames.value = frame(summary(lending), summary(vault), source = StatusSource.ACTUAL)
+                advanceUntilIdle()
+
+                // Assert
+                val expected = EarnPickerAnalyticsEvent.ScreenOpened(
+                    source = EarnEntrySource.TokenPage,
+                    token = currency.symbol,
+                    product = "Lending",
+                    currentApy = "5.00",
+                    products = 1,
+                )
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.ScreenOpened>()) }
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN chosen product rate null WHEN shown THEN no Current APY`() = runTest {
+            // Arrange
+            val lendingWithoutRate = createSummary(productId = lending.id, rate = null)
+            val frames = MutableStateFlow(frame(lendingWithoutRate, summary(vault)))
+            val model = createModel(frames = frames, preselected = lending.id)
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            val expected = EarnPickerAnalyticsEvent.ScreenOpened(
+                source = EarnEntrySource.TokenPage,
+                token = currency.symbol,
+                product = "Lending",
+                currentApy = null,
+                products = 2,
+            )
+            verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Lending chosen WHEN clicking Vault then Lending THEN ProductChip Position 2 then 1 and no second screen event`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(summary(lending), summary(vault, rate = "0.07")))
+                val model = createModel(frames = frames, preselected = lending.id)
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.card("vault").onClick()
+                advanceUntilIdle()
+                model.uiState.value.card("lending").onClick()
+                advanceUntilIdle()
+
+                // Assert
+                verifyOrder {
+                    analyticsEventHandler.send(EarnPickerAnalyticsEvent.ProductChip("Vault", 2, "7.00"))
+                    analyticsEventHandler.send(EarnPickerAnalyticsEvent.ProductChip("Lending", 1, "5.00"))
+                }
+                verify(exactly = 2) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.ProductChip>()) }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.ScreenOpened>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Lending chosen WHEN clicking Lending THEN no ProductChip`() = runTest {
+            // Arrange
+            val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
+            val model = createModel(frames = frames, preselected = lending.id)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.card("lending").onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.selectedChipIds()).containsExactly("lending")
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.ProductChip>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN onTabClick Details THEN Tab Lending Details`() = runTest {
+            // Arrange
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                preselected = lending.id,
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.ready().onTabClick(EarnPickerTab.Details)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(EarnPickerAnalyticsEvent.Tab("Lending", EarnPickerTab.Details))
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN onHorizonChange Year5 and onInputChange MonthlyTopUp THEN CalculatorHorizon and CalculatorInput with Lending`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.onHorizonChange(EarnHorizon.Year5)
+                model.onInputChange(EarnCalculatorComponent.Input.MonthlyTopUp)
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(EarnPickerAnalyticsEvent.CalculatorHorizon("Lending", EarnHorizon.Year5))
+                }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnPickerAnalyticsEvent.CalculatorInput("Lending", EarnCalculatorComponent.Input.MonthlyTopUp),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN shown WHEN onInfoClick Risk and onLinkClick url null THEN DetailRow Lending Risk and DetailRow Lending null`() =
+            runTest {
+                // Arrange
+                val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.onInfoClick(info, EarnRowKind.Risk)
+                model.onLinkClick("https://aave.com", null)
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(EarnPickerAnalyticsEvent.DetailRow("Lending", EarnRowKind.Risk))
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(EarnPickerAnalyticsEvent.DetailRow("Lending", null)) }
+                verify(exactly = 1) { urlOpener.openUrl("https://aave.com") }
+                assertThat(model.rowInfo.value).isEqualTo(
+                    EarnRowInfoUM.Text(title = stringReference("title"), text = stringReference("description")),
+                )
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN no position and balance below min deposit WHEN shown THEN NoFundsNotice and after onAddFundsClick AddFunds symbol YieldPicker, no StartEarning`() =
+            runTest {
+                // Arrange
+                stubBalance(BigDecimal.ZERO)
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.cta.onClick()
+
+                // Assert
+                verifyOrder {
+                    analyticsEventHandler.send(EarnPickerAnalyticsEvent.NoFundsNotice(currency.symbol, "Lending"))
+                    analyticsEventHandler.send(
+                        EarnPickerAnalyticsEvent.AddFunds(currency.symbol, EarnAddFundsSource.YieldPicker),
+                    )
+                }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.StartEarning>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the no funds notice shown WHEN the state is re-emitted THEN still one NoFundsNotice`() = runTest {
+            // Arrange
+            stubBalance(BigDecimal.ZERO)
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                preselected = lending.id,
+            )
+            advanceUntilIdle()
+
+            // Act
+            lending.stateFlow.value = lending.readyState().copy(description = stringReference("changed"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.NoFundsNotice>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Primary CTA WHEN onActionClick lending deposit THEN StartEarning Lending with the rate`() = runTest {
+            // Arrange
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                preselected = lending.id,
+            )
+            advanceUntilIdle()
+            val action = lending.readyState().primary.action
+
+            // Act
+            model.onActionClick(lending, action)
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(EarnPickerAnalyticsEvent.StartEarning("Lending", "5.00")) }
+            assertThat(lending.handler.actions).containsExactly(action)
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class HeroVideo {
 
         @Test
@@ -1351,9 +1658,11 @@ internal class EarnPickerModelTest {
         products: List<EarnProduct> = listOf(lending, vault),
         preselected: EarnProductId? = null,
         shouldRedirectToActive: Boolean = false,
+        source: EarnEntrySource = EarnEntrySource.TokenPage,
     ): EarnPickerModel {
         every { summarySupplier(USER_WALLET_ID) } returns frames
         val registry = EarnProductsRegistry(products = products.toSet(), rateSources = emptySet())
+        val cta = EarnPickerCta()
 
         return EarnPickerModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -1361,6 +1670,7 @@ internal class EarnPickerModelTest {
                 EarnYieldPickerComponent.Params(
                     userWalletId = USER_WALLET_ID,
                     cryptoCurrency = currency,
+                    source = source,
                     preselected = preselected,
                     shouldRedirectToActive = shouldRedirectToActive,
                 ),
@@ -1372,7 +1682,7 @@ internal class EarnPickerModelTest {
                 rateBadgeConverter = EarnRateBadgeConverter(),
                 registry = registry,
             ),
-            converter = EarnPickerConverter(registry = registry, cta = EarnPickerCta()),
+            converter = EarnPickerConverter(registry = registry, cta = cta),
             singleAccountStatusListSupplier = accountStatusListSupplier,
             overviewFetcher = overviewFetcher,
             appScope = TestAppCoroutineScope(StandardTestDispatcher(testScheduler)),
@@ -1381,6 +1691,8 @@ internal class EarnPickerModelTest {
             urlOpener = urlOpener,
             videoFactory = videoFactory,
             heroClipCache = heroClipCache,
+            cta = cta,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 

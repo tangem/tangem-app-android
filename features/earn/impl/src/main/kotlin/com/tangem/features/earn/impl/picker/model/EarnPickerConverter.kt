@@ -107,9 +107,13 @@ internal class EarnPickerConverter @Inject constructor(
                 incentive = state.incentiveRate.toIncentiveUM(onClick = intents::onIncentiveClick),
                 sections = EarnPickerTab.entries.filter { it.isAvailableIn(state) }.toImmutableList(),
                 benefits = state.benefits.map { block -> block.toBenefitUM() }.toImmutableList(),
-                details = state.details.map {
-                    it.toUM(onInfoClick = intents::onInfoClick, onLinkClick = intents::onLinkClick)
+                details = state.details.map { row ->
+                    row.toUM(
+                        onInfoClick = { info -> intents.onInfoClick(info, row.kind) },
+                        onLinkClick = { url -> intents.onLinkClick(url, row.kind) },
+                    )
                 }.toImmutableList(),
+                onTabClick = intents::onTabClick,
             )
         }
     }

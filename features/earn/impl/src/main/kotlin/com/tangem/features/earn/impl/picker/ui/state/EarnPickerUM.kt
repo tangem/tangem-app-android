@@ -36,6 +36,7 @@ internal data class EarnPickerUM(
             val sections: ImmutableList<EarnPickerTab>,
             val benefits: ImmutableList<EarnBenefitUM>,
             val details: ImmutableList<EarnRowUM>,
+            val onTabClick: (EarnPickerTab) -> Unit,
         ) : ContentUM
     }
 }

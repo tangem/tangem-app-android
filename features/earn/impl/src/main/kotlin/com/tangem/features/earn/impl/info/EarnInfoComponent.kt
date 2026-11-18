@@ -21,6 +21,7 @@ import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.info.ui.EarnInfoContent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import dagger.assisted.Assisted
@@ -45,6 +46,10 @@ internal class EarnInfoComponent @AssistedInject constructor(
             // The Info screen does not open the incentive sheet yet.
             callback = object : EarnCalculatorComponent.ModelCallback {
                 override fun onIncentiveClick() = Unit
+
+                override fun onHorizonChange(horizon: EarnHorizon) = Unit
+
+                override fun onInputChange(input: EarnCalculatorComponent.Input) = Unit
             },
         ),
     )
