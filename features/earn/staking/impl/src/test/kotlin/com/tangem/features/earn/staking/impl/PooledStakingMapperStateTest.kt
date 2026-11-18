@@ -21,10 +21,12 @@ import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
+import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.staking.impl.fixtures.coin
 import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
 import com.tangem.test.core.ProvideTestModels
@@ -86,10 +88,7 @@ internal class PooledStakingMapperStateTest {
                 ),
             ),
             details = listOf(
-                row(
-                    label = resourceReference(R.string.earn_product_details_risk),
-                    value = resourceReference(R.string.earn_risk_level_low),
-                ),
+                EarnRisk.Low.detailsRow(),
                 row(label = resourceReference(R.string.staking_validator), value = stringReference("P2P")),
                 row(
                     label = resourceReference(R.string.earn_product_details_withdrawals),

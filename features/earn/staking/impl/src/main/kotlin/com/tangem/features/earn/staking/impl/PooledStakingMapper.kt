@@ -34,6 +34,7 @@ import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.product.detailsRow
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
@@ -55,7 +56,7 @@ internal class PooledStakingMapper @Inject constructor() {
                 id = R.string.earn_apy_value,
                 formatArgs = wrappedList(option.apy.format { percent(canBeLower = true) }),
             ),
-            risk = EarnRisk.Low,
+            risk = RISK,
             availability = if (availability is StakingAvailability.Full) {
                 ProductAvailability.Full
             } else {
@@ -137,10 +138,7 @@ internal class PooledStakingMapper @Inject constructor() {
         val feeLabel = resourceReference(R.string.earn_product_details_performance_fee)
 
         return listOf(
-            row(
-                label = resourceReference(R.string.earn_product_details_risk),
-                value = resourceReference(R.string.earn_risk_level_low),
-            ),
+            RISK.detailsRow(),
             // The p2p.org link needs a link value in the contract; plain text until it exists.
             row(label = resourceReference(R.string.staking_validator), value = stringReference(VALIDATOR_VALUE)),
             row(
@@ -184,6 +182,8 @@ internal class PooledStakingMapper @Inject constructor() {
     private companion object {
 
         const val PERCENT_SHIFT = 2
+
+        val RISK = EarnRisk.Low
 
         // The validator is a brand name, not a translated text.
         const val VALIDATOR_VALUE = "P2P"
