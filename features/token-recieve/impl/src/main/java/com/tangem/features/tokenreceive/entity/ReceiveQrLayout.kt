@@ -1,6 +1,8 @@
 package com.tangem.features.tokenreceive.entity
 
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.google.zxing.qrcode.encoder.ByteMatrix
 import com.google.zxing.qrcode.encoder.Encoder
 import kotlin.math.abs
 
@@ -35,9 +37,18 @@ internal data class ReceiveQrLayout(
 }
 
 internal fun receiveQrLayout(content: String): ReceiveQrLayout {
-    val matrix = Encoder.encode(content, ErrorCorrectionLevel.H).matrix
+    val matrix = encodeReceiveQr(content)
     return receiveQrLayout(moduleCount = matrix.width) { row, column -> matrix.get(column, row).toInt() == 1 }
 }
+
+private fun encodeReceiveQr(content: String): ByteMatrix {
+    val matrix = Encoder.encode(content, ErrorCorrectionLevel.H).matrix
+    if (matrix.width >= MIN_MODULE_COUNT) return matrix
+    return Encoder.encode(content, ErrorCorrectionLevel.H, mapOf(EncodeHintType.QR_VERSION to MIN_VERSION)).matrix
+}
+
+private const val MIN_VERSION = 3
+private const val MIN_MODULE_COUNT = 29
 
 internal fun receiveQrLayout(moduleCount: Int, isDark: (row: Int, column: Int) -> Boolean): ReceiveQrLayout {
     val moduleSize = (ReceiveQrLayout.CANVAS_SIZE - 2 * ReceiveQrLayout.QUIET_ZONE) / moduleCount
