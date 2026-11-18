@@ -662,7 +662,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun showBuyNotSupported(country: OnrampCountry) {
-        if (state.value.buyNotSupportedMessage?.id == "buy_not_supported") return
+        if (state.value.buyNotSupportedMessage?.id == OnrampStateFactory.BUY_NOT_SUPPORTED_MESSAGE_ID) return
 
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.NoticeBuyNotSupported(

@@ -57,6 +57,7 @@ import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
+import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.tangem.test.core.ProvideTestModels
@@ -497,7 +498,7 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
 
         // Assert
-        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
         coVerify(exactly = 1) { fetchPairsUseCase.invoke(any(), any()) }
         model.onDestroy()
     }
@@ -898,7 +899,7 @@ internal class OnrampMainComponentModelTest {
             scheduler.runCurrent()
             lookup.complete(onrampCountry("USD").right())
             scheduler.runCurrent()
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
 
             // Act
             tokenSupport.complete(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.name))
@@ -906,7 +907,7 @@ internal class OnrampMainComponentModelTest {
 
             // Assert
             assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("buy_not_supported")
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.BUY_NOT_SUPPORTED_MESSAGE_ID)
             assertThat(sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeBuyNotSupported>()).hasSize(1)
             model.onDestroy()
         }

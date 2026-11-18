@@ -182,7 +182,7 @@ internal class OnrampStateFactory(
     ): OnrampMainComponentUM {
         val message = regionName?.let(::buildRegionRestrictionMessage)
         val buyNotSupportedMessage = state.buyNotSupportedMessage
-            ?.takeUnless { it.id == "country_not_supported" }
+            ?.takeUnless { it.id == COUNTRY_NOT_SUPPORTED_MESSAGE_ID }
             ?: buildCountryNotSupportedMessage().takeIf { isCountryBlocked && regionName == null }
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
@@ -227,7 +227,7 @@ internal class OnrampStateFactory(
     }
 
     private fun buildCountryNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
-        id = "country_not_supported",
+        id = COUNTRY_NOT_SUPPORTED_MESSAGE_ID,
         title = resourceReference(R.string.onramp_residency_bottomsheet_country_not_supported),
         subtitle = resourceReference(R.string.onramp_settings_residence_description),
         messageEffect = TangemMessageEffect.None,
@@ -254,7 +254,7 @@ internal class OnrampStateFactory(
     }
 
     private fun buildBuyNotSupportedMessage(): TangemMessageUM = TangemMessageUM(
-        id = "buy_not_supported",
+        id = BUY_NOT_SUPPORTED_MESSAGE_ID,
         title = resourceReference(
             id = R.string.onramp_token_is_not_supported_banner_title,
             formatArgs = wrappedList(cryptoCurrency.name),
@@ -325,4 +325,9 @@ internal class OnrampStateFactory(
         decimals = currency.precision,
         type = AmountType.FiatType(currency.code),
     )
+
+    companion object {
+        const val COUNTRY_NOT_SUPPORTED_MESSAGE_ID = "country_not_supported"
+        const val BUY_NOT_SUPPORTED_MESSAGE_ID = "buy_not_supported"
+    }
 }
