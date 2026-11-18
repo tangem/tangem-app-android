@@ -1,10 +1,12 @@
 package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
@@ -83,8 +85,7 @@ class CreateJointAccountUseCase(
                     signature = signResult.signature,
                 )
             }
-            .mapLeft(JointAccountFlowError::Failed)
-            .bind()
+            .getOrElse { cause -> raise(toRequestError(userWalletId = userWalletId, cause = cause)) }
 
         val refresh = refreshAccounts(userWalletId = userWalletId)
 
@@ -136,6 +137,19 @@ class CreateJointAccountUseCase(
     private suspend fun refreshAccountList(userWalletId: UserWalletId) {
         accountListFetcher(params = SingleAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
             TangemLogger.e("Failed to refetch the account list of $userWalletId after joint account creation", it)
+        }
+    }
+
+    private suspend fun toRequestError(userWalletId: UserWalletId, cause: Throwable): JointAccountCreationError {
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
+            TangemLogger.e("Failed to refetch joint accounts of $userWalletId after a failed creation", it)
+        }
+        val jointAccountsCount = repository.getStoredJointAccounts(userWalletId = userWalletId).size
+
+        return if (jointAccountsCount >= AccountList.MAX_JOINT_ACCOUNTS_COUNT) {
+            JointAccountCreationError.AccountsLimitReached
+        } else {
+            JointAccountFlowError.Failed(cause = cause)
         }
     }
 

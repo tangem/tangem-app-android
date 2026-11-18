@@ -9,7 +9,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -20,6 +22,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -102,6 +105,7 @@ internal class JointAccountCreationModel @Inject constructor(
                 logger.e(messageString = "Joint account creation failed: $error")
                 showError(JointAccountError(source = ErrorSource.Create, errorMessage = error.toString()))
             }
+            JointAccountCreationError.AccountsLimitReached -> showJointLimitReached()
             is JointAccountFlowError.Failed -> {
                 logger.e(messageString = "Joint account creation failed", throwable = error.cause)
                 showError(JointAccountError(source = ErrorSource.Create, cause = error.cause))
@@ -114,6 +118,20 @@ internal class JointAccountCreationModel @Inject constructor(
         router.replaceAll(
             AppRoute.Wallet,
             AppRoute.JointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId),
+        )
+    }
+
+    private fun showJointLimitReached() {
+        analyticsEventHandler.send(JointAccountAnalyticsEvent.NoticeAccountsLimitReached(LimitSource.Create))
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreUiR.string.account_add_limit_dialog_title),
+                message = resourceReference(
+                    id = CoreUiR.string.account_add_limit_dialog_description,
+                    formatArgs = wrappedList(AccountList.MAX_JOINT_ACCOUNTS_COUNT.toString()),
+                ),
+                firstActionBuilder = { okAction() },
+            ),
         )
     }
 

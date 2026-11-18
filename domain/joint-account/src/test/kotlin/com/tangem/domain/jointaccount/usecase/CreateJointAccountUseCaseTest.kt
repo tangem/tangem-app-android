@@ -257,6 +257,41 @@ internal class CreateJointAccountUseCaseTest {
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
         coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
         coEvery { repository.create(any(), any(), any()) } throws cause
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(account())
+
+        // Act
+        val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
+    }
+
+    @Test
+    fun `GIVEN creation request fails and the wallet is at the limit WHEN invoke THEN AccountsLimitReached`() =
+        runTest {
+            // Arrange — the backend refuses the 21st account with the same 400 as a malformed request
+            coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+            coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+            coEvery { repository.create(any(), any(), any()) } throws IllegalStateException("400")
+            coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns List(size = 20) { account() }
+
+            // Act
+            val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+            // Assert
+            assertThat(actual).isEqualTo(JointAccountCreationError.AccountsLimitReached.left())
+            coVerify(exactly = 1) { fetcher.invoke(params = SingleJointAccountListFetcher.Params(WALLET_ID)) }
+        }
+
+    @Test
+    fun `GIVEN creation request and the refetch fail WHEN invoke THEN the stored list still decides`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("no network")
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+        coEvery { repository.create(any(), any(), any()) } throws cause
+        coEvery { fetcher.invoke(params = any()) } returns cause.left()
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns emptyList()
 
         // Act
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)

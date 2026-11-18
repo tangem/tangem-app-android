@@ -11,4 +11,10 @@ sealed interface JointAccountCreationError : JointAccountFlowError {
      * came back in the list. Nothing left to open — the user is asked to contact support.
      */
     data object ExistingAccountNotFound : JointAccountCreationError
+
+    /**
+     * The request failed and the wallet already takes part in the maximum number of joint accounts. The backend
+     * reports the limit with the same 400 as a malformed request, so the refreshed list is what tells them apart.
+     */
+    data object AccountsLimitReached : JointAccountCreationError
 }
