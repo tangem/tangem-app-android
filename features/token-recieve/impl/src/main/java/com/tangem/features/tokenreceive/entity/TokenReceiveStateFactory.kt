@@ -13,6 +13,7 @@ import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.ens.EnsAddress
+import com.tangem.domain.models.network.Network
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
@@ -41,7 +42,7 @@ internal class TokenReceiveStateFactory(
                 is TokenReceiveType.Custom -> getCustomCurrencyIconState(tokenReceiveType)
             },
             network = cryptoCurrency.network.name,
-            isEnsResultLoading = false,
+            isEnsResultLoading = cryptoCurrency.network.nameResolvingType == Network.NameResolvingType.ENS,
             notificationConfigs = getNotifications(tokenName = tokenName).toImmutableList(),
         )
     }
