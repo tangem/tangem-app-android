@@ -13,4 +13,10 @@ data class EarnPickerRoute(
 
 data class EarnInfoRoute(val productId: EarnProductId) : EarnRoute
 
-data class EarnFlowRoute(val productId: EarnProductId, val action: EarnFlowAction) : EarnRoute
+data class EarnFlowRoute(
+    val productId: EarnProductId,
+    val action: EarnFlowAction,
+    val opener: EarnFlowOpener? = null,
+) : EarnRoute
+
+enum class EarnFlowOpener { YieldPicker, InfoScreen }

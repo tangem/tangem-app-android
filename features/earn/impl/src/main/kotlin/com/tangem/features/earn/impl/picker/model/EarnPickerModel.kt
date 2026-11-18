@@ -37,6 +37,7 @@ import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
+import com.tangem.features.earn.product.api.navigation.EarnFlowOpener
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
@@ -109,7 +110,7 @@ internal class EarnPickerModel @Inject constructor(
 
     private val productParams = EarnProduct.Params(params.userWalletId, params.cryptoCurrency)
 
-    private val navigator = InnerEarnNavigator(router)
+    private val navigator = InnerEarnNavigator(router, EarnFlowOpener.YieldPicker)
 
     /** One handler per product for the lifetime of the screen: a handler may keep state between clicks. */
     private val handlers = mutableMapOf<EarnProductId, EarnActionHandler>()
