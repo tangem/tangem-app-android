@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.creation.config.state.transformers
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountConfigUM
@@ -56,7 +57,7 @@ internal class UpdateConfigInitialStateTransformerTest {
                 value = CryptoPortfolioIcon.Icon.Home,
                 color = CryptoPortfolioIcon.Color.MexicanPink,
             ),
-            wallet = JointAccountConfigUM.WalletUM(name = "My wallet", onClick = onWalletClick),
+            wallet = JointAccountConfigUM.WalletUM(name = "My wallet", deviceIcon = DeviceIconUM.Stub(cardsCount = 1), onClick = onWalletClick),
             isContinueEnabled = true,
         )
 
