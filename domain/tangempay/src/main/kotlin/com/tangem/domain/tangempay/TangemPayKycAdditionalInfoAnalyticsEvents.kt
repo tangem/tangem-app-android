@@ -85,11 +85,7 @@ sealed class TangemPayKycAdditionalInfoAnalyticsEvents(
         ;
 
         companion object {
-            fun of(isEnabled: Boolean, isRequired: Boolean): NoticeState? = when {
-                !isEnabled -> null
-                isRequired -> SHOWN
-                else -> NOT_SHOWN
-            }
+            fun of(isRequired: Boolean): NoticeState = if (isRequired) SHOWN else NOT_SHOWN
         }
     }
 

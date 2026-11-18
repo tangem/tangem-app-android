@@ -65,7 +65,6 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.kyc.createKycAdditionalInfoBannerState
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
@@ -120,7 +119,6 @@ internal class MoneyAccountDetailsModelTest {
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore = mockk()
     private val isBalanceHiddenFlow = MutableStateFlow(false)
@@ -130,14 +128,13 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
-        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase, tangemPayFeatureToggles, getUserWalletUseCase)
+        clearMocks(moneyAccountFeatureToggles, getExploreUrlUseCase, getUserWalletUseCase)
         clearMocks(kycAdditionalInfoPopupStore)
         coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returns true
         coEvery { kycAdditionalInfoPopupStore.reset(any()) } returns Unit
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
-        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         isBalanceHiddenFlow.value = false
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
@@ -635,12 +632,9 @@ internal class MoneyAccountDetailsModelTest {
 
         @ParameterizedTest
         @MethodSource("provideScreenOpenedNoticeModels")
-        fun `GIVEN toggle and flag WHEN first loaded THEN screen opened with matching notice param`(
+        fun `GIVEN required flag WHEN first loaded THEN screen opened with matching notice param`(
             model: ScreenOpenedNoticeModel,
         ) = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns model.isToggleEnabled
-
             // Act
             val detailsModel = createModel(
                 activeAccount(balance = balance(), isKycAdditionalInfoRequired = model.isKycAdditionalInfoRequired),
@@ -833,21 +827,13 @@ internal class MoneyAccountDetailsModelTest {
         private fun provideScreenOpenedNoticeModels() = listOf(
             ScreenOpenedNoticeModel(
                 name = "active account with flag -> notice shown",
-                isToggleEnabled = true,
                 isKycAdditionalInfoRequired = true,
                 expectedNotice = NoticeState.SHOWN,
             ),
             ScreenOpenedNoticeModel(
                 name = "active account without flag -> notice not shown",
-                isToggleEnabled = true,
                 isKycAdditionalInfoRequired = false,
                 expectedNotice = NoticeState.NOT_SHOWN,
-            ),
-            ScreenOpenedNoticeModel(
-                name = "toggle off -> no notice param",
-                isToggleEnabled = false,
-                isKycAdditionalInfoRequired = false,
-                expectedNotice = null,
             ),
         )
 
@@ -872,9 +858,8 @@ internal class MoneyAccountDetailsModelTest {
 
     data class ScreenOpenedNoticeModel(
         val name: String,
-        val isToggleEnabled: Boolean,
         val isKycAdditionalInfoRequired: Boolean,
-        val expectedNotice: NoticeState?,
+        val expectedNotice: NoticeState,
     ) {
         override fun toString(): String = name
     }
@@ -1187,22 +1172,6 @@ internal class MoneyAccountDetailsModelTest {
         }
 
         @Test
-        fun `GIVEN toggle off WHEN onStart THEN no extra refresh`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
-            val model = createModel(activeAccount(balance = balance()))
-            advanceUntilIdle()
-
-            // Act
-            model.onStart()
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
-            model.onDestroy()
-        }
-
-        @Test
         fun `GIVEN account not loaded WHEN pulled to refresh THEN status fetched without tx history reload`() = runTest {
             // Arrange
             val model = createModel(emptyFlow())
@@ -1473,7 +1442,6 @@ internal class MoneyAccountDetailsModelTest {
             txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
             renewTangemPaySessionUseCase = renewTangemPaySessionUseCase,
             uiMessageSender = uiMessageSender,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             getUserWalletUseCase = getUserWalletUseCase,
             kycAdditionalInfoPopupStore = kycAdditionalInfoPopupStore,
         )

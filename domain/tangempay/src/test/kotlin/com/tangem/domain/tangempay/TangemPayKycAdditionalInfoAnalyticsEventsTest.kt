@@ -240,20 +240,17 @@ internal class TangemPayKycAdditionalInfoAnalyticsEventsTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN toggle and flag WHEN notice state resolved THEN it matches the toggle and flag`(
-            model: NoticeStateModel,
-        ) {
+        fun `GIVEN required flag WHEN notice state resolved THEN it matches the flag`(model: NoticeStateModel) {
             // Act
-            val actual = NoticeState.of(isEnabled = model.isEnabled, isRequired = model.isRequired)
+            val actual = NoticeState.of(isRequired = model.isRequired)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(
-            NoticeStateModel(isEnabled = false, isRequired = true, expected = null),
-            NoticeStateModel(isEnabled = true, isRequired = true, expected = NoticeState.SHOWN),
-            NoticeStateModel(isEnabled = true, isRequired = false, expected = NoticeState.NOT_SHOWN),
+            NoticeStateModel(isRequired = true, expected = NoticeState.SHOWN),
+            NoticeStateModel(isRequired = false, expected = NoticeState.NOT_SHOWN),
         )
     }
 
@@ -263,5 +260,5 @@ internal class TangemPayKycAdditionalInfoAnalyticsEventsTest {
         val expectedParams: Map<String, String>,
     )
 
-    data class NoticeStateModel(val isEnabled: Boolean, val isRequired: Boolean, val expected: NoticeState?)
+    data class NoticeStateModel(val isRequired: Boolean, val expected: NoticeState)
 }

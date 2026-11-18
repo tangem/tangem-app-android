@@ -23,7 +23,6 @@ import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.utils.isKycAdditionalInfoRequested
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -44,7 +43,6 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
     private val networkConnectionManager: NetworkConnectionManager,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val contributionsFetcher: MoneyAccountContributionsFetcher,
 ) : MoneyAccountStatusFetcher {
 
@@ -134,7 +132,6 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         summary: CustomerSummary,
         customerInfo: CustomerInfo,
     ): Boolean {
-        if (!tangemPayFeatureToggles.isKycAdditionalInfoEnabled) return false
         if (summary.isKycAdditionalInfoRequested != customerInfo.isKycAdditionalInfoRequested) {
             TangemLogger.e(
                 "Money account status $userWalletId: summary and customer info disagree on KYC additional info",

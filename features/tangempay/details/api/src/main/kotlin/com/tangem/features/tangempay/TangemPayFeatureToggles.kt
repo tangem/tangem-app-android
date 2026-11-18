@@ -4,5 +4,4 @@ interface TangemPayFeatureToggles {
     val isGoogleWalletPushProvisioningEnabled: Boolean
     val isGoogleWalletButtonAlwaysShown: Boolean
     val isOrderFrameworkEnabled: Boolean
-    val isKycAdditionalInfoEnabled: Boolean
 }

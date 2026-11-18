@@ -8,17 +8,11 @@ import com.tangem.domain.tangempay.model.MoneyAccountActivationState
 import com.tangem.domain.tangempay.model.PaymentAccountActivationState
 import com.tangem.domain.tangempay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 
-class ResolveMoneyAccountStatusFromSummaryUseCase(
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
-) {
+class ResolveMoneyAccountStatusFromSummaryUseCase {
 
     operator fun invoke(summary: CustomerSummary): MoneyAccountStatusValue? {
-        val state = TangemPayCustomerStateConverter.convert(
-            value = summary,
-            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
-        )
+        val state = TangemPayCustomerStateConverter.convert(summary)
         return when (state) {
             TangemPayCustomerState.KycRequired,
             TangemPayCustomerState.KycInProgress,

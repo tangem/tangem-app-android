@@ -256,7 +256,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
         coEvery { getCustomerSummaryUseCase(userWalletId, any()) } returns null.right()
         every { tangemPayFeatureToggles.isOrderFrameworkEnabled } returns false
-        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
     }
 
     /**
@@ -698,20 +697,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 assertThat(storedStatuses.last().value.toKycAdditionalInfoOutcome()).isEqualTo(model.expected)
             }
-
-        @Test
-        fun `GIVEN toggle off AND ACTIVE with PENDING WHEN invoke THEN Loaded without flag`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
-            stubHappyPath(buildCustomerInfo(paymentAccount = paymentAccount, kycStatus = KycStatus.PENDING))
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.lastLoaded().isKycAdditionalInfoRequired).isFalse()
-        }
 
         @Test
         fun `GIVEN ACTIVE with PENDING AND deactivated payment product WHEN invoke THEN Deactivated`() = runTest {

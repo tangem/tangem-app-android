@@ -26,7 +26,6 @@ import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.tangempay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -61,7 +60,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val summary: CustomerSummary = mockk()
     private val networkConnectionManager: NetworkConnectionManager = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val contributionsFetcher: MoneyAccountContributionsFetcher = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
@@ -74,7 +72,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         resolveMoneyAccountStatusFromSummaryUseCase = resolveMoneyAccountStatusFromSummaryUseCase,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         networkConnectionManager = networkConnectionManager,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
         contributionsFetcher = contributionsFetcher,
     )
 
@@ -89,11 +86,9 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             getCustomerSummaryUseCase,
             summary,
             networkConnectionManager,
-            tangemPayFeatureToggles,
             contributionsFetcher,
         )
         every { networkConnectionManager.isOnlineSync } returns true
-        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         every { summary.customerStatus } returns CustomerSummary.CustomerStatus.ACTIVE
         every { summary.kycStatus } returns CustomerSummary.KycStatus.APPROVED
         coEvery { contributionsFetcher.fetch(USER_WALLET_ID, cryptoCurrency) } returns Unit
@@ -376,24 +371,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
 
             // Assert
             verifyStored(active(isKycAdditionalInfoRequired = true))
-        }
-
-    @Test
-    fun `GIVEN active instance AND toggle off AND kyc in progress WHEN invoke THEN active account without flag`() =
-        runTest {
-            // Arrange
-            stubSummaryKycInProgress()
-            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
-            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
-                accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
-                kycStatus = KycStatus.PENDING,
-            ).right()
-
-            // Act
-            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
-
-            // Assert
-            verifyStored(active(isKycAdditionalInfoRequired = false))
         }
 
     @Test
