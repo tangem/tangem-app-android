@@ -126,6 +126,30 @@ internal class ExchangeIntentModelTest {
     }
 
     @Test
+    fun `GIVEN history wallet differs from selected WHEN proceeding THEN swap uses the history wallet`() = runTest {
+        // Arrange
+        val historyWalletId = UserWalletId("aabbcc")
+        coEvery { getExchangeIntentUseCase(historyWalletId, INTENT_ID) } returns intent.right()
+        coEvery { holdingsResolver.resolve(historyWalletId, any()) } returns
+            ExchangeIntentHoldings.Both(from = usdt, to = pol)
+        val model = createModel(testScope = this, requestedWalletId = historyWalletId)
+        advanceUntilIdle()
+
+        // Act
+        model.shownOffer().primaryButton.onClick()
+
+        // Assert
+        val expected = swapRouteConverter.convert(
+            ExchangeIntentSwapRouteConverter.Input(intent = intent, userWalletId = historyWalletId, from = usdt, to = pol),
+        )
+        assertThat(rootStack).containsExactly(expected)
+        coVerify(exactly = 1) { getExchangeIntentUseCase(historyWalletId, INTENT_ID) }
+        coVerify(exactly = 1) { holdingsResolver.resolve(historyWalletId, intent) }
+        coVerify(exactly = 0) { userWalletsListRepository.selectedUserWalletSync() }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN intent request in flight WHEN model created THEN nothing is shown yet`() = runTest {
         // Arrange
         val response = CompletableDeferred<Either<Throwable, ExchangeIntent>>()
@@ -804,7 +828,10 @@ internal class ExchangeIntentModelTest {
         ExchangeIntentSwapRouteConverter.Input(intent = intent, userWalletId = walletId, from = usdt, to = pol),
     )
 
-    private fun createModel(testScope: TestScope): ExchangeIntentModel = ExchangeIntentModel(
+    private fun createModel(
+        testScope: TestScope,
+        requestedWalletId: UserWalletId? = null,
+    ): ExchangeIntentModel = ExchangeIntentModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         getExchangeIntentUseCase = getExchangeIntentUseCase,
@@ -816,7 +843,9 @@ internal class ExchangeIntentModelTest {
         cantReachConverter = cantReachConverter,
         swapRouteConverter = swapRouteConverter,
         analyticsEventHandler = analyticsEventHandler,
-        paramsContainer = MutableParamsContainer(value = ExchangeIntentComponent.Params(intentId = INTENT_ID)),
+        paramsContainer = MutableParamsContainer(
+            value = ExchangeIntentComponent.Params(intentId = INTENT_ID, walletId = requestedWalletId),
+        ),
     )
 
     private companion object {

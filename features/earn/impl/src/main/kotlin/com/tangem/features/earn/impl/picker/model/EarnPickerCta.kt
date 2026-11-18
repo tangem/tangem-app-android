@@ -1,10 +1,11 @@
 package com.tangem.features.earn.impl.picker.model
 
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.earn.impl.guardedBy
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
@@ -22,7 +23,7 @@ internal class EarnPickerCta @Inject constructor() {
         onAddFunds: () -> Unit,
     ): TangemButtonUM {
         if (state !is EarnProductState.Ready) {
-            return button(EarnPickerTexts.startEarning, isEnabled = false)
+            return button(resourceReference(R.string.eth_yield_start_earning), isEnabled = false)
         }
 
         val primary = state.primary
@@ -32,9 +33,11 @@ internal class EarnPickerCta @Inject constructor() {
 
         val block = primary.guardedBy(state).block
         val isStart = state.position == EarnPositionState.None
+        // A product without a minimum deposit still has nothing to deposit from an empty balance
+        val isBelowDeposit = ethBalance.signum() == 0 || ethBalance < state.limits.minDeposit
         return when {
             block != null -> button(primary.label, isDimmed = true, onClick = { onBlocked(block) })
-            isStart && ethBalance < state.limits.minDeposit -> button(EarnPickerTexts.addFunds, onClick = onAddFunds)
+            isStart && isBelowDeposit -> button(resourceReference(R.string.common_add_funds), onClick = onAddFunds)
             else -> button(primary.label, onClick = { onActionClick(primary.action) })
         }
     }

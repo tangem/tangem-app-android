@@ -56,6 +56,12 @@ internal class CtaBannerLinkTest {
         ResolveModel(link = "tangem://token_chart?token_id=bitcoin", expected = CtaBannerLink.APP_LINK),
         ResolveModel(link = "tangem://joint_account", expected = CtaBannerLink.APP_LINK),
         ResolveModel(link = "tangem://pay-app-main", expected = CtaBannerLink.APP_LINK),
+        ResolveModel(
+            link = "tangem://onboard-virtual-account?entry=ff1&id=VRTACC01",
+            expected = CtaBannerLink.MONEY_ACCOUNT,
+        ),
+        ResolveModel(link = "tangem://onboard-virtual-account", expected = CtaBannerLink.MONEY_ACCOUNT),
+        ResolveModel(link = "tangem://onboard-virtual-accounts", expected = CtaBannerLink.APP_LINK),
         ResolveModel(link = "tangem://", expected = CtaBannerLink.UNSUPPORTED),
         ResolveModel(link = "tangem:swap", expected = CtaBannerLink.UNSUPPORTED),
         ResolveModel(link = "TANGEM://support", expected = CtaBannerLink.UNSUPPORTED),

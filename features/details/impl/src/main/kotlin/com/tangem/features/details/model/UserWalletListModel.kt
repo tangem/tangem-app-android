@@ -27,6 +27,7 @@ import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.utils.UserWalletSaver
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.introduction.AddWalletComponent
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -60,6 +61,11 @@ internal class UserWalletListModel @Inject constructor(
         isClickableIfLocked = true,
         onWalletClick = ::onWalletClicked,
     )
+
+    val addWalletSheetRequests: SharedFlow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    val addWalletModelCallbacks = AddWalletModelCallbacks()
 
     val state: MutableStateFlow<UserWalletListUM> = MutableStateFlow(
         value = UserWalletListUM(
@@ -110,7 +116,7 @@ internal class UserWalletListModel @Inject constructor(
         if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
             showAddWalletBottomSheet()
         } else {
-            router.push(AppRoute.CreateWalletSelection)
+            addWalletSheetRequests.tryEmit(Unit)
         }
     }
 
@@ -138,7 +144,10 @@ internal class UserWalletListModel @Inject constructor(
     private fun onAddHardwareWalletClick() {
         analyticsEventHandler.send(Settings.ButtonAddHardwareWallet(getWalletsType()))
         hideAddWalletBottomSheet()
+        scanAndSaveUserWallet()
+    }
 
+    private fun scanAndSaveUserWallet() {
         withProgress(isWalletSavingInProgress) {
             userWalletSaver.scanAndSaveUserWallet(modelScope)
         }
@@ -177,6 +186,11 @@ internal class UserWalletListModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    inner class AddWalletModelCallbacks : AddWalletComponent.ModelCallbacks {
+
+        override fun onAddCardClick() = scanAndSaveUserWallet()
     }
 
     private fun onWalletReorder(fromIndex: Int, toIndex: Int) {

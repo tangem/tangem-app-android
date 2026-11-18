@@ -17,7 +17,6 @@ internal class DefaultJointRefundReceiverProvider @Inject constructor(
     override suspend fun refundReceiver(): String {
         return when (apiConfigsManager.getEnvironmentConfig(TangemGatewayApiConfig.TANGEM_TECH_ID).environment) {
             ApiEnvironment.PROD,
-            ApiEnvironment.PROD_NEW,
             -> PROD_TREASURY
             else -> TEST_TREASURY
         }

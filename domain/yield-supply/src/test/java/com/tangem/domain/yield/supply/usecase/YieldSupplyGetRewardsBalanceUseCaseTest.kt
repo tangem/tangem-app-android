@@ -13,7 +13,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase.Companion.TICK_MILLIS
+import com.tangem.domain.yield.supply.usecase.RewardsBalanceTicker.TICK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -312,10 +312,10 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
 
         val apyFraction = apy.divide(BigDecimal("100"), 18, RoundingMode.HALF_UP)
         val perTickCrypto = amount.multiply(apyFraction)
-            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .multiply(RewardsBalanceTicker.TICK_SECONDS_BD)
             .divide(
-                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
-                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RewardsBalanceTicker.SECONDS_PER_YEAR_BD,
+                RewardsBalanceTicker.SCALE,
                 RoundingMode.HALF_UP,
             )
             .abs()
@@ -323,10 +323,10 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
 
         val fiatAmountStart = amount.multiply(fiatRate)
         val perTickFiat = fiatAmountStart.multiply(apyFraction)
-            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .multiply(RewardsBalanceTicker.TICK_SECONDS_BD)
             .divide(
-                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
-                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RewardsBalanceTicker.SECONDS_PER_YEAR_BD,
+                RewardsBalanceTicker.SCALE,
                 RoundingMode.HALF_UP,
             )
             .abs()
@@ -410,16 +410,16 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
 
     private fun initialPerTickDelta(amount: BigDecimal, apy: BigDecimal): BigDecimal {
         val apyFraction = apy.divide(
-            YieldSupplyGetRewardsBalanceUseCase.HUNDRED_BD,
-            YieldSupplyGetRewardsBalanceUseCase.SCALE,
+            RewardsBalanceTicker.HUNDRED_BD,
+            RewardsBalanceTicker.SCALE,
             RoundingMode.HALF_UP,
         )
         return amount
             .multiply(apyFraction)
-            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .multiply(RewardsBalanceTicker.TICK_SECONDS_BD)
             .divide(
-                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
-                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RewardsBalanceTicker.SECONDS_PER_YEAR_BD,
+                RewardsBalanceTicker.SCALE,
                 RoundingMode.HALF_UP,
             )
             .abs()
@@ -427,30 +427,30 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
 
     private fun nextBalance(current: BigDecimal, apy: BigDecimal): BigDecimal {
         val apyFraction = apy.divide(
-            YieldSupplyGetRewardsBalanceUseCase.HUNDRED_BD,
-            YieldSupplyGetRewardsBalanceUseCase.SCALE,
+            RewardsBalanceTicker.HUNDRED_BD,
+            RewardsBalanceTicker.SCALE,
             RoundingMode.HALF_UP,
         )
         val perTickDelta = current
             .multiply(apyFraction)
-            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .multiply(RewardsBalanceTicker.TICK_SECONDS_BD)
             .divide(
-                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
-                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RewardsBalanceTicker.SECONDS_PER_YEAR_BD,
+                RewardsBalanceTicker.SCALE,
                 RoundingMode.HALF_UP,
             )
         return current.add(perTickDelta)
     }
 
     private fun calculateMinVisibleDecimalsForTest(perTickDeltaAbs: BigDecimal): Int {
-        if (perTickDeltaAbs <= BigDecimal.ZERO) return YieldSupplyGetRewardsBalanceUseCase.MIN_DECIMALS
+        if (perTickDeltaAbs <= BigDecimal.ZERO) return RewardsBalanceTicker.MIN_DECIMALS
         val perTickAsDouble = perTickDeltaAbs.toDouble()
-        if (perTickAsDouble.isNaN() || perTickAsDouble.isInfinite()) return YieldSupplyGetRewardsBalanceUseCase.MIN_DECIMALS
-        val safe = if (perTickAsDouble <= 0.0) YieldSupplyGetRewardsBalanceUseCase.EPSILON else perTickAsDouble
-        val raw = ceil(-kotlin.math.ln(safe) / YieldSupplyGetRewardsBalanceUseCase.LN_10)
+        if (perTickAsDouble.isNaN() || perTickAsDouble.isInfinite()) return RewardsBalanceTicker.MIN_DECIMALS
+        val safe = if (perTickAsDouble <= 0.0) RewardsBalanceTicker.EPSILON else perTickAsDouble
+        val raw = ceil(-kotlin.math.ln(safe) / RewardsBalanceTicker.LN_10)
         return raw.toInt().coerceIn(
-            YieldSupplyGetRewardsBalanceUseCase.MIN_DECIMALS,
-            YieldSupplyGetRewardsBalanceUseCase.FIAT_MAX_DECIMALS,
+            RewardsBalanceTicker.MIN_DECIMALS,
+            RewardsBalanceTicker.FIAT_MAX_DECIMALS,
         )
     }
 

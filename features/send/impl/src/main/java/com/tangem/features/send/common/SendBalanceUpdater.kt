@@ -1,7 +1,7 @@
 package com.tangem.features.send.common
 
 import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
 import com.tangem.domain.account.status.utils.BalanceContributionsRefresher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -25,7 +25,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
-    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
+    private val nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher,
     private val balanceContributionsRefresher: BalanceContributionsRefresher,
     private val coroutineScope: AppCoroutineScope,
     @Assisted private val userWallet: UserWallet,
@@ -76,7 +76,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
 
     private suspend fun refreshNonPortfolioCurrencies() {
         delay(BALANCE_UPDATE_DELAY)
-        nonPortfolioCurrenciesProvider.refresh(userWalletId = userWallet.walletId, network = cryptoCurrency.network)
+        nonPortfolioCurrenciesFetcher.fetch(userWalletId = userWallet.walletId, network = cryptoCurrency.network)
     }
 
     private suspend fun updateTxHistory() {

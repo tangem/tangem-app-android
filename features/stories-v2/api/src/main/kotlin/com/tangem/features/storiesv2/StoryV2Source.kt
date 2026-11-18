@@ -7,6 +7,7 @@ package com.tangem.features.storiesv2
 enum class StoryV2Source(val analyticsValue: String) {
     MAIN(analyticsValue = "Main"),
     WALLET_SETTINGS(analyticsValue = "Wallet Settings"),
+    PERMANENT_BANNER(analyticsValue = "Permanent Banner"),
     TOKEN(analyticsValue = "Token"),
     MARKETS(analyticsValue = "Markets"),
     TANGEM_PAY(analyticsValue = "Tangem Pay"),

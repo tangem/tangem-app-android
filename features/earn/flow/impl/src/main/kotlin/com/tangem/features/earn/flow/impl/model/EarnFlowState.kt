@@ -20,7 +20,10 @@ internal enum class EarnFlowStep { Amount, Confirm, Result }
  * [amountState] holds the amount the user entered, before the fee is deducted; [plan] carries the amount that goes
  * into the protocol. [planFee] is the fee [plan] was prepared with: a plan built for another fee is never verified.
  * [minAmount] comes from the session's `BelowMinimum` and joins the amount field validation from then on.
+ * [feeDeduction] is the fee the amount shares a balance with: `null` until the first fee arrives, zero when the fee is
+ * paid from elsewhere. [pendingSharePercent] is a Max or percent tap that waits for that fee.
  * [sentAmount] keeps the plan's amount for the result: the plan itself is dropped once the transaction is sent.
+ * [sentPlan] is that dropped plan, kept only for the confirmation to show until the result replaces it.
  */
 internal data class EarnFlowState(
     val step: EarnFlowStep,
@@ -29,6 +32,8 @@ internal data class EarnFlowState(
     val appCurrency: AppCurrency? = null,
     val maxAmount: BigDecimal? = null,
     val minAmount: BigDecimal? = null,
+    val feeDeduction: BigDecimal? = null,
+    val pendingSharePercent: Int? = null,
     val amountState: AmountState = AmountState.Empty,
     val fee: FeeSelectorUM = FeeSelectorUM.Loading,
     val isAmountSubtractAvailable: Boolean = false,
@@ -41,9 +46,19 @@ internal data class EarnFlowState(
     val explorerUrl: String? = null,
     val resultTimestamp: Long? = null,
     val sentAmount: BigDecimal? = null,
+    val sentPlan: EarnPlan? = null,
     @DrawableRes val walletIcon: Int? = null,
+    val isHoldToConfirm: Boolean = false,
     val source: AccountTitleUM? = null,
 ) {
+
+    /** [maxAmount] less [feeDeduction]: the Max, percent presets and the field limit all count from it. */
+    val availableMax: BigDecimal?
+        get() {
+            val max = maxAmount ?: return null
+            val deduction = feeDeduction ?: return max
+            return (max - deduction).coerceAtLeast(BigDecimal.ZERO)
+        }
 
     val feeSelection: EarnFeeSelection?
         get() = (fee as? FeeSelectorUM.Content)
@@ -65,6 +80,9 @@ internal data class EarnFlowState(
             ?.cryptoAmount
             ?.value
             ?.takeIf { it.signum() > 0 }
+
+    val isAmountInvalid: Boolean
+        get() = (amountState as? AmountState.Data)?.amountTextField?.isError == true
 
     /** [enteredAmount] reduced by the fee when both do not fit into the balance, as Send and Staking do it. */
     val sendingAmount: BigDecimal?

@@ -216,7 +216,10 @@ internal class CardSettingsModel @Inject constructor(
     }
 
     private fun resetWalletToFactorySettings() {
-        val scanResponse = cardSettingsInteractor.requireScanResponse()
+        val scanResponse = cardSettingsInteractor.scannedScanResponse.value ?: run {
+            TangemLogger.e("Impossible to reset card if ScanResponse is null")
+            return
+        }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
             router.push(
@@ -244,7 +247,10 @@ internal class CardSettingsModel @Inject constructor(
     }
 
     private fun changeAccessCode() = modelScope.launch {
-        val scanResponse = cardSettingsInteractor.requireScanResponse()
+        val scanResponse = cardSettingsInteractor.scannedScanResponse.value ?: run {
+            TangemLogger.e("Impossible to change access code if ScanResponse is null")
+            return@launch
+        }
 
         when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
             is CompletionResult.Success -> analyticsEventHandler.send(CardSettingsAnalyticsEvent.UserCodeChanged())

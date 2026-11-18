@@ -7,7 +7,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.core.navigation.deeplink.DeepLinkScheme
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.offramp.model.PendingOfframp
 import com.tangem.domain.offramp.repository.OfframpRepository

@@ -14,9 +14,12 @@ data class MarketingBanner(
     val partnerLabel: String? = null,
     val buttonText: String? = null,
     val hasGlow: Boolean = false,
+    val replacesSlot: RecommendedSlot? = null,
 ) {
 
     enum class UiType { STANDALONE, LINKED_TO_PROVIDER, PSEUDO_PROVIDER, STANDALONE_CTA }
 
     enum class IconAlign { LEFT, RIGHT }
+
+    enum class RecommendedSlot { BEST, FASTEST }
 }

@@ -419,7 +419,7 @@ internal class WalletSettingsModel @Inject constructor(
         modelScope.launch {
             hardwareUpgradeLauncher.launch(
                 userWalletId = params.userWalletId,
-                source = AppRoute.HardwareUpgradeStories.Source.WALLET_SETTINGS,
+                source = AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS,
             )
         }.saveIn(upgradeJobHolder)
     }

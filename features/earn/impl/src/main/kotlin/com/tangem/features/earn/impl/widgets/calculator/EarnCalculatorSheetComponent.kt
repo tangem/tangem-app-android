@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.haze.hazeSourceTangem
@@ -13,6 +14,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.earn.impl.widgets.calculator.ui.LocalEarnCalculatorOnGlass
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -38,7 +40,7 @@ internal class EarnCalculatorSheetComponent @AssistedInject constructor(
             onBack = ::dismiss,
             title = {
                 TangemModal.TopNavigation(
-                    title = EarnCalculatorTexts.title,
+                    title = resourceReference(R.string.earn_calculator_title),
                     onClose = ::dismiss,
                 )
             },

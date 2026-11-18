@@ -12,7 +12,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultTangemPayOnboardingSuccessComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
-    @Assisted private val params: Unit,
+    @Assisted private val params: TangemPayOnboardingSuccessComponent.Params,
 ) : TangemPayOnboardingSuccessComponent, AppComponentContext by context {
 
     private val model: TangemPayOnboardingSuccessModel = getOrCreateModel(params)
@@ -21,6 +21,7 @@ internal class DefaultTangemPayOnboardingSuccessComponent @AssistedInject constr
     override fun Content(modifier: Modifier) {
         TangemThemeRedesign {
             TangemPayOnboardingSuccessScreen(
+                product = params.product,
                 onCloseClick = model::onCloseClick,
                 animated = true,
                 modifier = modifier,
@@ -30,6 +31,9 @@ internal class DefaultTangemPayOnboardingSuccessComponent @AssistedInject constr
 
     @AssistedFactory
     interface Factory : TangemPayOnboardingSuccessComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultTangemPayOnboardingSuccessComponent
+        override fun create(
+            context: AppComponentContext,
+            params: TangemPayOnboardingSuccessComponent.Params,
+        ): DefaultTangemPayOnboardingSuccessComponent
     }
 }

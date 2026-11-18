@@ -31,6 +31,8 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -112,12 +114,11 @@ private fun PseudoProviderHeader(banner: MarketingBannerUM, onClick: () -> Unit,
             }
         }
 
-        val buttonText = banner.buttonText
-        if (!buttonText.isNullOrBlank()) {
+        banner.buttonText?.let { buttonText ->
             SpacerW(8.dp)
             PrimaryButton(
                 size = TangemButtonSize.RoundedAction,
-                text = buttonText,
+                text = buttonText.resolveReference(),
                 onClick = onClick,
             )
         }
@@ -194,7 +195,7 @@ private class PseudoProviderMarketingBannerPreviewProvider : PreviewParameterPro
         subtitle = "Pay by bank transfer",
         etaLabel = "up to 4 hours",
         partnerLabel = "via MoonPay",
-        buttonText = "Request",
+        buttonText = stringReference("Request"),
         hasGlow = true,
     )
 

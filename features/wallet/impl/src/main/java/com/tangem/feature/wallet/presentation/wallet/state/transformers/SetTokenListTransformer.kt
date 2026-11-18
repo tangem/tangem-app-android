@@ -35,6 +35,7 @@ internal class SetTokenListTransformer(
     private val isRedesignedAccountRowsEnabled: Boolean = false,
     @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
     private val isRedesignedTokenRowsEnabled: Boolean = false,
+    private val isTangemPayGroupEnabled: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -79,10 +80,13 @@ internal class SetTokenListTransformer(
                 val tokensListUM = toLoadedState()
                 val isTokensEmpty = !hasPersonalCurrencies()
                 val areActionsAvailable = getTotalFiatBalance().areActionsAvailable()
+                val tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState()
+                val moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedMoneyAccountState()
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
-                    tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
-                    moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedMoneyAccountState(),
+                    tangemPayMainUM = tangemPayMainUM,
+                    moneyAccountMainUM = moneyAccountMainUM,
+                    tangemPayGroupUM = tangemPayGroupState(tangemPayMainUM, moneyAccountMainUM),
                     polymarketWalletBlockUM = predictionBlockState(),
                     tokensListUM = tokensListUM,
                     areActionsAvailable = areActionsAvailable,
@@ -171,6 +175,23 @@ internal class SetTokenListTransformer(
         } ?: return this
 
         return moneyAccountConverter.convert(moneyAccountStatus)
+    }
+
+    private fun tangemPayGroupState(
+        tangemPayMainUM: TangemPayMainUM,
+        moneyAccountMainUM: MoneyAccountMainUM,
+    ): TangemPayGroupUM {
+        if (!isTangemPayGroupEnabled || params !is TokenConverterParams.Account) return TangemPayGroupUM.Hidden
+        val accountStatuses = params.accountList.accountStatuses
+        return TangemPayGroupConverter(
+            expandedAccounts = params.expandedAccounts,
+            clickIntents = clickIntents,
+        ).convert(
+            paymentStatus = accountStatuses.filterIsInstance<AccountStatus.Payment>().firstOrNull(),
+            moneyStatus = accountStatuses.filterIsInstance<AccountStatus.Money>().firstOrNull(),
+            tangemPayMainUM = tangemPayMainUM,
+            moneyAccountMainUM = moneyAccountMainUM,
+        )
     }
 
     private fun predictionBlockState(): PolymarketWalletBlockUM {

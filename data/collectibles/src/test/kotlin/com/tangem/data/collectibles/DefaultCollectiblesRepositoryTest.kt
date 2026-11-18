@@ -8,6 +8,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
 import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
+import com.tangem.data.collectibles.store.CollectiblesRegionStore
 import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
 import com.tangem.domain.collectibles.models.CollectibleBuybackStatus
 import com.tangem.domain.collectibles.models.CollectibleBuybackTx
@@ -33,6 +34,7 @@ import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResp
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse.CollectibleTxStatusDTO
 import com.tangem.grow.datasource.collectibles.models.response.GenerateBuybackDataResponse
 import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.GeoblockResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachinesResponse
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineDTO
@@ -45,18 +47,22 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 internal class DefaultCollectiblesRepositoryTest {
@@ -72,6 +78,7 @@ internal class DefaultCollectiblesRepositoryTest {
         repository = DefaultCollectiblesRepository(
             collectiblesApi = collectiblesApi,
             machineStore = CollectiblesMachineStore(store = RuntimeSharedStore()),
+            regionStore = CollectiblesRegionStore(store = RuntimeSharedStore()),
             errorResolver = CollectiblesErrorResolver(json = NetworkJsonFactory.create()),
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
@@ -716,6 +723,108 @@ internal class DefaultCollectiblesRepositoryTest {
             // Assert
             assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsRegionBlocked {
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN the backend verdict WHEN isRegionBlocked THEN it is returned for the wallet`(isBlocked: Boolean) =
+            runTest {
+                // Arrange
+                coEvery { collectiblesApi.getGeoblock(userWalletId = userWalletId.stringValue) } returns
+                    ApiResponse.Success(GeoblockResponse(isBlocked = isBlocked))
+
+                // Act
+                val actual = repository.isRegionBlocked(userWalletId)
+
+                // Assert
+                assertThat(actual).isEqualTo(isBlocked)
+                coVerify(exactly = 1) { collectiblesApi.getGeoblock(userWalletId = userWalletId.stringValue) }
+            }
+
+        @Test
+        fun `GIVEN api fails WHEN isRegionBlocked THEN the api error is thrown`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getGeoblock(any()) } returns networkError<GeoblockResponse>()
+
+            // Act
+            val actual = runCatching { repository.isRegionBlocked(userWalletId) }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
+        }
+
+        @Test
+        fun `GIVEN a known verdict WHEN isRegionBlocked THEN it is served without a request`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getGeoblock(any()) } returns ApiResponse.Success(GeoblockResponse(isBlocked = true))
+            repository.isRegionBlocked(userWalletId)
+
+            // Act
+            val actual = repository.isRegionBlocked(userWalletId)
+
+            // Assert
+            assertThat(actual).isTrue()
+            coVerify(exactly = 1) { collectiblesApi.getGeoblock(any()) }
+        }
+
+        @Test
+        fun `GIVEN a known verdict WHEN isRegionBlocked with skipCache THEN the backend is asked again`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getGeoblock(any()) } returnsMany listOf(
+                ApiResponse.Success(GeoblockResponse(isBlocked = true)),
+                ApiResponse.Success(GeoblockResponse(isBlocked = false)),
+            )
+            repository.isRegionBlocked(userWalletId)
+
+            // Act
+            val refreshed = repository.isRegionBlocked(userWalletId, skipCache = true)
+            val cached = repository.isRegionBlocked(userWalletId)
+
+            // Assert
+            assertThat(listOf(refreshed, cached)).containsExactly(false, false).inOrder()
+            coVerify(exactly = 2) { collectiblesApi.getGeoblock(any()) }
+        }
+
+        @Test
+        fun `GIVEN a known verdict WHEN a skipCache request fails THEN the known verdict is kept`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getGeoblock(any()) } returnsMany listOf(
+                ApiResponse.Success(GeoblockResponse(isBlocked = true)),
+                networkError(),
+            )
+            repository.isRegionBlocked(userWalletId)
+            runCatching { repository.isRegionBlocked(userWalletId, skipCache = true) }
+
+            // Act
+            val actual = repository.isRegionBlocked(userWalletId)
+
+            // Assert
+            assertThat(actual).isTrue()
+            coVerify(exactly = 2) { collectiblesApi.getGeoblock(any()) }
+        }
+
+        @Test
+        fun `GIVEN a check in flight WHEN isRegionBlocked THEN it waits for that check instead of asking again`() =
+            runTest {
+                // Arrange
+                val answer = CompletableDeferred<ApiResponse<GeoblockResponse>>()
+                coEvery { collectiblesApi.getGeoblock(any()) } coAnswers { answer.await() }
+                val first = async { repository.isRegionBlocked(userWalletId) }
+                runCurrent()
+
+                // Act
+                val second = async { repository.isRegionBlocked(userWalletId) }
+                runCurrent()
+                answer.complete(ApiResponse.Success(GeoblockResponse(isBlocked = true)))
+
+                // Assert
+                assertThat(listOf(first.await(), second.await())).containsExactly(true, true)
+                coVerify(exactly = 1) { collectiblesApi.getGeoblock(any()) }
+            }
     }
 
     @Nested

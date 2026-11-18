@@ -25,6 +25,8 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.features.jointaccount.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -60,6 +62,8 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val confirmJointAccountUseCase: ConfirmJointAccountUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val pollingCoordinator: JointAccountPollingCoordinator,
 ) : Model() {
@@ -160,9 +164,17 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             return
         }
 
+        if (!ensureWalletLinked()) return
+
         confirmJointAccountUseCase(account = account)
             .onLeft(::onConfirmError)
             .onRight(::onConfirmed)
+    }
+
+    private suspend fun ensureWalletLinked(): Boolean {
+        val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull() ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
     }
 
     private suspend fun findAccount(): Account.Joint? {

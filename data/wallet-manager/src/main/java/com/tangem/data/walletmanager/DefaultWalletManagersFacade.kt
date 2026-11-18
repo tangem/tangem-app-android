@@ -7,11 +7,6 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessInstructionRule
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessTransactionSigner
-import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
@@ -544,58 +539,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 is Result.Failure -> null
             }
         }
-
-    override suspend fun signTronGaslessTransactions(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionDataList: List<TransactionData>,
-        signer: TransactionSigner,
-    ): List<String>? = withContext(dispatchers.io) {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-            ?: return@withContext null
-
-        if (walletManager !is TronGaslessTransactionSigner) return@withContext null
-
-        when (val result = walletManager.signGaslessTransactions(transactionDataList, signer)) {
-            is Result.Success -> result.data
-            is Result.Failure -> null
-        }
-    }
-
-    override suspend fun signSolanaGaslessTransaction(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionData: TransactionData,
-        feePayer: String,
-        signer: TransactionSigner,
-        sponsorsRent: Boolean,
-    ): Result<SolanaGaslessSignedTransaction>? = withContext(dispatchers.io) {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(
-            transactionData = transactionData,
-            feePayer = feePayer,
-            signer = signer,
-            instructionRules = gaslessInstructionRules(sponsorsRent),
-        )
-    }
-
-    override suspend fun simulateSolanaGaslessTransaction(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionData: TransactionData,
-        feePayer: String,
-        sponsorsRent: Boolean,
-    ): Result<SolanaGaslessSimulation>? = withContext(dispatchers.io) {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(
-            transactionData = transactionData,
-            feePayer = feePayer,
-            instructionRules = gaslessInstructionRules(sponsorsRent),
-        )
-    }
-
-    private fun gaslessInstructionRules(sponsorsRent: Boolean): List<SolanaGaslessInstructionRule> =
-        if (sponsorsRent) SolanaGaslessInstructionRule.ASSOCIATED_TOKEN_ACCOUNT else emptyList()
 
     override suspend fun getScaledUiAmountMultiplier(
         userWalletId: UserWalletId,

@@ -3,7 +3,9 @@ package com.tangem.features.earn.lending.impl.product
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -51,7 +53,7 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success
 
-    override val title: TextReference = LendingTexts.title(lendingProvider.info)
+    override val title: TextReference = resourceReference(R.string.earn_product_lending_on_aave)
 
     override val provider: EarnProvider = lendingProvider.info
 
@@ -73,11 +75,7 @@ internal class LendingEarnProduct @Inject constructor(
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> {
         if (!isOffered) return flowOf(EarnProductState.Unavailable)
         return lendingSupplier(params.userWalletId).map { snapshot ->
-            val state = snapshot.assets[params.currency.id]
-            val minDeposit = state?.let {
-                lendingProvider.minDeposit(params.userWalletId, it.asset).getOrNull()
-            }
-            stateMapper.map(state, minDeposit)
+            stateMapper.map(snapshot.assets[params.currency.id])
         }
     }
 

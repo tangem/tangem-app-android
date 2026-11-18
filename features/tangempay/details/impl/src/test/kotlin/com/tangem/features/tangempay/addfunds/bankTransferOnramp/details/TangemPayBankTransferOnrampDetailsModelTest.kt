@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.error.TangemPayApiError
@@ -36,6 +37,7 @@ import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList
@@ -64,6 +66,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val detailsAnalytics: TangemPayBankTransferOnrampDetailsComponent.Analytics = mockk(relaxed = true)
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     private val defaultLocale = Locale.getDefault()
 
@@ -71,7 +74,8 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     fun resetMocks() {
         Locale.setDefault(Locale.US)
         clearMocks(router, getOnrampFeesUseCase, clipboardManager, shareManager)
-        clearMocks(detailsAnalytics)
+        clearMocks(detailsAnalytics, moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
         coEvery { getOnrampFeesUseCase(userWalletId, product) } returns emptyList<AccountFee>().right()
     }
 
@@ -377,6 +381,29 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     }
 
     @Test
+    fun `GIVEN MXN off and route credentials WHEN shown THEN the daily limit stays and no minimum deposit`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
+
+        // Act
+        val model = createModel(bankCredentials = USD_ROUTE, feeSource = FeeSource.Route)
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.minimumDeposit).isNull()
+        assertThat(state.dailyDepositLimit).isEqualTo(
+            DailyDepositLimitUM(
+                value = stringReference("$10,000"),
+                hint = resourceReference(
+                    id = R.string.tangempay_bank_transfer_details_daily_deposits_hint,
+                    formatArgs = wrappedList("$10,000"),
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN catalogue fee source with amount limits WHEN shown THEN no minimum deposit and the daily limit stays`() =
         runTest {
             // Act
@@ -525,6 +552,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         getOnrampFeesUseCase = getOnrampFeesUseCase,
         clipboardManager = clipboardManager,
         shareManager = shareManager,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     private fun TangemTabItemUM.toTabState() = (this as TangemTabItemUM.Content).let { tab ->

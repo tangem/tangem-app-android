@@ -111,6 +111,7 @@ internal class PolymarketPositionResultModel @Inject constructor(
                     else -> showError(R.string.prediction_claim_error_generic)
                 }
             }
+            PredictionClaimFailure.WalletBusy -> showError(R.string.prediction_session_key_wallet_busy)
             is PredictionClaimFailure.NothingToRedeem -> {
                 TangemLogger.i(
                     "The backend has nothing to redeem for the position, hiding the claim: ${failure.detail}",

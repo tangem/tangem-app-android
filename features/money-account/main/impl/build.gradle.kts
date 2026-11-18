@@ -11,13 +11,23 @@ android {
 }
 
 dependencies {
+    /** Common */
+    implementation(projects.common.routing)
+
     /** Core */
     api(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
+    /** Domain */
+    implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.wallets)
+
     /** Features api */
     implementation(projects.features.moneyAccount.main.api)
+    implementation(projects.features.tangempay.details.api)
 
     /** Compose */
     api(deps.compose.foundation)
@@ -28,9 +38,14 @@ dependencies {
     /** Other */
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.lifecycle.compose)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

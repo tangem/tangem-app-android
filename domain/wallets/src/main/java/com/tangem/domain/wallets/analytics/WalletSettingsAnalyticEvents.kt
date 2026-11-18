@@ -230,8 +230,9 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Create Wallet Screen Opened",
     )
 
-    class HardwareBackupScreenOpened : WalletSettingsAnalyticEvents(
+    class HardwareBackupScreenOpened(source: AnalyticsParam.ScreensSources) : WalletSettingsAnalyticEvents(
         event = "Hardware Backup Screen Opened",
+        params = mapOf(AnalyticsParam.SOURCE to source.value),
     )
 
     data class RecoveryPhraseScreenInfo(

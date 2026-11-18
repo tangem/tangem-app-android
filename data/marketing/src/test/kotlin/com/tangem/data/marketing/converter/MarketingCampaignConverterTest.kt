@@ -238,4 +238,29 @@ internal class MarketingCampaignConverterTest {
         // Assert
         assertThat(result).isEmpty()
     }
+
+    @ParameterizedTest
+    @MethodSource("replacesSlotModels")
+    fun `GIVEN replacesSlot WHEN convert THEN mapped or ignored`(model: ReplacesSlotModel) {
+        // Arrange
+        val dto = CampaignDto(
+            id = 1, type = "onramp", priority = 1,
+            banner = banner(uiType = "pseudo_provider").copy(buttonText = "Go", replacesSlot = model.raw),
+        )
+
+        // Act
+        val result = converter.convert(dto)
+
+        // Assert
+        assertThat(result.banner.replacesSlot).isEqualTo(model.expected)
+    }
+
+    private fun replacesSlotModels() = listOf(
+        ReplacesSlotModel("best", MarketingBanner.RecommendedSlot.BEST),
+        ReplacesSlotModel("fastest", MarketingBanner.RecommendedSlot.FASTEST),
+        ReplacesSlotModel("cheapest", null),
+        ReplacesSlotModel(null, null),
+    )
+
+    data class ReplacesSlotModel(val raw: String?, val expected: MarketingBanner.RecommendedSlot?)
 }

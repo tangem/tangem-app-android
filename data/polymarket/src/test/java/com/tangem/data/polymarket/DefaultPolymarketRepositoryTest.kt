@@ -37,6 +37,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyRespons
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceRequest
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
@@ -130,6 +131,7 @@ internal class DefaultPolymarketRepositoryTest {
     }
     private val l2HeaderBuilder = PolymarketL2HeaderBuilder(PolymarketHmacSigner(jvmCodec))
     private val userWalletId = UserWalletId(WALLET_ID)
+    private val serverClock = DefaultPolymarketServerClock(deviceClock = { DEVICE_NOW_MILLIS })
 
     private val repository = DefaultPolymarketRepository(
         polymarketApi = api,
@@ -141,6 +143,7 @@ internal class DefaultPolymarketRepositoryTest {
         eventErrorResolver = eventErrorResolver,
         placeOrderErrorResolver = placeOrderErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
+        serverClock = serverClock,
         dispatchers = dispatchers,
     )
 
@@ -289,6 +292,46 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN event response with a date WHEN getEvent THEN the server clock follows the backend`() = runTest {
+        // Arrange
+        coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns ApiResponse.Success(
+            data = PolymarketEventResponse(event = EVENT_DTO),
+            headers = mapOf("date" to listOf(SERVER_DATE)),
+        )
+
+        // Act
+        repository.getEvent(userWalletId = userWalletId, eventId = "event-1")
+
+        // Assert
+        assertThat(serverClock.nowMillis()).isEqualTo(SERVER_NOW_MILLIS)
+    }
+
+    @Test
+    fun `GIVEN events page with a date WHEN the feed loads THEN the server clock follows the backend`() = runTest {
+        // Arrange
+        coEvery { api.getEvents(walletId = WALLET_ID, category = null, limit = 20, cursor = null) } returns
+            ApiResponse.Success(
+                data = PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
+                headers = mapOf("date" to listOf(SERVER_DATE)),
+            )
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        repository.getEventsBatchFlow(
+            userWalletId = userWalletId,
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(serverClock.nowMillis()).isEqualTo(SERVER_NOW_MILLIS)
+        sourceScope.cancel()
+    }
+
+    @Test
     fun `GIVEN network exception WHEN getEvent THEN returns left network error`() = runTest {
         // Arrange
         coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns networkError()
@@ -419,6 +462,7 @@ internal class DefaultPolymarketRepositoryTest {
                 eventErrorResolver = eventErrorResolver,
                 placeOrderErrorResolver = placeOrderErrorResolver,
                 l2HeaderBuilder = l2HeaderBuilder,
+                serverClock = serverClock,
                 // The silent retry waits on a virtual-time dispatcher, so the test skips the 2s delay.
                 dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
             )
@@ -1338,6 +1382,149 @@ internal class DefaultPolymarketRepositoryTest {
         }
     }
 
+    @Nested
+    inner class GetPrices {
+
+        @ParameterizedTest
+        @ValueSource(strings = ["0", "0.000"])
+        fun `GIVEN empty bids WHEN fetched THEN BUY is sent and one remains a valid price`(emptyPrice: String) = runTest {
+            // Arrange
+            coEvery { clobApi.getPrices(any()) } returns ApiResponse.Success(
+                mapOf("empty" to mapOf("BUY" to emptyPrice), "one" to mapOf("BUY" to "1")),
+            )
+
+            // Act
+            val result = repository.getPrices(listOf("empty", "one"), PredictionOrderSide.BUY)
+
+            // Assert
+            assertThat(result.getOrNull()).containsExactly("empty", null, "one", BigDecimal.ONE)
+            coVerify(exactly = 1) {
+                clobApi.getPrices(listOf(PolymarketPriceRequest("empty", "BUY"), PolymarketPriceRequest("one", "BUY")))
+            }
+        }
+
+        @Test
+        fun `GIVEN duplicate assets exceeding a batch WHEN fetched THEN unique requests stay within the limit`() = runTest {
+            // Arrange
+            val assetIds = (0..500).map(Int::toString)
+            val batches = mutableListOf<List<PolymarketPriceRequest>>()
+            coEvery { clobApi.getPrices(capture(batches)) } answers {
+                ApiResponse.Success(
+                    firstArg<List<PolymarketPriceRequest>>().associate { it.tokenId to mapOf("SELL" to "0.42") },
+                )
+            }
+
+            // Act
+            val result = repository.getPrices(assetIds + assetIds, PredictionOrderSide.SELL)
+
+            // Assert
+            assertThat(batches.map { it.size }).containsExactly(500, 1).inOrder()
+            assertThat(batches.flatten().map { it.tokenId }).containsExactlyElementsIn(assetIds).inOrder()
+            assertThat(batches.flatten().map { it.side }.toSet()).containsExactly("SELL")
+            assertThat(result.getOrNull()?.size).isEqualTo(501)
+        }
+
+        @Test
+        fun `GIVEN missing and empty asks WHEN fetched THEN unavailable prices remain distinct from zero`() = runTest {
+            // Arrange
+            coEvery { clobApi.getPrices(any()) } returns ApiResponse.Success(
+                mapOf(
+                    "priced" to mapOf("BUY" to "0.10", "SELL" to "0.420"),
+                    "empty" to mapOf("SELL" to "1.000"),
+                    "wrong-side" to mapOf("BUY" to "0.10"),
+                    "zero" to mapOf("SELL" to "0"),
+                    "extra" to mapOf("SELL" to "0.50"),
+                ),
+            )
+
+            // Act
+            val result = repository.getPrices(
+                listOf("priced", "empty", "missing", "wrong-side", "zero"), PredictionOrderSide.SELL,
+            )
+
+            // Assert
+            assertThat(result.getOrNull()).containsExactly(
+                "priced", BigDecimal("0.420"), "empty", null, "missing", null, "wrong-side", null,
+                "zero", BigDecimal.ZERO,
+            )
+        }
+
+        @Test
+        fun `GIVEN no assets WHEN fetched THEN no request is sent`() = runTest {
+            // Act
+            val result = repository.getPrices(emptyList(), PredictionOrderSide.SELL)
+
+            // Assert
+            assertThat(result.getOrNull()).isEmpty()
+            coVerify(exactly = 0) { clobApi.getPrices(any()) }
+        }
+
+        @Test
+        fun `GIVEN blank asset WHEN fetched THEN entire input is rejected before network`() = runTest {
+            // Act
+            val result = repository.getPrices(listOf("valid", " "), PredictionOrderSide.SELL)
+
+            // Assert
+            assertThat(result).isEqualTo(PredictionPriceError.InvalidAsset.left())
+            coVerify(exactly = 0) { clobApi.getPrices(any()) }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["not a price", "-0.1", "1.1"])
+        fun `GIVEN malformed price WHEN fetched THEN result reports parsing failure`(price: String) = runTest {
+            // Arrange
+            coEvery { clobApi.getPrices(any()) } returns ApiResponse.Success(mapOf("asset" to mapOf("SELL" to price)))
+
+            // Act
+            val result = repository.getPrices(listOf("asset"), PredictionOrderSide.SELL)
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PredictionPriceError.Unknown::class.java)
+        }
+
+        @Test
+        fun `GIVEN failed middle batch WHEN fetched THEN partial snapshot is not returned or retried individually`() = runTest {
+            // Arrange
+            coEvery { clobApi.getPrices(any()) } returnsMany listOf(
+                ApiResponse.Success(emptyMap()),
+                httpError(code = Code.NOT_FOUND, body = "missing book"),
+            )
+
+            // Act
+            val result = repository.getPrices((0..1000).map(Int::toString), PredictionOrderSide.SELL)
+
+            // Assert
+            assertThat(result).isEqualTo(PredictionPriceError.Unknown(404, "missing book").left())
+            coVerify(exactly = 2) { clobApi.getPrices(any()) }
+            coVerify(exactly = 0) { clobApi.getPrice(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN transport timeout WHEN fetched THEN network failure is preserved`() = runTest {
+            // Arrange
+            coEvery { clobApi.getPrices(any()) } returns timeoutError()
+
+            // Act
+            val result = repository.getPrices(listOf("asset"), PredictionOrderSide.SELL)
+
+            // Assert
+            assertThat(result).isEqualTo(PredictionPriceError.Network.left())
+        }
+
+        @Test
+        fun `GIVEN cancellation WHEN fetching a batch THEN cancellation propagates`() = runTest {
+            // Arrange
+            val cancellation = CancellationException("left the screen")
+            coEvery { clobApi.getPrices(any()) } throws cancellation
+
+            // Act
+            val result = runCatching { repository.getPrices(listOf("asset"), PredictionOrderSide.SELL) }
+
+            // Assert
+            assertThat(result.exceptionOrNull()).isSameInstanceAs(cancellation)
+        }
+    }
+
     @Test
     fun `GIVEN credentials WHEN getBalanceAllowance THEN signs the read path and converts the base units`() = runTest {
         // Arrange
@@ -1561,6 +1748,9 @@ internal class DefaultPolymarketRepositoryTest {
         const val SESSION_KEY = "0x5e55000000000000000000000000000000000002"
         const val ORDER_ID = "0x6b2e"
         const val ASSET_ID = "1116047"
+        const val DEVICE_NOW_MILLIS = 1_787_000_000_000L
+        const val SERVER_DATE = "Thu, 17 Sep 2026 12:34:51 GMT"
+        const val SERVER_NOW_MILLIS = 1_789_648_491_000L
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"

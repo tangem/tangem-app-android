@@ -1,6 +1,7 @@
 package com.tangem.domain.mcp.models
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.TestInstance
@@ -33,6 +34,16 @@ internal class McpRequestTest {
         McpRequest.Intent(
             id = "intent-id",
             source = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
+        ),
+        McpRequest.Intent(
+            id = "intent-id",
+            source = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
+            walletId = UserWalletId("aabbcc"),
+        ),
+        McpRequest.Intent(
+            id = "intent-id",
+            source = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
+            walletId = UserWalletId("aabbcc"),
         ),
     )
 }

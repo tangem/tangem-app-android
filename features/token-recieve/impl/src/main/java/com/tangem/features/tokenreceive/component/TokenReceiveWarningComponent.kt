@@ -34,5 +34,6 @@ internal class TokenReceiveWarningComponent(
         val callback: TokenReceiveWarningModelCallback,
         val onDismiss: () -> Unit,
         val network: Network,
+        val networkLabel: String?,
     )
 }

@@ -47,6 +47,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelec
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencyChoice
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
@@ -86,6 +87,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val yieldSupplyStopEarningUseCase: YieldSupplyStopEarningUseCase,
     private val urlOpener: UrlOpener,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
@@ -320,10 +322,18 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 cryptoCurrency = cryptoCurrency,
                 txIds = listOf(txId),
+                isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
             )
             yieldSupplyTxHistoryUpdater.scheduleUpdates(userWallet.walletId, cryptoCurrency, listOf(txId))
             params.callback.onStopEarningTransactionSent()
         }
+    }
+
+    private suspend fun isHeldOutsidePortfolio(): Boolean {
+        return currencyStatusResolver.isHeldOutsidePortfolio(
+            userWalletId = userWallet.walletId,
+            currency = cryptoCurrency,
+        )
     }
 
     private suspend fun onLoadFee(load: Int) = coroutineScope {
@@ -331,6 +341,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
         ).getOrNull()
         val nativeFeeStatus = feeStatus ?: cryptoCurrencyStatus
         if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) {

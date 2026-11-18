@@ -15,6 +15,8 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
@@ -24,9 +26,12 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class JointAccountCreationModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val createJointAccount: CreateJointAccountUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -53,6 +58,8 @@ internal class JointAccountCreationModel @Inject constructor(
             return
         }
 
+        if (!ensureWalletLinked(userWalletId = config.walletId)) return
+
         createJointAccount(
             userWalletId = config.walletId,
             config = JointAccountConfig(
@@ -75,6 +82,12 @@ internal class JointAccountCreationModel @Inject constructor(
                 openMembers(userWalletId = config.walletId, cryptoAccountId = account.cryptoAccountId)
             },
         )
+    }
+
+    private suspend fun ensureWalletLinked(userWalletId: UserWalletId): Boolean {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
     }
 
     // TODO: a separate task will split the cases apart — "the account exists but is not in the list" deserves

@@ -6,7 +6,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.uri.PromoPageUrlValidator
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.PromoPageRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.test.core.ProvideTestModels
@@ -41,7 +40,6 @@ internal class PromoPageRouterTest {
     private val selectedWallet = MutableStateFlow<UserWallet?>(null)
     private val promoPageRepository: PromoPageRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val marketingFeatureToggles: MarketingFeatureToggles = mockk()
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val unlockedWallet: UserWallet.Hot = mockk { every { isLocked } returns false }
     private val lockedWallet: UserWallet.Hot = mockk { every { isLocked } returns true }
@@ -49,7 +47,6 @@ internal class PromoPageRouterTest {
     private val router = PromoPageRouter(
         promoPageRepository = promoPageRepository,
         userWalletsListRepository = userWalletsListRepository,
-        marketingFeatureToggles = marketingFeatureToggles,
         appRouter = appRouter,
         appCoroutineScope = TestAppCoroutineScope(),
     )
@@ -69,14 +66,13 @@ internal class PromoPageRouterTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(promoPageRepository, userWalletsListRepository, marketingFeatureToggles, appRouter)
+        clearMocks(promoPageRepository, userWalletsListRepository, appRouter)
         keptPage.value = null
         selectedWallet.value = unlockedWallet
         every { promoPageRepository.observePage() } returns keptPage
         coEvery { promoPageRepository.setPage(any()) } answers { keptPage.value = firstArg() }
         coEvery { promoPageRepository.consumePage() } answers { keptPage.getAndUpdate { null } }
         every { userWalletsListRepository.selectedUserWallet } returns selectedWallet
-        every { marketingFeatureToggles.isPromoPageEnabled } returns true
         every { PromoPageUrlValidator.isAllowed(any()) } returns true
     }
 
@@ -89,7 +85,6 @@ internal class PromoPageRouterTest {
         fun `GIVEN deep link WHEN savePage THEN only a promo_page link replaces the kept page`(model: SavePageModel) {
             // Arrange
             keptPage.value = OLD_PAGE
-            every { marketingFeatureToggles.isPromoPageEnabled } returns model.isToggleOn
             val uri = deepLinkUri(scheme = model.scheme, host = model.host, pages = model.pages)
 
             // Act
@@ -103,7 +98,6 @@ internal class PromoPageRouterTest {
             SavePageModel(name = "first non-empty page", pages = listOf("", PAGE, OLD_PAGE), expected = PAGE),
             SavePageModel(name = "no page", pages = emptyList(), expected = null),
             SavePageModel(name = "empty page", pages = listOf(""), expected = null),
-            SavePageModel(name = "toggle off", isToggleOn = false, expected = OLD_PAGE),
             SavePageModel(name = "another target", host = "main", expected = OLD_PAGE),
             SavePageModel(name = "web link", scheme = "https", expected = OLD_PAGE),
             SavePageModel(name = "opaque wc link", scheme = "wc", host = null, expected = OLD_PAGE),
@@ -166,7 +160,6 @@ internal class PromoPageRouterTest {
                 // Arrange
                 keptPage.value = PAGE
                 selectedWallet.value = model.selectedWallet
-                every { marketingFeatureToggles.isPromoPageEnabled } returns model.isToggleOn
 
                 // Act
                 router.observe(backgroundScope, MutableStateFlow(model.route))
@@ -195,7 +188,6 @@ internal class PromoPageRouterTest {
             WaitingPageModel(name = "another screen", selectedWallet = unlockedWallet, route = AppRoute.AppSettings),
             WaitingPageModel(name = "locked wallet", selectedWallet = lockedWallet),
             WaitingPageModel(name = "no selected wallet", selectedWallet = null),
-            WaitingPageModel(name = "toggle off", selectedWallet = unlockedWallet, isToggleOn = false),
         )
     }
 
@@ -214,7 +206,6 @@ internal class PromoPageRouterTest {
         val scheme: String = "tangem",
         val host: String? = "promo_page",
         val pages: List<String> = listOf(PAGE),
-        val isToggleOn: Boolean = true,
         val expected: String?,
     ) {
         override fun toString(): String = name
@@ -224,7 +215,6 @@ internal class PromoPageRouterTest {
         val name: String,
         val selectedWallet: UserWallet?,
         val route: AppRoute = AppRoute.Wallet,
-        val isToggleOn: Boolean = true,
     ) {
         override fun toString(): String = name
     }

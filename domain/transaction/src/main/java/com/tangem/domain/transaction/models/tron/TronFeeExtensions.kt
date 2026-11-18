@@ -7,11 +7,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 /**
- * TRX is taken without quoting the gasless fee when it covers the native fee and the account's own energy
- * covers the transfer: such a fee is close to zero, and the decision needs neither rates nor the gasless service.
+ * TRX is taken without quoting the gasless fee when it covers the native fee and the account's own energy lowers
+ * it, even partly: the product keeps gasless only for accounts without energy, so the decision needs neither rates
+ * nor the gasless service.
  */
-fun TransactionFee.isPaidByOwnTronEnergy(nativeStatus: CryptoCurrencyStatus): Boolean =
-    nativeStatus.canPayNativeFee(this) && isCoveredByOwnTronEnergy()
+fun TransactionFee.isLoweredByOwnTronEnergy(nativeStatus: CryptoCurrencyStatus): Boolean =
+    nativeStatus.canPayNativeFee(this) && spendsOwnTronEnergy()
 
 /** Once the gasless fee is quoted, TRX is taken when it covers the native fee and costs no more in fiat. */
 fun TransactionFee.isPreferredOverTronGasless(
@@ -30,9 +31,9 @@ fun CryptoCurrencyStatus.canPayNativeFee(fee: TransactionFee): Boolean {
 }
 
 /** A fee with no estimated energy is not treated as covered: a token transfer always needs energy. */
-internal fun TransactionFee.isCoveredByOwnTronEnergy(): Boolean {
+internal fun TransactionFee.spendsOwnTronEnergy(): Boolean {
     val tronFee = normal as? Fee.Tron ?: return false
-    return tronFee.feeEnergy > 0 && tronFee.remainingEnergy >= tronFee.feeEnergy
+    return tronFee.feeEnergy > 0 && tronFee.remainingEnergy > 0
 }
 
 /**

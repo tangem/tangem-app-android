@@ -5,6 +5,7 @@ import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveScoresRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveQuotesRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
+import com.tangem.data.polymarket.DefaultPolymarketServerClock
 import com.tangem.data.polymarket.DefaultPolymarketPriceHistoryRepository
 import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.DefaultPolymarketRedeemRepository
@@ -28,6 +29,7 @@ import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketServerClock
 import com.tangem.domain.polymarket.PolymarketPriceHistoryRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
@@ -75,6 +77,9 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketRepository(impl: DefaultPolymarketRepository): PolymarketRepository
+
+    @Binds
+    fun bindServerClock(impl: DefaultPolymarketServerClock): PolymarketServerClock
 
     @Binds
     fun bindPriceHistoryRepository(impl: DefaultPolymarketPriceHistoryRepository): PolymarketPriceHistoryRepository

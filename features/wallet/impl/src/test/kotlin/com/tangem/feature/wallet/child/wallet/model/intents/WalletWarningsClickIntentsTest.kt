@@ -185,7 +185,7 @@ internal class WalletWarningsClickIntentsTest {
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(any<WalletScreenAnalyticsEvent.MainScreen.ButtonUpgrade>()) }
         coVerify(exactly = 1) {
-            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.HardwareUpgradeStories.Source.MAIN)
+            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER)
         }
     }
 

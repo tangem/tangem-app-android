@@ -31,6 +31,7 @@ import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -325,19 +326,23 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class WalletHardwareBackup(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
+        val source: Source,
+    ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}") {
+
+        /** Entry point the hardware wallet upgrade was started from, passed on through the story if one is shown */
+        enum class Source {
+            UPGRADE_BANNER,
+            PERMANENT_BANNER,
+            WALLET_SETTINGS,
+            BACKUP,
+        }
+    }
 
     @Serializable
     data class HardwareUpgradeStories(
         val userWalletId: UserWalletId,
-        val source: Source,
-    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}") {
-
-        enum class Source {
-            MAIN,
-            WALLET_SETTINGS,
-        }
-    }
+        val source: WalletHardwareBackup.Source,
+    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}")
 
     @Serializable
     data class CreateCloudBackup(
@@ -620,7 +625,19 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_verified")
 
     @Serializable
-    data object TangemPayOnboardingSuccess : AppRoute(path = "/tangem_pay_onboarding_success")
+    data class TangemPayOnboardingSuccess(
+        @SerialName("product") val product: Product,
+    ) : AppRoute(path = "/tangem_pay_onboarding_success") {
+
+        @Serializable
+        enum class Product {
+            @SerialName("tangem_pay")
+            TANGEM_PAY,
+
+            @SerialName("money_account")
+            MONEY_ACCOUNT,
+        }
+    }
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
@@ -642,6 +659,7 @@ sealed class AppRoute(val path: String) : Route {
      * @property stage the lifecycle stage label of the entry point, empty when it has none
      * @property repeatAfterDays how long an answer closes the survey on this device; null closes it for good
      * @property isAlreadyAnswered opens straight on the thank-you screen, for a survey answered within its term
+     * @property isFromCache the entry point got the survey from the cache, without a request to the vendor
      */
     @Serializable
     data class NativeSurvey(
@@ -651,6 +669,7 @@ sealed class AppRoute(val path: String) : Route {
         val repeatAfterDays: Int?,
         val userWalletId: UserWalletId,
         val isAlreadyAnswered: Boolean,
+        val isFromCache: Boolean,
     ) : AppRoute(path = "/native_survey/$surveyId") {
 
         enum class Source { SHEET, PUSH, BANNER, LINK }

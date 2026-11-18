@@ -1930,6 +1930,35 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a session key operation holds the wallet WHEN confirmed THEN the wallet busy alert is shown`() = runTest {
+        // Arrange
+        stubResolvedPredictionPair(destination = polygonUsdcDestination())
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        stubStoredPolymarketAddresses()
+        coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+            mockk<PreparedPredictionWithdrawal>().right()
+        coEvery { submitPredictionWithdrawalInteractor.confirm(any()) } returns
+            PredictionWithdrawalFailure.WalletBusy.left()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.enterAmount("5")
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val alert = slot<DialogMessage>()
+        verify(exactly = 1) { messageSender.send(capture(alert)) }
+        assertThat(alert.captured.message).isEqualTo(resourceReference(R.string.prediction_session_key_wallet_busy))
+        verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
+        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the card tap is cancelled WHEN confirmed THEN no alert is shown`() = runTest {
         // Arrange
         stubResolvedPredictionPair(destination = polygonUsdcDestination())

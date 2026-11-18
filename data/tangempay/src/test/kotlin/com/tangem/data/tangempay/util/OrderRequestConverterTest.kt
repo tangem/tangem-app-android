@@ -7,6 +7,7 @@ import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.tangempay.model.CardActivationOrder
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
+import com.tangem.domain.tangempay.model.MoneyAccountDepositCredentials
 import com.tangem.domain.tangempay.model.OrderType
 import com.tangem.domain.tangempay.model.PlasticCardOrder
 import com.tangem.domain.tangempay.model.ShippingAddress
@@ -163,6 +164,13 @@ internal class OrderRequestConverterTest {
             request = CustomerOrderRequest.SmartContractIssue(chainId = CHAIN_ID),
             expected = OrderRequest.SmartContractIssue(WALLET, CHAIN_ID),
         ),
+        ConvertModel(
+            name = "banking account issue",
+            request = CustomerOrderRequest.AccountIssueBanking(
+                depositCredentials = MoneyAccountDepositCredentials(address = DEPOSIT_ADDRESS, signature = SIGNATURE),
+            ),
+            expected = OrderRequest.BankingAccountIssue(depositAddress = DEPOSIT_ADDRESS, signature = SIGNATURE),
+        ),
     )
 
     private fun provideNonCardIssueTypes() = OrderType.entries - setOf(
@@ -230,5 +238,7 @@ internal class OrderRequestConverterTest {
         const val LAST_FOUR_DIGITS = "8252"
         const val TARGET_PLAN = "plan-plus"
         const val CHAIN_ID = 137L
+        const val DEPOSIT_ADDRESS = "0xDEPOSIT"
+        const val SIGNATURE = "0xSIGNATURE"
     }
 }

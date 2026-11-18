@@ -25,6 +25,8 @@ import javax.inject.Inject
 
 internal interface MoneyAccountIntents {
 
+    fun onMoneyAccountNotStartedClicked(userWalletId: UserWalletId)
+
     fun onMoneyAccountActivatingClicked()
 
     fun onMoneyAccountFailedClicked(userWalletId: UserWalletId, customerId: String)
@@ -39,6 +41,10 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val tangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
 ) : BaseWalletClickIntents(), MoneyAccountIntents {
+
+    override fun onMoneyAccountNotStartedClicked(userWalletId: UserWalletId) {
+        router.openMoneyAccountActivation(userWalletId = userWalletId)
+    }
 
     override fun onMoneyAccountActivatingClicked() {
         val bottomSheet = bottomSheetMessage {

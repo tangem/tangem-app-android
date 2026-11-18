@@ -82,7 +82,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.Kyc
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
@@ -150,7 +149,6 @@ internal class WalletModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val mcpRequestService: McpRequestService,
-    private val mcpFeatureToggles: McpFeatureToggles,
     private val allServicesFeatureToggles: AllServicesFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
@@ -954,9 +952,7 @@ internal class WalletModel @Inject constructor(
                 )
             }
             is QrSendTarget.McpAuthorization -> {
-                if (mcpFeatureToggles.isMcpEnabled) {
-                    mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
-                }
+                mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
             }
             is QrSendTarget.DeepLink -> deeplinkLauncher.launch(target.uri, shouldReportFailure = false)
             is QrSendTarget.Single -> {

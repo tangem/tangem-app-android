@@ -11,12 +11,20 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-/** The details 'Add Wallet' opens a hardware/mobile chooser sheet; pick hardware when it appears. */
-private fun BaseTestCase.chooseAddHardwareWalletIfSheetShown() {
-    step("Choose 'Add hardware wallet' when the add-wallet sheet is shown") {
+private fun BaseTestCase.chooseHardwareWalletInAddWalletSheet() {
+    step("Assert 'Add wallet' sheet is displayed") {
+        awaitSuccess {
+            onAddWalletBottomSheet {
+                if (!cardOrRingRow.isDisplayedSafely()) legacyAddHardwareWalletButton.assertIsDisplayed()
+            }
+        }
+    }
+    step("Click on the hardware wallet option") {
         onAddWalletBottomSheet {
-            if (addHardwareWalletButton.isDisplayedSafely()) {
-                addHardwareWalletButton.performClick()
+            if (cardOrRingRow.isDisplayedSafely()) {
+                cardOrRingRow.performClick()
+            } else {
+                legacyAddHardwareWalletButton.performClick()
             }
         }
     }
@@ -31,7 +39,7 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
     }
-    chooseAddHardwareWalletIfSheetShown()
+    chooseHardwareWalletInAddWalletSheet()
     // Gate on the top-bar More button, not the container — the bottom Markets sheet can leave the container un-"displayed".
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
@@ -46,15 +54,21 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
             if (!shown) onMainScreen { swipeToAdjacentWallet(toPrevious = false) }
             shown
         }
-        // Let the pager fling settle — a click mid-animation is eaten by the button's clickableSingle debounce.
-        waitForIdle()
-        onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-        // The prompt clears once the card's addresses are derived (re-scan + reload over many, some failing, RPCs).
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
-            var generated = false
-            onMainScreen { generated = !synchronizeAddressesButton.isDisplayedSafely() }
-            generated
+        // A click on the freshly shown page can be lost, and derivation takes ~15 s, so re-click when it stays.
+        val synchronized = (1..SYNC_ADDRESSES_CLICK_ATTEMPTS).any {
+            waitForIdle()
+            var shown = false
+            onMainScreen { shown = synchronizeAddressesButton.isDisplayedSafely() }
+            if (shown) onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
+            runCatching {
+                composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    var generated = false
+                    onMainScreen { generated = !synchronizeAddressesButton.isDisplayedSafely() }
+                    generated
+                }
+            }.isSuccess
         }
+        check(synchronized) { "'Synchronize addresses' is still shown after $SYNC_ADDRESSES_CLICK_ATTEMPTS clicks" }
     }
 }
 
@@ -66,7 +80,7 @@ fun BaseTestCase.addNewCardWalletWithoutSync(mockContent: MockContent) {
     step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
     }
-    chooseAddHardwareWalletIfSheetShown()
+    chooseHardwareWalletInAddWalletSheet()
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
             runCatching { onMainScreenTopBar { moreButton.assertIsDisplayed() } }.isSuccess
@@ -178,3 +192,5 @@ fun BaseTestCase.addMissingReceiveTokenToWallet(token: String, recipientWalletNa
         onAddToPortfolioScreen { confirmButton.performClick() }
     }
 }
+
+private const val SYNC_ADDRESSES_CLICK_ATTEMPTS = 2

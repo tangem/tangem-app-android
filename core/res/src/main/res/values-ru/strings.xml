@@ -867,7 +867,7 @@
   <string name="hw_activation_need_backup">Сделать бэкап</string>
   <string name="hw_activation_need_description">Чтобы завершить настройку, создайте резервную копию кошелька и защитите приложение кодом доступа.</string>
   <string name="hw_activation_need_finish">Завершить сейчас</string>
-  <string name="hw_activation_need_title">Закончить настройку кошелька</string>
+  <string name="hw_activation_need_title">Закончите настройку кошелька</string>
   <string name="hw_activation_need_warning_description">Завершите настройку, защитив приложение кодом доступа.</string>
   <string name="hw_backup_alert_description">Если вы это сделаете, придётся начать заново.</string>
   <string name="hw_backup_alert_title">Вы уверены, что хотите выйти из процесса активации?</string>
@@ -1019,6 +1019,7 @@
   <string name="hw_upgrade_start_description">Вы собираетесь перейти на устройство Tangem, где ваши активы будут в безопасности в холодном хранилище.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Апгрейд до аппаратного кошелька</string>
+  <string name="hw_upgrade_to_cold_badge">Перейти на холодный кошелек</string>
   <string name="hw_upgrade_to_cold_banner_description">Храните свою криптовалюту в безопасности с помощью первоклассного аппаратного кошелька Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Сделать апгрейд кошелька до аппаратной версии.</string>
   <string name="hw_wallets_limit_alert_message">В Tangem можно иметь до %1$s мобильных кошельков. Чтобы добавить новый, сначала удалите один из текущих мобильных кошельков.</string>
@@ -1429,7 +1430,7 @@
   <string name="mcp_swap_intent_processed_subtitle">Обмен %1$s на %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Обновитесь до версии %1$s, чтобы создать мобильный кошелёк</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Мобильный кошелек требует %1$s или новее.</string>
-  <string name="money_account_add_funds_bank_description">Получайте USD с банковского счёта через ACH/Wire или SPEI</string>
+  <string name="money_account_add_funds_bank_description">Получайте USD из банков США через ACH или MXN из мексиканских банков через SPEI</string>
   <string name="money_account_add_funds_receive_description">Отправьте USDC в сети Polygon на адрес счёта</string>
   <string name="money_account_add_funds_swap_description">Пополните счёт в USD криптовалютой из вашего кошелька</string>
   <string name="money_account_balance_unavailable_description">Не удалось загрузить баланс. Попробуйте позже.</string>
@@ -1442,7 +1443,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">Откроется после пополнения</string>
   <string name="money_account_main_status_dialog_activating_description">Готовим ваш счёт. Это может занять некоторое время</string>
-  <string name="money_account_main_status_dialog_activating_title">Открываем ваш банковский счёт</string>
+  <string name="money_account_main_status_dialog_activating_title">Открываем ваш счёт в USD</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Мы работаем над тем, чтобы стать доступными в других регионах. Нужна помощь?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Мы работаем над расширением на новые регионы. Нужна помощь? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Пока недоступно в вашем регионе</string>
@@ -1459,7 +1460,7 @@
   <string name="money_account_main_status_verification">Верификация в процессе…</string>
   <string name="money_account_onboarding_currency_card_caption">Валюта счёта</string>
   <string name="money_account_onboarding_description">Работает как обычный банковский счёт. Но на базе крипты и полностью под вашим контролем.</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay — финансово-технологическая компания, а не банк. Банковские услуги предоставляет SSB, член FDIC. Средства, размещённые в SSB, подлежат страхованию FDIC на сумму до 250 000 долларов США на вкладчика в каждом застрахованном банке с учётом применимых ограничений и правил FDIC.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay — не банк. Реквизиты счёта предоставляет SSB Bank. Средства хранятся в виде USDC, а не вкладов в SSB Bank. USDC не застрахован FDIC.</string>
   <string name="money_account_onboarding_earn_card_caption">Доход</string>
   <string name="money_account_onboarding_fees_error">Не удалось загрузить информацию о комиссиях.\nНажмите, чтобы обновить</string>
   <string name="money_account_onboarding_fees_notice">Переводы SWIFT не поддерживаются. Если вы отправите такой перевод, он будет возвращён</string>
@@ -3067,7 +3068,7 @@
   <string name="tangempay_tangem_visa_card">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Получайте банковские переводы в USD через ACH/Wire</string>
+  <string name="tangempay_topup_bank_transfer_body">Получайте USD со счёта в банке США через ACH</string>
   <string name="tangempay_topup_bank_transfer_pending_body">Создаём банковские реквизиты...</string>
   <string name="tangempay_topup_bank_transfer_title">С банковского счёта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
@@ -3095,7 +3096,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Платежи</string>
-  <string name="tangempay_unified_onboarding_payments_title">ACH и банковские переводы на каждый день</string>
+  <string name="tangempay_unified_onboarding_payments_title">Банковские переводы на каждый день</string>
   <string name="tangempay_unified_onboarding_plan_caption">Один тариф</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic — бесплатно.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus включает оба продукта и гораздо больше</string>
@@ -3515,9 +3516,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>
   <string name="warning_last_balance_updated_time">Последнее обновление %s</string>
-  <string name="warning_link_wallet_cold_message">Синхронизируйте кошелёк с сервисами Tangem для дополнительной защиты.</string>
-  <string name="warning_link_wallet_hot_message">Синхронизируйте кошелёк с сервисами Tangem для дополнительной защиты.</string>
-  <string name="warning_link_wallet_title">Защитите своё соединение</string>
+  <string name="warning_link_wallet_cold_message">Используйте карту для дополнительной защиты при подключении к сервисам Tangem.</string>
+  <string name="warning_link_wallet_hot_message">Добавьте ещё один уровень защиты при подключении к сервисам Tangem</string>
+  <string name="warning_link_wallet_title">Защитите подключение</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>

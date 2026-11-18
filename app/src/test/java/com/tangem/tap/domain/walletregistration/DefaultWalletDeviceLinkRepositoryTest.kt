@@ -11,7 +11,6 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.registration.WalletLinkError
-import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.PreparedWalletRegistration
 import com.tangem.lib.auth.session.WalletNonce
@@ -48,14 +47,12 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
     private val walletRegistrar: WalletRegistrar = mockk()
     private val mobileSigner: MobileWalletRegistrationSigner = mockk()
     private val coldSigner: ColdWalletRegistrationSigner = mockk()
-    private val walletFeatureToggles: WalletFeatureToggles = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     private val repository = DefaultWalletDeviceLinkRepository(
         walletRegistrar = walletRegistrar,
         mobileSigner = mobileSigner,
         coldSigner = coldSigner,
-        walletFeatureToggles = walletFeatureToggles,
         analyticsEventHandler = analyticsEventHandler,
     )
 
@@ -78,8 +75,7 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(walletRegistrar, mobileSigner, coldSigner, walletFeatureToggles, analyticsEventHandler)
-        every { walletFeatureToggles.isWalletLinkingEnabled } returns true
+        clearMocks(walletRegistrar, mobileSigner, coldSigner, analyticsEventHandler)
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -143,19 +139,6 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
         }
 
         private fun provideUnsupportedWallets() = unsupportedColdWallets
-
-        @Test
-        fun `GIVEN linking disabled WHEN isLinked collected THEN emits true without reading registrations`() = runTest {
-            // Arrange
-            every { walletFeatureToggles.isWalletLinkingEnabled } returns false
-
-            // Act
-            val actual = repository.isLinked(hotWallet).toList()
-
-            // Assert
-            assertThat(actual).containsExactly(true)
-            verify(exactly = 0) { walletRegistrar.registeredWalletIds() }
-        }
     }
 
     @Nested
@@ -192,19 +175,6 @@ internal class DefaultWalletDeviceLinkRepositoryTest {
         }
 
         private fun provideUnsupportedWallets() = unsupportedColdWallets
-
-        @Test
-        fun `GIVEN linking disabled WHEN link THEN returns NotSupported without registering`() = runTest {
-            // Arrange
-            every { walletFeatureToggles.isWalletLinkingEnabled } returns false
-
-            // Act
-            val actual = repository.link(hotWallet)
-
-            // Assert
-            assertThat(actual).isEqualTo(WalletLinkError.NotSupported.left())
-            coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
-        }
 
         @Test
         fun `GIVEN cold wallet WHEN link THEN signs a cold nonce with the card signer and submits it`() = runTest {

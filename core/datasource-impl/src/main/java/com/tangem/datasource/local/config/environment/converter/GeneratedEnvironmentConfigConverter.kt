@@ -33,14 +33,8 @@ internal object GeneratedEnvironmentConfigConverter {
             appsFlyerApiKey = AppsFlyer.appsFlyerDevKey,
             appsAppId = AppsFlyer.appsFlyerAppID,
             walletConnectProjectId = GeneratedEnvironmentConfig.walletConnectProjectId,
-            express = createExpressModel(
-                apiKey = Express.apiKey,
-                signVerifierPublicKey = Express.signVerifierPublicKey,
-            ),
-            devExpress = createExpressModel(
-                apiKey = DevExpress.apiKey,
-                signVerifierPublicKey = DevExpress.signVerifierPublicKey,
-            ),
+            express = createExpressModel(signVerifierPublicKey = Express.signVerifierPublicKey),
+            devExpress = createExpressModel(signVerifierPublicKey = DevExpress.signVerifierPublicKey),
             stakeKitApiKey = GeneratedEnvironmentConfig.stakeKitApiKey,
             p2pApiKey = createP2PKeys(),
             blockAidApiKey = GeneratedEnvironmentConfig.blockaidApiKey,
@@ -59,9 +53,9 @@ internal object GeneratedEnvironmentConfigConverter {
         )
     }
 
-    private fun createExpressModel(apiKey: String?, signVerifierPublicKey: String?): ExpressModel? {
-        return if (!apiKey.isNullOrEmpty() && !signVerifierPublicKey.isNullOrEmpty()) {
-            ExpressModel(apiKey = apiKey, signVerifierPublicKey = signVerifierPublicKey)
+    private fun createExpressModel(signVerifierPublicKey: String?): ExpressModel? {
+        return if (!signVerifierPublicKey.isNullOrEmpty()) {
+            ExpressModel(signVerifierPublicKey = signVerifierPublicKey)
         } else {
             null
         }

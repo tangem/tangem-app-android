@@ -34,7 +34,9 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.model.CashbackDisplayMode
 import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
 import com.tangem.domain.tangempay.model.TangemPayCashback
+import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
 import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.tangempay.usecase.DismissVirtualAccountOrderFailureUseCase
 import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
@@ -141,6 +143,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
     }
     private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase =
         mockk(relaxUnitFun = true)
+    private val kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -161,8 +164,11 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             cashbackBalanceHidingSettingsUseCase,
             dismissVirtualAccountOrderFailureUseCase,
             paymentAccountStatusFetcher,
+            kycAdditionalInfoPopupStore,
         )
         coEvery { findActiveBankOfframpOrderUseCase(any()) } returns null.right()
+        coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returns true
+        coEvery { kycAdditionalInfoPopupStore.reset(any()) } returns Unit
         cachedSummary.value = null
         every { observeCashbackSummaryUseCase(any()) } returns cachedSummary
         coEvery { getCashbackDeactivationDismissedUseCase(any()) } returns false
@@ -1004,6 +1010,29 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN popup shown on first entry WHEN account entered again THEN notice shown without popup`() = runTest {
+            // Arrange
+            coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returnsMany listOf(true, false)
+            val flagged = loadedStatus(isKycAdditionalInfoRequired = true)
+            val firstEntry = createModel(testScope = this, statusValue = flagged)
+            advanceUntilIdle()
+            firstEntry.onDestroy()
+
+            // Act
+            val secondEntry = createModel(testScope = this, statusValue = flagged)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 2) { analytics.send(NoticeShown(AccountType.PAYMENT, Placement.ACCOUNT_BLOCK)) }
+            verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY)) }
+            verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+            coVerify(exactly = 2) {
+                kycAdditionalInfoPopupStore.tryMarkShown(KycAdditionalInfoAccount(userWalletId, AccountType.PAYMENT))
+            }
+            secondEntry.onDestroy()
+        }
+
         @ParameterizedTest
         @EnumSource(
             value = TangemPayDetailsInitialRoute::class,
@@ -1300,6 +1329,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             },
             tangemPayCurrencyFactory = mockk(relaxed = true),
             tangemPayFeatureToggles = tangemPayFeatureToggles,
+            kycAdditionalInfoPopupStore = kycAdditionalInfoPopupStore,
         ).destroyAfterTest()
     }
 

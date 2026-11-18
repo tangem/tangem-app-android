@@ -8,7 +8,6 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddTokenBottomSheet
-import com.tangem.screens.onDialog
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onBuyTokenDetailsScreen
 import com.tangem.screens.onChooseTokenBottomSheet
@@ -160,9 +159,6 @@ class BuyTest : BaseTestCase() {
             }
             step("Click on 'Buy' button") {
                 onAddFundsBottomSheet { buyTokenButton.clickWithAssertion() }
-            }
-            step("Click on 'Confirm' button in 'Dialog'") {
-                onDialog { confirmButton.clickWithAssertion() }
             }
             step("Assert '$token is not supported' banner title is displayed") {
                 flakySafely { onBuyTokenDetailsScreen { tokenNotSupportedTitle(token).assertIsDisplayed() } }

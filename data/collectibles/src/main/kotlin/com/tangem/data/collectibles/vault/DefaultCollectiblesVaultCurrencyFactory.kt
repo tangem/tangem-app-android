@@ -7,24 +7,26 @@ import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.data.common.currency.getTokenId
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
+import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import javax.inject.Inject
 
 /**
- * No key is derived for the vault's token and nothing about it is wallet-specific, so its network is described
- * from the chain alone rather than through the wallet-bound factory the portfolio's currencies are built by.
+ * The vault's token is described through the collectibles owner key path rather than the wallet-bound factory the
+ * portfolio's currencies are built by, so it never resolves to the wallet's ordinary Solana network.
  */
 internal class DefaultCollectiblesVaultCurrencyFactory @Inject constructor() : CollectiblesVaultCurrencyFactory {
 
     private val network by lazy(mode = LazyThreadSafetyMode.NONE) {
         val blockchain = Blockchain.Solana
+        val derivationPath = Network.DerivationPath.Custom(COLLECTIBLES_OWNER_DERIVATION_PATH)
 
         Network(
-            id = Network.ID(value = blockchain.toNetworkId(), derivationPath = Network.DerivationPath.None),
+            id = Network.ID(value = blockchain.toNetworkId(), derivationPath = derivationPath),
             name = blockchain.fullName,
             currencySymbol = blockchain.currency,
-            derivationPath = Network.DerivationPath.None,
+            derivationPath = derivationPath,
             isTestnet = blockchain.isTestnet(),
             standardType = Network.StandardType.Unspecified(blockchain.name),
             hasFiatFeeRate = true,

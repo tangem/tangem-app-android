@@ -37,6 +37,7 @@ import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -89,25 +90,31 @@ internal fun JointAccountCompositionScreen(
                     top = contentPadding.calculateTopPadding() + 12.dp,
                     bottom = maxOf(contentPadding.calculateBottomPadding(), footerHeight) + 12.dp,
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp),
                 text = stringResourceSafe(R.string.joint_account_members_title),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
 
             Text(
-                modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
+                modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp),
                 text = explanationText(state = state),
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
 
-            MemberSlotsRow(state = state, modifier = Modifier.padding(start = 8.dp, bottom = 20.dp))
+            MemberSlotsRow(state = state, modifier = Modifier.padding(start = 8.dp, top = 24.dp))
 
-            SteppersCard(state = state)
+            SteppersCard(state = state, modifier = Modifier.padding(top = 36.dp))
+
+            Text(
+                modifier = Modifier.padding(start = 8.dp, top = 12.dp, end = 8.dp),
+                text = state.accessLossNote.resolveReference(),
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
         }
     }
 }
@@ -147,7 +154,7 @@ private fun explanationText(state: JointAccountCompositionUM): AnnotatedString {
 private fun MemberSlotsRow(state: JointAccountCompositionUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         repeat(times = state.maxMembers) { index ->
             val slotState = when {
@@ -348,9 +355,9 @@ private fun Preview_JointAccountCompositionScreen(
 
 private class JointAccountCompositionStateProvider : CollectionPreviewParameterProvider<JointAccountCompositionUM>(
     collection = listOf(
-        createPreviewState(totalMembers = 2, requiredToSign = 2),
-        createPreviewState(totalMembers = 3, requiredToSign = 2),
-        createPreviewState(totalMembers = 5, requiredToSign = 3),
+        createPreviewState(totalMembers = 3, requiredToSign = 3),
+        createPreviewState(totalMembers = 3, requiredToSign = 1),
+        createPreviewState(totalMembers = 5, requiredToSign = 2),
     ),
 )
 

@@ -41,4 +41,24 @@ internal object TokenActionsRegionRestriction {
             ),
         )
     }
+
+    /**
+     * The notice for a region where onramp is unavailable, as reported for the country detected by IP.
+     *
+     * @param regionName name of that country, as returned by the backend
+     */
+    fun onrampBanner(regionName: String): TangemMessageBanner.State {
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.onramp_region_restriction_title),
+            description = resourceReference(
+                id = R.string.onramp_region_restriction_description_v2,
+                formatArgs = wrappedList(regionName),
+            ),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+        )
+    }
 }

@@ -1,17 +1,14 @@
 package com.tangem.feature.wallet.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import javax.inject.Inject
 
-internal class WalletDeepLinkHandler @Inject constructor(
-    private val router: AppRouter,
-) : DeepLinkHandler {
+internal class WalletDeepLinkHandler @Inject constructor() : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
-        router.popTo(AppRoute.Wallet)
+        request.router.popTo(AppRoute.Wallet)
     }
 
     companion object {

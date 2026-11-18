@@ -26,10 +26,12 @@ import com.tangem.features.earn.impl.info.EarnInfoChartConfig
 import com.tangem.features.earn.impl.info.EarnInfoComponent
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
+import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
+import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
@@ -300,7 +302,10 @@ internal class EarnInfoModel @Inject constructor(
 
     private fun redirectToPicker() {
         if (isRedirected.compareAndSet(false, true)) {
-            router.replaceCurrent(EarnPickerRoute(preselected = params.productId, shouldRedirectToActive = false))
+            router.redirect(
+                current = EarnInfoRoute(params.productId),
+                replacement = EarnPickerRoute(preselected = params.productId, shouldRedirectToActive = false),
+            )
         }
     }
 

@@ -1,9 +1,11 @@
 package com.tangem.features.onramp.deeplink
 
 import android.net.Uri
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.features.onramp.success.OnrampSuccessScreenTrigger
 import io.mockk.clearMocks
 import io.mockk.coVerify
@@ -18,14 +20,18 @@ import org.junit.jupiter.api.Test
 
 internal class DefaultOnrampDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger = mockk(relaxed = true)
     private val conciergeWaitlistTrigger: ConciergeWaitlistTrigger = mockk(relaxed = true)
+    private var stack: List<Route> = emptyList()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, onrampSuccessScreenTrigger, conciergeWaitlistTrigger)
-        every { appRouter.stack } returns emptyList()
+        clearMocks(router, onrampSuccessScreenTrigger, conciergeWaitlistTrigger)
+        stack = listOf(AppRoute.Wallet, AppRoute.OnrampSuccess("previous"))
+        every { router.navigate(any(), any()) } answers {
+            stack = firstArg<(List<Route>) -> List<Route>>().invoke(stack)
+        }
     }
 
     @Test
@@ -37,7 +43,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
         // Assert
         coVerify(exactly = 1) { conciergeWaitlistTrigger.triggerOpenWaitlist() }
         coVerify(exactly = 0) { onrampSuccessScreenTrigger.triggerOnrampSuccess(any()) }
-        verify(exactly = 0) { appRouter.replaceAll(*anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { router.navigate(any(), any()) }
     }
 
     @Test
@@ -49,17 +55,17 @@ internal class DefaultOnrampDeepLinkHandlerTest {
         // Assert
         coVerify(exactly = 0) { conciergeWaitlistTrigger.triggerOpenWaitlist() }
         coVerify(exactly = 0) { onrampSuccessScreenTrigger.triggerOnrampSuccess(any()) }
-        verify(exactly = 0) { appRouter.replaceAll(*anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { router.navigate(any(), any()) }
     }
 
     @Test
-    fun `GIVEN tx id and waitlist type WHEN handled THEN success screen opened instead of waitlist`() = runTest {
+    fun `GIVEN tx id and waitlist type WHEN handled THEN success screen replaces the onramp ones instead of waitlist`() = runTest {
         // Act
         handle(queryParams = mapOf("tx_id" to "tx", "type" to "concierge_waitlist"))
         runCurrent()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceAll(AppRoute.OnrampSuccess("tx"), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, AppRoute.OnrampSuccess("tx")).inOrder()
         coVerify(exactly = 0) { conciergeWaitlistTrigger.triggerOpenWaitlist() }
     }
 
@@ -75,7 +81,6 @@ internal class DefaultOnrampDeepLinkHandlerTest {
     }
 
     private val handler = DefaultOnrampDeepLinkHandler(
-        appRouter = appRouter,
         onrampSuccessScreenTrigger = onrampSuccessScreenTrigger,
         conciergeWaitlistTrigger = conciergeWaitlistTrigger,
     )
@@ -87,7 +92,7 @@ internal class DefaultOnrampDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = backgroundScope,
                 isFromOnNewIntent = false,
-                router = mockk(),
+                router = router,
             ),
         )
     }

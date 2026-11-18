@@ -17,6 +17,7 @@ internal data class EarnConfirmUM(
     val legal: EarnLegalUM?,
     val stepLabel: TextReference?,
     val primary: TangemButtonUM,
+    val isHoldToConfirm: Boolean = false,
 )
 
 internal data class EarnLegalUM(

@@ -32,7 +32,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
@@ -49,6 +48,7 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.StakingDetailsScreenTestTags
+import com.tangem.core.ui.utils.LastItemAtBottomArrangement
 import com.tangem.domain.staking.model.BalanceType
 import com.tangem.domain.staking.model.RewardBlockType
 import com.tangem.domain.staking.model.common.RewardType
@@ -85,7 +85,7 @@ internal fun StakingInitialInfoContent(
         config = state.pullToRefreshConfig,
     ) {
         LazyColumn(
-            verticalArrangement = alignLastToBottom(),
+            verticalArrangement = LastItemAtBottomArrangement,
             modifier = Modifier
                 .fillMaxSize()
                 .background(TangemTheme.colors3.bg.primary)
@@ -473,24 +473,6 @@ private val textGradientColors = listOf(
     TangemColorPalette.White,
     Color(0xff8fb4df),
 )
-
-@Composable
-private fun alignLastToBottom() = remember {
-    object : Arrangement.Vertical {
-        override fun Density.arrange(totalSize: Int, sizes: IntArray, outPositions: IntArray) {
-            var currentOffset = 0
-
-            sizes.forEachIndexed { index, size ->
-                if (index == sizes.lastIndex) {
-                    outPositions[index] = totalSize - size
-                } else {
-                    outPositions[index] = currentOffset
-                    currentOffset += size
-                }
-            }
-        }
-    }
-}
 
 // region preview
 

@@ -33,7 +33,8 @@ internal class DevApiConfigsManager(
     override fun initialize() {
         initializedState.value = false
 
-        appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+        appPreferencesStore.getObjectMap<String>(PreferencesKeys.apiConfigsEnvironmentKey)
+            .map { it.toKnownEnvironments() }
             .distinctUntilChanged()
             .onEach { savedEnvironments ->
                 val apiConfigs = configs.value
@@ -41,7 +42,7 @@ internal class DevApiConfigsManager(
                 configs.value = apiConfigs.mapValues { entry ->
                     val (config, currentEnvironment) = entry
 
-                    savedEnvironments[config.id.name] ?: currentEnvironment
+                    savedEnvironments[config.id.name]?.takeIf { config.isSupported(it) } ?: currentEnvironment
                 }
 
                 if (!initializedState.value) {
@@ -68,9 +69,9 @@ internal class DevApiConfigsManager(
 
     override suspend fun changeEnvironment(id: String, environment: ApiEnvironment) {
         appPreferencesStore.editData { mutablePreferences ->
-            val updatedMap = mutablePreferences.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+            val updatedMap = mutablePreferences.getObjectMap<String>(PreferencesKeys.apiConfigsEnvironmentKey)
                 .toMutableMap()
-                .apply { put(id, environment) }
+                .apply { put(id, environment.name) }
 
             mutablePreferences.setObjectMap(PreferencesKeys.apiConfigsEnvironmentKey, updatedMap)
         }
@@ -84,11 +85,11 @@ internal class DevApiConfigsManager(
             .map { it.id.name }
 
         appPreferencesStore.editData { mutablePreferences ->
-            val updatedMap = mutablePreferences.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+            val updatedMap = mutablePreferences.getObjectMap<String>(PreferencesKeys.apiConfigsEnvironmentKey)
                 .mapValues { (configName, currentEnvironment) ->
                     val isEnvSupported = supportedConfigs.contains(configName)
 
-                    if (isEnvSupported) environment else currentEnvironment
+                    if (isEnvSupported) environment.name else currentEnvironment
                 }
 
             mutablePreferences.setObjectMap(key = PreferencesKeys.apiConfigsEnvironmentKey, value = updatedMap)
@@ -126,5 +127,17 @@ internal class DevApiConfigsManager(
 
     private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
         return apiConfigs.values.associateWith(ApiConfig::defaultEnvironment)
+    }
+
+    // Saved by name: a renamed or removed ApiEnvironment must not break decoding of the whole map
+    private fun Map<String, String>.toKnownEnvironments(): Map<String, ApiEnvironment> {
+        return mapNotNull { (configName, environmentName) ->
+            val environment = ApiEnvironment.entries.firstOrNull { it.name == environmentName }
+            environment?.let { configName to it }
+        }.toMap()
+    }
+
+    private fun ApiConfig.isSupported(environment: ApiEnvironment): Boolean {
+        return environmentConfigs.any { it.environment == environment }
     }
 }

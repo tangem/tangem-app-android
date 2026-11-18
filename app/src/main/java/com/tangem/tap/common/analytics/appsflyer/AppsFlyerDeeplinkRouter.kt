@@ -2,12 +2,12 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import androidx.core.net.toUri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler

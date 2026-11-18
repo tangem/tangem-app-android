@@ -328,18 +328,20 @@ internal class TangemPayDetailsStateFactory(
         return buildList {
             if (tariffPlan != null) {
                 val isPlanChanging = tariffPlan.isPlanTransitioningState
+                val iconRes = if (isPlanChanging) {
+                    CoreUiR.drawable.ic_arrow_refresh_20
+                } else {
+                    CoreUiR.drawable.ic_information_24
+                }
                 add(
                     TangemPayDropDownItemUM(
                         title = resourceReference(R.string.tangempay_current_plan_title),
                         onClick = { intents.onClickCurrentPlan(tariffPlan) },
                         icon = TangemIconUM.Icon(
-                            iconRes = if (isPlanChanging) {
-                                CoreUiR.drawable.ic_arrow_refresh_20
-                            } else {
-                                CoreUiR.drawable.ic_information_24
-                            },
+                            iconRes = iconRes,
                             tintReference = { TangemTheme.colors3.icon.primary },
                         ),
+                        iconRes = iconRes,
                         subtitle = if (isPlanChanging) {
                             resourceReference(R.string.tangempay_changing_plan)
                         } else {

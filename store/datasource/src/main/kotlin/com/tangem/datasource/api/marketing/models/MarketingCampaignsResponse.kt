@@ -51,4 +51,5 @@ data class BannerDto(
     @Json(name = "partnerLabel") val partnerLabel: String? = null,
     @Json(name = "buttonText") val buttonText: String? = null,
     @SerialName("glow") @Json(name = "glow") val hasGlow: Boolean = false,
+    @Json(name = "replacesSlot") val replacesSlot: String? = null,
 )

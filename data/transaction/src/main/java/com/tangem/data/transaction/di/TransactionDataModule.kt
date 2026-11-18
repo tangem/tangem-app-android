@@ -102,11 +102,13 @@ internal object TransactionDataModule {
     @Singleton
     fun provideTronGaslessTransactionRepository(
         tronGaslessApi: TronGaslessApi,
+        walletManagersFacade: WalletManagersFacade,
         @NetworkMoshi moshi: Moshi,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): TronGaslessTransactionRepository {
         return DefaultTronGaslessTransactionRepository(
             api = tronGaslessApi,
+            walletManagersFacade = walletManagersFacade,
             errorAdapter = moshi.adapter(GaslessErrorResponse::class.java),
             dispatchers = coroutineDispatcherProvider,
         )
@@ -116,11 +118,13 @@ internal object TransactionDataModule {
     @Singleton
     fun provideSolanaGaslessTransactionRepository(
         solanaGaslessApi: SolanaGaslessApi,
+        walletManagersFacade: WalletManagersFacade,
         @NetworkMoshi moshi: Moshi,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): SolanaGaslessTransactionRepository {
         return DefaultSolanaGaslessTransactionRepository(
             api = solanaGaslessApi,
+            walletManagersFacade = walletManagersFacade,
             errorAdapter = moshi.adapter(GaslessErrorResponse::class.java),
             dispatchers = coroutineDispatcherProvider,
         )

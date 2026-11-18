@@ -7,9 +7,9 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.features.hotwallet.HardwareUpgradeStoriesComponent
+import com.tangem.features.hotwallet.hardwareupgrade.toStoryV2Source
 import com.tangem.features.storiesv2.StoriesV2Component
 import com.tangem.features.storiesv2.StoriesV2PendingAction
-import com.tangem.features.storiesv2.StoryV2Source
 import com.tangem.features.storiesv2.StoryV2Type
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -47,14 +47,11 @@ internal class DefaultHardwareUpgradeStoriesComponent @AssistedInject constructo
     private fun openHardwareWallet() {
         lifecycle.doOnResume(isOneTime = true) {
             componentScope.launch(dispatchers.main) {
-                router.replaceCurrent(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
+                router.replaceCurrent(
+                    AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId, source = params.source),
+                )
             }
         }
-    }
-
-    private fun AppRoute.HardwareUpgradeStories.Source.toStoryV2Source(): StoryV2Source = when (this) {
-        AppRoute.HardwareUpgradeStories.Source.MAIN -> StoryV2Source.MAIN
-        AppRoute.HardwareUpgradeStories.Source.WALLET_SETTINGS -> StoryV2Source.WALLET_SETTINGS
     }
 
     @AssistedFactory

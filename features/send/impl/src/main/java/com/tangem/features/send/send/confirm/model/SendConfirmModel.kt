@@ -56,6 +56,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
@@ -135,6 +136,7 @@ internal class SendConfirmModel @Inject constructor(
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val jointSendDelegate: JointSendDelegate,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val blockaidAnalyticsSender: JointBlockaidAnalyticsSender,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
     private val reportSendIntentHashUseCase: ReportSendIntentHashUseCase,
@@ -305,19 +307,27 @@ internal class SendConfirmModel @Inject constructor(
         )
         val feeToken = feeCurrencyStatus.currency
         modelScope.launch {
-            jointSendDelegate
-                .prepareOperation(
-                    account = account,
-                    currency = cryptoCurrency,
-                    amount = sendingAmount,
-                    destinationUM = uiState.value.destinationUM,
-                    feeToken = feeToken.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
-                )
-                .fold(
-                    ifLeft = ::showJointOperationError,
-                    ifRight = { prepared -> onJointOperationPrepared(prepared = prepared, feeToken = feeToken) },
-                )
+            if (ensureWalletLinkedUseCase(userWallet)) {
+                prepareJointOperation(account = account, amount = sendingAmount, feeToken = feeToken)
+            } else {
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+            }
         }
+    }
+
+    private suspend fun prepareJointOperation(account: Account.Joint, amount: BigDecimal, feeToken: CryptoCurrency) {
+        jointSendDelegate
+            .prepareOperation(
+                account = account,
+                currency = cryptoCurrency,
+                amount = amount,
+                destinationUM = uiState.value.destinationUM,
+                feeToken = feeToken.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
+            )
+            .fold(
+                ifLeft = ::showJointOperationError,
+                ifRight = { prepared -> onJointOperationPrepared(prepared = prepared, feeToken = feeToken) },
+            )
     }
 
     private suspend fun onJointOperationPrepared(prepared: PreparedJointOperation.Creation, feeToken: CryptoCurrency) {

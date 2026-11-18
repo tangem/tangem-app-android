@@ -2,10 +2,9 @@ package com.tangem.features.feed.deeplink
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -17,17 +16,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class MarketsTokenExchangesDeepLinkHandler @Inject constructor(
-    private val appRouter: AppRouter,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
+        val router = request.router
         val tokenId = request.queryParams[TOKEN_ID_KEY]
 
         if (tokenId.isNullOrEmpty()) {
             TangemLogger.e("Markets token exchanges deeplink does not contain token_id")
-            appRouter.push(AppRoute.Markets())
+            router.push(AppRoute.Markets())
             return
         }
 
@@ -43,11 +42,11 @@ internal class MarketsTokenExchangesDeepLinkHandler @Inject constructor(
                 tokenSymbol = "",
             ).getOrElse {
                 TangemLogger.e("Failed to get market token info for exchanges deeplink")
-                appRouter.push(AppRoute.Markets())
+                router.push(AppRoute.Markets())
                 return@launch
             }
 
-            appRouter.push(
+            router.push(
                 AppRoute.MarketsTokenDetails(
                     token = TokenMarketParams(
                         id = rawTokenId,

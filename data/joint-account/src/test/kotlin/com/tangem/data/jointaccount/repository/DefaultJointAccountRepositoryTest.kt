@@ -6,6 +6,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.jointaccount.FIXTURE_CRYPTO_ACCOUNT_ID
@@ -18,6 +19,7 @@ import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.createJointAccountInvitePreview
 import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.data.jointaccount.createSafeTx
+import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
@@ -59,12 +61,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultJointAccountRepositoryTest {
 
     private val jointAccountApi: JointAccountApi = mockk()
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk()
+    private val store: JointAccountsStore = mockk()
 
     private val repository = DefaultJointAccountRepository(
         jointAccountApi = jointAccountApi,
@@ -73,13 +77,30 @@ internal class DefaultJointAccountRepositoryTest {
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
         operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter()),
+        store = store,
         dispatchers = TestingCoroutineDispatcherProvider(),
         moshi = Moshi.Builder().build(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountApi, walletAccountsFetcher)
+        clearMocks(jointAccountApi, walletAccountsFetcher, store)
+    }
+
+    @Test
+    fun `GIVEN accounts stored by a fetch WHEN getStoredJointAccounts THEN they come from the store as is`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val stored = listOf(mockk<JointAccount>())
+        coEvery { store.getSyncOrNull(userWalletId = userWalletId) } returnsMany listOf(stored, null)
+
+        // Act
+        val actual = repository.getStoredJointAccounts(userWalletId = userWalletId)
+        val actualWithoutCache = repository.getStoredJointAccounts(userWalletId = userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(stored)
+        assertThat(actualWithoutCache).isEmpty()
     }
 
     @ParameterizedTest
@@ -695,12 +716,53 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(null.right())
     }
 
+    @ParameterizedTest
+    @CsvSource(
+        "application/json; charset=utf-8, true",
+        "application/problem+json, true",
+        "text/html, false",
+        "text/plain, false",
+        "text/html; profile=json, false",
+    )
+    fun `GIVEN a 2xx answer of some content type WHEN reject THEN only JSON counts as a recorded refusal`(
+        contentType: String,
+        isRecorded: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.rejectJointOperation(any(), any()) } returns
+            ApiResponse.Success(data = Unit, headers = mapOf("content-type" to listOf(contentType)))
+
+        // Act
+        val actual = repository.rejectOperation(userWalletId = WALLET_ID, operationId = OPERATION_ID)
+
+        // Assert
+        assertThat(actual.isRight()).isEqualTo(isRecorded)
+        assertThat(actual.leftOrNull() is JointOperationRejectError.Failed).isEqualTo(!isRecorded)
+    }
+
+    @ParameterizedTest
+    @CsvSource("NO_CONTENT, true", "OK, false")
+    fun `GIVEN a 2xx answer without a content type WHEN reject THEN only an empty 204 counts as recorded`(
+        code: Code,
+        isRecorded: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.rejectJointOperation(any(), any()) } returns
+            ApiResponse.Success(data = Unit, code = code)
+
+        // Act
+        val actual = repository.rejectOperation(userWalletId = WALLET_ID, operationId = OPERATION_ID)
+
+        // Assert
+        assertThat(actual.isRight()).isEqualTo(isRecorded)
+    }
+
     @Test
     fun `GIVEN an operation WHEN reject THEN the call carries the id and no body`() = runTest {
         // Arrange
         coEvery {
             jointAccountApi.rejectJointOperation(walletId = WALLET_ID.stringValue, operationId = OPERATION_ID)
-        } returns ApiResponse.Success(Unit)
+        } returns ApiResponse.Success(data = Unit, code = Code.NO_CONTENT)
 
         // Act
         val actual = repository.rejectOperation(userWalletId = WALLET_ID, operationId = OPERATION_ID)

@@ -48,7 +48,7 @@ internal class YieldSupplySmartGasTest : YieldSupplyActionModelTestBase() {
     private val yieldSupplySmartGas = YieldSupplySmartGas(
         sendTransactionUseCase = sendTransactionUseCase,
         createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
-        singleAccountStatusListSupplier = accountStatusListSupplier,
+        currencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
         getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
     )
 

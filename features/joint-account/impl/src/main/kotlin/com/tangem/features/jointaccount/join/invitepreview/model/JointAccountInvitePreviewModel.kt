@@ -20,9 +20,11 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
@@ -48,7 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -72,6 +74,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private val router: Router,
     private val stateController: JointAccountInvitePreviewStateController,
     private val getJointAccountInvitePreviewUseCase: GetJointAccountInvitePreviewUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     val portfolioSelectorController: PortfolioSelectorController,
     private val clipboardManager: ClipboardManager,
@@ -129,6 +132,8 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
 
     private var loadJob: Job? = null
 
+    private var lastLinkedAccountId: AccountId? = null
+
     init {
         loadForSelectedWallet()
         observeWallets()
@@ -140,8 +145,8 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
         combine(
             userWalletsListRepository.userWallets.filterNotNull(),
             selectedWallet,
-        ) { _, selected -> selected?.walletId }
-            .distinctUntilChanged()
+        ) { _, selected -> selected }
+            .distinctUntilChangedBy { selected -> selected?.walletId }
             .onEach(::load)
             .launchIn(modelScope)
     }
@@ -171,16 +176,17 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     // endregion
 
     // region Loading
-    private fun load(walletId: UserWalletId?) {
+    private fun load(wallet: UserWallet?) {
         loadJob?.cancel()
         loadJob = modelScope.launch {
-            if (uiState.value is JointAccountInvitePreviewUM.Content) {
+            val isPreviewShown = uiState.value is JointAccountInvitePreviewUM.Content
+            if (isPreviewShown) {
                 stateController.update(SetContinueLoadingTransformer())
             } else {
                 stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
             }
 
-            if (walletId == null) {
+            if (wallet == null) {
                 // On a cold start the wallets load before the selection derived from them: wait for it to catch up
                 val hasUnlockedWallet = userWalletsListRepository.userWallets.value.orEmpty().any { !it.isLocked }
                 if (hasUnlockedWallet) return@launch
@@ -192,10 +198,17 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                 return@launch
             }
 
-            loadPreview(walletId).fold(
-                ifLeft = ::onLoadError,
-                ifRight = { preview -> onLoaded(preview) },
-            )
+            if (ensureWalletLinkedUseCase(wallet)) {
+                lastLinkedAccountId = portfolioSelectorController.selectedAccountSync
+                loadPreview(wallet.walletId).fold(
+                    ifLeft = ::onLoadError,
+                    ifRight = { preview -> onLoaded(preview) },
+                )
+            } else if (isPreviewShown) {
+                portfolioSelectorController.selectAccount(accountId = lastLinkedAccountId)
+            } else {
+                router.pop()
+            }
         }
     }
 
@@ -213,7 +226,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private suspend fun onLoaded(preview: JointAccountInvitePreview) {
-        params.draftHolder.setConfig(config = preview.config)
+        params.draftHolder.setInvite(config = preview.config, creatorAddress = preview.creator.address)
         awaitSelectorReady()
         stateController.update(
             SetContentTransformer(
@@ -269,7 +282,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onRetryClick() {
-        load(walletId = selectedWallet.value?.walletId)
+        load(wallet = selectedWallet.value)
     }
 
     private fun onRequiredApprovalsClick() {
