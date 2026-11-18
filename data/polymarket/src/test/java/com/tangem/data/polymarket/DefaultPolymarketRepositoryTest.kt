@@ -131,6 +131,7 @@ internal class DefaultPolymarketRepositoryTest {
     }
     private val l2HeaderBuilder = PolymarketL2HeaderBuilder(PolymarketHmacSigner(jvmCodec))
     private val userWalletId = UserWalletId(WALLET_ID)
+    private val serverClock = DefaultPolymarketServerClock(deviceClock = { DEVICE_NOW_MILLIS })
 
     private val repository = DefaultPolymarketRepository(
         polymarketApi = api,
@@ -142,6 +143,7 @@ internal class DefaultPolymarketRepositoryTest {
         eventErrorResolver = eventErrorResolver,
         placeOrderErrorResolver = placeOrderErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
+        serverClock = serverClock,
         dispatchers = dispatchers,
     )
 
@@ -290,6 +292,46 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN event response with a date WHEN getEvent THEN the server clock follows the backend`() = runTest {
+        // Arrange
+        coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns ApiResponse.Success(
+            data = PolymarketEventResponse(event = EVENT_DTO),
+            headers = mapOf("date" to listOf(SERVER_DATE)),
+        )
+
+        // Act
+        repository.getEvent(userWalletId = userWalletId, eventId = "event-1")
+
+        // Assert
+        assertThat(serverClock.nowMillis()).isEqualTo(SERVER_NOW_MILLIS)
+    }
+
+    @Test
+    fun `GIVEN events page with a date WHEN the feed loads THEN the server clock follows the backend`() = runTest {
+        // Arrange
+        coEvery { api.getEvents(walletId = WALLET_ID, category = null, limit = 20, cursor = null) } returns
+            ApiResponse.Success(
+                data = PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
+                headers = mapOf("date" to listOf(SERVER_DATE)),
+            )
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        repository.getEventsBatchFlow(
+            userWalletId = userWalletId,
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(serverClock.nowMillis()).isEqualTo(SERVER_NOW_MILLIS)
+        sourceScope.cancel()
+    }
+
+    @Test
     fun `GIVEN network exception WHEN getEvent THEN returns left network error`() = runTest {
         // Arrange
         coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns networkError()
@@ -420,6 +462,7 @@ internal class DefaultPolymarketRepositoryTest {
                 eventErrorResolver = eventErrorResolver,
                 placeOrderErrorResolver = placeOrderErrorResolver,
                 l2HeaderBuilder = l2HeaderBuilder,
+                serverClock = serverClock,
                 // The silent retry waits on a virtual-time dispatcher, so the test skips the 2s delay.
                 dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
             )
@@ -1705,6 +1748,9 @@ internal class DefaultPolymarketRepositoryTest {
         const val SESSION_KEY = "0x5e55000000000000000000000000000000000002"
         const val ORDER_ID = "0x6b2e"
         const val ASSET_ID = "1116047"
+        const val DEVICE_NOW_MILLIS = 1_787_000_000_000L
+        const val SERVER_DATE = "Thu, 17 Sep 2026 12:34:51 GMT"
+        const val SERVER_NOW_MILLIS = 1_789_648_491_000L
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
