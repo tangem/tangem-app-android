@@ -88,7 +88,7 @@ data class EarnVaultTransactionDto(
     @SerialName("expectedBy")
     val expectedBy: String?,
     @SerialName("errorCode")
-    val errorCode: EarnVaultTransactionErrorCodeDto? = null,
+    val errorCode: EarnVaultTransactionErrorCodeDto? = EarnVaultTransactionErrorCodeDto.UNKNOWN,
 )
 
 @Serializable
@@ -153,4 +153,7 @@ enum class EarnVaultTransactionStatusDto {
 enum class EarnVaultTransactionErrorCodeDto {
     DROPPED,
     NOT_SENT,
+
+    /** Not a wire value: a code this build does not know is coerced to this default by `NetworkJsonFactory` */
+    UNKNOWN,
 }

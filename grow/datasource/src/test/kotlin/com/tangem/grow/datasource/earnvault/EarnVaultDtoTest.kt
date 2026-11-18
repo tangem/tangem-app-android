@@ -313,6 +313,32 @@ internal class EarnVaultDtoTest {
         }
     }
 
+    @Test
+    fun `GIVEN failure code this app does not know WHEN transaction parsed THEN it falls back to UNKNOWN`() {
+        // Arrange
+        val body = """
+            {"id":"t4","vaultId":"eth-enhanced-yield","network":"ethereum","type":"deposit","amount":"1",
+            "receivedAmount":null,"status":"failed","txHash":"0x4444","submittedAt":"2026-11-12T09:00:00.000Z",
+            "confirmedAt":null,"completedAt":null,"expectedBy":null,"errorCode":"REVERTED"}
+        """.trimIndent()
+
+        // Act
+        val actual = json.decodeFromString<EarnVaultTransactionDto>(body)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            createTransaction(
+                id = "t4",
+                type = EarnVaultTransactionTypeDto.DEPOSIT,
+                amount = "1",
+                status = EarnVaultTransactionStatusDto.FAILED,
+                txHash = "0x4444",
+                submittedAt = "2026-11-12T09:00:00.000Z",
+                errorCode = EarnVaultTransactionErrorCodeDto.UNKNOWN,
+            ),
+        )
+    }
+
     @Nested
     inner class Errors {
 
