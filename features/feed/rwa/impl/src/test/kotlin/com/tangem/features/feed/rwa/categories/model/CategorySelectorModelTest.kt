@@ -8,16 +8,17 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
+import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent.ModelCallback
-import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorSectionUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
 import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,8 +30,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * A tap applies and closes, except on a category with a sector choice, which Apply confirms. The umbrella
- * id never travels in a selection, and Featured is not a filter at all.
+ * Every pick applies and closes; chips show under every category with a sector choice, and a picked
+ * sector takes the check from its category row.
+ * The umbrella id never travels in a selection, and Featured is not a filter at all.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CategorySelectorModelTest {
@@ -38,11 +40,13 @@ internal class CategorySelectorModelTest {
     private val router: Router = mockk(relaxed = true)
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase = mockk()
     private val userCountryResolver: UserCountryResolver = mockk()
+    private val feedFeatureToggles: FeedFeatureToggles = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, getCoinCategoriesUseCase, userCountryResolver)
+        clearMocks(router, getCoinCategoriesUseCase, userCountryResolver, feedFeatureToggles)
         coEvery { userCountryResolver.resolve() } returns "DE"
+        every { feedFeatureToggles.isCategoryFiltersRedesignEnabled } returns true
     }
 
     @Test
@@ -55,7 +59,7 @@ internal class CategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.items().items.map { it.id }).containsExactly(umbrella.id, stocks.id).inOrder()
+        assertThat(model.content().items.map { it.id }).containsExactly(umbrella.id, stocks.id).inOrder()
     }
 
     @Test
@@ -71,7 +75,7 @@ internal class CategorySelectorModelTest {
             model.tapCategory(umbrella.id)
 
             // Assert
-            assertThat(callback.selection).isEqualTo(CategorySelection())
+            assertThat(callback.selections).containsExactly(CategorySelection())
             verify(exactly = 1) { router.pop(any()) }
         }
 
@@ -89,7 +93,7 @@ internal class CategorySelectorModelTest {
             model.tapCategory(umbrella.id)
 
             // Assert
-            assertThat(callback.selection).isEqualTo(CategorySelection())
+            assertThat(callback.selections).containsExactly(CategorySelection())
         }
 
     @Test
@@ -102,7 +106,7 @@ internal class CategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        val checked = model.items().items.filter { it.isSelected }
+        val checked = model.content().items.filter { it.isSelected }
         assertThat(checked.map { it.id }).containsExactly(umbrella.id)
     }
 
@@ -119,7 +123,7 @@ internal class CategorySelectorModelTest {
             model.tapCategory(bonds.id)
 
             // Assert
-            assertThat(callback.selection).isEqualTo(bondsSelection)
+            assertThat(callback.selections).containsExactly(bondsSelection)
             verify(exactly = 1) { router.pop(any()) }
         }
 
@@ -136,131 +140,152 @@ internal class CategorySelectorModelTest {
             model.tapCategory(bonds.id)
 
             // Assert
-            assertThat(callback.selection).isNull()
+            assertThat(callback.selections).isEmpty()
             verify(exactly = 1) { router.pop(any()) }
         }
 
     @Test
-    fun `GIVEN no filter WHEN a category with sectors tapped THEN Apply shows and nothing applies`() =
-        runTest {
-            // Arrange
-            stubCategories(umbrella, stocks)
-            val callback = RecordingCallback()
-            val model = createModel(testScope = this, callback = callback)
-            advanceUntilIdle()
-
-            // Act
-            model.tapCategory(stocks.id)
-
-            // Assert
-            assertThat(model.sectors()).isNotNull()
-            assertThat(model.content().isApplyVisible).isTrue()
-            assertThat(callback.selection).isNull()
-            verify(exactly = 0) { router.pop(any()) }
-        }
-
-    @Test
-    fun `GIVEN a picked category with sectors WHEN a sector tapped and applied THEN the pair reaches the tab`() =
-        runTest {
-            // Arrange
-            stubCategories(umbrella, stocks)
-            val callback = RecordingCallback()
-            val model = createModel(testScope = this, callback = callback)
-            advanceUntilIdle()
-            model.tapCategory(stocks.id)
-
-            // Act
-            model.tapSector("technology")
-            model.content().footer.onApply()
-
-            // Assert
-            assertThat(callback.selection).isEqualTo(stocksWithTechnology)
-            verify(exactly = 1) { router.pop(any()) }
-        }
-
-    @Test
-    fun `GIVEN category with sector applied WHEN its All sector applied THEN the whole category reaches the tab`() =
-        runTest {
-            // Arrange
-            stubCategories(umbrella, stocks)
-            val callback = RecordingCallback()
-            val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
-            advanceUntilIdle()
-
-            // Act
-            model.tapSector("__all__")
-            model.content().footer.onApply()
-
-            // Assert
-            assertThat(callback.selection).isEqualTo(CategorySelection(category = stocksWithTechnology.category))
-        }
-
-    @Test
-    fun `GIVEN category with sector applied WHEN the same category tapped THEN the sector survives unapplied`() =
-        runTest {
-            // Arrange
-            stubCategories(umbrella, stocks)
-            val callback = RecordingCallback()
-            val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
-            advanceUntilIdle()
-
-            // Act
-            model.tapCategory(stocks.id)
-
-            // Assert
-            val selectedSectors = requireNotNull(model.sectors()).sectors.filter { it.isSelected }
-            assertThat(selectedSectors.map { it.id }).containsExactly("technology")
-            assertThat(model.content().isApplyVisible).isFalse()
-            assertThat(callback.selection).isNull()
-            verify(exactly = 0) { router.pop(any()) }
-        }
-
-    @Test
-    fun `GIVEN another sector picked WHEN the applied one is picked back THEN Apply is hidden again`() = runTest {
+    fun `GIVEN no filter WHEN a category with sectors tapped THEN it applies and the screen closes`() = runTest {
         // Arrange
         stubCategories(umbrella, stocks)
-        val model = createModel(testScope = this, selection = stocksWithTechnology)
+        val callback = RecordingCallback()
+        val model = createModel(testScope = this, callback = callback)
         advanceUntilIdle()
-        model.tapSector("healthcare")
 
         // Act
-        model.tapSector("technology")
+        model.tapCategory(stocks.id)
 
         // Assert
-        assertThat(model.content().isApplyVisible).isFalse()
+        assertThat(callback.selections).containsExactly(stocksSelection)
+        verify(exactly = 1) { router.pop(any()) }
     }
 
     @Test
-    fun `GIVEN selected category with a lone sector WHEN model created THEN the sectors section is hidden`() =
+    fun `GIVEN a category with sectors applied WHEN a chip tapped THEN the pair applies and the screen closes`() =
         runTest {
             // Arrange
-            stubCategories(umbrella, bonds)
+            stubCategories(umbrella, stocks)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = stocksSelection, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapSector(categoryId = stocks.id, sectorId = "technology")
+
+            // Assert
+            assertThat(callback.selections).containsExactly(stocksWithTechnology)
+            verify(exactly = 1) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN another category applied WHEN a chip tapped THEN its own category applies with the sector`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks, bonds)
+            val callback = RecordingCallback()
+            val model = createModel(testScope = this, selection = bondsSelection, callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.tapSector(categoryId = stocks.id, sectorId = "technology")
+
+            // Assert
+            assertThat(callback.selections).containsExactly(stocksWithTechnology)
+            verify(exactly = 1) { router.pop(any()) }
+        }
+
+    @Test
+    fun `GIVEN a sector applied WHEN its chip tapped again THEN the whole category applies`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+        val callback = RecordingCallback()
+        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+        advanceUntilIdle()
+
+        // Act
+        model.tapSector(categoryId = stocks.id, sectorId = "technology")
+
+        // Assert
+        assertThat(callback.selections).containsExactly(stocksSelection)
+        verify(exactly = 1) { router.pop(any()) }
+    }
+
+    @Test
+    fun `GIVEN a sector applied WHEN model created THEN its chip is checked and its category row is not`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+
+        // Act
+        val model = createModel(testScope = this, selection = stocksWithTechnology)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.checkedCategoryIds()).isEmpty()
+        assertThat(model.sectors(stocks.id).single { it.isSelected }.id).isEqualTo("technology")
+    }
+
+    @Test
+    fun `GIVEN category with sector applied WHEN same category tapped THEN the sector is dropped`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+        val callback = RecordingCallback()
+        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+        advanceUntilIdle()
+
+        // Act
+        model.tapCategory(stocks.id)
+
+        // Assert
+        assertThat(callback.selections).containsExactly(stocksSelection)
+        verify(exactly = 1) { router.pop(any()) }
+    }
+
+    @Test
+    fun `GIVEN a live pick WHEN the tab echoes it back THEN it is not applied twice`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+        val callback = RecordingCallback()
+        val model = createModel(testScope = this, callback = callback)
+        advanceUntilIdle()
+
+        // Act
+        model.tapCategory(stocks.id)
+        model.tapSector(categoryId = stocks.id, sectorId = "healthcare")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(callback.selections).containsExactly(stocksSelection, stocksWithHealthcare).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a category with a lone sector WHEN model created THEN its row shows no chips`() = runTest {
+        // Arrange
+        stubCategories(umbrella, bonds)
+
+        // Act
+        val model = createModel(testScope = this, selection = bondsSelection)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.sectors(bonds.id)).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN another category applied WHEN model created THEN every category with sectors shows its chips`() =
+        runTest {
+            // Arrange
+            stubCategories(umbrella, stocks, bonds)
 
             // Act
             val model = createModel(testScope = this, selection = bondsSelection)
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.sectors()).isNull()
+            assertThat(model.content().items.filter { it.sectors.isNotEmpty() }.map { it.id })
+                .containsExactly(stocks.id)
+            assertThat(model.sectors(stocks.id).map { it.id }).containsExactly("technology", "healthcare").inOrder()
+            assertThat(model.sectors(stocks.id).none { it.isSelected }).isTrue()
         }
-
-    @Test
-    fun `GIVEN selected category with two sectors WHEN model created THEN the section leads with All`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-        val selection = CategorySelection(
-            category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName, code = stocks.code),
-        )
-
-        // Act
-        val model = createModel(testScope = this, selection = selection)
-        advanceUntilIdle()
-
-        // Assert
-        val sectors = requireNotNull(model.sectors())
-        assertThat(sectors.sectors.map { it.id }).containsExactly("__all__", "technology", "healthcare").inOrder()
-        assertThat(sectors.sectors.first().isSelected).isTrue()
-    }
 
     @Test
     fun `GIVEN failing categories request WHEN model created THEN error state offers a retry`() = runTest {
@@ -283,20 +308,7 @@ internal class CategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.items().items.map { it.id }).containsExactly(umbrella.id, stocks.id)
-    }
-
-    @Test
-    fun `GIVEN category with sector applied WHEN model created THEN Apply is hidden`() = runTest {
-        // Arrange
-        stubCategories(umbrella, stocks)
-
-        // Act
-        val model = createModel(testScope = this, selection = stocksWithTechnology)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.content().isApplyVisible).isFalse()
+        assertThat(model.content().items.map { it.id }).containsExactly(umbrella.id, stocks.id)
     }
 
     @Test
@@ -327,15 +339,14 @@ internal class CategorySelectorModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.sectors()?.sectors?.map { it.label }).containsExactly(
-                resourceReference(R.string.common_all),
+            assertThat(model.sectors(xstocks.id).map { it.label }).containsExactly(
                 resourceReference(R.string.markets_real_assets_sector_xstocks_technology),
                 resourceReference(R.string.markets_real_assets_sector_xstocks_healthcare),
             ).inOrder()
         }
 
     @Test
-    fun `GIVEN an open selector WHEN the tab applies another category THEN it is ticked without applying`() =
+    fun `GIVEN an open selector WHEN the tab applies another sector THEN it is ticked without applying`() =
         runTest {
             // Arrange
             stubCategories(umbrella, stocks, bonds)
@@ -348,10 +359,9 @@ internal class CategorySelectorModelTest {
             advanceUntilIdle()
 
             // Assert - the deeplink already filtered the list, so nothing is applied back
-            assertThat(model.selectedCategoryId()).isEqualTo(stocks.id)
-            assertThat(requireNotNull(model.sectors()).sectors.single { it.isSelected }.id).isEqualTo("technology")
-            assertThat(model.content().isApplyVisible).isFalse()
-            assertThat(callback.selection).isNull()
+            assertThat(model.checkedCategoryIds()).isEmpty()
+            assertThat(model.sectors(stocks.id).single { it.isSelected }.id).isEqualTo("technology")
+            assertThat(callback.selections).isEmpty()
             verify(exactly = 0) { router.pop(any()) }
         }
 
@@ -371,6 +381,7 @@ internal class CategorySelectorModelTest {
             router = router,
             getCoinCategoriesUseCase = getCoinCategoriesUseCase,
             userCountryResolver = userCountryResolver,
+            feedFeatureToggles = feedFeatureToggles,
         )
     }
 
@@ -380,30 +391,25 @@ internal class CategorySelectorModelTest {
 
     private fun CategorySelectorModel.content() = uiState.value as CategorySelectorUM.Content
 
-    private fun CategorySelectorModel.tapCategory(id: String) = items().items.single { it.id == id }.onItemClick()
+    private fun CategorySelectorModel.tapCategory(id: String) = content().items.single { it.id == id }.onItemClick()
 
-    private fun CategorySelectorModel.tapSector(id: String) =
-        requireNotNull(sectors()).sectors.single { it.id == id }.onItemClick()
+    private fun CategorySelectorModel.tapSector(categoryId: String, sectorId: String) =
+        sectors(categoryId).single { it.id == sectorId }.onItemClick()
 
-    private fun CategorySelectorModel.selectedCategoryId() = items().items.single { it.isSelected }.id
+    private fun CategorySelectorModel.checkedCategoryIds() = content().items.filter { it.isSelected }.map { it.id }
 
-    private fun CategorySelectorModel.items() = content().sections
-        .filterIsInstance<CategorySelectorSectionUM.Items>()
-        .single()
+    private fun CategorySelectorModel.sectors(categoryId: String) = content().items.single { it.id == categoryId }.sectors
 
-    private fun CategorySelectorModel.sectors() = content().sections
-        .filterIsInstance<CategorySelectorSectionUM.Sectors>()
-        .singleOrNull()
-
+    /** Echoes every pick back through [appliedSelection], as the tab does. */
     private class RecordingCallback : ModelCallback {
 
         override val appliedSelection = MutableStateFlow(CategorySelection())
 
-        var selection: CategorySelection? = null
-            private set
+        val selections = mutableListOf<CategorySelection>()
 
         override fun onCategorySelect(selection: CategorySelection) {
-            this.selection = selection
+            selections += selection
+            appliedSelection.value = selection
         }
     }
 
@@ -467,6 +473,14 @@ internal class CategorySelectorModelTest {
 
         val bondsSelection = CategorySelection(
             category = CategorySelection.Entry(id = bonds.id, displayName = bonds.displayName, code = bonds.code),
+        )
+
+        val stocksSelection = CategorySelection(
+            category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName, code = stocks.code),
+        )
+
+        val stocksWithHealthcare = stocksSelection.copy(
+            sector = CategorySelection.Entry(id = "healthcare", displayName = "Healthcare", code = "healthcare"),
         )
 
         val stocksWithTechnology = CategorySelection(
