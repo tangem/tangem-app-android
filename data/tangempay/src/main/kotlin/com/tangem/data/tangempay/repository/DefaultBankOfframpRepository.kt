@@ -10,7 +10,6 @@ import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
-import com.tangem.domain.tangempay.model.bankofframp.CustomerName
 import com.tangem.domain.tangempay.repository.BankOfframpRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.spend.datasource.tangempay.TangemPayApi
@@ -41,16 +40,6 @@ internal class DefaultBankOfframpRepository @Inject constructor(
         }
             .map { response -> response.result?.let(BankOfframpOptionsConverter::convert) ?: EMPTY_OPTIONS }
             .mapLeft { error -> error.toBankOfframpError(operation = "getOptions") }
-    }
-
-    override suspend fun getCustomerName(userWalletId: UserWalletId): Either<BankOfframpError, CustomerName> {
-        return requestPerformer.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCustomerName(authHeader = authHeader)
-        }
-            .map { response ->
-                CustomerName(firstName = response.result?.firstName, lastName = response.result?.lastName)
-            }
-            .mapLeft { error -> error.toBankOfframpError(operation = "getCustomerName") }
     }
 
     /**
