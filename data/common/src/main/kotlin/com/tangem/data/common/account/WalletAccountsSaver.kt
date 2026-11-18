@@ -29,4 +29,12 @@ interface WalletAccountsSaver {
     suspend fun push(userWalletId: UserWalletId, accounts: List<WalletAccountDTO>): GetWalletAccountsResponse?
 
     suspend fun syncTokens(userWalletId: UserWalletId)
+
+    /**
+     * Syncs the tokens unless the backend holds a newer list. In that case nothing is pushed and the saved document
+     * is replaced by the backend's one, so the caller repeats its edit on it.
+     *
+     * @return `true` when the saved document was replaced
+     */
+    suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean
 }

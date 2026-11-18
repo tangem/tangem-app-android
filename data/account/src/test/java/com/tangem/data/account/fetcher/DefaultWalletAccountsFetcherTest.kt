@@ -881,6 +881,51 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
+        fun `GIVEN the backend holds a newer list WHEN syncTokensOrRefresh THEN its document replaces the saved one`() =
+            runTest {
+                // Arrange
+                val serverResponse = createGetWalletAccountsResponse(
+                    userWalletId = userWalletId,
+                    sortType = UserTokensResponse.SortType.MANUAL,
+                )
+                accountsResponseStoreFlow.value = savedResponse
+                coEvery {
+                    userTokensSaver.pushUnlessStale(userWalletId, savedResponse.toUserTokensResponse())
+                } returns true
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = any())
+                } returns ApiResponse.Success(data = serverResponse)
+                coEvery { accountsResponseStore.updateData(any()) } coAnswers {
+                    accountsResponseStoreFlow.value = serverResponse
+                    serverResponse
+                }
+
+                // Act
+                val actual = fetcher.syncTokensOrRefresh(userWalletId)
+
+                // Assert
+                Truth.assertThat(actual).isTrue()
+                Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(serverResponse)
+            }
+
+        @Test
+        fun `GIVEN the saved list is current WHEN syncTokensOrRefresh THEN it is pushed and nothing is fetched`() =
+            runTest {
+                // Arrange
+                accountsResponseStoreFlow.value = savedResponse
+                coEvery {
+                    userTokensSaver.pushUnlessStale(userWalletId, savedResponse.toUserTokensResponse())
+                } returns false
+
+                // Act
+                val actual = fetcher.syncTokensOrRefresh(userWalletId)
+
+                // Assert
+                Truth.assertThat(actual).isFalse()
+                coVerify(exactly = 0) { walletAccountsApi.getAccounts(walletId = any(), eTag = any()) }
+            }
+
+        @Test
         fun `GIVEN no saved document WHEN syncTokens THEN nothing is pushed`() = runTest {
             // Act
             fetcher.syncTokens(userWalletId)
