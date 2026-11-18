@@ -196,7 +196,7 @@ private fun ColumnScope.Unreachable(state: TangemPayBankWithdrawAmountUM.Unreach
             onClick = state.onRetryClick,
         )
         Text(
-            text = state.message.resolveReference(),
+            text = stringResourceSafe(R.string.tangempay_withdraw_bank_network_fee_unreachable),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -436,6 +436,5 @@ private class AmountPreviewProvider : PreviewParameterProvider<TangemPayBankWith
         TangemPayBankWithdrawAmountPreviewData.moneyAccount,
         TangemPayBankWithdrawAmountPreviewData.loading,
         TangemPayBankWithdrawAmountPreviewData.feeUnreachable,
-        TangemPayBankWithdrawAmountPreviewData.dataUnreachable,
     )
 }

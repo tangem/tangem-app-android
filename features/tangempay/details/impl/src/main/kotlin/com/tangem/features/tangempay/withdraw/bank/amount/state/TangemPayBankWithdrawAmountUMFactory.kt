@@ -66,7 +66,6 @@ internal class TangemPayBankWithdrawAmountUMFactory(
             )
             NetworkFeeState.Unreachable -> TangemPayBankWithdrawAmountUM.Unreachable(
                 header = header,
-                message = resourceReference(R.string.tangempay_withdraw_bank_network_fee_unreachable),
                 onRetryClick = callbacks.onRetryClick,
                 onBackClick = callbacks.onBackClick,
             )
