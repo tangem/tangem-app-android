@@ -22,7 +22,6 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.EarnSession
 import com.tangem.features.earn.product.api.session.EarnTxRef
 import com.tangem.features.earn.product.api.session.EarnTxStatus
-import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.DelayedReadDataStore
@@ -434,8 +433,8 @@ internal class DefaultEarnTxTrackerTest {
 
     private fun TestScope.createTracker(store: EarnTxStore) = DefaultEarnTxTracker(
         store = store,
-        registry = EarnProductsRegistry(products = setOf(lending, staking), rateSources = emptySet()),
-        sessionFactories = mapOf(LENDING_ID.value to sessionFactory),
+        registry = { EarnProductsRegistry(products = setOf(lending, staking), rateSources = emptySet()) },
+        sessionFactories = { mapOf(LENDING_ID.value to sessionFactory) },
         userWalletsListRepository = userWalletsListRepository,
         accountListSupplier = accountListSupplier,
         analyticsEventHandler = analyticsEventHandler,
@@ -450,7 +449,6 @@ internal class DefaultEarnTxTrackerTest {
             dispatchers = TestingCoroutineDispatcherProvider(),
             preferencesDataStore = preferences,
         ),
-        keys = GrowPreferencesKeys(),
     )
 
     private fun statuses(vararg values: TransactionStatus): Flow<EarnTxStatus> =

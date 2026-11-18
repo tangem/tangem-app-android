@@ -28,8 +28,6 @@ class GrowPreferencesKeys @Inject constructor() {
 
     val unsubmittedTransactionsKey: Preferences.Key<String> = stringPreferencesKey(name = "unsubmittedTransactions")
 
-    val earnSentTransactionsKey: Preferences.Key<String> = stringPreferencesKey(name = "earnSentTransactions")
-
     val onrampDefaultCountryKey: Preferences.Key<String> = stringPreferencesKey(name = "onrampDefaultCountry")
 
     val onrampSelectedCurrencyKey: Preferences.Key<String> = stringPreferencesKey(name = "onrampSelectedCurrency")

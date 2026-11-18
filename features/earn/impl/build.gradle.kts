@@ -35,9 +35,6 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
-    /** Data */
-    implementation(projects.grow.datasource)
-
     /** Domain */
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)

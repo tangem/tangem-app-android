@@ -9,7 +9,6 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.session.EarnTxRef
-import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -25,12 +24,11 @@ import org.junit.jupiter.api.Test
 
 internal class EarnTxStoreTest {
 
-    private val keys = GrowPreferencesKeys()
     private val preferencesStore: AppPreferencesStore = createAppPreferencesStore(
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = MockStateDataStore<Preferences>(emptyPreferences()),
     )
-    private val store = EarnTxStore(appPreferencesStore = preferencesStore, keys = keys)
+    private val store = EarnTxStore(appPreferencesStore = preferencesStore)
 
     @BeforeEach
     fun setUp() {
@@ -107,7 +105,7 @@ internal class EarnTxStoreTest {
     @Test
     fun `GIVEN a broken stored string WHEN all THEN returns empty and logs an error`() = runTest {
         // Arrange
-        preferencesStore.editData { it[keys.earnSentTransactionsKey] = "{not a list" }
+        preferencesStore.editData { it[EarnTxStore.sentTransactionsKey] = "{not a list" }
 
         // Act
         val actual = store.all()
@@ -123,8 +121,8 @@ internal class EarnTxStoreTest {
         val ref = createRef(id = "0xaaa")
         store.add(ref)
         preferencesStore.editData { preferences ->
-            val stored = requireNotNull(preferences[keys.earnSentTransactionsKey])
-            preferences[keys.earnSentTransactionsKey] = stored.replaceFirst("{", """{"addedLater":"value",""")
+            val stored = requireNotNull(preferences[EarnTxStore.sentTransactionsKey])
+            preferences[EarnTxStore.sentTransactionsKey] = stored.replaceFirst("{", """{"addedLater":"value",""")
         }
 
         // Act
@@ -138,7 +136,7 @@ internal class EarnTxStoreTest {
     @Test
     fun `GIVEN a broken stored string WHEN add THEN the journal holds only the new ref`() = runTest {
         // Arrange
-        preferencesStore.editData { it[keys.earnSentTransactionsKey] = "{not a list" }
+        preferencesStore.editData { it[EarnTxStore.sentTransactionsKey] = "{not a list" }
         val ref = createRef(id = "0xaaa")
 
         // Act

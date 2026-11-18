@@ -1,8 +1,8 @@
 package com.tangem.features.earn.impl.tracker
 
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.features.earn.product.api.session.EarnTxRef
-import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.builtins.ListSerializer
@@ -12,24 +12,23 @@ import javax.inject.Inject
 /** A JSON string: [EarnTxRef] is a kotlinx type, and the object helpers of [AppPreferencesStore] use Moshi. */
 internal class EarnTxStore @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
-    private val keys: GrowPreferencesKeys,
 ) {
 
     suspend fun add(ref: EarnTxRef) {
         appPreferencesStore.editData { preferences ->
-            val refs = decode(preferences[keys.earnSentTransactionsKey])
-            preferences[keys.earnSentTransactionsKey] = encode(refs.filterNot { it.id == ref.id } + ref)
+            val refs = decode(preferences[sentTransactionsKey])
+            preferences[sentTransactionsKey] = encode(refs.filterNot { it.id == ref.id } + ref)
         }
     }
 
     suspend fun remove(id: String) {
         appPreferencesStore.editData { preferences ->
-            val refs = decode(preferences[keys.earnSentTransactionsKey])
-            preferences[keys.earnSentTransactionsKey] = encode(refs.filterNot { it.id == id })
+            val refs = decode(preferences[sentTransactionsKey])
+            preferences[sentTransactionsKey] = encode(refs.filterNot { it.id == id })
         }
     }
 
-    suspend fun all(): List<EarnTxRef> = decode(appPreferencesStore.data.first()[keys.earnSentTransactionsKey])
+    suspend fun all(): List<EarnTxRef> = decode(appPreferencesStore.data.first()[sentTransactionsKey])
 
     private fun encode(refs: List<EarnTxRef>): String = json.encodeToString(serializer, refs)
 
@@ -44,9 +43,11 @@ internal class EarnTxStore @Inject constructor(
         }
     }
 
-    private companion object {
-        val serializer = ListSerializer(EarnTxRef.serializer())
+    companion object {
+        val sentTransactionsKey = stringPreferencesKey(name = "earnSentTransactions")
 
-        val json = Json { ignoreUnknownKeys = true }
+        private val serializer = ListSerializer(EarnTxRef.serializer())
+
+        private val json = Json { ignoreUnknownKeys = true }
     }
 }

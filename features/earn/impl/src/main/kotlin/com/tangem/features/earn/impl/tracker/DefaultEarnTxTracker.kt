@@ -14,6 +14,7 @@ import com.tangem.features.earn.product.api.session.EarnTxTracker
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -33,8 +34,8 @@ import kotlin.time.Duration.Companion.seconds
 @Singleton
 internal class DefaultEarnTxTracker @Inject constructor(
     private val store: EarnTxStore,
-    private val registry: EarnProductsRegistry,
-    private val sessionFactories: Map<String, @JvmSuppressWildcards EarnSession.Factory>,
+    private val registry: Lazy<EarnProductsRegistry>,
+    private val sessionFactories: Lazy<Map<String, @JvmSuppressWildcards EarnSession.Factory>>,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val accountListSupplier: SingleAccountListSupplier,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -80,8 +81,8 @@ internal class DefaultEarnTxTracker @Inject constructor(
             return
         }
 
-        val product = registry.find(ref.productId)
-        val factory = sessionFactories[ref.productId.value]
+        val product = registry.get().find(ref.productId)
+        val factory = sessionFactories.get()[ref.productId.value]
         if (product == null || factory == null) {
             drop(ref, reason = "the product or its session is unknown")
             return
