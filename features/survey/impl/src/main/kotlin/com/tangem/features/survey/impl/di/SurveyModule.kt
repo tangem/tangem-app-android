@@ -10,6 +10,7 @@ import com.tangem.features.survey.SurveySparrowLauncher
 import com.tangem.features.survey.impl.DefaultSurveyComponent
 import com.tangem.features.survey.impl.DefaultSurveyFeatureToggles
 import com.tangem.features.survey.impl.DefaultSurveySparrowLauncher
+import com.tangem.features.survey.impl.deeplink.NativeSurveyDeepLinkHandler
 import com.tangem.features.survey.impl.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.survey.impl.nativesurvey.repository.DefaultNativeSurveyRepository
 import com.tangem.features.survey.impl.nativesurvey.repository.NativeSurveyRepository
@@ -38,6 +39,11 @@ internal interface SurveyModule {
     @IntoMap
     @DeepLinkKey(SurveyDeepLinkHandler.DEEPLINK_KEY)
     fun bindSurveyDeepLinkHandler(impl: SurveyDeepLinkHandler): DeepLinkHandler
+
+    @Binds
+    @IntoMap
+    @DeepLinkKey(NativeSurveyDeepLinkHandler.DEEPLINK_KEY)
+    fun bindNativeSurveyDeepLinkHandler(impl: NativeSurveyDeepLinkHandler): DeepLinkHandler
 
     @Binds
     @Singleton

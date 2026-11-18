@@ -15,6 +15,7 @@ interface NativeSurveyComponent : ComposableContentComponent {
         val repeatAfterDays: Int?,
         val userWalletId: UserWalletId,
         val isAlreadyAnswered: Boolean,
+        val isFromCache: Boolean,
     )
 
     interface Factory : ComponentFactory<Params, NativeSurveyComponent>

@@ -826,6 +826,7 @@ internal class ChildFactory @Inject constructor(
                         repeatAfterDays = route.repeatAfterDays,
                         userWalletId = route.userWalletId,
                         isAlreadyAnswered = route.isAlreadyAnswered,
+                        isFromCache = route.isFromCache,
                     ),
                     componentFactory = nativeSurveyComponentFactory,
                 )
