@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -13,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,6 +22,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.components.ClearFocusOnKeyboardHidden
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
@@ -42,6 +45,8 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
+    ClearFocusOnKeyboardHidden()
     TangemTopBarScaffold(
         modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_FORM_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
@@ -65,6 +70,7 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
                 .windowInsetsPadding(footerInsets())
                 .verticalScroll(rememberScrollState())
                 .padding(top = contentPadding.calculateTopPadding())

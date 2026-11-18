@@ -19,7 +19,6 @@ import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,8 +28,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import com.tangem.core.ui.components.ClearFocusOnKeyboardHidden
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
-import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SendScreenTestTags
@@ -117,21 +116,6 @@ fun ModalAmountTextField(
 }
 
 private const val NOT_MEASURED = -1
-
-@Composable
-private fun ClearFocusOnKeyboardHidden() {
-    val focusManager = LocalFocusManager.current
-    val isKeyboardVisible by rememberIsKeyboardVisible()
-    var wasKeyboardVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(isKeyboardVisible) {
-        if (isKeyboardVisible) {
-            wasKeyboardVisible = true
-        } else if (wasKeyboardVisible) {
-            wasKeyboardVisible = false
-            focusManager.clearFocus()
-        }
-    }
-}
 
 @Composable
 private fun Int.toMaxWidthDp(): Dp {

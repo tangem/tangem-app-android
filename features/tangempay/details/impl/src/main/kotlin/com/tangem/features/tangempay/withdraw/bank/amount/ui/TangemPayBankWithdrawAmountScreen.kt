@@ -436,5 +436,6 @@ private class AmountPreviewProvider : PreviewParameterProvider<TangemPayBankWith
         TangemPayBankWithdrawAmountPreviewData.moneyAccount,
         TangemPayBankWithdrawAmountPreviewData.loading,
         TangemPayBankWithdrawAmountPreviewData.feeUnreachable,
+        TangemPayBankWithdrawAmountPreviewData.dataUnreachable,
     )
 }

@@ -107,4 +107,8 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onRetryClick = {},
         onBackClick = {},
     )
+
+    val dataUnreachable = feeUnreachable.copy(
+        message = resourceReference(R.string.tangempay_withdraw_bank_data_unreachable),
+    )
 }
