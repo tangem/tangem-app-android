@@ -16,14 +16,11 @@ internal class CollectiblesTransferErrorConverter(
     override fun convert(value: CollectiblesAccountError): DialogMessage? {
         val messageId = when (value) {
             CollectiblesAccountError.Cancelled -> return null
-            // TODO([REDACTED_TASK_KEY]): a withdrawal string; this one says "before swapping again"
-            is CollectiblesAccountError.MaybeSent -> R.string.gasless_solana_error_maybe_sent
+            is CollectiblesAccountError.MaybeSent -> R.string.collectibles_withdraw_transfer_error_maybe_sent
             is CollectiblesAccountError.Vault -> when (value.error) {
                 GachaVaultError.SponsorUnavailable -> R.string.gasless_solana_error_unavailable
-                // TODO([REDACTED_TASK_KEY]): a withdrawal string; this one says "sponsored swaps"
-                GachaVaultError.SponsorRateLimited -> R.string.gasless_solana_error_rate_limited
-                // TODO([REDACTED_TASK_KEY]): a withdrawal string; this one says "Start the swap again"
-                GachaVaultError.TransactionExpired -> R.string.gasless_solana_error_expired
+                GachaVaultError.SponsorRateLimited -> R.string.collectibles_withdraw_transfer_error_rate_limited
+                GachaVaultError.TransactionExpired -> R.string.collectibles_withdraw_transfer_error_expired
                 else -> null
             }
             else -> null

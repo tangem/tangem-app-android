@@ -59,7 +59,7 @@ internal class CollectiblesTransferErrorConverterTest {
     private fun provideTestModels() = listOf(
         ErrorModel(
             error = CollectiblesAccountError.MaybeSent(txHash = null),
-            expectedMessage = resourceReference(R.string.gasless_solana_error_maybe_sent),
+            expectedMessage = resourceReference(R.string.collectibles_withdraw_transfer_error_maybe_sent),
         ),
         ErrorModel(
             error = vault(GachaVaultError.SponsorUnavailable),
@@ -67,11 +67,11 @@ internal class CollectiblesTransferErrorConverterTest {
         ),
         ErrorModel(
             error = vault(GachaVaultError.SponsorRateLimited),
-            expectedMessage = resourceReference(R.string.gasless_solana_error_rate_limited),
+            expectedMessage = resourceReference(R.string.collectibles_withdraw_transfer_error_rate_limited),
         ),
         ErrorModel(
             error = vault(GachaVaultError.TransactionExpired),
-            expectedMessage = resourceReference(R.string.gasless_solana_error_expired),
+            expectedMessage = resourceReference(R.string.collectibles_withdraw_transfer_error_expired),
         ),
         ErrorModel(
             error = vault(GachaVaultError.SponsorRejected(reason = "SOLANA_SIMULATION_FAILED")),
