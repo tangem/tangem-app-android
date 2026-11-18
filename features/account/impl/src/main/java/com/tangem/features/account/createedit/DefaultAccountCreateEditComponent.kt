@@ -28,19 +28,14 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
 
     private val walletSelectorSlot = model.walletSelector?.let { selector ->
         childSlot(
-            source = selector.navigation,
+            source = selector.picker.navigation,
             serializer = Unit.serializer(),
             key = "accountCreateWalletSelectorSlot",
             handleBackButton = false,
             childFactory = { _, componentContext ->
                 portfolioSelectorComponentFactory.create(
                     context = childByContext(componentContext),
-                    params = PortfolioSelectorComponent.Params(
-                        portfolioFetcher = selector.portfolioFetcher,
-                        controller = selector.portfolioSelectorController,
-                        bsCallback = selector.bottomSheetCallback,
-                        settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
-                    ),
+                    params = selector.picker.selectorParams,
                 )
             },
         )
@@ -54,8 +49,8 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
             isCreateMode = params is AccountCreateEditComponent.Params.Create,
             modifier = modifier,
         )
-        // only while there are changes to confirm: otherwise back is a plain pop, left to the stack's predictive back
-        BackHandler(enabled = state.buttonState.isButtonEnabled, onBack = state.onCloseClick)
+        // only while there are unsaved changes: otherwise back is a plain pop, left to the stack's predictive back
+        BackHandler(enabled = state.hasUnsavedChanges, onBack = state.onCloseClick)
 
         walletSelectorSlot?.let { slot ->
             val walletSelector by slot.subscribeAsState()

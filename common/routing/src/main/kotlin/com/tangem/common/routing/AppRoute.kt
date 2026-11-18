@@ -527,6 +527,10 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
 
+    /** Crypto account intro for callers that can't tell which wallet: it asks, then opens [CreateAccount]. */
+    @Serializable
+    data object CryptoAccountIntro : AppRoute(path = "/crypto_account_intro")
+
     /** [userWalletId] is null when the caller can't tell which wallet: the flow asks after its intro. */
     @Serializable
     data class JointAccountCreation(

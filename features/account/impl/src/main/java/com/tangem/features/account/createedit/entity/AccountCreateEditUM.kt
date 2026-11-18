@@ -14,6 +14,7 @@ internal data class AccountCreateEditUM(
     val iconsState: Icons,
     val buttonState: Button,
     val wallet: Wallet?,
+    val hasUnsavedChanges: Boolean = false,
     val onCloseClick: () -> Unit,
 ) {
 

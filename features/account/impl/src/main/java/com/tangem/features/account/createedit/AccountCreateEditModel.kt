@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.accountLimitReachedDialog
 import com.tangem.common.ui.account.toDomain
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -21,11 +22,9 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -44,13 +43,12 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateName
 import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.features.account.createedit.wallet.AccountCreateWalletSelector
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.AccountWalletPicker
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @ModelScoped
@@ -65,10 +63,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private val getUnoccupiedAccountIndexUseCase: GetUnoccupiedAccountIndexUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    userWalletsListRepository: UserWalletsListRepository,
-    singleAccountListSupplier: SingleAccountListSupplier,
-    portfolioFetcherFactory: PortfolioFetcher.Factory,
-    portfolioSelectorController: PortfolioSelectorController,
+    accountWalletPickerFactory: AccountWalletPicker.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountCreateEditComponent.Params>()
@@ -77,20 +72,22 @@ internal class AccountCreateEditModel @Inject constructor(
     val uiState: StateFlow<AccountCreateEditUM>
         field = MutableStateFlow(value = getInitialState())
 
-    /** Only creation offers a wallet choice; an edited account stays in its wallet */
     val walletSelector: AccountCreateWalletSelector? = (params as? AccountCreateEditComponent.Params.Create)
         ?.let { create ->
             AccountCreateWalletSelector(
                 initialWalletId = create.userWalletId,
                 scope = modelScope,
-                userWalletsListRepository = userWalletsListRepository,
-                singleAccountListSupplier = singleAccountListSupplier,
-                portfolioFetcherFactory = portfolioFetcherFactory,
-                portfolioSelectorController = portfolioSelectorController,
+                picker = accountWalletPickerFactory.create(scope = modelScope),
+                onFullWalletPicked = {
+                    messageSender.send(
+                        accountLimitReachedDialog(limit = AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT),
+                    )
+                },
             )
         }
 
-    private var derivationInfoJob: Job? = null
+    /** The last wallet whose free index loaded: where a failed switch falls back to. */
+    private var lastLoadedWalletId: UserWalletId? = null
 
     init {
         when (params) {
@@ -244,8 +241,7 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun onCloseClick() {
-        val shouldShowConfirmDialog = uiState.value.buttonState.isButtonEnabled
-        if (shouldShowConfirmDialog) unsaveChangeDialog() else router.pop()
+        if (uiState.value.hasUnsavedChanges) unsaveChangeDialog() else router.pop()
     }
 
     private fun onIconSelect(icon: CryptoPortfolioIcon.Icon) {
@@ -277,9 +273,8 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private fun AccountCreateEditUM.validateNewState(): AccountCreateEditUM {
         val isValidName = this.account.name.isValidName()
-        val isAvailableForConfirm = when (params) {
-            // The index belongs to the selected wallet and is reloaded whenever the wallet changes
-            is AccountCreateEditComponent.Params.Create -> isValidName && account.derivationInfo.index != null
+        val hasUnsavedChanges = when (params) {
+            is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
                 val oldIcon = CryptoPortfolioIconConverter.convert(params.account.icon)
@@ -289,7 +284,10 @@ internal class AccountCreateEditModel @Inject constructor(
                 isValidName && (isNewName || isNewIcon)
             }
         }
-        return this.updateButton(isButtonEnabled = isAvailableForConfirm)
+        // In Create the index belongs to the selected wallet and is reloaded whenever the wallet changes
+        val isIndexReady = params is AccountCreateEditComponent.Params.Edit || account.derivationInfo.index != null
+        return this.updateButton(isButtonEnabled = hasUnsavedChanges && isIndexReady)
+            .copy(hasUnsavedChanges = hasUnsavedChanges)
     }
 
     private fun AccountNameUM.isValidName(): Boolean = this.toDomain().isRight()
@@ -311,32 +309,34 @@ internal class AccountCreateEditModel @Inject constructor(
         selector.walletRow
             .onEach { wallet -> uiState.update { it.copy(wallet = wallet) } }
             .launchIn(modelScope)
-        selector.selectedWalletId
-            .onEach(::updateDerivationInfo)
-            .launchIn(modelScope)
+        modelScope.launch { selector.selectedWalletId.collectLatest(::updateDerivationInfo) }
     }
 
-    private fun updateDerivationInfo(userWalletId: UserWalletId) {
-        derivationInfoJob?.cancel()
+    private suspend fun updateDerivationInfo(userWalletId: UserWalletId) {
         // The previous wallet's index must not be submitted while the new one is loading
         uiState.update { it.resetDerivationIndex().validateNewState() }
-        derivationInfoJob = modelScope.launch(dispatchers.default) {
-            getUnoccupiedAccountIndexUseCase(userWalletId = userWalletId)
-                .onRight { derivationIndex ->
-                    uiState.update {
-                        it.updateDerivationIndex(derivationIndex = derivationIndex.value).validateNewState()
-                    }
+        // withContext resumes on main only if this collection is still current, so a superseded wallet's
+        // index can't land after the reset above
+        withContext(dispatchers.default) { getUnoccupiedAccountIndexUseCase(userWalletId = userWalletId) }
+            .onRight { derivationIndex ->
+                lastLoadedWalletId = userWalletId
+                uiState.update {
+                    it.updateDerivationIndex(derivationIndex = derivationIndex.value).validateNewState()
                 }
-                .onLeft { cause ->
-                    val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
+            }
+            .onLeft { cause ->
+                val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
+                logError(error = error, params = mapOf("cause" to cause.toString()))
 
-                    logError(error = error, params = mapOf("cause" to cause.toString()))
-
-                    messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
-
-                    return@launch
-                }
-        }
+                // Re-selecting the failing wallet wouldn't reload it, so there's nothing left to fall back to
+                val fallbackWalletId = lastLoadedWalletId?.takeIf { it != userWalletId }
+                messageSender.showErrorDialog(
+                    universalError = error,
+                    onDismiss = {
+                        if (fallbackWalletId == null) router.pop() else walletSelector?.select(fallbackWalletId)
+                    },
+                )
+            }
     }
 
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
