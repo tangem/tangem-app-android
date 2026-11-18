@@ -132,7 +132,13 @@ internal class OnrampOffersLayoutUMTest {
                 expectedRows = listOf(bestBanner, fastestBanner, OnrampRecommendedRowUM.Offer(unslotted)),
                 expectedButton = null,
             ),
-            LayoutModel(OnrampOffersBlockUM.Empty, setOf(RecommendedSlot.BEST), listOf(bestBanner), null),
+            LayoutModel(OnrampOffersBlockUM.Empty, setOf(RecommendedSlot.BEST), emptyList(), null),
+            LayoutModel(
+                state = content.copy(recentOffer = best, recommended = persistentListOf()),
+                slots = RecommendedSlot.entries.toSet(),
+                expectedRows = emptyList(),
+                expectedButton = null,
+            ),
             LayoutModel(OnrampOffersBlockUM.Loading, setOf(RecommendedSlot.FASTEST), listOf(fastestBanner), null),
         )
     }
