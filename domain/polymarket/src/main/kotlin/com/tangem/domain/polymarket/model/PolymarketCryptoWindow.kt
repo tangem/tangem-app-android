@@ -23,7 +23,10 @@ data class PolymarketCryptoWindow(
     val finalPrice: BigDecimal?,
     val nextWindows: List<PolymarketCryptoNextWindow>,
     val liveEventId: String?,
-)
+) {
+
+    fun phaseAt(nowMillis: Long): PolymarketCryptoWindowPhase = PolymarketCryptoWindowPhase.at(start, end, nowMillis)
+}
 
 /** A later window of the same series; each window is an event of its own. */
 data class PolymarketCryptoNextWindow(
