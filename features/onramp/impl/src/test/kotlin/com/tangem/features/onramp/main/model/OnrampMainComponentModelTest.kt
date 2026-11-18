@@ -714,6 +714,55 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
+    fun `GIVEN lookup failed on screen return WHEN late quotes arrive THEN error with refresh stays`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("USD").right())
+        val quotes = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotes)
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.DomainError(null).left()
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        quotes.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.errorNotification)
+            .isInstanceOf(NotificationUM.Warning.OnrampErrorNotification::class.java)
+        assertThat(model.isBuyEnabled.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restricted IP country selected WHEN IP becomes allowed on return THEN country is blocked`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns restricted.right()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(restricted.right())
+        val model = createModel(scheduler = scheduler, quotesFlow = emptyFlow())
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("EUR").copy(id = "other").right()
+
+        // Act
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.regionRestrictionMessage).isNull()
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(model.isBuyEnabled.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN IP country available WHEN openRedirectPage THEN purchase is launched`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()

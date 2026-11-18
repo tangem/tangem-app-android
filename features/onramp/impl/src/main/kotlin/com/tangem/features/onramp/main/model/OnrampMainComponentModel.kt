@@ -216,6 +216,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private var isCountryBlocked = false
     private var ipRestrictedRegionName: String? = null
     private var ipRestrictedCountryId: String? = null
+    private var selectedCountry: OnrampCountry? = null
     private var isIpCheckPending = isCountryByIpEnabled
     private var ipCheckError: OnrampError? = null
     private var hasStarted = false
@@ -453,7 +454,20 @@ internal class OnrampMainComponentModel @Inject constructor(
         if (ipCheckError != null) quotesTaskScheduler.cancelTask()
         isIpCheckPending = false
         updateRegionRestriction()
+        blockSelectedCountryIfUnsupported()
         return result
+    }
+
+    // The IP answer can change while the selected country stays the same, so the country flow won't re-emit it.
+    private fun blockSelectedCountryIfUnsupported() {
+        val country = selectedCountry ?: return
+        if (!isCountryBlocked && isUnsupportedPick(country)) showCountryNotSupported(country)
+    }
+
+    // The IP region banner already covers the restricted IP country, so only another unsupported country
+    // picked by hand blocks the screen.
+    private fun isUnsupportedPick(country: OnrampCountry): Boolean {
+        return isCountryByIpEnabled && !country.isOnrampAvailable && country.id != ipRestrictedCountryId
     }
 
     private fun updateRegionRestriction() {
@@ -529,10 +543,9 @@ internal class OnrampMainComponentModel @Inject constructor(
                         if (isCountryByIpEnabled) {
                             state.update { stateFactory.getCountryFlagState(it, country.image, country.name) }
                         }
-                        // The IP region banner already covers the restricted IP country, so only another
-                        // unsupported country picked by hand blocks the screen.
                         if (isCountryByIpEnabled && isIpCheckPending) awaitLatestAvailabilityCheck()
-                        if (isCountryByIpEnabled && !country.isOnrampAvailable && country.id != ipRestrictedCountryId) {
+                        selectedCountry = country
+                        if (isUnsupportedPick(country)) {
                             showCountryNotSupported(country)
                             return@onEach
                         }
@@ -597,7 +610,8 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
-        if (isCountryBlocked) return
+        // A request already in flight can still answer after a failed IP check; keep its error and Refresh.
+        if (isCountryBlocked || ipCheckError != null) return
         sendOnrampQuotesErrorAnalytic(quotes)
         val hasAvailableOffer = quotes.any { it is OnrampQuote.Data && !it.isRestricted }
         val isRegionRestricted = !hasAvailableOffer && quotes.any(OnrampQuote::isRestricted)
