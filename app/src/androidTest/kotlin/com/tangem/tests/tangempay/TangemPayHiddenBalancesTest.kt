@@ -8,6 +8,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.hideBalances
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.scenarios.*
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onSwapSelectTokenScreen
@@ -18,12 +19,16 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import javax.inject.Inject
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import org.junit.Test
 
 @HiltAndroidTest
 class TangemPayHiddenBalancesTest : BaseTestCase() {
+
+    @Inject
+    lateinit var balanceHidingRepository: BalanceHidingRepository
 
     private val balanceScenario = "tangem_pay_balance_update"
     private val cashbackScenario = "tangem_pay_cashback"
@@ -49,7 +54,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
     @Test
     fun paymentAccountBalanceMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -80,7 +85,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
         val spendMerchant = "Cashback Coffee"
 
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
             additionalBeforeSection = { serveTangemPayCashbackFromWireMock() },
             additionalAfterSection = { restoreTangemPayCannedCashback() },
         ).run {
@@ -121,7 +126,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
     @Test
     fun cashbackWidgetAmountMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
             additionalBeforeSection = { serveTangemPayCashbackFromWireMock() },
             additionalAfterSection = { restoreTangemPayCannedCashback() },
         ).run {
@@ -144,7 +149,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
     fun addFundsFromTangemWalletBalanceMaskedTest() {
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(swapStoriesScenario, swapStoriesErrorState) },
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -172,7 +177,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
     fun withdrawWithinPortfolioBalancesMaskedTest() {
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(swapStoriesScenario, swapStoriesErrorState) },
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenarios for a multichain Tangem Pay withdrawal") {
                 setTangemPayMultiNetworkWithdrawScenarios()
@@ -211,7 +216,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
     @Test
     fun bankTransferSourceBalancesMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
             step("Open Tangem Pay") { openTangemPay() }
@@ -250,7 +255,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
         val amount = "5"
 
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
             step("Set WireMock scenario '$bankAccountsScenario' to '$twoAccountsState'") {
@@ -282,7 +287,7 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
         val histogramMonthOffsets = listOf(-4, -3, -1, 0)
 
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
             additionalBeforeSection = { serveTangemPayCashbackFromWireMock() },
             additionalAfterSection = { restoreTangemPayCannedCashback() },
         ).run {
