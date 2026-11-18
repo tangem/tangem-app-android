@@ -19,10 +19,12 @@ import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
+import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.product.api.rate.formatEarnPercent
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.Withdraw
@@ -33,14 +35,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
     private val performanceFeeText = provider.performanceFee.formatEarnPercent()
 
     private val details = listOf(
-        EarnRow(
-            label = resourceReference(R.string.earn_product_details_risk),
-            value = EarnValue.Text(resourceReference(R.string.earn_risk_level_low)),
-            info = EarnRowInfo.Text(
-                title = resourceReference(R.string.earn_product_details_risk_info_title),
-                text = resourceReference(R.string.earn_product_details_risk_low_description),
-            ),
-        ),
+        EarnRisk.Low.detailsRow(),
         EarnRow(
             label = resourceReference(R.string.earn_product_details_protocol),
             value = EarnValue.Link(text = provider.info.title, url = provider.websiteUrl),

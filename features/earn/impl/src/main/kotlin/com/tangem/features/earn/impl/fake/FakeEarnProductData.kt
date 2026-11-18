@@ -45,6 +45,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.Withdraw
@@ -241,14 +242,7 @@ private fun fakeDetails(): List<EarnRow> {
     val fee = resourceReference(ResR.string.earn_product_details_performance_fee)
     val percent = wrappedList<Any>(FAKE_FEE_PERCENT)
     return listOf(
-        EarnRow(
-            label = resourceReference(ResR.string.earn_product_details_risk),
-            value = EarnValue.Text(resourceReference(ResR.string.earn_risk_level_low)),
-            info = EarnRowInfo.Text(
-                title = resourceReference(ResR.string.earn_product_details_risk_info_title),
-                text = resourceReference(ResR.string.earn_product_details_risk_low_description),
-            ),
-        ),
+        EarnRisk.Low.detailsRow(),
         EarnRow(
             label = resourceReference(ResR.string.earn_product_details_protocol),
             value = EarnValue.Link(
