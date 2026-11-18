@@ -11,6 +11,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.AccruingBalanceContribution
 import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.staking.model.BalanceItem
@@ -32,9 +33,11 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
-class SetBalanceTransformerTest {
+internal class SetBalanceTransformerTest {
 
     private val onToggleBalanceType: () -> Unit = mockk(relaxed = true)
     private val appCurrency: AppCurrency = AppCurrency.Default
@@ -452,6 +455,45 @@ class SetBalanceTransformerTest {
     }
 
     @Test
+    fun `GIVEN accruing extra balance AND prev ticking WHEN transform THEN ticking balances preserved`() {
+        // Arrange
+        val status = createStatus(loadedValue(contributions = listOf(AccruingBalance(BigDecimal("1.5")))))
+        val transformer = createTransformer(status)
+        val prev = contentWithYieldBalances(fiat = "$21,000.12", crypto = "10.500001 ETH")
+
+        // Act
+        val result = transformer.transform(initialState().copy(balanceBlockUM = prev))
+
+        // Assert
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.displayYieldSupplyFiatBalance to content.displayYieldSupplyCryptoBalance)
+            .isEqualTo("$21,000.12" to "10.500001 ETH")
+    }
+
+    @ParameterizedTest
+    @EnumSource(TokenBalanceTypeUM.Type::class)
+    fun `GIVEN ticking balances WHEN balance type selected THEN only the total ticks`(type: TokenBalanceTypeUM.Type) {
+        // Arrange
+        val content = contentWithYieldBalances(fiat = "$21,000.12", crypto = "10.500001 ETH").copy(
+            tokenBalanceTypeUM = TokenBalanceTypeUM.Multiple(
+                type = type,
+                availableTypes = persistentListOf(TokenBalanceTypeUM.Type.ALL, TokenBalanceTypeUM.Type.AVAILABLE),
+                onSelect = {},
+            ),
+        )
+
+        // Act
+        val ticking = content.tickingFiatBalance to content.tickingCryptoBalance
+
+        // Assert
+        val expected = when (type) {
+            TokenBalanceTypeUM.Type.ALL -> "$21,000.12" to "10.500001 ETH"
+            TokenBalanceTypeUM.Type.AVAILABLE -> null to null
+        }
+        assertThat(ticking).isEqualTo(expected)
+    }
+
+    @Test
     fun `GIVEN yield active AND prev is not Content WHEN transform THEN yield balances are null`() {
         // GIVEN — prev is the default Loading block, so there are no yield balances to preserve yet
         val status = createStatus(loadedValue(yieldSupplyStatus = activeYieldSupplyStatus()))
@@ -629,4 +671,13 @@ class SetBalanceTransformerTest {
         type = TangemButtonType.Secondary,
         onClick = {},
     )
+
+    private data class AccruingBalance(val amount: BigDecimal) : AccruingBalanceContribution {
+
+        override val source: StatusSource = StatusSource.ACTUAL
+
+        override val accrualRate: BigDecimal = BigDecimal("0.03")
+
+        override fun totalDeltaCryptoAmount(): BigDecimal = amount
+    }
 }

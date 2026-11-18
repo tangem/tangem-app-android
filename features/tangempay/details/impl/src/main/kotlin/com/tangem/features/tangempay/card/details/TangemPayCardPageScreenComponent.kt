@@ -142,6 +142,7 @@ internal class TangemPayCardPageScreenComponent(
                 params = TokenReceiveComponent.Params(
                     config = navigation.config,
                     onDismiss = model.bottomSheetNavigation::dismiss,
+                    isNewScreenAllowed = false,
                 ),
             )
             is TangemPayCardNavigation.ChooseNetwork -> PaymentChooseNetworkComponent(

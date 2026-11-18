@@ -18,10 +18,12 @@ import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
+import com.tangem.core.ui.ds2.toast.TangemToastStackState
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.message.modal.MessageModal
 import com.tangem.core.ui.res.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun EventMessageEffect(
@@ -31,9 +33,11 @@ fun EventMessageEffect(
         topSnackbarHostState.showSnackbar(message)
     },
     onShowToast: (ToastMessage, Context) -> Unit = { message, context -> showToast(message, context) },
+    toastStackState: TangemToastStackState = LocalToastStackState.current,
 ) {
     val messageEvent by messageHandler.collectAsState()
     val context = LocalContext.current
+    val toastScope = rememberCoroutineScope()
 
     var dialogMessage: DialogMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
@@ -56,6 +60,9 @@ fun EventMessageEffect(
             }
             is ToastMessage -> {
                 onShowToast(message, context)
+            }
+            is TangemToastMessage -> {
+                toastScope.launch { toastStackState.show(message) }
             }
             is GlobalLoadingMessage -> {
                 loadingMessage = if (message.isShow) {

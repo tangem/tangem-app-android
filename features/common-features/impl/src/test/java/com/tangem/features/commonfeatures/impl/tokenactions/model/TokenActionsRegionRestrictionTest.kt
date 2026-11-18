@@ -61,4 +61,20 @@ internal class TokenActionsRegionRestrictionTest {
         assertThat(actual.variant).isEqualTo(TangemMessageBanner.Variant.Warning)
         assertThat(actual.title).isEqualTo(resourceReference(R.string.buy_swap_region_restriction_title))
     }
+
+    @Test
+    fun `GIVEN a region without onramp WHEN onrampBanner THEN the notice names it and stays a warning`() {
+        // Act
+        val actual = TokenActionsRegionRestriction.onrampBanner(regionName = "United Kingdom")
+
+        // Assert
+        assertThat(actual.variant).isEqualTo(TangemMessageBanner.Variant.Warning)
+        assertThat(actual.title).isEqualTo(resourceReference(R.string.onramp_region_restriction_title))
+        assertThat(actual.description).isEqualTo(
+            resourceReference(
+                id = R.string.onramp_region_restriction_description_v2,
+                formatArgs = wrappedList("United Kingdom"),
+            ),
+        )
+    }
 }

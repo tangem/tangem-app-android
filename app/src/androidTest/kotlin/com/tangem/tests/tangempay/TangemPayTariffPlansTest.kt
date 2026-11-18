@@ -7,6 +7,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.assertUrlOpenedStartingWith
 import com.tangem.common.utils.stubExternalUrlOpening
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.scenarios.*
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
@@ -28,7 +29,6 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     private val planPlusState = "Plus"
     private val planPlusFiveCardsState = "PlusFiveCards"
     private val planDowngradePendingState = "DowngradePending"
-    private val planTransitioningState = "Transitioning"
 
     private val transitionsOnboardingState = "Onboarding"
     private val transitionsFromBasicState = "FromBasic"
@@ -64,6 +64,8 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     private val noFeeAppliedPoint = getResourceString(CoreResR.string.tangempay_select_plan_confirm_point_no_fee)
     private val stayOnPlusButton =
         getResourceString(CoreResR.string.tangempay_current_plan_stay_button, plusPlan)
+    private val cancelPlusButton =
+        getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_cancel_button, plusPlan, basicPlan)
     private val awaitingPlanFeeNotification =
         getResourceString(CoreResR.string.tangempay_current_plan_awaiting_deposit_notification, plusPlan)
     private val upgradeConfirmTitle =
@@ -228,16 +230,12 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     @DisplayName("Tangem Pay: the Plus plan fee order picked during onboarding can be cancelled")
     @Test
     fun selectPlusPlanCancelledBeforePaymentTest() {
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planSelectNeededState,
-                    transitions = transitionsOnboardingState,
-                )
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
+            openTangemPayVerifiedFromActionRequiredTile()
+            openTangemPaySelectPlanFromVerified()
+            step("Assert '$basicPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) } }
             }
-        ).run {
-            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
-            step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Swipe to the '$plusPlan' plan") {
                 onTangemPaySelectPlanScreen { scrollToPlanAt(index = 1) }
             }
@@ -247,16 +245,39 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert '$plusFeePoint' point is displayed") {
                 onTangemPaySelectPlanScreen { point(plusFeePoint).assertIsDisplayed() }
             }
-            step("Put the plan fee order in 'awaiting deposit' in WireMock") {
-                stageTangemPayPlanFeeAwaitingDeposit()
+            step("Put the onboarding order in 'awaiting plan fee deposit' in WireMock") {
+                stageTangemPayOnboardingPlanFeeAwaitingDeposit()
             }
+            val ordersBefore = getTangemPayPlanOrderRequestCount()
             step("Click on 'Select' button") {
                 onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
             }
-            step("Assert 'Top-up your account' banner is displayed") {
+            step("Assert the order request was sent once") {
+                assertTangemPayTariffRequestSentOnce("order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
+            }
+            step("Assert 'Tangem Pay is activating' screen is displayed") {
+                awaitSuccess { onTangemPayOnboardingSuccessScreen { title.assertIsDisplayed() } }
+            }
+            val summaryRequestsAfterOrder = getTangemPaySummaryRequestCount()
+            step("Assert the account activation is polled") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTangemPayMainScreen { awaitingDepositBannerTitle(plusFee).assertIsDisplayed() }
+                    if (getTangemPaySummaryRequestCount() <= summaryRequestsAfterOrder) {
+                        throw AssertionError("The account activation should be polled after the order is placed")
+                    }
                 }
+            }
+            closeTangemPayOnboardingSuccessToPaymentAccount()
+            step("Assert 'Inactive' badge is displayed") {
+                awaitSuccess { onTangemPayMainScreen { inactiveBadge.assertIsDisplayed() } }
+            }
+            step("Assert 'Top-up your account' banner is displayed") {
+                onTangemPayMainScreen { awaitingDepositBannerTitle(plusFee).assertIsDisplayed() }
+            }
+            step("Assert 'Top-up your account' banner subtitle is displayed") {
+                onTangemPayMainScreen { awaitingDepositBannerSubtitle.assertIsDisplayed() }
+            }
+            step("Assert 'Add funds' banner button is displayed") {
+                onTangemPayMainScreen { awaitingDepositBannerAddFundsButton.assertIsDisplayed() }
             }
             val cancelsBefore = getTangemPayCancelPlanOrderRequestCount()
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
@@ -267,7 +288,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                     }
                 }
             }
-            step("Click on 'Cancel $plusPlan, move to $basicPlan' button") {
+            step("Assert '$cancelPlusButton' button is displayed") {
+                onTangemPayCurrentPlanScreen { notificationButtonWithText(cancelPlusButton).assertIsDisplayed() }
+            }
+            step("Click on '$cancelPlusButton' button") {
                 onTangemPayCurrentPlanScreen { notificationButton.clickWithAssertion() }
             }
             // The cancel stub only flips the polled order; the list the notification reads is drained here.
@@ -284,12 +308,6 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                     onTangemPayCurrentPlanScreen { notification.assertDoesNotExist() }
                 }
             }
-            step("Press back to the payment account") { pressBackFromCurrentPlan() }
-            step("Assert 'Top-up your account' banner is not displayed") {
-                assertTangemPayAwaitingDepositBannerHidden(plusFee)
-            }
-            step("Open 'Current plan' screen") { openTangemPayCurrentPlan(assertMenuItems = true) }
-            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
         }
     }
 
@@ -655,19 +673,46 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     @DisplayName("Tangem Pay: plan details stay reachable while a transition is in progress")
     @Test
     fun planDetailsDuringActiveTransitionTest() {
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planTransitioningState,
-                    transitions = transitionsFromBasicState,
-                )
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
+            openTangemPayVerifiedFromActionRequiredTile()
+            openTangemPaySelectPlanFromVerified()
+            step("Assert '$basicPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) } }
             }
-        ).run {
-            step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
-            step("Assert 'Change plan' button is not displayed") {
-                onTangemPayCurrentPlanScreen { changePlanButton.assertDoesNotExist() }
+            step("Swipe to the '$plusPlan' plan") {
+                onTangemPaySelectPlanScreen { scrollToPlanAt(index = 1) }
+            }
+            step("Assert '$plusPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) } }
+            }
+            step("Put the onboarding order in 'awaiting plan fee deposit' in WireMock") {
+                stageTangemPayOnboardingPlanFeeAwaitingDeposit()
+            }
+            step("Click on 'Select' button") {
+                onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
+            }
+            step("Assert 'Tangem Pay is activating' screen is displayed") {
+                awaitSuccess { onTangemPayOnboardingSuccessScreen { title.assertIsDisplayed() } }
+            }
+            closeTangemPayOnboardingSuccessToPaymentAccount()
+            step("Click on 'More' button") {
+                onTangemPayMainScreen { moreActionsButton.performClick() }
+            }
+            step("Assert 'Current plan' menu item has the arrows icon") {
+                awaitSuccess {
+                    onTangemPayMainScreen {
+                        currentPlanMenuItemIcon(CoreUiR.drawable.ic_arrow_refresh_20).assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert 'Current plan' menu item is clickable") {
+                onTangemPayMainScreen { currentPlanMenuItem.assertHasClickAction() }
+            }
+            step("Click on 'Current plan' menu item") {
+                onTangemPayMainScreen { currentPlanMenuItem.performClick() }
+            }
+            step("Assert 'Current plan' screen is displayed") {
+                awaitSuccess { onTangemPayCurrentPlanScreen { screen.assertIsDisplayed() } }
             }
         }
     }

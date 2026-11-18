@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -31,11 +32,15 @@ class YieldSupplyMinAmountUseCaseTest {
     private val feeRepository: FeeRepository = mockk(relaxed = true)
     private val quotesRepository: QuotesRepository = mockk(relaxed = true)
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk(relaxed = true)
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk {
+        coEvery { getStatuses(any(), any()) } returns emptyList()
+    }
 
     private val useCase = YieldSupplyMinAmountUseCase(
         feeRepository = feeRepository,
         quotesRepository = quotesRepository,
         singleAccountListSupplier = singleAccountListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
     )
 
     @Test

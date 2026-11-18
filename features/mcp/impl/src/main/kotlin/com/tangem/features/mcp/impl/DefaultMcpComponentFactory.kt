@@ -27,11 +27,17 @@ internal class DefaultMcpComponentFactory @Inject constructor(
         when (val source = request.source) {
             is McpRequest.Intent.Source.Express -> when (source.type) {
                 McpRequest.Intent.Source.Express.Type.EXCHANGE -> exchangeIntentComponentFactory
-                    .create(context = context, params = ExchangeIntentComponent.Params(intentId = request.id))
+                    .create(
+                        context = context,
+                        params = ExchangeIntentComponent.Params(intentId = request.id, walletId = request.walletId),
+                    )
             }
             is McpRequest.Intent.Source.Transaction -> when (source.type) {
                 McpRequest.Intent.Source.Transaction.Type.SEND -> sendIntentComponentFactory
-                    .create(context = context, params = SendIntentComponent.Params(intentId = request.id))
+                    .create(
+                        context = context,
+                        params = SendIntentComponent.Params(intentId = request.id, walletId = request.walletId),
+                    )
             }
         }
 }

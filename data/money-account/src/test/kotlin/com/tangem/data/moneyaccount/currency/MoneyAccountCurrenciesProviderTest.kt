@@ -13,7 +13,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
@@ -39,7 +38,6 @@ import java.math.BigDecimal
 internal class MoneyAccountCurrenciesProviderTest {
 
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
-    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val getMoneyAccountCryptoCurrencyStatusUseCase: GetMoneyAccountCryptoCurrencyStatusUseCase = mockk()
     private val currenciesRepository: CurrenciesRepository = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
@@ -48,7 +46,6 @@ internal class MoneyAccountCurrenciesProviderTest {
 
     private val sut = MoneyAccountCurrenciesProvider(
         moneyAccountStatusSupplier = moneyAccountStatusSupplier,
-        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         getMoneyAccountCryptoCurrencyStatusUseCase = getMoneyAccountCryptoCurrencyStatusUseCase,
         currenciesRepository = currenciesRepository,
         walletManagersFacade = walletManagersFacade,
@@ -60,7 +57,6 @@ internal class MoneyAccountCurrenciesProviderTest {
     fun resetMocks() {
         clearMocks(
             moneyAccountStatusSupplier,
-            moneyAccountStatusFetcher,
             getMoneyAccountCryptoCurrencyStatusUseCase,
             currenciesRepository,
             walletManagersFacade,
@@ -77,7 +73,6 @@ internal class MoneyAccountCurrenciesProviderTest {
         } returns COIN_AMOUNT
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(QUOTE_PARAMS) } returns COIN_QUOTE
         coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
-        coEvery { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID)) } returns Unit.right()
     }
 
     @Nested
@@ -219,34 +214,6 @@ internal class MoneyAccountCurrenciesProviderTest {
         val currencyId: CryptoCurrency.ID,
         val expected: CryptoCurrency?,
     )
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class Refresh {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN account status WHEN refresh THEN only its own network is refetched`(model: RefreshModel) = runTest {
-            // Arrange
-            givenAccountStatus(model.value)
-
-            // Act
-            sut.refresh(USER_WALLET_ID, model.network)
-
-            // Assert
-            coVerify(exactly = model.expectedFetches) {
-                moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
-            }
-        }
-
-        private fun provideTestModels(): List<RefreshModel> = listOf(
-            RefreshModel(value = activeAccount(), network = NETWORK, expectedFetches = 1),
-            RefreshModel(value = activeAccount(), network = ETHEREUM_NETWORK, expectedFetches = 0),
-            RefreshModel(value = MoneyAccountStatusValue.Empty, network = NETWORK, expectedFetches = 0),
-        )
-    }
-
-    data class RefreshModel(val value: MoneyAccountStatusValue, val network: Network, val expectedFetches: Int)
 
     private fun givenAccountStatus(value: MoneyAccountStatusValue) {
         every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns flowOf(

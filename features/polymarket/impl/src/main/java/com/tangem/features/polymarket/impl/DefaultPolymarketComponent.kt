@@ -1,6 +1,8 @@
 package com.tangem.features.polymarket.impl
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import com.tangem.features.polymarket.impl.common.ui.LocalPolymarketPriceAnimationEnabled
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,7 +23,6 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
@@ -29,6 +30,7 @@ import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
+import com.tangem.features.polymarket.impl.navigation.createEventDetailsComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.navigation.settledUserWalletId
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -93,12 +95,16 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val childStackValue by childStack.subscribeAsState()
 
-        Children(
-            stack = childStackValue,
-            modifier = modifier,
-            animation = stackAnimation { fade() },
-        ) { child ->
-            child.instance.Content(Modifier.fillMaxSize())
+        CompositionLocalProvider(
+            LocalPolymarketPriceAnimationEnabled provides polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+        ) {
+            Children(
+                stack = childStackValue,
+                modifier = modifier,
+                animation = stackAnimation { fade() },
+            ) { child ->
+                child.instance.Content(Modifier.fillMaxSize())
+            }
         }
     }
 
@@ -126,17 +132,9 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
         is PolymarketRoute.FastTrading -> createFastTrading(configuration, factoryContext)
-        is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
-            appComponentContext = factoryContext,
-            params = PolymarketEventDetailsComponent.Params(
-                eventId = configuration.eventId,
-                // The route carries the wallet the feed was opened for; the feature's own params
-                // hold none until the entry gate picks one.
-                userWalletId = configuration.userWalletId,
-                marketId = configuration.marketId,
-                assetId = configuration.assetId,
-                categoryLabel = configuration.categoryLabel,
-            ),
+        is PolymarketRoute.EventDetails -> configuration.createEventDetailsComponent(
+            context = factoryContext,
+            isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,

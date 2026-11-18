@@ -16,6 +16,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
+import com.tangem.features.collectibles.impl.inventory.CollectiblesInventoryComponent
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
@@ -35,6 +36,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
     private val machineDetailsComponentFactory: CollectiblesMachineDetailsComponent.Factory,
     private val packOpeningComponentFactory: CollectiblesPackOpeningComponent.Factory,
+    private val inventoryComponentFactory: CollectiblesInventoryComponent.Factory,
 ) : CollectiblesEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<CollectiblesRoute>()
@@ -107,6 +109,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
                 context = childContext,
                 params = CollectiblesPackOpenFailedComponent.Params(userWalletId = params.userWalletId),
             )
+            CollectiblesRoute.Inventory -> inventoryComponentFactory.create(context = childContext)
         }
     }
 

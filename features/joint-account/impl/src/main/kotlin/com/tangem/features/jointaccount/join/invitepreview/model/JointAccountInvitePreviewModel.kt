@@ -226,7 +226,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private suspend fun onLoaded(preview: JointAccountInvitePreview) {
-        params.draftHolder.setConfig(config = preview.config)
+        params.draftHolder.setInvite(config = preview.config, creatorAddress = preview.creator.address)
         awaitSelectorReady()
         stateController.update(
             SetContentTransformer(

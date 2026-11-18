@@ -443,6 +443,7 @@ internal class SetWarningsTransformerTest {
             onRefreshClick = {},
             buttonText = stringReference("Refresh"),
             shouldShowProgress = false,
+            isColdWallet = true,
         )
         val tangemPayUnreachable = WalletNotificationUM.TangemPayUnreachable
         val missingBackup = WalletNotificationUM.MissingBackup(onClick = {})

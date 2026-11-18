@@ -122,6 +122,7 @@ internal class TangemPayDetailsComponent(
                 params = TokenReceiveComponent.Params(
                     config = navigation.config,
                     onDismiss = model.bottomSheetNavigation::dismiss,
+                    isNewScreenAllowed = false,
                 ),
             )
             is TangemPayDetailsNavigation.TransactionDetails -> TangemPayTxHistoryDetailsComponent(

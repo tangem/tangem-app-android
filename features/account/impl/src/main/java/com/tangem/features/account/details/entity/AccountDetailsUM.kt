@@ -17,6 +17,7 @@ internal data class AccountDetailsUM(
     val requiredApprovals: RequiredApprovalsUM? = null,
     val members: MembersRowUM? = null,
     val networksInfo: NetworksInfoUM? = null,
+    val isNameAboveSubtitle: Boolean = false,
 ) {
 
     @Immutable

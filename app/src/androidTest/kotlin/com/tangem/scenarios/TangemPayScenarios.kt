@@ -804,7 +804,23 @@ fun BaseTestCase.openTangemPayWithdrawSwapScreen(expectedBalance: String = "10")
     step("Click on 'Withdraw' action chip") {
         onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
     }
-    // Stories auto-advance; a tap can miss mid-animation — retry the close until the Withdraw screen shows.
+    closeSwapStoriesUntilWithdrawScreen()
+}
+
+fun BaseTestCase.openTangemPayWithdrawWithinPortfolio(expectedBalance: String = "10") {
+    openTangemPay()
+    step("Assert initial balance contains '$expectedBalance'") {
+        onTangemPayMainScreen { balance.assertTextContainsSafe(expectedBalance, substring = true) }
+    }
+    openWithdrawHubFromPaymentAccount()
+    step("Click on 'Within your portfolio' card") {
+        onTangemPayWithdrawHubScreen { withinPortfolioCard.performClick() }
+    }
+    closeSwapStoriesUntilWithdrawScreen()
+}
+
+// Stories auto-advance; a tap can miss mid-animation — retry the close until the Withdraw screen shows.
+private fun BaseTestCase.closeSwapStoriesUntilWithdrawScreen() {
     step("Close 'Swap stories' and land on the 'Withdraw' screen (USDC pre-filled as source)") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             runCatching { onSwapStoriesScreen { closeButton.performClick() } }
@@ -827,16 +843,11 @@ fun BaseTestCase.chooseWithdrawReceiveToken(tokenName: String) {
     }
 }
 
-/**
- * Starts and ends on the Payment account; expects the first-time swap stories to be disabled. The token
- * selector keeps an expanded account expanded for the whole app session, so only the first call in a
- * session passes [expandPaymentAccount].
- */
+/** Starts and ends on the Payment account; expects the first-time swap stories to be disabled. */
 fun BaseTestCase.checkTangemPayWithdrawableOnlyOnNetwork(
     tokenName: String,
     networkName: String,
     otherNetworkNames: List<String>,
-    expandPaymentAccount: Boolean,
 ) {
     val polygonNetwork = "Polygon"
     val allFilterLabel = getResourceString(CoreResR.string.common_all)
@@ -850,13 +861,7 @@ fun BaseTestCase.checkTangemPayWithdrawableOnlyOnNetwork(
     step("Assert 'Withdraw' screen is displayed") {
         awaitSuccess { onSwapTokenScreen { withdrawTitle.assertIsDisplayed() } }
     }
-    if (expandPaymentAccount) {
-        openWithdrawSourceTokenSelector()
-    } else {
-        step("Click on the source token in the 'From' block") {
-            onSwapTokenScreen { swapSelectTokenIcon.clickWithAssertion() }
-        }
-    }
+    openWithdrawSourceTokenSelector()
     step("Assert only '$tokenName' on '$networkName' is displayed") {
         onSwapSelectTokenScreen {
             awaitSuccess { tokenWithNameAndNetwork(tokenName, networkName).assertIsDisplayed() }

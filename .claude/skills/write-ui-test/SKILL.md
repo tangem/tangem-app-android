@@ -1,6 +1,6 @@
 ---
 name: write-ui-test
-description: Write a Kaspresso/Compose instrumentation UI test for the Tangem Android app following project conventions — test class shape, page-object locations, Allure step naming, WireMock scenario setup, synchronization, and meaningful assertions. Covers known Compose traps (PullToRefreshBox swipe, TangemHoldToConfirmButton, Decompose lifecycle, hot-wallet access code), a catalogue of known pitfalls, a mechanical self-review script plus a fresh-context reviewer subagent, and the build/run/debug flow. Use when the user asks to write, add, port, or fix an instrumentation / androidTest / UI test, a page object, or a test scenario ("напиши UI-тест", "добавь инструментальный тест", "напиши тест в androidTest", "page object", "автотест на экран").
+description: Write a Kaspresso/Compose instrumentation UI test for the Tangem Android app following project conventions — test class shape, page-object locations, Allure step naming, WireMock scenario setup, synchronization, and meaningful assertions. Covers known Compose traps (PullToRefreshBox swipe, TangemHoldToConfirmButton, Decompose lifecycle, hot-wallet access code), a catalogue of known pitfalls, a mechanical self-review script, a blocking gate that checks the test step by step against its Allure case, a fresh-context reviewer subagent, and the build/run/debug flow. Use when the user asks to write, add, port, or fix an instrumentation / androidTest / UI test, a page object, or a test scenario ("напиши UI-тест", "добавь инструментальный тест", "напиши тест в androidTest", "page object", "автотест на экран").
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write, Agent
 argument-hint: [screen/flow or TC# to cover, e.g. "TangemPay freeze card"]
 ---
@@ -45,13 +45,21 @@ different setup.
       based on a release; set `MOCKS_ROOT` if the mocks repo is not at `../tangem-api-mocks`). It
       checks the working tree, untracked files included. Fix every `error`. Keep the printed
       `report.txt` and `review.diff` paths.
-   2. Spawn a fresh `general-purpose` subagent — never a `fork` — with the content of
-      `reference/reviewer.md` as the prompt, followed by its inputs: the `review.diff` and `report.txt`
-      paths, both repo paths, the raw case steps from Allure, and the deviations the user approved. If
-      subagents are unavailable, go through `reference/reviewer.md` yourself as a separate pass over
-      `review.diff`, ignoring your plan.
-   3. Verify each finding against the code. Fix the confirmed ones.
-   4. Re-run only `scripts/check.sh`. No second reviewer round.
+   2. **Allure steps gate (blocking).** Spawn a fresh `general-purpose` subagent — never a `fork` — with
+      the content of `reference/allure-steps-gate.md` as the prompt, followed by its inputs: the Android
+      repo path, one `file#method — AllureId N` line per test, and the deviations the user approved. It
+      fetches each case from Allure itself and maps every step and every expected result to code. Fix
+      each `MISSING` / `WEAKER` / `ORDER` row, or take it to the user — a step the test does not do is
+      the user's call, never yours. Repeat the gate until every case is `GATE N: PASS`. If subagents are
+      unavailable, run `reference/allure-steps-gate.md` yourself as a separate pass, fetching the cases
+      fresh and ignoring your plan.
+   3. Spawn another fresh `general-purpose` subagent with the content of `reference/reviewer.md` as the
+      prompt, followed by its inputs: the `review.diff` and `report.txt` paths, both repo paths, the
+      final step tables from the gate, and the deviations the user approved. If subagents are
+      unavailable, go through `reference/reviewer.md` yourself as a separate pass over `review.diff`,
+      ignoring your plan.
+   4. Verify each finding against the code. Fix the confirmed ones.
+   5. Re-run only `scripts/check.sh`. No second reviewer round.
 7. **Build BOTH APKs, install, run only the methods under test, and classify the result** correctly —
    Allure post-run hook failures are not test failures (see `reference/running-and-debugging.md`).
    Before blaming a test, check your local WireMock is started the way CI starts it — a misconfigured
@@ -59,7 +67,8 @@ different setup.
    regression" — CI does that.
 8. **Final cleanup, then `check.sh` once more.** Iterating on a failing run leaves dead code behind (see
    "Final cleanup" below). Re-run the script after the last edit and recompile the touched modules.
-9. **Report.** List every reviewer finding with its outcome — fixed, or rejected with a one-line
+9. **Report.** Include the gate's final step table for each case, with every `AGREED` row and its
+   reason. List every reviewer finding with its outcome — fixed, or rejected with a one-line
    reason. Never drop a finding silently. Name the tests the user should re-run for any shared mock
    you changed.
 
@@ -358,6 +367,9 @@ keeping one needs the step-3 reason, not just "it states a WHY".
   mock traps that already broke Android UI tests: merged vs. unmerged trees, disabled-button labels,
   screen-wide tags, swallowed clicks and holds, version-gated toggles, `MockAware*` repositories,
   iOS-built fixtures, traffic that bypasses WireMock.
+- **`reference/allure-steps-gate.md`** — the prompt for the blocking step-by-step gate in workflow
+  step 6: every Allure step and expected result mapped to test code, `GATE N: PASS|FAIL` per case.
+  Pass it verbatim plus the inputs it lists.
 - **`reference/reviewer.md`** — the prompt for the fresh-context reviewer subagent in workflow step 6.
   Pass it verbatim plus the inputs it lists; don't paraphrase it.
 - **`scripts/check.sh`** — the mechanical self-review (workflow steps 6 and 8). Prints `report.txt` and

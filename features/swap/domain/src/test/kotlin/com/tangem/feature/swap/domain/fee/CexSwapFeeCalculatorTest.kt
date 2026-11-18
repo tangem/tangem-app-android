@@ -609,7 +609,7 @@ internal class CexSwapFeeCalculatorTest {
         }
 
     @Test
-    fun `GIVEN own energy partly covers the fee and TRX cheaper in fiat WHEN calculate THEN native fee is returned`() =
+    fun `GIVEN own energy partly covers the fee WHEN calculate THEN native fee without gasless quote`() =
         runTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
@@ -631,7 +631,7 @@ internal class CexSwapFeeCalculatorTest {
             )
             val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
             assertThat(loaded?.fee).isEqualTo(expected)
-            coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
         }
 
     @Test

@@ -13,6 +13,7 @@ import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachineNftsBatchFetcher
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachinesBatchFetcher
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
+import com.tangem.data.collectibles.store.CollectiblesRegionStore
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchingContext
@@ -30,15 +31,20 @@ import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequ
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class DefaultCollectiblesRepository @Inject constructor(
     private val collectiblesApi: CollectiblesApi,
     private val machineStore: CollectiblesMachineStore,
+    private val regionStore: CollectiblesRegionStore,
     private val errorResolver: CollectiblesErrorResolver,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesRepository {
+
+    private val regionMutex = Mutex()
 
     override suspend fun getCategories(): CollectibleGachaMachineCategories = withContext(dispatchers.io) {
         MachineCategoriesConverter.convert(collectiblesApi.getCategories().getOrThrow())
@@ -205,6 +211,17 @@ internal class DefaultCollectiblesRepository @Inject constructor(
             ).getOrThrow()
 
             CollectibleBuybackStatusConverter.convert(response.status)
+        }
+
+    override suspend fun isRegionBlocked(userWalletId: UserWalletId, skipCache: Boolean): Boolean =
+        regionMutex.withLock {
+            if (!skipCache) regionStore.isBlockedOrNull()?.let { return@withLock it }
+
+            val isBlocked = withContext(dispatchers.io) {
+                collectiblesApi.getGeoblock(userWalletId = userWalletId.stringValue).getOrThrow().isBlocked
+            }
+            regionStore.store(isBlocked)
+            isBlocked
         }
 
     private suspend fun fetchMachinesPage(

@@ -2,8 +2,8 @@ package com.tangem.features.survey.impl.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.Runs
 import io.mockk.every

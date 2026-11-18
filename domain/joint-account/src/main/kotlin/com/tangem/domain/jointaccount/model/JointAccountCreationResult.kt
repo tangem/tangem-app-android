@@ -14,4 +14,10 @@ sealed interface JointAccountCreationResult {
     data class Created(val account: JointAccount) : JointAccountCreationResult
 
     data object CreatorAlreadyRegistered : JointAccountCreationResult
+
+    /**
+     * The backend refused the request itself. A malformed payload and a wallet that is already at the joint
+     * accounts limit come back as the same answer, so the caller tells them apart by the refreshed list.
+     */
+    data class Rejected(val cause: Throwable) : JointAccountCreationResult
 }

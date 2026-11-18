@@ -22,7 +22,6 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -30,13 +29,11 @@ import org.junit.jupiter.api.Test
 
 internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
 
-    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val repository: SolanaGaslessTransactionRepository = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
     private val hotSigner: TransactionSigner = mockk()
     private val gaslessSignerProvider: GaslessSignerProvider = mockk { every { this@mockk(any()) } returns hotSigner }
     private val useCase = CreateAndSendSolanaGaslessTransactionUseCase(
-        walletManagersFacade = walletManagersFacade,
         solanaGaslessTransactionRepository = repository,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         gaslessSignerProvider = gaslessSignerProvider,
@@ -62,7 +59,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(walletManagersFacade, repository, singleNetworkStatusFetcher)
+        clearMocks(repository, singleNetworkStatusFetcher)
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
     }
 
@@ -70,7 +67,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     fun `GIVEN signing and submit succeed WHEN invoke THEN returns backend signature`() = runTest {
         // Arrange
         coEvery {
-            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner, false)
+            repository.sign(walletId, network, txData, "FeePayer", hotSigner, false)
         } returns Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(walletId, signedBytes, 9) } returns "sig".right()
 
@@ -92,7 +89,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
             ),
         )
         coEvery {
-            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner, true)
+            repository.sign(walletId, network, txData, "FeePayer", hotSigner, true)
         } returns Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(walletId, signedBytes, 9) } returns "sig".right()
 
@@ -102,14 +99,14 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo("sig".right())
         coVerify(exactly = 1) {
-            walletManagersFacade.signSolanaGaslessTransaction(walletId, network, txData, "FeePayer", hotSigner, true)
+            repository.sign(walletId, network, txData, "FeePayer", hotSigner, true)
         }
     }
 
     @Test
     fun `GIVEN backend rejects WHEN invoke THEN Service error`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { repository.sign(any(), any(), any(), any(), any(), any()) } returns
             Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(any(), any(), any()) } returns SolanaGaslessError.BlockhashExpired.left()
 
@@ -123,7 +120,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN signing fails WHEN invoke THEN signing error and nothing submitted`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { repository.sign(any(), any(), any(), any(), any(), any()) } returns
             Result.Failure(BlockchainSdkError.Solana.GaslessMessageTooLarge)
 
         // Act
@@ -137,7 +134,7 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN no Solana wallet manager WHEN invoke THEN UnknownError`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns null
+        coEvery { repository.sign(any(), any(), any(), any(), any(), any()) } returns null
 
         // Act
         val actual = useCase(userWallet, txData, fee)
@@ -225,17 +222,17 @@ internal class CreateAndSendSolanaGaslessTransactionUseCaseTest {
         assertThat(actual.leftOrNull()).isInstanceOf(SendTransactionError.DataError::class.java)
         coVerify(
             exactly = 0,
-        ) { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) }
+        ) { repository.sign(any(), any(), any(), any(), any(), any()) }
     }
 
     private fun givenSignedAndRejected(error: SolanaGaslessError) {
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { repository.sign(any(), any(), any(), any(), any(), any()) } returns
             Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(any(), any(), any()) } returns error.left()
     }
 
     private fun givenSignedAndSubmitted(signature: String) {
-        coEvery { walletManagersFacade.signSolanaGaslessTransaction(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { repository.sign(any(), any(), any(), any(), any(), any()) } returns
             Result.Success(SolanaGaslessSignedTransaction(signedBytes, lastValidBlockHeight = 9))
         coEvery { repository.submit(any(), any(), any()) } returns signature.right()
     }

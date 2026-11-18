@@ -5,8 +5,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -26,7 +24,7 @@ import javax.inject.Inject
 internal class YieldSupplySmartGas @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
 ) {
 
@@ -69,9 +67,7 @@ internal class YieldSupplySmartGas @Inject constructor(
         feeTokenId: CryptoCurrency.ID,
         network: Network,
     ): CryptoCurrencyStatus? {
-        return singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
-            .getCryptoCurrencyStatus(currencyId = feeTokenId, network = network)
-            .getOrNull()
+        return currencyStatusResolver.getSync(userWalletId = userWalletId, currencyId = feeTokenId, network = network)
     }
 }
 

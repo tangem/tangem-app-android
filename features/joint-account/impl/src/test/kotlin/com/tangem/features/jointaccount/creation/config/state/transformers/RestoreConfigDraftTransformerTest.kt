@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.creation.config.state.transformers
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWalletId
@@ -120,7 +121,7 @@ internal class RestoreConfigDraftTransformerTest {
     private companion object {
         // Shared instances so states built before and after a transform compare equal
         val namePlaceholder = stringReference(value = "Joint account")
-        val wallet = JointAccountConfigUM.WalletUM(name = "My wallet", onClick = {})
+        val wallet = JointAccountConfigUM.WalletUM(name = "My wallet", deviceIcon = DeviceIconUM.Stub(cardsCount = 1), onClick = {})
         val onNameChange: (String, Boolean) -> Unit = { _, _ -> }
         val onColorClick: (CryptoPortfolioIcon.Color) -> Unit = {}
         val onIconClick: (CryptoPortfolioIcon.Icon) -> Unit = {}

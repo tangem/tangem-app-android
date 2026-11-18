@@ -19,7 +19,7 @@ import com.tangem.features.survey.impl.nativesurvey.model.NativeSurvey
 import com.tangem.features.survey.impl.nativesurvey.model.SurveyAnswer
 import com.tangem.features.survey.impl.nativesurvey.model.SurveyEntry
 import com.tangem.features.survey.impl.nativesurvey.model.SurveyQuestion
-import com.tangem.features.survey.impl.nativesurvey.model.SurveySource
+import com.tangem.features.survey.impl.nativesurvey.model.toSurveySource
 import com.tangem.features.survey.impl.nativesurvey.repository.NativeSurveyRepository
 import com.tangem.features.survey.impl.nativesurvey.repository.SurveySubmitError
 import com.tangem.features.survey.impl.nativesurvey.screen.ui.state.NativeSurveyUM
@@ -89,8 +89,8 @@ internal class NativeSurveyModel @Inject constructor(
             NativeSurveyAnalyticsEvent.SurveyOpened(
                 entry = entry,
                 surveyType = loaded?.survey?.type,
-                // An answered survey is not fetched at all, which counts as From Cache
-                isFromCache = loaded == null || loaded.isFromCache,
+                // The entry point made the request, if any: the screen itself only reads what it cached
+                isFromCache = loaded == null || params.isFromCache && loaded.isFromCache,
                 isAlreadyPassed = params.isAlreadyAnswered,
             ),
         )
@@ -192,13 +192,14 @@ internal class NativeSurveyModel @Inject constructor(
         finish()
     }
 
+    /** Removes this survey wherever it is: a deep link may have opened another screen over it. */
     private fun finish() {
         if (isFinished) return
         isFinished = true
-        router.pop()
+        router.navigate(transformer = { stack -> stack.filterNot { route -> route is AppRoute.NativeSurvey } })
     }
 
-    /** The error alert outlives the screen, and its late dismissal must not pop the screen beneath. */
+    /** The error alert outlives the screen, and its late dismissal must not close anything once the screen is gone. */
     override fun onDestroy() {
         isFinished = true
         super.onDestroy()
@@ -206,13 +207,6 @@ internal class NativeSurveyModel @Inject constructor(
 
     private fun updateForm(transform: (NativeSurveyUM.Form) -> NativeSurveyUM.Form) {
         uiState.update { state -> if (state is NativeSurveyUM.Form && !state.isSubmitting) transform(state) else state }
-    }
-
-    private fun AppRoute.NativeSurvey.Source.toSurveySource() = when (this) {
-        AppRoute.NativeSurvey.Source.SHEET -> SurveySource.SHEET
-        AppRoute.NativeSurvey.Source.PUSH -> SurveySource.PUSH
-        AppRoute.NativeSurvey.Source.BANNER -> SurveySource.BANNER
-        AppRoute.NativeSurvey.Source.LINK -> SurveySource.LINK
     }
 
     private companion object {

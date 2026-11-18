@@ -2,6 +2,7 @@ package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.getOrElse
 import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
@@ -15,8 +16,6 @@ import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
-import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.supplier.findByMember
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.logging.TangemLogger
@@ -27,7 +26,6 @@ class JoinJointAccountUseCase(
     private val repository: JointAccountRepository,
     private val signer: JointAccountSigner,
     private val fetcher: SingleJointAccountListFetcher,
-    private val supplier: SingleJointAccountListSupplier,
     private val accountListFetcher: SingleAccountListFetcher,
 ) {
 
@@ -35,6 +33,7 @@ class JoinJointAccountUseCase(
         userWalletId: UserWalletId,
         inviteId: String,
         config: JointAccountConfig,
+        creatorAddress: String,
         memberName: String,
     ): Either<JointAccountJoinError, JointAccount> = either {
         val rawIndex = Either
@@ -63,36 +62,49 @@ class JoinJointAccountUseCase(
             .mapLeft(::toJoinError)
             .bind()
 
-        val joined = Either
-            .catch {
-                repository.join(
+        val joined = Either.catch {
+            repository.join(
+                userWalletId = userWalletId,
+                payload = createPayload(
                     userWalletId = userWalletId,
-                    payload = createPayload(
-                        userWalletId = userWalletId,
-                        inviteId = inviteId,
-                        config = config,
-                        memberName = memberName,
-                        derivationIndex = derivationIndex,
-                        ownerAddress = signResult.ownerAddress,
-                    ),
-                    signature = signResult.signature,
-                )
-            }
-            .mapLeft(JointAccountFlowError::Failed)
-            .bind()
+                    inviteId = inviteId,
+                    config = config,
+                    memberName = memberName,
+                    derivationIndex = derivationIndex,
+                    ownerAddress = signResult.ownerAddress,
+                ),
+                signature = signResult.signature,
+            )
+        }
 
         val refresh = refreshAccounts(userWalletId = userWalletId)
+        val memberAddresses = listOf(signResult.ownerAddress, creatorAddress)
 
         joined.fold(
-            ifRight = { account -> account },
-            ifLeft = { conflict ->
-                refresh.mapLeft(JointAccountFlowError::Failed).bind()
+            ifLeft = { cause ->
+                val failure = JointAccountFlowError.Failed(cause = cause)
+                refresh.getOrElse { raise(failure) }
 
-                val own = supplier.findByMember(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress)
+                ensureNotNull(findJoined(userWalletId = userWalletId, memberAddresses = memberAddresses)) { failure }
+            },
+            ifRight = { answer ->
+                answer.getOrElse { conflict ->
+                    refresh.mapLeft(JointAccountFlowError::Failed).bind()
 
-                ensureNotNull(own) { JointAccountJoinError.InvalidInvite(cause = conflict) }
+                    ensureNotNull(findJoined(userWalletId = userWalletId, memberAddresses = memberAddresses)) {
+                        JointAccountJoinError.InvalidInvite(cause = conflict)
+                    }
+                }
             },
         )
+    }
+
+    private suspend fun findJoined(userWalletId: UserWalletId, memberAddresses: List<String>): JointAccount? {
+        val accounts = repository.getStoredJointAccounts(userWalletId = userWalletId)
+
+        return memberAddresses.firstNotNullOfOrNull { address ->
+            accounts.firstOrNull { account -> account.members.any { it.address.equals(address, ignoreCase = true) } }
+        }
     }
 
     @Suppress("LongParameterList")

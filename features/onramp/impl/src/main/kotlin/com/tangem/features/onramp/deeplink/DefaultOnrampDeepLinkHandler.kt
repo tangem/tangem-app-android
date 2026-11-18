@@ -1,10 +1,10 @@
 package com.tangem.features.onramp.deeplink
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.OnrampDeeplinkTarget
 import com.tangem.common.routing.deeplink.resolveOnrampDeeplinkTarget
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.features.onramp.success.OnrampSuccessScreenTrigger
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch

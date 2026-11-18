@@ -1,6 +1,12 @@
 package com.tangem.features.polymarket.impl.common.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.tangem.core.ui.components.text.TextAnimatedCounter
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -97,13 +103,31 @@ internal fun PolymarketOutcomeButton(
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (price != null) {
-                    Text(
-                        text = PRICE_SEPARATOR + price.resolveReference(),
-                        color = colors.content,
-                        style = labelStyle(),
-                        maxLines = 1,
-                        softWrap = false,
-                    )
+                    val priceText = price.resolveReference()
+                    if (LocalPolymarketPriceAnimationEnabled.current) {
+                        Text(text = PRICE_SEPARATOR, color = colors.content, style = labelStyle(), softWrap = false)
+                        val locale = Locale.getDefault()
+                        val decimalSeparator = remember(locale) {
+                            DecimalFormatSymbols.getInstance(locale).decimalSeparator
+                        }
+                        TextAnimatedCounter(
+                            text = priceText,
+                            decimalSeparator = decimalSeparator,
+                            style = labelStyle().copy(color = colors.content),
+                            animationSpec = tween(
+                                durationMillis = PRICE_ANIMATION_DURATION,
+                                easing = PriceAnimationEasing,
+                            ),
+                        )
+                    } else {
+                        Text(
+                            text = PRICE_SEPARATOR + priceText,
+                            color = colors.content,
+                            style = labelStyle(),
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
                 }
             }
         }
@@ -175,6 +199,10 @@ private fun cappedFontScaleDensity(): Density {
     }
 }
 
+internal val LocalPolymarketPriceAnimationEnabled = staticCompositionLocalOf { false }
+
+private const val PRICE_ANIMATION_DURATION = 300
+private val PriceAnimationEasing = CubicBezierEasing(a = 0.69f, b = 0.07f, c = 0.27f, d = 0.95f)
 private const val PRICE_SEPARATOR = " • "
 private const val MAX_FONT_SCALE = 1.3f
 private val FOCUS_RING_WIDTH = 2.dp

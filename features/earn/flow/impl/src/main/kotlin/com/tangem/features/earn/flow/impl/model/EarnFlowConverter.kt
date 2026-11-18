@@ -69,7 +69,11 @@ internal class EarnFlowConverter @Inject constructor() {
             status = state.status,
             isFeeReady = state.feeSelection != null,
             isPreparing = state.isPreparing,
-            notifications = EarnFlowNotifications.amount(state, screens.onFeeReload),
+            notifications = EarnFlowNotifications.amount(
+                state = state,
+                isFromPosition = screens.action.isFromPosition,
+                onFeeReload = screens.onFeeReload,
+            ),
             clickIntents = screens.clickIntents,
             callbacks = screens.amountCallbacks,
             source = state.source,
@@ -81,14 +85,20 @@ internal class EarnFlowConverter @Inject constructor() {
         return confirm(
             action = screens.action,
             product = screens.product,
-            plan = state.plan,
+            plan = state.plan ?: state.sentPlan,
             status = status,
             appCurrency = state.appCurrency,
             signing = state.signing,
             isFeeReady = state.feeSelection != null,
+            isAmountValid = !state.isAmountInvalid,
             isPreparing = state.isPreparing,
-            notifications = EarnFlowNotifications.confirm(state, screens.onFeeReload),
+            notifications = EarnFlowNotifications.confirm(
+                state = state,
+                isFromPosition = screens.action.isFromPosition,
+                onFeeReload = screens.onFeeReload,
+            ),
             walletIcon = state.walletIcon,
+            isHoldToConfirm = state.isHoldToConfirm,
             callbacks = screens.confirmCallbacks,
         )
     }
@@ -157,9 +167,11 @@ internal class EarnFlowConverter @Inject constructor() {
         appCurrency: AppCurrency?,
         signing: EarnSigningState,
         isFeeReady: Boolean,
+        isAmountValid: Boolean,
         isPreparing: Boolean,
         notifications: ImmutableList<NotificationUM>,
         @DrawableRes walletIcon: Int?,
+        isHoldToConfirm: Boolean,
         callbacks: EarnConfirmCallbacks,
     ): EarnConfirmUM = EarnConfirmUM(
         icons = icons(status, product),
@@ -183,12 +195,16 @@ internal class EarnFlowConverter @Inject constructor() {
         primary = TangemButtonUM(
             text = action.label,
             type = TangemButtonType.Primary,
-            isEnabled = isFeeReady && !isPreparing && notifications.none { it is NotificationUM.Error },
+            isEnabled = isFeeReady &&
+                isAmountValid &&
+                !isPreparing &&
+                notifications.none { it is NotificationUM.Error },
             isLoading = signing.isExecuting || isPreparing,
             tangemIconUM = walletIcon?.let { TangemIconUM.Icon(iconRes = it) },
             iconPosition = TangemButtonIconPosition.End,
             onClick = callbacks.onConfirm,
         ),
+        isHoldToConfirm = isHoldToConfirm,
     )
 
     @Suppress("LongParameterList")

@@ -29,6 +29,8 @@ sealed interface CustomerOrderRequest {
 
     data class SmartContractIssue(val chainId: Long) : CustomerOrderRequest
 
+    data class AccountIssueBanking(val depositCredentials: MoneyAccountDepositCredentials) : CustomerOrderRequest
+
     data class Onboarding(
         val tariffPlanTransition: TariffPlanTransition?,
         val depositCredentials: MoneyAccountDepositCredentials?,

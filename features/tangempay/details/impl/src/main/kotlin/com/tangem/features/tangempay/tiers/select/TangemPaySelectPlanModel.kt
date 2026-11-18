@@ -209,7 +209,12 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 }
             }.onRight {
-                router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess)
+                router.replaceAll(
+                    AppRoute.Wallet,
+                    AppRoute.TangemPayOnboardingSuccess(
+                        product = AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY,
+                    ),
+                )
             }
         }
     }

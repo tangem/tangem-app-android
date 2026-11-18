@@ -14,12 +14,14 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionPricesUseCase
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
+import com.tangem.features.polymarket.impl.soccer.model.PolymarketSoccerModel
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
 import com.tangem.features.polymarket.impl.fasttrading.model.PolymarketFastTradingActivationModel
@@ -148,6 +150,11 @@ internal interface PolymarketModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(PolymarketSoccerModel::class)
+    fun bindPolymarketSoccerModel(impl: PolymarketSoccerModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(PolymarketEventDetailsModel::class)
     fun bindPolymarketEventDetailsModel(impl: PolymarketEventDetailsModel): Model
 
@@ -240,6 +247,11 @@ internal object PolymarketDomainUseCasesModule {
         GetPredictionPriceUseCase(
             polymarketRepository = polymarketRepository,
         )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionPricesUseCase(polymarketRepository: PolymarketRepository): GetPredictionPricesUseCase =
+        GetPredictionPricesUseCase(polymarketRepository)
 
     @Provides
     @Singleton

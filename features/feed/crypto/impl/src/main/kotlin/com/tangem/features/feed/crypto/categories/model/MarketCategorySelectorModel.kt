@@ -10,6 +10,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketCategoriesUseCase
 import com.tangem.domain.markets.GetMarketCategoryListFlowUseCase
 import com.tangem.domain.markets.MarketCategory
+import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.model.transformer.MarketCategorySelectorTransformer
@@ -29,6 +30,7 @@ private const val FEATURED_LIMIT = 20
 
 private const val QUERY_DEBOUNCE_MILLIS = 500L
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class MarketCategorySelectorModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -37,7 +39,11 @@ internal class MarketCategorySelectorModel @Inject constructor(
     private val getMarketCategoriesUseCase: GetMarketCategoriesUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getMarketCategoryListFlowUseCase: GetMarketCategoryListFlowUseCase,
+    feedFeatureToggles: FeedFeatureToggles,
 ) : Model() {
+
+    /** Read once, so an open screen never switches behaviour under the user. */
+    private val isRedesignEnabled = feedFeatureToggles.isCategoryFiltersRedesignEnabled
 
     private val appCurrency: StateFlow<AppCurrency> = getSelectedAppCurrencyUseCase.invokeOrDefault()
         .stateIn(modelScope, SharingStarted.Eagerly, AppCurrency.Default)
@@ -88,9 +94,12 @@ internal class MarketCategorySelectorModel @Inject constructor(
             isActive = false,
             onActiveChange = ::onSearchActiveChange,
             onClearClick = { onQueryChange(query = "") },
-            // The screen's close button sits beside the field: the one built into TangemSearch is
-            // hidden while the field is idle and empty, which is when there is most to escape from.
-            onCloseClick = null,
+            // the field offers its own close only with the redesign; the sheet is closed from the header either way
+            onCloseClick = if (isRedesignEnabled) {
+                { onQueryChange(query = "") }
+            } else {
+                null
+            },
         ),
         isResetVisible = appliedSelection.category != null,
         footer = MarketCategorySelectorFooterUM(onReset = ::onReset),
@@ -166,11 +175,12 @@ internal class MarketCategorySelectorModel @Inject constructor(
                 renderBody(content = MarketCategorySelectorUM.ContentUM.Empty)
             else -> uiState.update(
                 transformer = MarketCategorySelectorTransformer(
-                    featured = featured,
+                    // without the redesign a search drops the rail: an empty featured list hides it
+                    featured = if (isRedesignEnabled || appliedQuery == null) featured else emptyList(),
                     categories = categories,
                     selection = appliedSelection,
                     appCurrency = appCurrency.value,
-                    isSearching = appliedQuery != null,
+                    query = appliedQuery,
                     isLoadingMore = listStatus is PaginationStatus.NextBatchLoading,
                     onLoadMore = listManager::loadMore,
                     onSelectionChange = ::onSelectionChange,

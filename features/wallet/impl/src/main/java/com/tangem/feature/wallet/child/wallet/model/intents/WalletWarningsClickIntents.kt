@@ -429,7 +429,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             // Whichever ends first: a slow experiment fetch must not navigate once the user has left the screen.
             merge(
-                flow { emit(hardwareUpgradeLauncher.launch(userWalletId, HardwareUpgradeStories.Source.MAIN)) },
+                flow { emit(hardwareUpgradeLauncher.launch(userWalletId, WalletHardwareBackup.Source.UPGRADE_BANNER)) },
                 screenLifecycleProvider.isBackgroundState.filter { isBackground -> isBackground }.map { },
             ).first()
         }

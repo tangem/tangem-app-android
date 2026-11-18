@@ -2,7 +2,6 @@ package com.tangem.features.walletconnect.connections.model
 
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
@@ -21,12 +20,11 @@ import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
-import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -36,8 +34,8 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -53,7 +51,6 @@ internal class WcConnectionsModelTest {
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
     private val wcPairService: WcPairService = mockk()
     private val mcpRequestService: McpRequestService = mockk()
-    private val mcpFeatureToggles: McpFeatureToggles = mockk()
     private val mcpRepository: McpRepository = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
@@ -67,7 +64,6 @@ internal class WcConnectionsModelTest {
             wcDisconnectUseCase,
             multiAccountListSupplier,
             isAccountsModeEnabledUseCase,
-            mcpFeatureToggles,
             mcpRepository,
             analytics,
         )
@@ -81,30 +77,21 @@ internal class WcConnectionsModelTest {
         coEvery { wcDisconnectUseCase.disconnectAll() } returns Unit
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN mcp toggle WHEN screen opened THEN screen opened event matches the toggle`(model: RenameModel) =
-        runTest {
-            // Arrange
-            every { mcpFeatureToggles.isMcpEnabled } returns model.isMcpEnabled
+    @Test
+    fun `GIVEN connections screen WHEN screen opened THEN connections screen opened event is sent`() = runTest {
+        // Act
+        val connectionsModel = createModel(testScope = this)
+        advanceUntilIdle()
 
-            // Act
-            val connectionsModel = createModel(testScope = this)
-            advanceUntilIdle()
+        // Assert
+        verify(exactly = 1) { analytics.send(ConnectionsAnalyticEvents.ScreenOpened()) }
+        verify(exactly = 0) { analytics.send(ofType<WcAnalyticEvents.ScreenOpened>()) }
+        connectionsModel.onDestroy()
+    }
 
-            // Assert
-            verify(exactly = 1) { analytics.send(model.screenOpened) }
-            verify(exactly = 0) { analytics.send(model.otherScreenOpened) }
-            connectionsModel.onDestroy()
-        }
-
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN mcp toggle WHEN disconnect all confirmed THEN disconnect all event matches the toggle`(
-        model: RenameModel,
-    ) = runTest {
+    @Test
+    fun `GIVEN disconnect all dialog WHEN confirmed THEN connections disconnect all event is sent`() = runTest {
         // Arrange
-        every { mcpFeatureToggles.isMcpEnabled } returns model.isMcpEnabled
         val messages = mutableListOf<UiMessage>()
         every { uiMessageSender.send(capture(messages)) } returns Unit
         val connectionsModel = createModel(testScope = this)
@@ -116,48 +103,29 @@ internal class WcConnectionsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { analytics.send(model.disconnectAll) }
-        verify(exactly = 0) { analytics.send(model.otherDisconnectAll) }
+        verify(exactly = 1) { analytics.send(ConnectionsAnalyticEvents.ButtonDisconnectAll()) }
+        verify(exactly = 0) { analytics.send(ofType<WcAnalyticEvents.ButtonDisconnectAll>()) }
+        coVerify(exactly = 1) { mcpRepository.revokeAllSessions() }
         connectionsModel.onDestroy()
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN mcp toggle WHEN disconnect all cancelled THEN no disconnect all event is sent`(model: RenameModel) =
-        runTest {
-            // Arrange
-            every { mcpFeatureToggles.isMcpEnabled } returns model.isMcpEnabled
-            val messages = mutableListOf<UiMessage>()
-            every { uiMessageSender.send(capture(messages)) } returns Unit
-            val connectionsModel = createModel(testScope = this)
-            advanceUntilIdle()
+    @Test
+    fun `GIVEN disconnect all dialog WHEN cancelled THEN no disconnect all event is sent`() = runTest {
+        // Arrange
+        val messages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(messages)) } returns Unit
+        val connectionsModel = createModel(testScope = this)
+        advanceUntilIdle()
 
-            // Act
-            connectionsModel.uiState.value.topAppBarConfig.disconnectAllItem.onClick()
-            advanceUntilIdle()
+        // Act
+        connectionsModel.uiState.value.topAppBarConfig.disconnectAllItem.onClick()
+        advanceUntilIdle()
 
-            // Assert
-            verify(exactly = 0) { analytics.send(ofType<ConnectionsAnalyticEvents.ButtonDisconnectAll>()) }
-            verify(exactly = 0) { analytics.send(ofType<WcAnalyticEvents.ButtonDisconnectAll>()) }
-            connectionsModel.onDestroy()
-        }
-
-    private fun provideTestModels() = listOf(
-        RenameModel(
-            isMcpEnabled = true,
-            screenOpened = ConnectionsAnalyticEvents.ScreenOpened(),
-            otherScreenOpened = WcAnalyticEvents.ScreenOpened(),
-            disconnectAll = ConnectionsAnalyticEvents.ButtonDisconnectAll(),
-            otherDisconnectAll = WcAnalyticEvents.ButtonDisconnectAll(),
-        ),
-        RenameModel(
-            isMcpEnabled = false,
-            screenOpened = WcAnalyticEvents.ScreenOpened(),
-            otherScreenOpened = ConnectionsAnalyticEvents.ScreenOpened(),
-            disconnectAll = WcAnalyticEvents.ButtonDisconnectAll(),
-            otherDisconnectAll = ConnectionsAnalyticEvents.ButtonDisconnectAll(),
-        ),
-    )
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<ConnectionsAnalyticEvents.ButtonDisconnectAll>()) }
+        verify(exactly = 0) { analytics.send(ofType<WcAnalyticEvents.ButtonDisconnectAll>()) }
+        connectionsModel.onDestroy()
+    }
 
     private fun createModel(testScope: TestScope) = WcConnectionsModel(
         router = router,
@@ -170,20 +138,9 @@ internal class WcConnectionsModelTest {
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
         wcPairService = wcPairService,
         mcpRequestService = mcpRequestService,
-        mcpFeatureToggles = mcpFeatureToggles,
         mcpRepository = mcpRepository,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         analytics = analytics,
         paramsContainer = MutableParamsContainer(WcConnectionsComponent.Params(UserWalletId("aabbcc"))),
     )
-
-    data class RenameModel(
-        val isMcpEnabled: Boolean,
-        val screenOpened: AnalyticsEvent,
-        val otherScreenOpened: AnalyticsEvent,
-        val disconnectAll: AnalyticsEvent,
-        val otherDisconnectAll: AnalyticsEvent,
-    ) {
-        override fun toString(): String = "isMcpEnabled=$isMcpEnabled"
-    }
 }

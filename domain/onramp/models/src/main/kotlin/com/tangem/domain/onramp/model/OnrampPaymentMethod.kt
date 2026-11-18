@@ -26,6 +26,7 @@ enum class PaymentMethodType(val id: String?) {
     CARD(id = "card"),
     REVOLUT_PAY(id = "invoice-revolut-pay"),
     SEPA(id = "sepa"),
+    MOONPAY_BALANCE(id = "moonpay-balance"),
     OTHER(id = null),
     ;
 
@@ -39,7 +40,7 @@ enum class PaymentMethodType(val id: String?) {
             CARD -> 1
             REVOLUT_PAY -> 2
             SEPA -> 3
-            OTHER -> 4
+            MOONPAY_BALANCE, OTHER -> 4
         }
     } else {
         when (this) {
@@ -47,7 +48,7 @@ enum class PaymentMethodType(val id: String?) {
             REVOLUT_PAY -> 1
             SEPA -> 2
             OTHER -> 3
-            GOOGLE_PAY -> 4
+            MOONPAY_BALANCE, GOOGLE_PAY -> 4
         }
     }
 
@@ -58,14 +59,14 @@ enum class PaymentMethodType(val id: String?) {
             REVOLUT_PAY -> 1
             CARD -> 2
             SEPA -> 3
-            OTHER -> 4
+            MOONPAY_BALANCE, OTHER -> 4
         }
     } else {
         when (this) {
             REVOLUT_PAY -> 0
             CARD -> 1
             SEPA -> 2
-            OTHER -> 3
+            MOONPAY_BALANCE, OTHER -> 3
             GOOGLE_PAY -> 4
         }
     }
@@ -76,6 +77,7 @@ enum class PaymentMethodType(val id: String?) {
     fun getProcessingSpeed(): PaymentSpeed = when (this) {
         GOOGLE_PAY,
         REVOLUT_PAY,
+        MOONPAY_BALANCE,
         -> PaymentSpeed.Instant
         CARD -> PaymentSpeed.FewMin
         SEPA -> PaymentSpeed.FewDays
@@ -99,6 +101,7 @@ enum class PaymentMethodType(val id: String?) {
             CARD.id -> CARD
             REVOLUT_PAY.id -> REVOLUT_PAY
             SEPA.id -> SEPA
+            MOONPAY_BALANCE.id -> MOONPAY_BALANCE
             else -> OTHER
         }
     }

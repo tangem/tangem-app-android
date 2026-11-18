@@ -123,6 +123,27 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
+    fun `GIVEN currency held outside the portfolio WHEN onClick THEN fee status and pending tracked for its holder`() =
+        runTest {
+            // Arrange
+            coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns true
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
+                cryptoCurrencyStatus.right()
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify { getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+            coVerify(exactly = 1) {
+                pendingTracker.addPending(userWalletId, token, any(), any(), isHeldOutsidePortfolio = true)
+            }
+        }
+
+    @Test
     fun `GIVEN coin fee currency WHEN onClick succeeds THEN transaction sent analytics carries coin fee asset`() = runTest {
         // Arrange — network fee paid in the native coin, not the token
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns statusOf(coin).right()
@@ -229,6 +250,7 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
         sendTransactionUseCase = sendTransactionUseCase,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
+        currencyStatusResolver = currencyStatusResolver,
         yieldSupplyGetContractAddressUseCase = getContractAddressUseCase,
         yieldSupplyPendingTracker = pendingTracker,
         yieldSupplyAlertFactory = alertFactory,

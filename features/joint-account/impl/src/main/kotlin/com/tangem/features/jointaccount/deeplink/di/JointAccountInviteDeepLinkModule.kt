@@ -1,7 +1,7 @@
 package com.tangem.features.jointaccount.deeplink.di
 
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkKey
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import dagger.Binds
 import dagger.Module

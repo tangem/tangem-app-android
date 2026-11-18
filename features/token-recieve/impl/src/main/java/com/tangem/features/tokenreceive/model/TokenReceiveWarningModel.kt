@@ -26,6 +26,7 @@ internal class TokenReceiveWarningModel @Inject constructor(
                 iconState = params.iconState,
                 onWarningAcknowledged = params.callback::onWarningAcknowledged,
                 network = params.network.name,
+                networkLabel = params.networkLabel,
             ),
         )
 }

@@ -6,11 +6,11 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.earn.lending.impl.product.LendingTexts
-import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.provider.LendingTransactions
 import com.tangem.features.earn.lending.impl.provider.LendingTxError
 import com.tangem.features.earn.lending.impl.provider.LendingTxExpectation
@@ -25,7 +25,6 @@ import javax.inject.Inject
 internal class LendingPlanFactory @Inject constructor(
     private val transactions: LendingTransactions,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val lendingProvider: LendingProvider,
     private val depositRows: LendingDepositRows,
 ) {
 
@@ -137,7 +136,9 @@ internal class LendingPlanFactory @Inject constructor(
     private fun isEntireWithdrawal(amount: BigDecimal, position: BigDecimal): Boolean = amount >= position
 
     private fun toSessionError(error: LendingTxError): EarnSessionError = when (error) {
-        LendingTxError.UpdateRequired -> EarnSessionError.Rejected(LendingTexts.updateRequired(lendingProvider.info))
+        LendingTxError.UpdateRequired -> EarnSessionError.Rejected(
+            resourceReference(R.string.lending_update_app_message),
+        )
         LendingTxError.ReadFailed, is LendingTxError.Unverified -> EarnSessionError.Failed()
     }
 }

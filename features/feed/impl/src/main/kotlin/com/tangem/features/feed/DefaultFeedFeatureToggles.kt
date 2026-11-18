@@ -9,4 +9,7 @@ internal class DefaultFeedFeatureToggles(
 
     override val isDiscoverDeeplinkFiltersEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19355_DISCOVER_DEEPLINK_FILTERS_ENABLED)
+
+    override val isCategoryFiltersRedesignEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19514_CATEGORY_FILTERS_REDESIGN_ENABLED)
 }

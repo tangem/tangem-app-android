@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import arrow.core.raise.either
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
@@ -30,6 +31,7 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobPriceFormat
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceRequest
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
@@ -102,6 +104,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val eventErrorResolver: PolymarketEventErrorResolver,
     private val placeOrderErrorResolver: PredictionPlaceOrderErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
+    private val serverClock: DefaultPolymarketServerClock,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
 
@@ -196,6 +199,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
             limit = limit,
             cursor = cursor,
         )
+        serverClock.record(response)
         return when (response) {
             is ApiResponse.Success -> PolymarketEventsPage(
                 events = response.data.events.map(PolymarketEventConverter::convert),
@@ -212,7 +216,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketEventError, PolymarketEvent> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId).bind()
+                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId)
+                    .also(serverClock::record)
+                    .bind()
                 PolymarketEventConverter.convert(response.event).right()
             },
             onError = { eventErrorResolver.resolve(it).left() },
@@ -338,6 +344,48 @@ internal class DefaultPolymarketRepository @Inject constructor(
             onError = { it.toPriceError().left() },
         )
     }
+
+    override suspend fun getPrices(
+        assetIds: List<String>,
+        side: PredictionOrderSide,
+    ): Either<PredictionPriceError, Map<String, BigDecimal?>> = withContext(dispatchers.io) {
+        if (assetIds.any(String::isBlank)) return@withContext PredictionPriceError.InvalidAsset.left()
+        either {
+            buildMap {
+                assetIds.distinct().chunked(PRICE_BATCH_LIMIT).forEach { batch ->
+                    putAll(getPriceBatch(batch, side).bind())
+                }
+            }
+        }
+    }
+
+    private suspend fun getPriceBatch(
+        assetIds: List<String>,
+        side: PredictionOrderSide,
+    ): Either<PredictionPriceError, Map<String, BigDecimal?>> = safeApiCall(
+        call = {
+            val response = clobApi.getPrices(assetIds.map { PolymarketPriceRequest(it, side.name) }).bind()
+            Either.catch {
+                assetIds.associateWith { assetId ->
+                    response[assetId]?.get(side.name)?.let { raw ->
+                        val price = BigDecimal(raw)
+                        require(price >= BigDecimal.ZERO && price <= BigDecimal.ONE) { "Price outside [0, 1]" }
+                        price.takeUnless { it.compareTo(side.emptyBookSentinel()) == 0 }
+                    }
+                }
+            }.mapLeft { error ->
+                TangemLogger.e("Unreadable batch book price", error)
+                PredictionPriceError.Unknown(httpCode = null, detail = error.message)
+            }
+        },
+        onError = { error ->
+            when (error) {
+                is ApiResponseError.HttpException ->
+                    PredictionPriceError.Unknown(httpCode = error.code.numericCode, detail = error.errorBody)
+                else -> error.toPriceError()
+            }.left()
+        },
+    )
 
     private fun PredictionOrderSide.emptyBookSentinel(): BigDecimal = when (this) {
         PredictionOrderSide.BUY -> PolymarketClobPriceFormat.EMPTY_BID_PRICE
@@ -640,6 +688,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     private companion object {
+        const val PRICE_BATCH_LIMIT = 500
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"

@@ -29,6 +29,7 @@ import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -532,6 +533,21 @@ internal data class TangemActionMessageStory(
     val isLongText: Boolean,
     val onVariantChange: (TangemActionMessage.Variant) -> Unit,
     val onLongTextToggle: () -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemToastStory(
+    val appearance: TangemToast.Appearance,
+    val duration: TangemToast.Duration,
+    val isMultiLine: Boolean,
+    val hasIcon: Boolean,
+    val hasAction: Boolean,
+    val isClosable: Boolean,
+    val onAppearanceChange: (TangemToast.Appearance) -> Unit,
+    val onDurationChange: (TangemToast.Duration) -> Unit,
+    val onMultiLineToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onActionToggle: () -> Unit,
+    val onClosableToggle: () -> Unit,
 ) : DsStoryBookPage
 
 @Suppress("BooleanPropertyNaming")

@@ -10,6 +10,7 @@ interface TokenReceiveComponent : ComposableBottomSheetComponent {
     data class Params(
         val config: TokenReceiveConfig,
         val onDismiss: () -> Unit,
+        val isNewScreenAllowed: Boolean = true,
     )
 
     interface Factory : ComponentFactory<Params, TokenReceiveComponent> {

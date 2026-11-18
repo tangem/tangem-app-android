@@ -47,7 +47,8 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.funding.PredictionAwaitingFundsBanner
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionRestrictedBanner
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBanner
+import com.tangem.features.polymarket.impl.fasttrading.banner.ui.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf

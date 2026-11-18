@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_dots_vertical_20
+import com.tangem.core.ui.test.ContextMenuItemIconResKey
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -101,7 +103,10 @@ private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () 
             .padding(vertical = 12.dp, horizontal = 16.dp),
     ) {
         TangemIcon(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier
+                .size(20.dp)
+                .testTag(TangemPayTestTags.CONTEXT_MENU_ITEM_ICON)
+                .semantics { item.iconRes?.let { set(ContextMenuItemIconResKey, it) } },
             tangemIconUM = item.icon,
         )
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

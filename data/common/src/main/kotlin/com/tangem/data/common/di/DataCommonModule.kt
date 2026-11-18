@@ -82,6 +82,7 @@ internal object DataCommonModule {
         walletAccountsETags: WalletAccountsETags,
         jointAccountFeatureToggles: JointAccountFeatureToggles,
         walletTokensLocalStore: WalletTokensLocalStore,
+        supportedAccountTypes: SupportedAccountTypes,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -95,6 +96,7 @@ internal object DataCommonModule {
             walletAccountsETags = walletAccountsETags,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
             walletTokensLocalStore = walletTokensLocalStore,
+            supportedAccountTypes = supportedAccountTypes,
         )
     }
 

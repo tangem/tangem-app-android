@@ -10,8 +10,10 @@ import com.tangem.data.tangempay.store.CashbackSummaryStore
 import com.tangem.data.tangempay.store.TangemPayStorage
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.model.AccountFeeGroupType
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.CustomerOrderRequest
 import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.domain.tangempay.model.OrderType
@@ -32,6 +34,7 @@ import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -41,6 +44,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 internal class DefaultOnboardingRepositoryTest {
@@ -52,6 +56,7 @@ internal class DefaultOnboardingRepositoryTest {
     private val userPropertiesSender: TangemPayUserPropertiesSender = mockk(relaxed = true)
     private val orderPoller: OrderPoller = mockk(relaxed = true)
     private val ordersStore: OrdersStore = mockk(relaxed = true)
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     private val repository = DefaultOnboardingRepository(
         analytics = mockk(relaxed = true),
@@ -70,6 +75,7 @@ internal class DefaultOnboardingRepositoryTest {
         userPropertiesSender = userPropertiesSender,
         orderPoller = Lazy { orderPoller },
         ordersStore = ordersStore,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     @BeforeEach
@@ -82,7 +88,9 @@ internal class DefaultOnboardingRepositoryTest {
             userPropertiesSender,
             orderPoller,
             ordersStore,
+            moneyAccountFeatureToggles,
         )
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
 
         coEvery {
             requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -587,6 +595,49 @@ internal class DefaultOnboardingRepositoryTest {
             }
         }
 
+        @ParameterizedTest
+        @MethodSource("provideFixedPartModels")
+        fun `GIVEN percentage fee with a fixed part WHEN getFees THEN the fixed part is kept only with MXN`(
+            model: FixedPartModel,
+        ) = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns model.isMxnEnabled
+            val response = FeesResponse(
+                result = listOf(
+                    fee(
+                        type = "ACH_ONRAMP",
+                        group = "ONRAMP",
+                        paymentMethodId = "ACH",
+                        calculationType = "PERCENTAGE",
+                        fixedAmount = BigDecimal("0.50"),
+                    ),
+                ),
+            )
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = any(), groups = any()) } returns
+                ApiResponse.Success(response)
+
+            // Act
+            val actual = repository.getFees(USER_WALLET_ID, PRODUCT, setOf(AccountFeeGroupType.ONRAMP))
+
+            // Assert
+            val expected = AccountFee(
+                type = "ACH_ONRAMP",
+                name = "ACH",
+                paymentMethodId = "ACH",
+                group = AccountFeeGroupType.ONRAMP,
+                calculationType = FeeCalculationType.PERCENTAGE,
+                amount = BigDecimal.ONE,
+                currency = "USD",
+                fixedAmount = model.expectedFixedAmount,
+            )
+            assertThat(actual).isEqualTo(listOf(expected).right())
+        }
+
+        private fun provideFixedPartModels() = listOf(
+            FixedPartModel(isMxnEnabled = true, expectedFixedAmount = BigDecimal("0.50")),
+            FixedPartModel(isMxnEnabled = false, expectedFixedAmount = null),
+        )
+
         private fun provideTestModels() = listOf(
             FeesAccountTypeModel(product = TangemPayProduct.PAYMENT_ACCOUNT, expectedAccountType = ACCOUNT_TYPE),
             FeesAccountTypeModel(product = TangemPayProduct.BANKING_ACCOUNT, expectedAccountType = "BANKING_ACCOUNT"),
@@ -599,6 +650,7 @@ internal class DefaultOnboardingRepositoryTest {
             calculationType: String? = "FIXED",
             amount: BigDecimal? = BigDecimal.ONE,
             currency: String? = "USD",
+            fixedAmount: BigDecimal? = null,
         ) = FeesResponse.Fee(
             type = type,
             group = group,
@@ -606,9 +658,77 @@ internal class DefaultOnboardingRepositoryTest {
             paymentMethodId = paymentMethodId,
             calculationType = calculationType,
             amount = amount,
-            fixedAmount = null,
+            fixedAmount = fixedAmount,
             currency = currency,
             description = "fee",
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetBankCredentials {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN deposit fee and legacy fee WHEN getBankCredentials THEN the deposit fee is read only with MXN`(
+            model: DepositFeeModel,
+        ) = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns model.isMxnEnabled
+            coEvery { tangemPayApi.getBankCredentials(AUTH_HEADER, PRODUCT_INSTANCE_ID) } returns
+                ApiResponse.Success(BankCredentialsResponse(result = bankCredentialsResult()))
+
+            // Act
+            val actual = repository.getBankCredentials(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual.getOrNull()?.depositFee).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            DepositFeeModel(
+                isMxnEnabled = true,
+                expected = BankCredentials.DepositFee(
+                    calculationType = FeeCalculationType.PERCENTAGE,
+                    amount = BigDecimal.ONE,
+                    fixedAmount = BigDecimal("0.50"),
+                    currency = "USD",
+                ),
+            ),
+            DepositFeeModel(
+                isMxnEnabled = false,
+                expected = BankCredentials.DepositFee(
+                    calculationType = FeeCalculationType.FIXED,
+                    amount = BigDecimal("1.00"),
+                ),
+            ),
+        )
+
+        private fun bankCredentialsResult() = BankCredentialsResponse.Result(
+            type = "fiat",
+            beneficiaryName = null,
+            beneficiaryAddress = null,
+            beneficiaryBankName = null,
+            beneficiaryBankAddress = null,
+            accountNumber = "707613210122",
+            routingNumber = null,
+            rail = "ACH",
+            transferMessage = null,
+            fee = BankCredentialsResponse.LegacyFee(type = "flat", amount = "1.00"),
+            depositFee = FeesResponse.Fee(
+                type = "ACH_ONRAMP",
+                group = "ONRAMP",
+                name = "ACH",
+                paymentMethodId = "ACH",
+                calculationType = "PERCENTAGE",
+                amount = BigDecimal.ONE,
+                fixedAmount = BigDecimal("0.50"),
+                currency = "USD",
+                description = null,
+            ),
+            depositLimit = null,
+            amountLimits = null,
+            exchangeRate = null,
         )
     }
 
@@ -761,6 +881,10 @@ internal class DefaultOnboardingRepositoryTest {
     )
 
     internal data class FeesAccountTypeModel(val product: TangemPayProduct, val expectedAccountType: String)
+
+    internal data class FixedPartModel(val isMxnEnabled: Boolean, val expectedFixedAmount: BigDecimal?)
+
+    internal data class DepositFeeModel(val isMxnEnabled: Boolean, val expected: BankCredentials.DepositFee?)
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")

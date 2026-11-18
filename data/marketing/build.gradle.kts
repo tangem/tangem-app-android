@@ -11,7 +11,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.configToggles)
     implementation(projects.core.remote)
     implementation(deps.androidx.datastore)
 

@@ -1394,7 +1394,7 @@
   <string name="mcp_swap_intent_processed_subtitle">將 %1$s 兌換為 %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">建立行動錢包前，您必須更新至 %1$s</string>
   <string name="mobile_wallet_requires_min_os_warning_title">行動錢包需要 %1$s 或更新版本</string>
-  <string name="money_account_add_funds_bank_description">透過 ACH/Wire 或 SPEI 從銀行帳戶接收 USD</string>
+  <string name="money_account_add_funds_bank_description">透過 ACH 從美國的銀行接收 USD，或透過 SPEI 從墨西哥的銀行接收 MXN</string>
   <string name="money_account_add_funds_receive_description">將 Polygon 網路的 USDC 發送至帳戶地址</string>
   <string name="money_account_add_funds_swap_description">使用錢包中的加密資產為美元帳戶儲值</string>
   <string name="money_account_balance_unavailable_description">載入餘額時發生問題，請稍後再試</string>
@@ -1407,7 +1407,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">存款後開通</string>
   <string name="money_account_main_status_dialog_activating_description">我們正在為您準備帳戶，這可能需要一些時間</string>
-  <string name="money_account_main_status_dialog_activating_title">正在開設您的銀行帳戶</string>
+  <string name="money_account_main_status_dialog_activating_title">正在開設您的美元帳戶</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">我們正在努力拓展至更多地區。需要協助嗎？</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">我們正在努力覆蓋更多地區。需要協助？%s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">您所在的地區暫不支援</string>
@@ -1424,7 +1424,7 @@
   <string name="money_account_main_status_verification">身分驗證進行中…</string>
   <string name="money_account_onboarding_currency_card_caption">帳戶幣別</string>
   <string name="money_account_onboarding_description">像一般銀行帳戶一樣使用。但由加密資產驅動，並完全由您掌控。</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay 是一家金融科技公司，而非銀行。銀行服務由 SSB 提供，SSB 為 FDIC 成員。存放於 SSB 的資金符合 FDIC 保險的承保資格，每位存款人於每家投保銀行最高可獲 250,000 美元保障，並受適用限制及 FDIC 規則約束。</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay 不是銀行。帳戶資訊由 SSB Bank 提供。資金以 USDC 形式持有，而非作為存款存放於 SSB Bank。USDC 不受 FDIC 保險保障。</string>
   <string name="money_account_onboarding_earn_card_caption">賺取收益</string>
   <string name="money_account_onboarding_fees_error">無法載入費用資訊。\n點擊重新載入</string>
   <string name="money_account_onboarding_fees_notice">不支援 SWIFT 轉帳。如果您發起 SWIFT 轉帳，款項將被退回</string>
@@ -2533,7 +2533,7 @@
   <string name="tangempay_card_details_open_wallet_notification_title_apple">將卡片新增至 Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">開啟 Google 錢包</string>
   <string name="tangempay_card_details_open_wallet_step_1_5_apple">點擊右上角的「+」按鈕</string>
-  <string name="tangempay_card_details_open_wallet_step_1_apple">開啟 Apple Wallet</string>
+  <string name="tangempay_card_details_open_wallet_step_1_apple">開啟「錢包」App</string>
   <string name="tangempay_card_details_open_wallet_step_2">點擊新增卡片</string>
   <string name="tangempay_card_details_open_wallet_step_2_apple">點擊「簽帳金融卡或信用卡」</string>
   <string name="tangempay_card_details_open_wallet_step_3">手動輸入卡片詳情</string>
@@ -2857,7 +2857,7 @@
   <string name="tangempay_tangem_visa_card">在現實生活中隨心消費加密資產</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">透過 ACH/Wire 從銀行帳戶接收美元</string>
+  <string name="tangempay_topup_bank_transfer_body">透過 ACH 從美國的銀行帳戶接收美元</string>
   <string name="tangempay_topup_bank_transfer_pending_body">正在建立您的銀行帳戶資訊...</string>
   <string name="tangempay_topup_bank_transfer_title">從銀行帳戶</string>
   <string name="tangempay_topup_receive_body_multichain">將 USDC 或 USDT 傳送至您帳戶的地址</string>
@@ -2885,7 +2885,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">付款</string>
-  <string name="tangempay_unified_onboarding_payments_title">滿足日常所需的ACH和電匯轉帳</string>
+  <string name="tangempay_unified_onboarding_payments_title">滿足日常所需的銀行轉帳</string>
   <string name="tangempay_unified_onboarding_plan_caption">一個方案</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic 免費。</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus 涵蓋兩者，還有更多權益</string>

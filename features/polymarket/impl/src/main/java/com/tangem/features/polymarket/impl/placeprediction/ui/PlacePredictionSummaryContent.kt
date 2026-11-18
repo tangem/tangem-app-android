@@ -27,6 +27,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.side
 import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
@@ -98,6 +99,7 @@ internal fun PlacePredictionSummaryContent(
             PredictionDetailsBlock(state = state, onFeeClick = intents::onFeeClick)
             PredictionNotificationsBlock(
                 notifications = state.notifications,
+                side = state.order.side,
                 onRetryClick = intents::onQuoteRetryClick,
             )
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))

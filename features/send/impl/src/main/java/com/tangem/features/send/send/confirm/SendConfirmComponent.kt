@@ -120,6 +120,11 @@ internal class SendConfirmComponent(
             analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
             isTronGaslessSupported = true,
+            blockAppearance = if (isJointAccount) {
+                FeeSelectorParams.BlockAppearance.IconRow
+            } else {
+                FeeSelectorParams.BlockAppearance.Default
+            },
         ),
         onResult = model::onFeeResult,
     )

@@ -42,6 +42,7 @@ internal fun AppComponentContext.polymarketFundingSheetSlot(
                 params = TokenReceiveComponent.Params(
                     config = config.config,
                     onDismiss = { navigation.dismissIfShown(config) },
+                    isNewScreenAllowed = false,
                 ),
             )
         }

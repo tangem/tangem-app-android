@@ -1,6 +1,8 @@
 package com.tangem.features.marketing.impl.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.marketing.models.MarketingBanner
 
 @Immutable
 internal data class MarketingBannerUM(
@@ -15,8 +17,9 @@ internal data class MarketingBannerUM(
     val subtitle: String? = null,
     val etaLabel: String? = null,
     val partnerLabel: String? = null,
-    val buttonText: String? = null,
+    val buttonText: TextReference? = null,
     val hasGlow: Boolean = false,
+    val replacesSlot: MarketingBanner.RecommendedSlot? = null,
     val style: Style = Style.DEFAULT,
 ) {
     enum class IconAlign { LEFT, RIGHT }

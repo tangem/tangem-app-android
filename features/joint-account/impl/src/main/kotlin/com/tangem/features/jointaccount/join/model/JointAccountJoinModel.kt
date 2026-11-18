@@ -53,8 +53,9 @@ internal class JointAccountJoinModel @Inject constructor(
         val draft = draftHolder.draft.value
         val walletId = draft.selectedWalletId
         val config = draft.config
+        val creatorAddress = draft.creatorAddress
 
-        if (walletId == null || config == null) {
+        if (walletId == null || config == null || creatorAddress == null) {
             TangemLogger.e("Joint account join failed: the draft has no wallet or config from the preview step")
             showGenericError(JointAccountError(source = ErrorSource.Join, errorMessage = "Incomplete draft"))
             return JoinResultAction.None
@@ -72,6 +73,7 @@ internal class JointAccountJoinModel @Inject constructor(
             userWalletId = walletId,
             inviteId = inviteId,
             config = config,
+            creatorAddress = creatorAddress,
             memberName = memberName,
         ).fold(
             ifLeft = ::onJoinError,

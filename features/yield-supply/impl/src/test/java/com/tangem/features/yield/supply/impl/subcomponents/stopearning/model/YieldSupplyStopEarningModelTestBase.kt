@@ -15,6 +15,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
+import com.tangem.features.yield.supply.impl.common.portfolioCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -93,6 +94,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
         getFeeUseCase = getFeeUseCase,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
+        currencyStatusResolver = currencyStatusResolver,
         yieldSupplyStopEarningUseCase = stopEarningUseCase,
         urlOpener = urlOpener,
         yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
@@ -107,7 +109,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
         yieldSupplySmartGas = YieldSupplySmartGas(
             sendTransactionUseCase = sendTransactionUseCase,
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
-            singleAccountStatusListSupplier = accountStatusListSupplier,
+            currencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
             getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,

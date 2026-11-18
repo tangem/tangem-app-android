@@ -5,6 +5,7 @@ import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketSoccerTab
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.model.PolymarketTeam
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import java.math.BigDecimal
@@ -80,3 +81,8 @@ internal fun soccerPickerCard(
         else PolymarketSoccerCard.Content.OverUnderPicker(positions, teamSide),
     )
 }
+
+internal fun PolymarketSoccerEvent.mainEvent() = createPolymarketEvent(
+    id = id, title = title, status = status, isLive = isLive,
+    markets = tabs.flatMap { it.cards }.flatMap { it.markets }.filter { it.eventId == id }.distinctBy { it.id },
+).copy(gameId = gameId, teams = teams, score = score, period = period, isEnded = isEnded, dataFetchedAt = dataFetchedAt)

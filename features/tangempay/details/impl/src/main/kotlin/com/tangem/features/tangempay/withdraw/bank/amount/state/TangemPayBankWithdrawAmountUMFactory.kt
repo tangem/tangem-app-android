@@ -27,6 +27,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.CustomerNameState
 import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Currency
 
@@ -34,6 +35,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
     private val step: TangemPayBankWithdrawInnerRoute,
     private val sourceAccount: BankWithdrawSourceAccount,
     private val callbacks: Callbacks,
+    @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED") private val isMxnEnabled: Boolean,
 ) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
@@ -195,6 +197,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onDismiss = callbacks.onSheetDismiss,
             )
             AmountSheet.ROUTES -> SheetUM.Routes(
+                title = createRoutesTitle(),
                 items = selection.destinations.map { destination ->
                     RouteItemUM(
                         rail = destination.rail,
@@ -209,6 +212,13 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onDismiss = callbacks.onSheetDismiss,
             )
         }
+
+    @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED")
+    private fun createRoutesTitle(): TextReference = if (isMxnEnabled) {
+        resourceReference(R.string.tangempay_withdraw_bank_choose_transfer_method)
+    } else {
+        resourceReference(R.string.tangempay_withdraw_bank_select_route)
+    }
 
     private fun createNetworkFeeNote(selection: AmountSelection): TextReference? =
         if (isNetworkFeeCharged && selection.isNetworkFeeQuoted) {

@@ -16,28 +16,32 @@ class CheckOnrampAvailabilityUseCase(
     suspend operator fun invoke(
         userWallet: UserWallet,
         isCountryByIpEnabled: Boolean = false,
+        detectedCountry: OnrampCountry? = null,
     ): Either<OnrampError, OnrampAvailability> {
         return Either.catch {
             repository.fetchPaymentMethodsIfAbsent(userWallet)
             if (isCountryByIpEnabled) {
-                checkWithCountryByIp(userWallet)
+                checkWithCountryByIp(userWallet, detectedCountry)
             } else {
                 checkWithResidencyConfirmation(userWallet)
             }
         }.mapLeft(errorResolver::resolve)
     }
 
-    private suspend fun checkWithCountryByIp(userWallet: UserWallet): OnrampAvailability {
+    private suspend fun checkWithCountryByIp(
+        userWallet: UserWallet,
+        detectedCountry: OnrampCountry?,
+    ): OnrampAvailability {
         val savedCountry = repository.getDefaultCountrySync()
-        val country = savedCountry ?: detectCountry(userWallet)
+        val country = savedCountry ?: detectCountry(userWallet, detectedCountry)
         val listed = repository.fetchCountries(userWallet).find { it.id == country.id }
         val validated = listed?.copy(defaultCurrency = country.defaultCurrency) ?: country
         if (validated != savedCountry) repository.saveDefaultCountry(validated)
         return resolveAvailability(validated)
     }
 
-    private suspend fun detectCountry(userWallet: UserWallet): OnrampCountry {
-        val detectedCountry = repository.getCountryByIp(userWallet)
+    private suspend fun detectCountry(userWallet: UserWallet, country: OnrampCountry?): OnrampCountry {
+        val detectedCountry = country ?: repository.getCountryByIp(userWallet)
         val currency = repository.getSelectedCurrencySync() ?: detectedCountry.defaultCurrency
         return detectedCountry.copy(defaultCurrency = currency)
     }

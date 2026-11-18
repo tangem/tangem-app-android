@@ -2,9 +2,9 @@ package com.tangem.features.jointaccount.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.utils.logging.TangemLogger

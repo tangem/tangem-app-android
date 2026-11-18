@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.core.decompose)
+    implementation(projects.core.navigation)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.feedback.models)

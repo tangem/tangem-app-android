@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED",
-        "version": "6.8"
-    },
-    {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
         "version": "undefined"
     },
@@ -28,8 +24,8 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1721_MCP_ENABLED",
-        "version": "6.8"
+        "name": "AND_19454_MCP_INTENTS_HISTORY_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
@@ -40,24 +36,8 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
-        "version": "6.8"
-    },
-    {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "TWI_1732_PROMO_PAGE_ENABLED",
-        "version": "6.8"
-    },
-    {
-        "name": "AND_19037_WALLET_LINKING_ENABLED",
-        "version": "6.8"
-    },
-    {
-        "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE_V2",
-        "version": "6.8"
+        "version": "6.9"
     },
     {
         "name": "TWI_1720_ALL_SERVICES_ENABLED",
@@ -65,6 +45,10 @@
     },
     {
         "name": "AND_19355_DISCOVER_DEEPLINK_FILTERS_ENABLED",
+        "version": "6.9"
+    },
+    {
+        "name": "AND_19514_CATEGORY_FILTERS_REDESIGN_ENABLED",
         "version": "undefined"
     },
     {
@@ -73,6 +57,10 @@
     },
     {
         "name": "TWI_1898_NPS_SURVEY_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1821_PERMANENT_UPGRADE_BANNER_ENABLED",
         "version": "undefined"
     }
 ]

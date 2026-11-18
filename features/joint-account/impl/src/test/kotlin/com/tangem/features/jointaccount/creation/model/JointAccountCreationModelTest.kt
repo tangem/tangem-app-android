@@ -7,6 +7,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.models.StatusSource
@@ -18,6 +19,7 @@ import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -89,6 +91,26 @@ internal class JointAccountCreationModelTest {
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 event = JointAccountAnalyticsEvent.JointAccountError(source = ErrorSource.Create, cause = cause),
+            )
+        }
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN accounts limit reached WHEN createAccount THEN limit notice is sent and shown`() = runTest {
+        // Arrange
+        val model = createModelWithDraft()
+        coEvery {
+            createJointAccount(any(), any(), any())
+        } returns JointAccountCreationError.AccountsLimitReached.left()
+
+        // Act
+        model.createAccount(displayName = NAME)
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                event = JointAccountAnalyticsEvent.NoticeAccountsLimitReached(source = LimitSource.Create),
             )
         }
         verify(exactly = 1) { uiMessageSender.send(any()) }

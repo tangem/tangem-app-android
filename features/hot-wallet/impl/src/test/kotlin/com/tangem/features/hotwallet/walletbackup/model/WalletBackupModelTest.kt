@@ -408,7 +408,10 @@ internal class WalletBackupModelTest {
         verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonHardwareUpdate> { true }) }
         verify {
             router.push(
-                route = AppRoute.WalletHardwareBackup(userWalletId = walletId),
+                route = AppRoute.WalletHardwareBackup(
+                    userWalletId = walletId,
+                    source = AppRoute.WalletHardwareBackup.Source.BACKUP,
+                ),
                 onComplete = any(),
             )
         }

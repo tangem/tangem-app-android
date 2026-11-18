@@ -1,6 +1,7 @@
 package com.tangem.tests.tangempay
 
 import androidx.test.espresso.Espresso
+import com.kaspersky.kaspresso.testcases.core.testcontext.TestContext
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
@@ -143,9 +144,18 @@ class TangemPayCrossWalletSwapTest : BaseTestCase() {
     @DisplayName("Tangem Pay: swap from the Payment account to a token of another wallet via Withdraw")
     @Test
     fun swapFromPaymentAccountToTokenOfOtherWalletViaWithdrawTest() {
-        val withdrawAmount = "5"
-        val sentWithdrawAmount = "5.00"
-        val channelsBankOfframpState = "BankOfframp"
+        setupHooks(
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
+        ).run {
+            swapFromPaymentAccountToTetherOfOtherWalletViaWithdraw()
+            returnToMainFromWithdrawSuccess()
+        }
+    }
+
+    @AllureId("14044")
+    @DisplayName("Tangem Pay: balances after a swap from the Payment account to a token of another wallet")
+    @Test
+    fun balancesAfterSwapFromPaymentAccountToTokenOfOtherWalletTest() {
         val payBalanceAfterWithdrawState = "AfterWithdraw"
         val tetherAfterWithdrawState = "AfterPayWithdraw"
         val payBalanceAfterWithdraw = "5.00"
@@ -153,84 +163,26 @@ class TangemPayCrossWalletSwapTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
         ).run {
-            step("Set WireMock scenarios for a cross-wallet Tangem Pay swap") { setTangemPayCrossWalletSwapScenarios() }
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBankOfframpState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBankOfframpState)
-            }
-            step("Open 'Main' screen with existing hot wallet") { openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12) }
-            step("Generate missing addresses") { generateMissingHotWalletAddresses() }
-            step("Wait for addresses to be generated") { waitForAddressesGenerated() }
-            step("Close 'Finalize wallet setup' sheet if shown") { closeFinishWalletActivationSheetIfShown() }
-            step("Add card wallet '$cardWalletName'") { addNewCardWallet(WalletMockContent) }
-            step("Reveal '$tether' in '$mainAccountName' of '$cardWalletName'") {
-                revealTokenInAccountOnMain(tokenName = tether, accountName = mainAccountName)
-            }
-            var tetherBalanceBefore = BigDecimal.ZERO
-            step("Read '$tether' balance") { tetherBalanceBefore = readDisplayedTokenBalance(tether) }
-            step("Switch to '$hotWalletName'") { switchToPreviousWallet() }
-            step("Open Payment account of '$hotWalletName'") { openTangemPayOfDisplayedWallet() }
-            step("Assert payment account balance contains '$initialPayBalance'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTangemPayMainScreen { balance.assertTextContainsSafe(initialPayBalance, substring = true) }
-                }
-            }
-            step("Open 'Withdraw' hub") { openWithdrawHubFromPaymentAccount() }
-            step("Click on 'Within your portfolio' card") {
-                onTangemPayWithdrawHubScreen { withinPortfolioCard.performClick() }
-            }
-            step("Assert 'Withdraw' Swap screen is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { withdrawTitle.assertIsDisplayed() } }
-            }
-            step("Click on 'Choose token' button") { onSwapTokenScreen { chooseTokenButton.performClick() } }
-            step("Choose '$tether' of '$cardWalletName' as receive token") {
-                selectTokenInAccountOnWalletTab(
-                    walletName = cardWalletName,
-                    accountName = mainAccountName,
-                    tokenName = tether,
-                )
-            }
-            step("Enter withdraw amount '$withdrawAmount'") { enterWithdrawAmount(withdrawAmount) }
-            step("Assert receive amount is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }
-            }
-            step("Confirm swap by holding the button") { confirmTangemPayWithdrawByHolding() }
-            step("Assert 'Swap in progress' screen is displayed") {
-                flakySafely { onSwapSuccessScreen { title.assertIsDisplayed() } }
-            }
-            step("Assert 'You send' block shows '$sentWithdrawAmount $usdcSymbol' from '$PAY_ACCOUNT_ROW_NAME'") {
-                onSwapSuccessScreen {
-                    sendBlockText(PAY_ACCOUNT_ROW_NAME).assertIsDisplayed()
-                    sendBlockText(usdcSymbol).assertTextContains(sentWithdrawAmount, substring = true)
-                }
-            }
-            step("Assert 'You receive' block shows '$tetherSymbol' in '$mainAccountName'") {
-                onSwapSuccessScreen {
-                    receiveBlockText(mainAccountName).assertIsDisplayed()
-                    receiveBlockText(tetherSymbol).assertIsDisplayed()
-                }
-            }
-            step("Click on 'Close' button") { onSwapSuccessScreen { closeButton.performClick() } }
-            step("Assert 'Withdraw' hub screen is displayed") {
-                flakySafely { onTangemPayWithdrawHubScreen { bankSectionTitle.assertIsDisplayed() } }
-            }
-            step("Return to Payment account") { returnToPaymentAccountFromWithdrawHub() }
+            val tetherBalanceBefore = swapFromPaymentAccountToTetherOfOtherWalletViaWithdraw()
+            returnToMainFromWithdrawSuccess()
             step("Switch WireMock scenario '$balanceScenario' to '$payBalanceAfterWithdrawState'") {
                 setWireMockScenarioState(balanceScenario, payBalanceAfterWithdrawState)
             }
             step("Switch WireMock scenario '$tetherBalanceScenario' to '$tetherAfterWithdrawState'") {
                 setWireMockScenarioState(tetherBalanceScenario, tetherAfterWithdrawState)
             }
-            step("Pull to refresh Tangem Pay") { pullToRefreshTangemPay() }
-            step("Assert payment account balance contains '$payBalanceAfterWithdraw'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTangemPayMainScreen { balance.assertTextContainsSafe(payBalanceAfterWithdraw, substring = true) }
-                }
-            }
-            step("Return to the Main screen") { returnToMainFromTangemPay() }
             step("Switch to '$cardWalletName'") { switchToNextWallet() }
             step("Assert '$tether' balance of '$cardWalletName' increased") {
                 refreshMainUntilTokenBalance(tether, "increases above $tetherBalanceBefore") {
                     it > tetherBalanceBefore
+                }
+            }
+            step("Switch to '$hotWalletName'") { switchToPreviousWallet() }
+            step("Open Payment account of '$hotWalletName'") { openTangemPayOfDisplayedWallet() }
+            step("Pull to refresh Tangem Pay") { pullToRefreshTangemPay() }
+            step("Assert payment account balance contains '$payBalanceAfterWithdraw'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayMainScreen { balance.assertTextContainsSafe(payBalanceAfterWithdraw, substring = true) }
                 }
             }
         }
@@ -242,9 +194,6 @@ class TangemPayCrossWalletSwapTest : BaseTestCase() {
     fun swapFromPaymentAccountToTokenOfOtherWalletFromTokenTest() {
         val withdrawAmount = "5"
         val sentWithdrawAmount = "5.00"
-        val payBalanceAfterWithdrawState = "AfterWithdraw"
-        val tetherAfterWithdrawState = "AfterPayWithdraw"
-        val payBalanceAfterWithdraw = "5.00"
 
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
@@ -258,8 +207,6 @@ class TangemPayCrossWalletSwapTest : BaseTestCase() {
             step("Reveal '$tether' in '$mainAccountName' of '$cardWalletName'") {
                 revealTokenInAccountOnMain(tokenName = tether, accountName = mainAccountName)
             }
-            var tetherBalanceBefore = BigDecimal.ZERO
-            step("Read '$tether' balance") { tetherBalanceBefore = readDisplayedTokenBalance(tether) }
             step("Click on token '$tether'") { openTokenDetailsFromAccountSection(tether) }
             step("Open 'Swap' screen") { openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false) }
             step("Open source token selector") { openSwapFromTokenSelector() }
@@ -283,42 +230,89 @@ class TangemPayCrossWalletSwapTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }
             }
             step("Confirm swap by holding the button") { confirmTangemPayWithdrawByHolding() }
-            step("Assert 'Swap in progress' screen is displayed") {
-                flakySafely { onSwapSuccessScreen { title.assertIsDisplayed() } }
-            }
-            step("Assert 'You send' block shows '$sentWithdrawAmount $usdcSymbol' from '$PAY_ACCOUNT_ROW_NAME'") {
-                onSwapSuccessScreen {
-                    sendBlockText(PAY_ACCOUNT_ROW_NAME).assertIsDisplayed()
-                    sendBlockText(usdcSymbol).assertTextContains(sentWithdrawAmount, substring = true)
-                }
-            }
-            step("Assert 'You receive' block shows '$tetherSymbol' in '$mainAccountName'") {
-                onSwapSuccessScreen {
-                    receiveBlockText(mainAccountName).assertIsDisplayed()
-                    receiveBlockText(tetherSymbol).assertIsDisplayed()
-                }
-            }
+            assertWithdrawSuccessScreen(sentWithdrawAmount)
             step("Click on 'Close' button") { onSwapSuccessScreen { closeButton.performClick() } }
-            step("Switch WireMock scenario '$balanceScenario' to '$payBalanceAfterWithdrawState'") {
-                setWireMockScenarioState(balanceScenario, payBalanceAfterWithdrawState)
-            }
-            step("Switch WireMock scenario '$tetherBalanceScenario' to '$tetherAfterWithdrawState'") {
-                setWireMockScenarioState(tetherBalanceScenario, tetherAfterWithdrawState)
-            }
             step("Click on 'Back' button") { tapBackButton() }
-            step("Assert '$tether' balance of '$cardWalletName' increased") {
-                refreshMainUntilTokenBalance(tether, "increases above $tetherBalanceBefore") {
-                    it > tetherBalanceBefore
-                }
-            }
-            step("Switch to '$hotWalletName'") { switchToPreviousWallet() }
-            step("Open Payment account of '$hotWalletName'") { openTangemPayOfDisplayedWallet() }
-            step("Pull to refresh Tangem Pay") { pullToRefreshTangemPay() }
-            step("Assert payment account balance contains '$payBalanceAfterWithdraw'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTangemPayMainScreen { balance.assertTextContainsSafe(payBalanceAfterWithdraw, substring = true) }
-                }
+            step("Assert 'Main' screen is displayed") {
+                awaitSuccess { onMainScreenTopBar { moreButton.assertIsDisplayed() } }
             }
         }
+    }
+
+    private fun TestContext<Unit>.swapFromPaymentAccountToTetherOfOtherWalletViaWithdraw(): BigDecimal {
+        val withdrawAmount = "5"
+        val sentWithdrawAmount = "5.00"
+        val channelsBankOfframpState = "BankOfframp"
+        var tetherBalanceBefore = BigDecimal.ZERO
+
+        step("Set WireMock scenarios for a cross-wallet Tangem Pay swap") { setTangemPayCrossWalletSwapScenarios() }
+        step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBankOfframpState'") {
+            setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBankOfframpState)
+        }
+        step("Open 'Main' screen with existing hot wallet") { openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12) }
+        step("Generate missing addresses") { generateMissingHotWalletAddresses() }
+        step("Wait for addresses to be generated") { waitForAddressesGenerated() }
+        step("Close 'Finalize wallet setup' sheet if shown") { closeFinishWalletActivationSheetIfShown() }
+        step("Add card wallet '$cardWalletName'") { addNewCardWallet(WalletMockContent) }
+        step("Reveal '$tether' in '$mainAccountName' of '$cardWalletName'") {
+            revealTokenInAccountOnMain(tokenName = tether, accountName = mainAccountName)
+        }
+        step("Read '$tether' balance") { tetherBalanceBefore = readDisplayedTokenBalance(tether) }
+        step("Switch to '$hotWalletName'") { switchToPreviousWallet() }
+        step("Open Payment account of '$hotWalletName'") { openTangemPayOfDisplayedWallet() }
+        step("Assert payment account balance contains '$initialPayBalance'") {
+            flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                onTangemPayMainScreen { balance.assertTextContainsSafe(initialPayBalance, substring = true) }
+            }
+        }
+        step("Open 'Withdraw' hub") { openWithdrawHubFromPaymentAccount() }
+        step("Click on 'Within your portfolio' card") {
+            onTangemPayWithdrawHubScreen { withinPortfolioCard.performClick() }
+        }
+        step("Assert 'Withdraw' Swap screen is displayed") {
+            flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { withdrawTitle.assertIsDisplayed() } }
+        }
+        step("Click on 'Choose token' button") { onSwapTokenScreen { chooseTokenButton.performClick() } }
+        step("Choose '$tether' of '$cardWalletName' as receive token") {
+            selectTokenInAccountOnWalletTab(
+                walletName = cardWalletName,
+                accountName = mainAccountName,
+                tokenName = tether,
+            )
+        }
+        step("Enter withdraw amount '$withdrawAmount'") { enterWithdrawAmount(withdrawAmount) }
+        step("Assert receive amount is displayed") {
+            flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }
+        }
+        step("Confirm swap by holding the button") { confirmTangemPayWithdrawByHolding() }
+        assertWithdrawSuccessScreen(sentWithdrawAmount)
+        return tetherBalanceBefore
+    }
+
+    private fun TestContext<Unit>.assertWithdrawSuccessScreen(sentWithdrawAmount: String) {
+        step("Assert 'Swap in progress' screen is displayed") {
+            flakySafely { onSwapSuccessScreen { title.assertIsDisplayed() } }
+        }
+        step("Assert 'You send' block shows '$sentWithdrawAmount $usdcSymbol' from '$PAY_ACCOUNT_ROW_NAME'") {
+            onSwapSuccessScreen {
+                sendBlockText(PAY_ACCOUNT_ROW_NAME).assertIsDisplayed()
+                sendBlockText(usdcSymbol).assertTextContains(sentWithdrawAmount, substring = true)
+            }
+        }
+        step("Assert 'You receive' block shows '$tetherSymbol' in '$mainAccountName'") {
+            onSwapSuccessScreen {
+                receiveBlockText(mainAccountName).assertIsDisplayed()
+                receiveBlockText(tetherSymbol).assertIsDisplayed()
+            }
+        }
+    }
+
+    private fun TestContext<Unit>.returnToMainFromWithdrawSuccess() {
+        step("Click on 'Close' button") { onSwapSuccessScreen { closeButton.performClick() } }
+        step("Assert 'Withdraw' hub screen is displayed") {
+            flakySafely { onTangemPayWithdrawHubScreen { bankSectionTitle.assertIsDisplayed() } }
+        }
+        step("Return to Payment account") { returnToPaymentAccountFromWithdrawHub() }
+        step("Return to the Main screen") { returnToMainFromTangemPay() }
     }
 }

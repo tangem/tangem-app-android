@@ -220,6 +220,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletHardwareBackupComponent.Params(
                         userWalletId = route.userWalletId,
+                        source = route.source,
                     ),
                     componentFactory = walletHardwareBackupComponentFactory,
                 )
@@ -813,7 +814,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayOnboardingSuccess -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = TangemPayOnboardingSuccessComponent.Params(product = route.product),
                     componentFactory = tangemPayOnboardingSuccessComponentFactory,
                 )
             }
@@ -834,6 +835,7 @@ internal class ChildFactory @Inject constructor(
                         repeatAfterDays = route.repeatAfterDays,
                         userWalletId = route.userWalletId,
                         isAlreadyAnswered = route.isAlreadyAnswered,
+                        isFromCache = route.isFromCache,
                     ),
                     componentFactory = nativeSurveyComponentFactory,
                 )

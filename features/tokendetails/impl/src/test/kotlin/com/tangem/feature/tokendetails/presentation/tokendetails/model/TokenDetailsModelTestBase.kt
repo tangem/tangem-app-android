@@ -59,6 +59,7 @@ import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.domain.yield.supply.usecase.GetAccruingBalanceUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -154,6 +155,7 @@ internal abstract class TokenDetailsModelTestBase {
     private val getJointOperationSlotUseCase: GetJointOperationSlotUseCase = mockk(relaxed = true)
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk(relaxed = true)
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase = mockk(relaxed = true)
+    private val getAccruingBalanceUseCase: GetAccruingBalanceUseCase = mockk(relaxed = true)
     private val signCloreMessageUseCase: SignCloreMessageUseCase = mockk(relaxed = true)
     private val dynamicAddressesDelegateFactory: DynamicAddressesDelegate.Factory = mockk(relaxed = true)
     private val isDynamicAddressesAvailableUseCase: IsDynamicAddressesAvailableUseCase = mockk(relaxed = true)
@@ -258,6 +260,7 @@ internal abstract class TokenDetailsModelTestBase {
             getAccountCryptoCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             yieldSupplyGetRewardsBalanceUseCase = yieldSupplyGetRewardsBalanceUseCase,
+            getAccruingBalanceUseCase = getAccruingBalanceUseCase,
             signCloreMessageUseCase = signCloreMessageUseCase,
             isXpubSupportedUseCase = isXpubSupportedUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,

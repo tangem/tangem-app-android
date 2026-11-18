@@ -9,12 +9,16 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.currency.balance.ContributionResolver
+import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import com.tangem.domain.yield.supply.status.YieldModuleStatusProducer
 import com.tangem.domain.yield.supply.status.YieldModuleStatusSupplier
 import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.earn.lending.impl.contribution.LendingContribution
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
+import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
@@ -22,6 +26,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -48,17 +54,23 @@ internal class AaveContributionProviderTest {
     private val statusSupplier: YieldModuleStatusSupplier = mockk()
     private val assetResolver: AaveAssetResolver = mockk()
     private val toggles: EarnFeatureToggles = mockk()
+    private val yieldSupplyRepository: YieldSupplyRepository = mockk()
+    private val lendingProvider: LendingProvider = mockk()
 
     private val provider = AaveContributionProvider(
         statusSupplier = statusSupplier,
         assetResolver = assetResolver,
+        markets = AaveMarkets(yieldSupplyRepository),
+        lendingProvider = lendingProvider,
         earnFeatureToggles = toggles,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(statusSupplier, assetResolver, toggles)
+        clearMocks(statusSupplier, assetResolver, toggles, yieldSupplyRepository, lendingProvider)
         every { toggles.isEarnEnabled } returns true
+        every { yieldSupplyRepository.getMarketsFlow() } returns flowOf(emptyList())
+        every { lendingProvider.performanceFee } returns BigDecimal("0.15")
         every { assetResolver.resolve(any()) } returns null
         every { assetResolver.resolve(eth) } returns asset
     }
@@ -136,6 +148,72 @@ internal class AaveContributionProviderTest {
     )
 
     @Test
+    fun `GIVEN WETH market WHEN contributions THEN position accrues at the base rate net of the fee`() = runTest {
+        // Arrange
+        every { statusSupplier(statusParams) } returns flowOf(setOf(wethStatus(balance = "1.5")))
+        every { yieldSupplyRepository.getMarketsFlow() } returns flowOf(listOf(wethMarket(apy = "3", totalApyEst = "5")))
+
+        // Act
+        val frames = provider.contributions(userWallet)
+
+        // Assert
+        frames.test {
+            skipItems(1)
+            assertThat(awaitItem().resolve(eth, null)).isEqualTo(
+                LendingContribution(
+                    amount = BigDecimal("1.5"),
+                    source = StatusSource.ACTUAL,
+                    accrualRate = BigDecimal("0.0255"),
+                ),
+            )
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `GIVEN market rate changes WHEN contributions THEN new frame carries the new rate`() = runTest {
+        // Arrange
+        val markets = MutableStateFlow(listOf(wethMarket(apy = "3", totalApyEst = "3")))
+        every { statusSupplier(statusParams) } returns flowOf(setOf(wethStatus(balance = "1.5")))
+        every { yieldSupplyRepository.getMarketsFlow() } returns markets
+
+        // Act
+        val frames = provider.contributions(userWallet)
+
+        // Assert
+        frames.test {
+            skipItems(2)
+            markets.value = listOf(wethMarket(apy = "4", totalApyEst = "4"))
+            assertThat(awaitItem().resolve(eth, null)).isEqualTo(
+                LendingContribution(
+                    amount = BigDecimal("1.5"),
+                    source = StatusSource.ACTUAL,
+                    accrualRate = BigDecimal("0.0340"),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN markets read fails WHEN contributions THEN position stays without a rate`() = runTest {
+        // Arrange
+        every { statusSupplier(statusParams) } returns flowOf(setOf(wethStatus(balance = "1.5")))
+        every { yieldSupplyRepository.getMarketsFlow() } returns flow { throw IllegalStateException("read failed") }
+
+        // Act
+        val frames = provider.contributions(userWallet)
+
+        // Assert
+        frames.test {
+            skipItems(1)
+            assertThat(awaitItem().resolve(eth, null)).isEqualTo(
+                LendingContribution(amount = BigDecimal("1.5"), source = StatusSource.ACTUAL),
+            )
+            awaitComplete()
+        }
+    }
+
+    @Test
     fun `GIVEN lending contribution WHEN deltas read THEN total is the position and spendable is zero`() {
         // Arrange
         val contribution = LendingContribution(amount = BigDecimal("1.5"), source = StatusSource.ACTUAL)
@@ -154,6 +232,21 @@ internal class AaveContributionProviderTest {
             effectiveProtocolBalance = balance?.let(::BigDecimal),
             source = source,
         )
+
+    private fun wethMarket(apy: String, totalApyEst: String): YieldMarketToken = YieldMarketToken(
+        tokenAddress = WETH,
+        chainId = 1,
+        apy = BigDecimal(apy),
+        isActive = false,
+        maxFeeNative = BigDecimal.ZERO,
+        maxFeeUSD = BigDecimal.ZERO,
+        backendId = eth.network.rawId,
+        campaign = YieldIncentiveCampaign(
+            hasActiveCampaign = true,
+            rewardsApy = BigDecimal(totalApyEst) - BigDecimal(apy),
+            totalApyEst = BigDecimal(totalApyEst),
+        ),
+    )
 
     internal data class ResolveModel(
         val currency: CryptoCurrency,

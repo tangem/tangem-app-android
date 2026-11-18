@@ -2,8 +2,6 @@ package com.tangem.feature.swap.deeplink
 
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.deeplink.DeepLinkHandler
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_AMOUNT_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_TOKEN_ID_KEY
@@ -18,6 +16,8 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.pushOrReplaceCurrent
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCase
 import com.tangem.domain.exchange.RampStateManager

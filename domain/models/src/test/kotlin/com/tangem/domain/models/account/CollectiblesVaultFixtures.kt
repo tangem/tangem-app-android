@@ -7,10 +7,12 @@ import java.math.BigDecimal
 internal fun vaultBalance(amount: String, rate: String?) = CollectiblesVaultBalance(
     usdcToken = VAULT_TOKEN,
     usdcAmount = BigDecimal(amount),
-    vaultAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    vaultAddress = VAULT_ADDRESS,
     ataAddress = VAULT_ATA_ADDRESS,
     usdcFiatRate = rate?.let(::BigDecimal),
 )
+
+internal const val VAULT_ADDRESS = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
 
 internal const val VAULT_ATA_ADDRESS = "7xKXtg2CW3S3WWzQ2i8ZbT9zGx1oSBMxa1jYGvJ4Uacd"
 

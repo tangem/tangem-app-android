@@ -5,5 +5,6 @@ import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnProjection
 import java.math.BigDecimal
 
-internal fun LendingProvider.projectionOf(rate: BigDecimal): EarnProjection =
-    DefaultEarnProjection(netRate = rate * (BigDecimal.ONE - performanceFee))
+internal fun LendingProvider.projectionOf(rate: BigDecimal): EarnProjection = DefaultEarnProjection(netRateOf(rate))
+
+internal fun LendingProvider.netRateOf(rate: BigDecimal): BigDecimal = rate * (BigDecimal.ONE - performanceFee)
