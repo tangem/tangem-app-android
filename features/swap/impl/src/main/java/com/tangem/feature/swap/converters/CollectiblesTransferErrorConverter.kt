@@ -8,8 +8,8 @@ import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.feature.swap.models.SwapAlertUM
 import com.tangem.utils.converter.Converter
 
-/** The alert for a failed withdrawal from the collectibles vault; null when the user cancelled it. */
-internal class CollectiblesWithdrawalErrorConverter(
+/** The alert for a failed transfer out of the collectibles vault; null when the user cancelled it. */
+internal class CollectiblesTransferErrorConverter(
     private val onDismiss: () -> Unit,
 ) : Converter<CollectiblesAccountError, DialogMessage?> {
 
