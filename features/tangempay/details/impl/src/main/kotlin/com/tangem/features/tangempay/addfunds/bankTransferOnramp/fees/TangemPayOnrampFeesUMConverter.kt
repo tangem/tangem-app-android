@@ -2,11 +2,12 @@ package com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees
 
 import arrow.core.Either
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.default
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.tangempay.model.AccountFee
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.FeeCalculationType
@@ -16,6 +17,7 @@ import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 private const val PERCENT_SIGN = "%"
+private const val PERCENT_DECIMALS = 2
 
 internal class TangemPayOnrampFeesUMConverter(
     private val onRetryClick: () -> Unit,
@@ -46,7 +48,7 @@ internal fun BigDecimal.formatFiatAmount(currencyCode: String): String {
 }
 
 internal fun BigDecimal.formatPercentageFee(): String =
-    movePointLeft(2).format { percent(withPercentSign = false, minFractionDigits = 0) } + PERCENT_SIGN
+    format { simple(decimals = PERCENT_DECIMALS).default() } + PERCENT_SIGN
 
 internal fun formatPercentageFee(percentage: BigDecimal, fixedAmount: BigDecimal?, currencyCode: String): String {
     val percentageText = percentage.formatPercentageFee()
