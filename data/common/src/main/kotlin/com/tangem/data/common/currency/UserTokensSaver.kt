@@ -63,7 +63,9 @@ class UserTokensSaver(
             response = response,
             useEnricher = true,
             shouldMergeStaleWrite = false,
-            onFailSend = { pushTokensRetryerPool + createPushTokensRetryer(userWalletId, response) },
+            onFailSend = {
+                pushTokensRetryerPool + createPushTokensRetryer(userWalletId, response, shouldMergeStaleWrite = false)
+            },
         )
     }
 
@@ -288,13 +290,23 @@ class UserTokensSaver(
         return UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, response = this)
     }
 
-    private fun createPushTokensRetryer(userWalletId: UserWalletId, response: UserTokensResponse): Retryer {
+    /**
+     * @param shouldMergeStaleWrite `false` for a list the caller edits itself: a retry that comes back stale stops
+     * there instead of merging, as the merge would bring back a token the user removed
+     */
+    private fun createPushTokensRetryer(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        shouldMergeStaleWrite: Boolean = true,
+    ): Retryer {
         return Retryer(attempt = 3) { iteration ->
             var isSuccess = true
 
-            push(
+            val isStale = push(
                 userWalletId = userWalletId,
                 response = response,
+                useEnricher = true,
+                shouldMergeStaleWrite = shouldMergeStaleWrite,
                 onFailSend = {
                     TangemLogger.e(
                         "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
@@ -303,6 +315,8 @@ class UserTokensSaver(
                     isSuccess = false
                 },
             )
+
+            if (isStale) TangemLogger.e("Retryer: tokens of $userWalletId are not pushed, the list became stale")
 
             isSuccess
         }

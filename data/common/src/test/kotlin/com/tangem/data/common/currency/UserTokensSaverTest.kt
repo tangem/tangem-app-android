@@ -18,6 +18,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.retryer.Retryer
+import com.tangem.utils.retryer.RetryerPool
 import io.mockk.*
 import io.mockk.coVerify
 import java.io.IOException
@@ -38,6 +40,7 @@ class UserTokensSaverTest {
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
     private val walletTokensLocalStore: WalletTokensLocalStore = mockk(relaxUnitFun = true)
     private val supportedAccountTypes: SupportedAccountTypes = mockk { every { query } returns SUPPORTED_TYPES }
+    private val pushTokensRetryerPool: RetryerPool = mockk(relaxed = true)
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -45,7 +48,7 @@ class UserTokensSaverTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
         walletServerBinder = walletServerBinder,
-        pushTokensRetryerPool = mockk(),
+        pushTokensRetryerPool = pushTokensRetryerPool,
         walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         jointAccountFeatureToggles = jointAccountFeatureToggles,
         walletTokensLocalStore = walletTokensLocalStore,
@@ -62,6 +65,7 @@ class UserTokensSaverTest {
             eTagsStore,
             jointAccountFeatureToggles,
             walletTokensLocalStore,
+            pushTokensRetryerPool,
         )
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
         coEvery { eTagsStore.getSyncOrNull(any(), any()) } returns null
@@ -352,7 +356,7 @@ class UserTokensSaverTest {
         coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returns preconditionFailed()
         coEvery { tangemTechApi.getFilteredAccounts(userWalletId) } returns
             ApiResponse.Error(ApiResponseError.UnknownException(Exception("boom"))) as
-            ApiResponse<GetWalletAccountsV2Response>
+                ApiResponse<GetWalletAccountsV2Response>
 
         // Act
         userTokensSaver.push(userWalletId = userWalletId, response = response, onFailSend = { onFailSendCalled = true })
@@ -463,7 +467,9 @@ class UserTokensSaverTest {
         // Assert
         assertThat(actual).isTrue()
         coVerify(exactly = 1) { tangemTechApi.saveTokens(any(), any(), any()) }
-        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV2(walletId = any()) }
+        coVerify(exactly = 0) {
+            tangemTechApi.getWalletAccountsV2(walletId = any(), eTag = any(), supportedAccountTypes = any())
+        }
         coVerify(exactly = 0) { walletTokensLocalStore.addRemoteTokens(any(), any()) }
     }
 
@@ -484,6 +490,35 @@ class UserTokensSaverTest {
         // Assert
         assertThat(actual).isFalse()
     }
+
+    @Test
+    fun `GIVEN a network error then a stale list WHEN pushUnlessStale is retried THEN nothing is merged or retried again`() =
+        runTest {
+            // Arrange
+            val userWalletId = UserWalletId("1234567890abcdef")
+            stubUserWallet(userWalletId)
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns STALE_ETAG
+            val response = createResponse(tokens = listOf(createToken()))
+            coEvery { enricher(userWalletId, response) } returns response
+            coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>,
+                preconditionFailed(),
+            )
+            val retryer = slot<Retryer>()
+            every { pushTokensRetryerPool + capture(retryer) } returns pushTokensRetryerPool
+
+            // Act
+            userTokensSaver.pushUnlessStale(userWalletId = userWalletId, response = response)
+            retryer.captured.launch()
+
+            // Assert
+            coVerify(exactly = 2) { tangemTechApi.saveTokens(any(), any(), any()) }
+            coVerify(exactly = 0) {
+                tangemTechApi.getWalletAccountsV2(walletId = any(), eTag = any(), supportedAccountTypes = any())
+            }
+            coVerify(exactly = 0) { walletTokensLocalStore.addRemoteTokens(any(), any()) }
+        }
 
     private fun stubStaleWriteRecovery(
         userWalletId: UserWalletId,

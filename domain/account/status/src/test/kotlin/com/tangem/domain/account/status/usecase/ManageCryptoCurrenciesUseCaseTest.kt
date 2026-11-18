@@ -30,6 +30,10 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import java.math.BigDecimal
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -88,6 +92,10 @@ internal class ManageCryptoCurrenciesUseCaseTest {
         private val peer = own.copy(
             id = own.id.copy(suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = "0xpeer")),
             contractAddress = "0xpeer",
+        )
+        private val later = own.copy(
+            id = own.id.copy(suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = "0xlater")),
+            contractAddress = "0xlater",
         )
 
         @ParameterizedTest
@@ -169,7 +177,9 @@ internal class ManageCryptoCurrenciesUseCaseTest {
 
                 // Assert
                 Truth.assertThat(actual.isLeft()).isTrue()
-                coVerify(exactly = 2) { accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin))) }
+                coVerify(
+                    exactly = 2,
+                ) { accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin))) }
                 coVerify(exactly = 2) { accountsCRUDRepository.saveAccount(any()) }
             }
 
@@ -208,6 +218,68 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             coVerify(exactly = 1) { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) }
             coVerify(exactly = 0) { accountsCRUDRepository.getAccountSync(any()) }
         }
+
+        @Test
+        fun `GIVEN a second edit made while the first sync is refused WHEN the list is refreshed THEN both repeat`() =
+            runTest {
+                // Arrange
+                val account = createAccount(currencies = listOf(coin))
+                val firstSync = CompletableDeferred<Boolean>()
+                coEvery {
+                    singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+                } returns createAccountStatusList(account = account, currencies = listOf(coin))
+                coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } coAnswers {
+                    firstSync.await()
+                } andThen false
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
+                    account.copy(cryptoCurrencies = listOf(coin, peer)).some()
+
+                // Act
+                launch { useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own)) }
+                runCurrent()
+                launch { useCase.invokeAndAwait(accountId = account.accountId, add = listOf(later)) }
+                runCurrent()
+                firstSync.complete(true)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin, peer, own, later)))
+                }
+                coVerify(exactly = 3) { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) }
+            }
+
+        @Test
+        fun `GIVEN the first edit refused twice WHEN a second edit is pending THEN only the second is restored`() =
+            runTest {
+                // Arrange
+                val account = createAccount(currencies = listOf(coin))
+                val firstSync = CompletableDeferred<Boolean>()
+                coEvery {
+                    singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+                } returns createAccountStatusList(account = account, currencies = listOf(coin))
+                coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } coAnswers {
+                    firstSync.await()
+                } andThen true andThen false
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
+                    account.copy(cryptoCurrencies = listOf(coin, peer)).some()
+
+                // Act
+                launch { useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own)) }
+                runCurrent()
+                launch { useCase.invokeAndAwait(accountId = account.accountId, add = listOf(later)) }
+                runCurrent()
+                firstSync.complete(true)
+                advanceUntilIdle()
+
+                // Assert
+                coVerifyOrder {
+                    accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin, peer, own, later)))
+                    accountsCRUDRepository.syncTokensOrRefresh(userWalletId)
+                    accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin, peer, later)))
+                    accountsCRUDRepository.syncTokensOrRefresh(userWalletId)
+                }
+            }
     }
 
     data class StaleModel(
@@ -291,9 +363,13 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             // Assert
             Truth.assertThat(actual.isRight()).isTrue()
             coVerify(exactly = 1) {
-                accountsCRUDRepository.saveAccount(account.copySealed(cryptoCurrencies = listOf(createdCoin, addedToken)))
+                accountsCRUDRepository.saveAccount(
+                    account.copySealed(cryptoCurrencies = listOf(createdCoin, addedToken)),
+                )
             }
-            coVerify(inverse = true) { derivationsRepository.derivePublicKeys(any(), match<List<CryptoCurrency>> { it.isNotEmpty() }) }
+            coVerify(
+                inverse = true,
+            ) { derivationsRepository.derivePublicKeys(any(), match<List<CryptoCurrency>> { it.isNotEmpty() }) }
             coVerify(inverse = true) { walletManagersFacade.getOrCreateWalletManager(any(), any<Network>()) }
             coVerify(exactly = 1) { cryptoCurrencyBalanceFetcher(userWalletId, listOf(createdCoin, addedToken)) }
         }

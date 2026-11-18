@@ -62,6 +62,12 @@ class ManageCryptoCurrenciesUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
+    private val tokensEditSynchronizer = TokensEditSynchronizer(accountsCRUDRepository) { currencies, edit ->
+        currencies
+            .map { currency -> CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading) }
+            .modify(add = edit.add, remove = edit.remove)
+    }
+
     suspend operator fun invoke(
         accountId: AccountId,
         add: CryptoCurrency? = null,
@@ -142,12 +148,14 @@ class ManageCryptoCurrenciesUseCase(
                 }
             }
 
-            saveAccount(
+            val edit = TokensEdit(accountId = accountId, add = modifiedCurrencyList.added, remove = remove)
+            saveEditedAccount(
                 account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total),
+                edit = edit,
             )
 
             syncTokensAndLaunchUpdates(
-                edit = TokensEdit(accountId = accountId, add = modifiedCurrencyList.added, remove = remove),
+                edit = edit,
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -191,10 +199,14 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = listOf(tokenToAdd))
 
-            saveAccount(account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total))
+            val edit = TokensEdit(accountId = accountId, add = listOf(tokenToAdd), remove = emptyList())
+            saveEditedAccount(
+                account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total),
+                edit = edit,
+            )
 
             syncTokensAndLaunchUpdates(
-                edit = TokensEdit(accountId = accountId, add = listOf(tokenToAdd), remove = emptyList()),
+                edit = edit,
                 modifiedCurrencyList = modifiedCurrencyList,
                 awaitSync = awaitTokensSyncFinished,
             ) {
@@ -279,10 +291,16 @@ class ManageCryptoCurrenciesUseCase(
         return ModifiedCurrencyList(added = added, removed = removed, total = mutableCurrencies)
     }
 
-    private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
+    /** The edit is pending before the account is saved, so a refresh that lands in between still repeats it */
+    private suspend fun Raise<Throwable>.saveEditedAccount(account: Account.CryptoPortfolio, edit: TokensEdit) {
+        tokensEditSynchronizer.register(edit)
+
         catch(
             block = { accountsCRUDRepository.saveAccount(account) },
-            catch = ::raise,
+            catch = { error ->
+                tokensEditSynchronizer.unregister(edit)
+                raise(error)
+            },
         )
     }
 
@@ -311,32 +329,9 @@ class ManageCryptoCurrenciesUseCase(
     }
 
     private suspend fun syncTokens(edit: TokensEdit, modifiedCurrencyList: ModifiedCurrencyList) {
-        val userWalletId = edit.accountId.userWalletId
-        createWalletManagers(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+        createWalletManagers(userWalletId = edit.accountId.userWalletId, currencies = modifiedCurrencyList.added)
 
-        runSuspendCatching {
-            val isRefreshed = accountsCRUDRepository.syncTokensOrRefresh(userWalletId)
-            if (isRefreshed) repeatOnRefreshedAccount(edit)
-        }
-            .onFailure { TangemLogger.e("Failed to sync tokens for wallet $userWalletId", it) }
-    }
-
-    /**
-     * Another device changed the list first: the account now holds the backend's tokens, and the edit is made on
-     * them once more. A second refusal drops the edit — the list on the screen is the backend's one by then.
-     */
-    private suspend fun repeatOnRefreshedAccount(edit: TokensEdit) {
-        val account = accountsCRUDRepository.getAccountSync(edit.accountId).getOrNull() ?: return
-        val modifiedCurrencyList = account.cryptoCurrencies
-            .map { currency -> CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading) }
-            .modify(add = edit.add, remove = edit.remove)
-
-        if (!modifiedCurrencyList.hasChanges) return
-
-        accountsCRUDRepository.saveAccount(account.copySealed(cryptoCurrencies = modifiedCurrencyList.total))
-
-        val isRefusedAgain = accountsCRUDRepository.syncTokensOrRefresh(edit.accountId.userWalletId)
-        if (isRefusedAgain) TangemLogger.e("Tokens edit of ${edit.accountId} is dropped: refused as stale twice")
+        tokensEditSynchronizer.sync(edit)
     }
 
     private suspend fun syncTokensAndLaunchUpdates(
@@ -405,10 +400,7 @@ class ManageCryptoCurrenciesUseCase(
     }
 }
 
-/** What the user asked for, kept to be repeated on a list refreshed from the backend */
-private data class TokensEdit(val accountId: AccountId, val add: List<CryptoCurrency>, val remove: List<CryptoCurrency>)
-
-private data class ModifiedCurrencyList(
+internal data class ModifiedCurrencyList(
     val added: List<CryptoCurrency>,
     val removed: List<CryptoCurrency>,
     val total: List<CryptoCurrency>,
