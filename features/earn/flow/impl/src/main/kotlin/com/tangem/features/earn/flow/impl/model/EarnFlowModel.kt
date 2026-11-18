@@ -152,6 +152,8 @@ internal class EarnFlowModel @Inject constructor(
     // A load after Loading or Error resets the selector to its default fee: only a loaded-to-loaded change is a pick
     private var lastFeeType: AnalyticsParam.FeeType? = null
 
+    private var lastFeeCurrencyId: CryptoCurrency.ID? = null
+
     private val noticeAnalytics = EarnFlowNoticeAnalytics(
         analyticsEventHandler = analyticsEventHandler,
         category = params.flowProduct.analytics.category,
@@ -611,12 +613,13 @@ internal class EarnFlowModel @Inject constructor(
     fun restoredStack(): List<EarnFlowStep> = state.value.stack(hasAmountStep = amountSource != null)
 
     private fun moveTo(step: EarnFlowStep) {
+        val isNewStep = state.value.step != step
         state.update { it.copy(step = step) }
         when (step) {
             EarnFlowStep.Result -> navigation.replaceAll(step)
             else -> navigation.pushNew(step)
         }
-        if (step == EarnFlowStep.Confirm) sendConfirmScreenOpened()
+        if (step == EarnFlowStep.Confirm && isNewStep) sendConfirmScreenOpened()
     }
 
     private fun finish(exit: EarnFlowExit) = params.callback.onFinished(exit)
@@ -673,9 +676,17 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun sendFeeSpeedIfPicked(isPreviousFeeLoaded: Boolean) {
         val feeType = state.value.feeSelection?.feeType ?: return
+        val feeCurrencyId = (state.value.fee as? FeeSelectorUM.Content)
+            ?.feeExtraInfo
+            ?.feeCryptoCurrencyStatus
+            ?.currency
+            ?.id
         val previous = lastFeeType
+        val isSameFeeToken = feeCurrencyId == lastFeeCurrencyId
+        val isSpeedPick = isPreviousFeeLoaded && isSameFeeToken
         lastFeeType = feeType
-        if (isPreviousFeeLoaded && previous != null && previous != feeType) {
+        lastFeeCurrencyId = feeCurrencyId
+        if (isSpeedPick && previous != null && previous != feeType) {
             sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.FeeSpeed(category, feeType, currentScreen(type)) }
         }
     }

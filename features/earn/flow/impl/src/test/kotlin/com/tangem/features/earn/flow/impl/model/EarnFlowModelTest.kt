@@ -1979,6 +1979,21 @@ internal class EarnFlowModelTest {
             }
 
         @Test
+        fun `GIVEN the confirm screen WHEN Next arrives again THEN confirm screen opened is not sent again`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ConfirmScreenOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN Done WHEN the result shows THEN success screen opened is sent with the rate`() = runTest {
             // Arrange
             coEvery { session.screenAnalytics(action = Deposit()) } returns
@@ -2545,6 +2560,23 @@ internal class EarnFlowModelTest {
             }
 
         @Test
+        fun `GIVEN no max amount on withdraw WHEN Max and percent pressed THEN no button event is sent`() = runTest {
+            // Arrange
+            coEvery { session.maxAmount(action = any()) } returns EarnSessionError.Failed().left()
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Act
+            flow.onMaxValueClick()
+            flow.onPercentClick(percent = 50)
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.Max>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.Percent>()) }
+            flow.onDestroy()
+        }
+
+        @Test
         fun `GIVEN Normal fee loaded WHEN Max selected THEN fee speed Max is sent once`() = runTest {
             // Arrange
             val flow = createModel(action = Deposit())
@@ -2567,6 +2599,35 @@ internal class EarnFlowModelTest {
                 )
             }
             verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an ETH fee loaded WHEN the fee token is switched THEN no fee speed is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            advanceUntilIdle()
+            val tokenFee = testFeeContent("1.5").let { content ->
+                content.copy(
+                    feeExtraInfo = content.feeExtraInfo.copy(
+                        feeCryptoCurrencyStatus = MockYieldSupply.loadedStatus(
+                            currency = MockYieldSupply.token(),
+                            amount = BigDecimal("100"),
+                            fiatAmount = BigDecimal("100"),
+                            fiatRate = BigDecimal.ONE,
+                        ),
+                    ),
+                )
+            }
+
+            // Act
+            flow.onFeeResult(tokenFee)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
             flow.onDestroy()
         }
 
