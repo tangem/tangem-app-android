@@ -26,7 +26,11 @@ internal fun CollectiblesInventoryContent(
     modifier: Modifier = Modifier,
 ) {
     when (content) {
-        ContentUM.Loading -> CollectiblesInventorySkeleton(contentPadding = contentPadding, modifier = modifier)
+        is ContentUM.Loading -> CollectiblesInventorySkeleton(
+            info = content.info,
+            contentPadding = contentPadding,
+            modifier = modifier,
+        )
         is ContentUM.Items -> CollectiblesInventoryCardsGrid(
             items = content.items,
             gridState = gridState,
