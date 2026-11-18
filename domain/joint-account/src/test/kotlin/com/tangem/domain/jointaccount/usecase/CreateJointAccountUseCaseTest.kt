@@ -267,31 +267,65 @@ internal class CreateJointAccountUseCaseTest {
     }
 
     @Test
-    fun `GIVEN creation request fails and the wallet is at the limit WHEN invoke THEN AccountsLimitReached`() =
+    fun `GIVEN creation is rejected and the wallet is at the limit WHEN invoke THEN AccountsLimitReached`() = runTest {
+        // Arrange
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+        coEvery { repository.create(any(), any(), any()) } returns
+            JointAccountCreationResult.Rejected(cause = IllegalStateException("400"))
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns List(size = 20) { account() }
+
+        // Act
+        val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountCreationError.AccountsLimitReached.left())
+        coVerify(exactly = 1) { fetcher.invoke(params = SingleJointAccountListFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN creation is rejected below the limit WHEN invoke THEN Failed`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("400")
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+        coEvery { repository.create(any(), any(), any()) } returns JointAccountCreationResult.Rejected(cause = cause)
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns listOf(account())
+
+        // Act
+        val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
+    }
+
+    @Test
+    fun `GIVEN creation is rejected and the refetch fails WHEN invoke THEN Failed despite a full stored list`() =
         runTest {
-            // Arrange — the backend refuses the 21st account with the same 400 as a malformed request
+            // Arrange
+            val cause = IllegalStateException("400")
             coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
             coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
-            coEvery { repository.create(any(), any(), any()) } throws IllegalStateException("400")
+            coEvery { repository.create(any(), any(), any()) } returns
+                JointAccountCreationResult.Rejected(cause = cause)
+            coEvery { fetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
             coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns List(size = 20) { account() }
 
             // Act
             val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
             // Assert
-            assertThat(actual).isEqualTo(JointAccountCreationError.AccountsLimitReached.left())
-            coVerify(exactly = 1) { fetcher.invoke(params = SingleJointAccountListFetcher.Params(WALLET_ID)) }
+            assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
         }
 
     @Test
-    fun `GIVEN creation request and the refetch fail WHEN invoke THEN the stored list still decides`() = runTest {
-        // Arrange
-        val cause = IllegalStateException("no network")
+    fun `GIVEN creation request throws and the wallet is at the limit WHEN invoke THEN Failed`() = runTest {
+        // Arrange — a lost answer of the request that created the 20th account must not read as the limit
+        val cause = IllegalStateException("timeout")
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
         coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
         coEvery { repository.create(any(), any(), any()) } throws cause
-        coEvery { fetcher.invoke(params = any()) } returns cause.left()
-        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns emptyList()
+        coEvery { repository.getStoredJointAccounts(WALLET_ID) } returns List(size = 20) { account() }
 
         // Act
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)

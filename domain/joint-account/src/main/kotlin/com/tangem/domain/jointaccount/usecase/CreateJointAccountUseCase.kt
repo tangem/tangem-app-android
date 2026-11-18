@@ -1,7 +1,6 @@
 package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
@@ -85,7 +84,12 @@ class CreateJointAccountUseCase(
                     signature = signResult.signature,
                 )
             }
-            .getOrElse { cause -> raise(toRequestError(userWalletId = userWalletId, cause = cause)) }
+            .mapLeft(JointAccountFlowError::Failed)
+            .bind()
+
+        if (result is JointAccountCreationResult.Rejected) {
+            raise(toRejectionError(userWalletId = userWalletId, cause = result.cause))
+        }
 
         val refresh = refreshAccounts(userWalletId = userWalletId)
 
@@ -102,6 +106,7 @@ class CreateJointAccountUseCase(
 
                 ensureNotNull(own) { JointAccountCreationError.ExistingAccountNotFound }
             }
+            is JointAccountCreationResult.Rejected -> raise(JointAccountFlowError.Failed(cause = result.cause))
         }
     }
 
@@ -140,16 +145,20 @@ class CreateJointAccountUseCase(
         }
     }
 
-    private suspend fun toRequestError(userWalletId: UserWalletId, cause: Throwable): JointAccountCreationError {
+    /** Only a list that was just refreshed can blame the limit: a stale one may count an archived account. */
+    private suspend fun toRejectionError(userWalletId: UserWalletId, cause: Throwable): JointAccountCreationError {
+        val failed = JointAccountFlowError.Failed(cause = cause)
+
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
-            TangemLogger.e("Failed to refetch joint accounts of $userWalletId after a failed creation", it)
+            TangemLogger.e("Failed to refetch joint accounts of $userWalletId after a rejected creation", it)
+            return failed
         }
         val jointAccountsCount = repository.getStoredJointAccounts(userWalletId = userWalletId).size
 
         return if (jointAccountsCount >= AccountList.MAX_JOINT_ACCOUNTS_COUNT) {
             JointAccountCreationError.AccountsLimitReached
         } else {
-            JointAccountFlowError.Failed(cause = cause)
+            failed
         }
     }
 
