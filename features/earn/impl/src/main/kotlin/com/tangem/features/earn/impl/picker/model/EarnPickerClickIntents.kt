@@ -3,7 +3,7 @@ package com.tangem.features.earn.impl.picker.model
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.session.EarnAction
 
 internal interface EarnPickerClickIntents {
@@ -23,7 +23,7 @@ internal interface EarnPickerClickIntents {
 
     fun onIncentiveClick()
 
-    fun onInfoClick(block: EarnTextBlock)
+    fun onInfoClick(info: EarnRowInfo)
 
     fun onLinkClick(url: String)
 

@@ -45,8 +45,8 @@ import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
-import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
@@ -445,9 +445,9 @@ internal class LendingEarnProductTest {
                         EarnRow(
                             label = resourceReference(R.string.token_details_balance_total),
                             value = EarnValue.Amount(BigDecimal("2")),
-                            info = EarnTextBlock(
+                            info = EarnRowInfo.Text(
                                 title = resourceReference(R.string.token_details_balance_total),
-                                description = resourceReference(
+                                text = resourceReference(
                                     R.string.lending_position_total_balance_info,
                                     wrappedList(FEE_TEXT),
                                 ),
@@ -456,9 +456,9 @@ internal class LendingEarnProductTest {
                         EarnRow(
                             label = resourceReference(R.string.token_details_balance_available),
                             value = EarnValue.Amount(BigDecimal("2")),
-                            info = EarnTextBlock(
+                            info = EarnRowInfo.Text(
                                 title = resourceReference(R.string.token_details_balance_available),
-                                description = resourceReference(R.string.lending_position_available_balance_info),
+                                text = resourceReference(R.string.lending_position_available_balance_info),
                             ),
                         ),
                     ),

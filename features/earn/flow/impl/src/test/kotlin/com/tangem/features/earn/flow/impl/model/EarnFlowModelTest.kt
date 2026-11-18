@@ -41,6 +41,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
@@ -48,6 +49,7 @@ import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
@@ -1729,6 +1731,52 @@ internal class EarnFlowModelTest {
 
             // Assert
             verify(exactly = 1) { urlOpener.openUrl(TEST_LEARN_MORE_URL) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class RowInfo {
+
+        private val info = EarnRowInfo.Text(title = stringReference("Current APY"), text = stringReference("It varies"))
+        private val row = EarnRow(
+            label = stringReference("Current APY"),
+            value = EarnValue.Text(stringReference("5.5%")),
+            info = info,
+        )
+
+        @Test
+        fun `GIVEN a confirm row with info WHEN its info pressed THEN rowInfo holds its sheet`() = runTest {
+            // Arrange
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns
+                TestPlan(rows = listOf(row)).right()
+            val model = createConfirmedModel()
+
+            // Act
+            model.confirm.value?.rows?.single()?.onInfoClick?.invoke()
+
+            // Assert
+            val expected = EarnRowInfoUM.Text(
+                title = stringReference("Current APY"),
+                text = stringReference("It varies"),
+            )
+            assertThat(model.rowInfo.value).isEqualTo(expected)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an open row info WHEN onRowInfoDismiss THEN rowInfo is cleared`() = runTest {
+            // Arrange
+            coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns
+                TestPlan(rows = listOf(row)).right()
+            val model = createConfirmedModel()
+            model.confirm.value?.rows?.single()?.onInfoClick?.invoke()
+
+            // Act
+            model.onRowInfoDismiss()
+
+            // Assert
+            assertThat(model.rowInfo.value).isNull()
             model.onDestroy()
         }
     }

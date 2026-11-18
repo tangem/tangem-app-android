@@ -30,6 +30,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
@@ -145,17 +146,17 @@ internal class PooledStakingMapper @Inject constructor() {
             row(
                 label = withdrawalsLabel,
                 value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
-                info = textBlock(
+                info = EarnRowInfo.Text(
                     title = withdrawalsLabel,
-                    description = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
+                    text = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
                 ),
             ),
             row(
                 label = feeLabel,
                 value = resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList(percent)),
-                info = textBlock(
+                info = EarnRowInfo.Text(
                     title = feeLabel,
-                    description = resourceReference(
+                    text = resourceReference(
                         id = R.string.earn_product_details_performance_fee_info,
                         formatArgs = wrappedList(percent),
                     ),
@@ -164,15 +165,10 @@ internal class PooledStakingMapper @Inject constructor() {
         )
     }
 
-    private fun row(label: TextReference, value: TextReference, info: EarnTextBlock? = null): EarnRow = EarnRow(
+    private fun row(label: TextReference, value: TextReference, info: EarnRowInfo? = null): EarnRow = EarnRow(
         label = label,
         value = EarnValue.Text(value),
         info = info,
-    )
-
-    private fun textBlock(title: TextReference, description: TextReference): EarnTextBlock = EarnTextBlock(
-        title = title,
-        description = description,
     )
 
     /** A stake that is known or could not be read: "Start earning" must not be offered over a possible balance. */

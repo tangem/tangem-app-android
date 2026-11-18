@@ -1,16 +1,16 @@
 package com.tangem.features.earn.product.api.product
 
 import com.tangem.common.TangemBlogUrlBuilder
-import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.api.ui.EarnRowUM
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 fun EarnRow.toUM(
-    onInfoClick: (EarnTextBlock) -> Unit,
+    onInfoClick: (EarnRowInfo) -> Unit,
     onLinkClick: ((String) -> Unit)? = null,
     yearlyFiatEarningsText: (BigDecimal) -> TextReference = { amount -> stringReference(amount.toPlainString()) },
     amountText: (BigDecimal) -> TextReference = { amount -> stringReference(amount.toPlainString()) },
@@ -22,7 +22,7 @@ fun EarnRow.toUM(
         is EarnValue.Amount -> amountText(rowValue.value)
         is EarnValue.YearlyFiatEarnings -> yearlyFiatEarningsText(rowValue.value)
     },
-    onInfoClick = info?.let { block -> { onInfoClick(block) } },
+    onInfoClick = info?.let { rowInfo -> { onInfoClick(rowInfo) } },
     onValueClick = value.linkClick(onLinkClick),
 )
 
@@ -32,10 +32,14 @@ private fun EarnValue.linkClick(onLinkClick: ((String) -> Unit)?): (() -> Unit)?
     return { openLink(link.url) }
 }
 
-fun EarnTextBlock.toUM(): TangemModalContentUM.Informer.Item = TangemModalContentUM.Informer.Item(
-    title = title,
-    description = description,
-)
+fun EarnRowInfo.toUM(): EarnRowInfoUM = when (this) {
+    is EarnRowInfo.Text -> EarnRowInfoUM.Text(title = title, text = text)
+    is EarnRowInfo.Items -> EarnRowInfoUM.Items(
+        title = title,
+        items = items.map { item -> EarnRowInfoUM.Item(title = item.title, description = item.description) }
+            .toImmutableList(),
+    )
+}
 
 fun EarnHowItWorks.toUM(onLearnMoreClick: (TangemBlogUrlBuilder.Post) -> Unit): EarnHowItWorksUM = EarnHowItWorksUM(
     title = title,

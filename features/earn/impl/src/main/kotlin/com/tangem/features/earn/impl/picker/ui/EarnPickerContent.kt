@@ -83,7 +83,7 @@ import com.tangem.features.earn.impl.ui.EarnIncentiveBadge
 import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.session.EarnAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -557,7 +557,7 @@ private object PreviewData {
         override fun onRetryClick(product: EarnProduct) = Unit
         override fun onOverviewRetryClick() = Unit
         override fun onIncentiveClick() = Unit
-        override fun onInfoClick(block: EarnTextBlock) = Unit
+        override fun onInfoClick(info: EarnRowInfo) = Unit
         override fun onLinkClick(url: String) = Unit
         override fun onCloseClick() = Unit
     }

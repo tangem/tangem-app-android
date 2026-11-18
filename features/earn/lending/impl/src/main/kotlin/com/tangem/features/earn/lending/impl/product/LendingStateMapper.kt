@@ -20,6 +20,7 @@ import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.rate.formatEarnPercent
@@ -35,9 +36,9 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         EarnRow(
             label = resourceReference(R.string.earn_product_details_risk),
             value = EarnValue.Text(resourceReference(R.string.earn_risk_level_low)),
-            info = EarnTextBlock(
+            info = EarnRowInfo.Text(
                 title = resourceReference(R.string.earn_product_details_risk_info_title),
-                description = resourceReference(R.string.earn_product_details_risk_low_description),
+                text = resourceReference(R.string.earn_product_details_risk_low_description),
             ),
         ),
         EarnRow(
@@ -174,7 +175,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         private fun infoRow(label: TextReference, value: EarnValue, info: TextReference) = EarnRow(
             label = label,
             value = value,
-            info = EarnTextBlock(title = label, description = info),
+            info = EarnRowInfo.Text(title = label, text = info),
         )
     }
 }

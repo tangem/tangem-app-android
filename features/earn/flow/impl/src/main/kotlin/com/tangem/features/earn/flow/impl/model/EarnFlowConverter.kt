@@ -36,7 +36,7 @@ import com.tangem.features.earn.flow.impl.ui.state.EarnIconsUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnLegalUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
 import com.tangem.features.earn.product.api.product.EarnRow
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
@@ -255,7 +255,7 @@ internal class EarnFlowConverter @Inject constructor() {
     private fun confirmRows(
         rows: List<EarnRow>,
         appCurrency: AppCurrency?,
-        onInfoClick: (EarnTextBlock) -> Unit,
+        onInfoClick: (EarnRowInfo) -> Unit,
     ): ImmutableList<EarnRowUM> {
         val earningsText = appCurrency?.let { currency ->
             { earnings: BigDecimal -> yearlyEarningsText(earnings, currency) }
@@ -352,13 +352,13 @@ internal data class EarnAmountCallbacks(
 )
 
 internal data class EarnConfirmCallbacks(
-    val onInfoClick: (EarnTextBlock) -> Unit,
+    val onInfoClick: (EarnRowInfo) -> Unit,
     val onConfirm: () -> Unit,
     val onLegalClick: (String) -> Unit,
 )
 
 internal data class EarnResultCallbacks(
-    val onInfoClick: (EarnTextBlock) -> Unit,
+    val onInfoClick: (EarnRowInfo) -> Unit,
     val onExit: (EarnFlowExit) -> Unit,
     val onExploreClick: (String) -> Unit,
     val onShareClick: (String) -> Unit,

@@ -40,6 +40,7 @@ import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
@@ -120,9 +121,9 @@ internal class EarnInfoConverterTest {
         }
 
         @Test
-        fun `GIVEN details with info and link WHEN row clicks THEN callbacks receive the block and the url`() {
+        fun `GIVEN details with info and link WHEN row clicks THEN callbacks receive the info and the url`() {
             // Arrange
-            val info = EarnTextBlock(stringReference("Risk"), stringReference("How risky"))
+            val info = EarnRowInfo.Text(title = stringReference("Risk"), text = stringReference("How risky"))
             val rows = listOf(
                 EarnRow(stringReference("Risk"), EarnValue.Text(stringReference("Low")), info),
                 EarnRow(stringReference("Protocol"), EarnValue.Link(stringReference("Aave"), "https://aave.com")),
@@ -610,20 +611,22 @@ internal class EarnInfoConverterTest {
                 title = stringReference("Yield from Ethereum itself."),
                 description = stringReference("You earn from securing the network, not from lending."),
             )
-            val withdrawalsInfo = EarnTextBlock(
+            val riskInfo = EarnRowInfo.Items(
+                title = stringReference("Risk information"),
+                items = listOf(EarnTextBlock(stringReference("Low risk"), stringReference("High liquidity"))),
+            )
+            val withdrawalsInfo = EarnRowInfo.Text(
                 title = stringReference("Withdrawals"),
-                description = stringReference(
+                text = stringReference(
                     "Withdrawals take up to 5 days, because Ethereum releases staked ETH through an exit queue.",
                 ),
             )
-            val feeInfo = EarnTextBlock(
+            val feeInfo = EarnRowInfo.Text(
                 title = stringReference("Performance fee"),
-                description = stringReference(
-                    "10% of the yield you earn. It is not charged on the amount you deposit.",
-                ),
+                text = stringReference("10% of the yield you earn. It is not charged on the amount you deposit."),
             )
             val details = listOf(
-                EarnRow(stringReference("Risk"), EarnValue.Text(stringReference("Low"))),
+                EarnRow(stringReference("Risk"), EarnValue.Text(stringReference("Low")), riskInfo),
                 EarnRow(stringReference("Validator"), EarnValue.Text(stringReference("P2P"))),
                 EarnRow(stringReference("Withdrawals"), EarnValue.Text(stringReference("Up to 5 days")), withdrawalsInfo),
                 EarnRow(stringReference("Performance fee"), EarnValue.Text(stringReference("10% of yield")), feeInfo),
@@ -675,7 +678,7 @@ internal class EarnInfoConverterTest {
                 )
             assertThat(actual.details.map { Triple(it.label, it.value, it.onInfoClick != null) })
                 .containsExactly(
-                    Triple(stringReference("Risk"), stringReference("Low"), false),
+                    Triple(stringReference("Risk"), stringReference("Low"), true),
                     Triple(stringReference("Validator"), stringReference("P2P"), false),
                     Triple(stringReference("Withdrawals"), stringReference("Up to 5 days"), true),
                     Triple(stringReference("Performance fee"), stringReference("10% of yield"), true),
@@ -774,7 +777,7 @@ internal class EarnInfoConverterTest {
     internal sealed interface Call {
         data class Action(val action: EarnAction) : Call
         data class Blocked(val block: EarnBlock) : Call
-        data class Info(val block: EarnTextBlock) : Call
+        data class Info(val info: EarnRowInfo) : Call
         data class Link(val url: String) : Call
         data class HowItWorks(val howItWorks: EarnHowItWorks) : Call
         data object Close : Call

@@ -3,12 +3,12 @@ package com.tangem.features.earn.product.api.product
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.api.ui.EarnRowUM
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -17,11 +17,11 @@ import java.math.BigDecimal
 internal class EarnRowMappingTest {
 
     @Test
-    fun `GIVEN row with info WHEN toUM and info clicked THEN callback receives that text block`() {
+    fun `GIVEN row with info WHEN toUM and info clicked THEN callback receives that info`() {
         // Arrange
-        val info = createTextBlock(title = "APY", description = "Annual percentage yield")
+        val info = EarnRowInfo.Text(title = stringReference("APY"), text = stringReference("Annual percentage yield"))
         val row = createRow(info = info)
-        val received = mutableListOf<EarnTextBlock>()
+        val received = mutableListOf<EarnRowInfo>()
 
         // Act
         row.toUM(onInfoClick = received::add, onLinkClick = {}).onInfoClick?.invoke()
@@ -33,8 +33,8 @@ internal class EarnRowMappingTest {
     @Test
     fun `GIVEN row with info WHEN toUM without click THEN callback is not invoked`() {
         // Arrange
-        val row = createRow(info = createTextBlock())
-        val received = mutableListOf<EarnTextBlock>()
+        val row = createRow(info = createInfo())
+        val received = mutableListOf<EarnRowInfo>()
 
         // Act
         row.toUM(onInfoClick = received::add, onLinkClick = {})
@@ -46,9 +46,9 @@ internal class EarnRowMappingTest {
     @Test
     fun `GIVEN row with info WHEN toUM and info clicked twice THEN callback is invoked each time`() {
         // Arrange
-        val info = createTextBlock()
+        val info = createInfo()
         val row = createRow(info = info)
-        val received = mutableListOf<EarnTextBlock>()
+        val received = mutableListOf<EarnRowInfo>()
 
         // Act
         val onInfoClick = row.toUM(onInfoClick = received::add, onLinkClick = {}).onInfoClick
@@ -78,7 +78,7 @@ internal class EarnRowMappingTest {
         // Arrange
         val label = stringReference("Rewards")
         val value = stringReference("0.5 ETH")
-        val row = createRow(label = label, value = EarnValue.Text(value), info = createTextBlock())
+        val row = createRow(label = label, value = EarnValue.Text(value), info = createInfo())
 
         // Act
         val actual = row.toUM(onInfoClick = {}, onLinkClick = {})
@@ -87,22 +87,6 @@ internal class EarnRowMappingTest {
         val expected = EarnRowUM(label = label, value = value, onInfoClick = null)
         assertThat(actual.onInfoClick).isNotNull()
         assertThat(actual.copy(onInfoClick = null)).isEqualTo(expected)
-    }
-
-    @Test
-    fun `GIVEN text block WHEN toUM THEN informer item has the same title and description`() {
-        // Arrange
-        val block = createTextBlock(title = "Withdrawal", description = "Takes up to 3 days")
-
-        // Act
-        val actual = block.toUM()
-
-        // Assert
-        val expected = TangemModalContentUM.Informer.Item(
-            title = stringReference("Withdrawal"),
-            description = stringReference("Takes up to 3 days"),
-        )
-        assertThat(actual).isEqualTo(expected)
     }
 
     @Test
@@ -262,21 +246,52 @@ internal class EarnRowMappingTest {
     }
 
     @Test
-    fun `GIVEN text block with icon WHEN toUM THEN informer item carries only title and description`() {
+    fun `GIVEN text info WHEN toUM THEN the sheet has the same title and paragraph`() {
         // Arrange
-        val block = EarnTextBlock(
-            title = stringReference("No lock-ups"),
-            description = stringReference("Withdraw anytime"),
-            icon = TangemIconUM.Icon(Icons.ic_info_16),
+        val info = EarnRowInfo.Text(title = stringReference("Withdrawals"), text = stringReference("Usually instant"))
+
+        // Act
+        val actual = info.toUM()
+
+        // Assert
+        val expected = EarnRowInfoUM.Text(
+            title = stringReference("Withdrawals"),
+            text = stringReference("Usually instant"),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN items info WHEN toUM THEN the sheet lists the items in order under the title`() {
+        // Arrange
+        val info = EarnRowInfo.Items(
+            title = stringReference("Risk information"),
+            items = listOf(
+                createTextBlock(title = "Low risk", description = "Shorter withdrawals"),
+                EarnTextBlock(
+                    title = stringReference("High risk"),
+                    description = stringReference("May use leverage"),
+                    icon = TangemIconUM.Icon(Icons.ic_info_16),
+                ),
+            ),
         )
 
         // Act
-        val actual = block.toUM()
+        val actual = info.toUM()
 
         // Assert
-        val expected = TangemModalContentUM.Informer.Item(
-            title = stringReference("No lock-ups"),
-            description = stringReference("Withdraw anytime"),
+        val expected = EarnRowInfoUM.Items(
+            title = stringReference("Risk information"),
+            items = persistentListOf(
+                EarnRowInfoUM.Item(
+                    title = stringReference("Low risk"),
+                    description = stringReference("Shorter withdrawals"),
+                ),
+                EarnRowInfoUM.Item(
+                    title = stringReference("High risk"),
+                    description = stringReference("May use leverage"),
+                ),
+            ),
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -284,8 +299,13 @@ internal class EarnRowMappingTest {
     private fun createRow(
         label: TextReference = stringReference("Label"),
         value: EarnValue = EarnValue.Text(stringReference("Value")),
-        info: EarnTextBlock? = null,
+        info: EarnRowInfo? = null,
     ) = EarnRow(label = label, value = value, info = info)
+
+    private fun createInfo(title: String = "Title", text: String = "Description") = EarnRowInfo.Text(
+        title = stringReference(title),
+        text = stringReference(text),
+    )
 
     private fun createTextBlock(title: String = "Title", description: String = "Description") = EarnTextBlock(
         title = stringReference(title),
