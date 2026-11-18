@@ -18,6 +18,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.topbar.collapsing.entity.TangemCollapsingAppBarState
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -42,6 +43,7 @@ fun TangemCollapsingTopBar(
         val collapsingConstraints = constraints.copy(
             minWidth = 0,
             minHeight = 0,
+            maxHeight = Constraints.Infinity,
         )
         val collapsingPlaceable = measurables[0].measure(collapsingConstraints)
 
