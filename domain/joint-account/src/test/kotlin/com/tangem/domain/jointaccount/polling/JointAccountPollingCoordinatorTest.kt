@@ -4,6 +4,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import io.mockk.every
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
@@ -11,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -27,6 +31,12 @@ internal class JointAccountPollingCoordinatorTest {
 
     private val fetcher: SingleJointAccountListFetcher = mockk()
     private val isLinked = MutableStateFlow(true)
+    private val userWallets = MutableStateFlow<List<UserWallet>?>(
+        listOf(WALLET_ID, OTHER_WALLET_ID).map { id -> mockk<UserWallet> { every { walletId } returns id } },
+    )
+    private val userWalletsListRepository: UserWalletsListRepository = mockk {
+        every { userWallets } returns this@JointAccountPollingCoordinatorTest.userWallets
+    }
 
     @BeforeEach
     fun resetMocks() {
@@ -454,10 +464,39 @@ internal class JointAccountPollingCoordinatorTest {
         coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
     }
 
+    @Test
+    fun `GIVEN a polled wallet WHEN it is forgotten THEN polling stops and the request in flight is cancelled`() =
+        runTest {
+            // Arrange
+            var isRequestCancelled = false
+            coEvery { fetcher.invoke(userWalletId = WALLET_ID) } coAnswers {
+                try {
+                    awaitCancellation()
+                } finally {
+                    isRequestCancelled = true
+                }
+            }
+            val coordinator = createCoordinator(testScope = this)
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { } }
+            advanceTimeBy(POLL_INTERVAL_MILLIS)
+            runCurrent()
+
+            // Act
+            userWallets.value = userWallets.value.orEmpty().filterNot { it.walletId == WALLET_ID }
+            runCurrent()
+            advanceTimeBy(delayTimeMillis = 60_000L)
+            runCurrent()
+
+            // Assert
+            assertThat(isRequestCancelled).isTrue()
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+        }
+
     private fun createCoordinator(testScope: TestScope): JointAccountPollingCoordinator {
         return JointAccountPollingCoordinator(
             fetcher = fetcher,
             isWalletLinked = { isLinked },
+            userWalletsListRepository = userWalletsListRepository,
             appScope = TestAppCoroutineScope(testScope.backgroundScope.coroutineContext),
             now = { testScope.testScheduler.currentTime },
         )

@@ -1,5 +1,6 @@
 package com.tangem.domain.jointaccount.polling
 
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -9,10 +10,12 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
@@ -46,11 +49,14 @@ import kotlin.time.Duration.Companion.seconds
  * [fetch] itself never throws — a failed request surfaces as [arrow.core.Either.Left] and is only logged — but
  * should the producer coroutine still die for some other reason, it retries after [POLL_INTERVAL] rather than
  * leaving the wallet's ticker dead in [tickers] for the rest of the process.
+ *
+ * @param isWalletLinked passed as a function: the use case behind it lives in a module that depends on this one
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class JointAccountPollingCoordinator(
     private val fetcher: SingleJointAccountListFetcher,
     private val isWalletLinked: (UserWalletId) -> Flow<Boolean>,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val appScope: AppCoroutineScope,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -69,19 +75,28 @@ class JointAccountPollingCoordinator(
         return tickers.computeIfAbsent(walletId, ::createTicker)
     }
 
-    private fun createTicker(walletId: UserWalletId): Flow<Unit> = isWalletLinked(walletId)
-        .distinctUntilChanged()
-        .flatMapLatest { isLinked -> if (isLinked) ticks(walletId) else emptyFlow() }
-        .retryWhen { cause, _ ->
-            TangemLogger.e("Joint account polling ticker crashed for wallet $walletId, retrying", cause)
-            delay(POLL_INTERVAL)
-            true
-        }
-        .shareIn(
-            scope = appScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = STOP_TIMEOUT_MILLIS),
-            replay = 0,
-        )
+    /**
+     * A forgotten wallet stops being polled at once, the request in flight included: the ticker outlives its
+     * subscribers by [STOP_TIMEOUT_MILLIS], and an answer stored after the wallet's data is cleaned would bring
+     * the joint accounts of a wallet that is gone back to the disk.
+     */
+    private fun createTicker(walletId: UserWalletId): Flow<Unit> =
+        combine(isWalletLinked(walletId), isWalletStored(walletId)) { isLinked, isStored -> isLinked && isStored }
+            .distinctUntilChanged()
+            .flatMapLatest { isPollable -> if (isPollable) ticks(walletId) else emptyFlow() }
+            .retryWhen { cause, _ ->
+                TangemLogger.e("Joint account polling ticker crashed for wallet $walletId, retrying", cause)
+                delay(POLL_INTERVAL)
+                true
+            }
+            .shareIn(
+                scope = appScope,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = STOP_TIMEOUT_MILLIS),
+                replay = 0,
+            )
+
+    private fun isWalletStored(walletId: UserWalletId): Flow<Boolean> = userWalletsListRepository.userWallets
+        .map { wallets -> wallets.orEmpty().any { it.walletId == walletId } }
 
     private fun ticks(walletId: UserWalletId): Flow<Unit> = flow {
         var failuresInRow = 0
