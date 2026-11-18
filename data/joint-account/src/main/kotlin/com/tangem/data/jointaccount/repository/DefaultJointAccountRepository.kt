@@ -7,6 +7,7 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.ApiResponseRaise
@@ -321,12 +322,23 @@ internal class DefaultJointAccountRepository @Inject constructor(
     ): Either<JointOperationRejectError, Unit> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                jointAccountApi.rejectJointOperation(
+                val response = jointAccountApi.rejectJointOperation(
                     walletId = userWalletId.stringValue,
                     operationId = operationId,
-                ).bind()
+                )
+                response.bind()
 
-                Unit.right()
+                val mediaType = response.headers[CONTENT_TYPE_HEADER]?.firstOrNull()?.substringBefore(';')?.trim()
+                val isRecorded = when (mediaType) {
+                    null -> (response as? ApiResponse.Success)?.code == Code.NO_CONTENT
+                    else -> mediaType.endsWith(JSON_SUBTYPE, ignoreCase = true)
+                }
+                if (isRecorded) {
+                    Unit.right()
+                } else {
+                    val cause = IllegalStateException("Unexpected answer to the refusal: $mediaType")
+                    JointOperationRejectError.Failed(cause = cause).left()
+                }
             },
             onError = { error -> rejectErrorConverter.convert(error).left() },
         )
@@ -335,6 +347,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private companion object {
         const val TAG = "JointAccountRepository"
         const val NO_JOINT_ACCOUNTS = 0
+        const val CONTENT_TYPE_HEADER = "content-type"
+        const val JSON_SUBTYPE = "json"
         val DEAD_INVITE_CODES = setOf(Code.CONFLICT, Code.NOT_FOUND)
         val SLOT_UNAVAILABLE_CODES = setOf(Code.FORBIDDEN, Code.NOT_FOUND, Code.CONFLICT)
     }
