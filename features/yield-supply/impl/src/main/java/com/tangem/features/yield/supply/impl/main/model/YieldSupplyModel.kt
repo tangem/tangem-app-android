@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.main.model
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
 import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
@@ -110,18 +111,26 @@ internal class YieldSupplyModel @Inject constructor(
             val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
             if (isAvailable) {
                 loadUserWalletData()
+                fetchOriginAccount()
+            }
+        }
+    }
+
+    private suspend fun fetchOriginAccount() {
+        when (params.account) {
+            AccountKind.Portfolio -> {
                 singleNetworkStatusFetcher(
                     params = SingleNetworkStatusFetcher.Params(
                         userWalletId = params.userWalletId,
                         network = cryptoCurrency.network,
                     ),
                 )
-                nonPortfolioCurrenciesFetcher.fetch(
-                    userWalletId = params.userWalletId,
-                    network = cryptoCurrency.network,
-                )
                 fetchYieldModuleStatus()
             }
+            AccountKind.Money -> nonPortfolioCurrenciesFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = cryptoCurrency.network,
+            )
         }
     }
 
@@ -151,7 +160,11 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         combine(
-            flow = currencyStatusResolver.observe(userWalletId = params.userWalletId, currency = cryptoCurrency),
+            flow = currencyStatusResolver.observe(
+                userWalletId = params.userWalletId,
+                currency = cryptoCurrency,
+                account = params.account,
+            ),
             flow2 = yieldSupplyEnterStatusFlowUseCase(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = cryptoCurrency,
@@ -234,6 +247,7 @@ internal class YieldSupplyModel @Inject constructor(
             userWalletId = params.userWalletId,
             cryptoCurrency = cryptoCurrencyStatus.currency,
             apy = apy,
+            account = params.account,
         )
     }
 
@@ -346,10 +360,7 @@ internal class YieldSupplyModel @Inject constructor(
                 val minAmount = yieldSupplyMinAmountUseCase(
                     userWalletId = userWallet.walletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    isHeldOutsidePortfolio = currencyStatusResolver.isHeldOutsidePortfolio(
-                        userWalletId = userWallet.walletId,
-                        currency = cryptoCurrencyStatus.currency,
-                    ),
+                    isHeldOutsidePortfolio = params.account.isHeldOutsidePortfolio,
                 ).getOrNull()
                 if (minAmount != null) {
                     val dustAmount = yieldSupplyGetDustMinAmountUseCase(

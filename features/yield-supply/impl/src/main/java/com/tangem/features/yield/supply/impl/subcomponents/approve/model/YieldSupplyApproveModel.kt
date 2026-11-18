@@ -32,7 +32,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCa
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -64,7 +63,6 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
-    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val yieldSupplyGetContractAddressUseCase: YieldSupplyGetContractAddressUseCase,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
@@ -178,11 +176,8 @@ internal class YieldSupplyApproveModel @Inject constructor(
         params.callback.onTransactionProgress(false)
     }
 
-    private suspend fun isHeldOutsidePortfolio(): Boolean {
-        return currencyStatusResolver.isHeldOutsidePortfolio(
-            userWalletId = userWallet.walletId,
-            currency = cryptoCurrency,
-        )
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
     }
 
     private suspend fun onTransactionSuccess(txHash: String) {

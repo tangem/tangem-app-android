@@ -120,13 +120,14 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private var appCurrency = AppCurrency.Default
 
+    // Banner deeplinks open portfolio screens (e.g. Onramp) for the currency, which a Money flow doesn't have
     val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
         MarketingBannerRequest(
             screen = MarketingScreen.Yield(
                 networkId = params.cryptoCurrency.network.rawId,
                 contractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-        ),
+        ).takeUnless { isHeldOutsidePortfolio() },
     )
 
     val uiState: StateFlow<YieldSupplyActiveContentUM>
@@ -294,18 +295,15 @@ internal class YieldSupplyActiveModel @Inject constructor(
      */
     fun onGoToTokenClick() {
         onClaimResultDismiss()
-        modelScope.launch {
-            // Outside the portfolio (Money) the screen beneath is the account screen, not a token screen
-            if (!currencyStatusResolver.isInPortfolio(userWalletId = userWalletId, currency = cryptoCurrency)) {
-                router.pop()
-                return@launch
-            }
-            // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block
-            // flag
-            router.popToOrReplaceCurrent(
-                route = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency),
-            ) { route -> route.userWalletId == userWalletId && route.currency.id == cryptoCurrency.id }
+        // Outside the portfolio (Money) the screen beneath is the account screen, not a token screen
+        if (isHeldOutsidePortfolio()) {
+            router.pop()
+            return
         }
+        // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
+        router.popToOrReplaceCurrent(
+            route = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency),
+        ) { route -> route.userWalletId == userWalletId && route.currency.id == cryptoCurrency.id }
     }
 
     private fun subscribeOnClaimOutcome() {
@@ -357,7 +355,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    currencyStatusResolver.observe(userWalletId = params.userWalletId, currency = cryptoCurrency)
+                    currencyStatusResolver.observe(
+                        userWalletId = params.userWalletId,
+                        currency = cryptoCurrency,
+                        account = params.account,
+                    )
                         .distinctUntilChanged()
                         .onEach { maybeCryptoCurrency ->
                             maybeCryptoCurrency.fold(
@@ -477,8 +479,8 @@ internal class YieldSupplyActiveModel @Inject constructor(
         }
     }
 
-    private suspend fun isHeldOutsidePortfolio(): Boolean {
-        return currencyStatusResolver.isHeldOutsidePortfolio(userWalletId = userWalletId, currency = cryptoCurrency)
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
     }
 
     private fun loadMinAmount() {

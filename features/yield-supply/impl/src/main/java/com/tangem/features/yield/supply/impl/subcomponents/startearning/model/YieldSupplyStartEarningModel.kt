@@ -165,8 +165,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun isHeldOutsidePortfolio(): Boolean {
-        return currencyStatusResolver.isHeldOutsidePortfolio(userWalletId = userWalletId, currency = cryptoCurrency)
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
     }
 
     private suspend fun calculateMinAmount(cryptoCurrencyStatus: CryptoCurrencyStatus): BigDecimal {
@@ -391,9 +391,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             userWalletId = userWalletId,
             feeTokenId = fee.feeTokenId,
             network = cryptoCurrency.network,
+            account = params.account,
         )
         if (feeTokenStatus == null) {
-            TangemLogger.e("Yield Mode Smart Gas fee token ${fee.feeTokenId} is not in the portfolio")
+            TangemLogger.e("Yield Mode Smart Gas fee token ${fee.feeTokenId} is not in the ${params.account} account")
             return null
         }
         return YieldSupplySmartGasFee(
@@ -602,7 +603,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     }
 
     private fun getCurrenciesStatusUpdates() {
-        currencyStatusResolver.observe(userWalletId = params.userWalletId, currency = cryptoCurrency)
+        currencyStatusResolver.observe(
+            userWalletId = params.userWalletId,
+            currency = cryptoCurrency,
+            account = params.account,
+        )
             .distinctUntilChanged()
             .onEach { maybeCryptoCurrency ->
                 maybeCryptoCurrency.fold(
