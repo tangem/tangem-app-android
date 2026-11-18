@@ -7,16 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -35,7 +32,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -48,7 +44,6 @@ import com.tangem.core.ui.components.notifications.toBannerButtons
 import com.tangem.core.ui.ds.button.TangemButtonIconPosition
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.loader.TangemLoader
@@ -61,7 +56,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
-import com.tangem.core.ui.res.generated.icons.ic_keyboard_down_20
 import com.tangem.core.ui.res.generated.icons.ic_warning_20
 import com.tangem.features.earn.api.ui.EarnRowUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnIconsUM
@@ -262,10 +256,8 @@ internal fun EarnSecondaryText(text: TextReference, modifier: Modifier = Modifie
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun EarnPercentButtons(items: ImmutableList<PredefinedPercentButtonUM>, modifier: Modifier = Modifier) {
-    val keyboardController = LocalSoftwareKeyboardController.current
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         items.forEach { item ->
             TangemButton(
@@ -274,14 +266,6 @@ internal fun EarnPercentButtons(items: ImmutableList<PredefinedPercentButtonUM>,
                 size = TangemButton.Size.X8,
                 text = item.label,
                 onClick = item.onClick,
-            )
-        }
-        if (WindowInsets.isImeVisible) {
-            TangemButton(
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X8,
-                iconStart = TangemIconUM.Icon(Icons.ic_keyboard_down_20),
-                onClick = { keyboardController?.hide() },
             )
         }
     }
