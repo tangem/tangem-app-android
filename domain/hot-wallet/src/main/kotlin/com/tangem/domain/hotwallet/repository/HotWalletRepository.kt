@@ -32,4 +32,8 @@ interface HotWalletRepository {
     fun isFirstTopUpDetectedThisSession(userWalletId: UserWalletId): Boolean
 
     fun markFirstTopUpDetectedThisSession(userWalletId: UserWalletId)
+
+    fun isBalanceThresholdReached(userWalletId: UserWalletId): Flow<Boolean>
+
+    suspend fun setBalanceThresholdReached(userWalletId: UserWalletId, isReached: Boolean)
 }

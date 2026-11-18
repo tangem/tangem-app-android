@@ -106,6 +106,9 @@ class StorePreferencesKeys @Inject constructor() {
 
     val hasHadFirstTopUpKey: Preferences.Key<String> = stringPreferencesKey(name = "hasHadFirstTopUp")
 
+    val upgradeBalanceThresholdReachedKey: Preferences.Key<String> =
+        stringPreferencesKey(name = "upgradeBalanceThresholdReached")
+
     val pendingAssetsDiscoveryKey: Preferences.Key<String> = stringPreferencesKey(name = "pendingAssetsDiscovery")
 
     val notificationsApplicationIdKey: Preferences.Key<String> =
