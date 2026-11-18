@@ -102,7 +102,13 @@ fun BaseTestCase.openMarketsTokenDetails(tokenName: String) {
         waitForIdle()
     }
     step("Scroll to 'Listed on exchanges' block") {
-        onMarketsScreen { scrollToListedOnBlock() }
+        // Wait for the lazily-composed token-details container before scrolling, retrying until it attaches.
+        awaitAssert {
+            onMarketsScreen {
+                tokenDetailsContent.assertIsDisplayed()
+                scrollToListedOnBlock()
+            }
+        }
         waitForIdle()
     }
 }
