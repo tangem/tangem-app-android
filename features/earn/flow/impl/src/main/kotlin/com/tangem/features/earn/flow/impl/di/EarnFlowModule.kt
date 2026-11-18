@@ -2,7 +2,9 @@ package com.tangem.features.earn.flow.impl.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.earn.flow.api.EarnDepositCapacity
 import com.tangem.features.earn.flow.api.EarnFlowComponent
+import com.tangem.features.earn.flow.impl.DefaultEarnDepositCapacity
 import com.tangem.features.earn.flow.impl.DefaultEarnFlowComponent
 import com.tangem.features.earn.flow.impl.model.EarnFlowModel
 import dagger.Binds
@@ -20,6 +22,10 @@ internal interface EarnFlowComponentModule {
     @Binds
     @Singleton
     fun bindFlowComponentFactory(impl: DefaultEarnFlowComponent.Factory): EarnFlowComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindDepositCapacity(impl: DefaultEarnDepositCapacity): EarnDepositCapacity
 }
 
 @Module
