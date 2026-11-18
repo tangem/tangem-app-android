@@ -279,6 +279,7 @@ class GetOnrampOffersUseCaseTest {
                         val offer = recommendedBlock.offers.single()
                         Truth.assertThat(offer.quote.provider.id).isEqualTo("valid")
                         Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
+                        Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
                         Truth.assertThat(offer.rateDif).isNull()
                     },
                 )
@@ -311,6 +312,7 @@ class GetOnrampOffersUseCaseTest {
                     val offer = block.offers.single()
                     Truth.assertThat(offer.quote.provider.id).isEqualTo("provider1")
                     Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
+                    Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
                     Truth.assertThat(offer.rateDif).isNull()
                 },
             )
@@ -384,6 +386,7 @@ class GetOnrampOffersUseCaseTest {
                         val offer = recommendedBlock.offers.single()
                         Truth.assertThat(offer.quote.provider.id).isEqualTo("valid")
                         Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
+                        Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
                         Truth.assertThat(offer.rateDif).isNull()
                     },
                 )
@@ -419,6 +422,7 @@ class GetOnrampOffersUseCaseTest {
                     val offer = block.offers.single()
                     Truth.assertThat(offer.quote.provider.id).isEqualTo("provider1")
                     Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
+                    Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
                     Truth.assertThat(block.hasMoreOffers).isTrue()
                 },
             )
@@ -483,6 +487,9 @@ class GetOnrampOffersUseCaseTest {
                     val block = offers.single()
                     Truth.assertThat(block.category).isEqualTo(OnrampOfferCategory.Recommended)
                     Truth.assertThat(block.offers.map { it.quote.provider.id }).containsExactly("best", "fast")
+                    Truth.assertThat(block.offers.map { it.recommendedSlot })
+                        .containsExactly(OnrampRecommendedSlot.BEST, OnrampRecommendedSlot.FASTEST)
+                        .inOrder()
 
                     val greatRateOffer = block.offers.first { it.advantages == OnrampOfferAdvantages.GreatRate }
                     Truth.assertThat(greatRateOffer.quote.provider.id).isEqualTo("best")

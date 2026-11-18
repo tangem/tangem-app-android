@@ -43,6 +43,7 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampMainTopBarUM
+import com.tangem.features.onramp.main.entity.takesSlots
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.utils.annotations.RemoveWithToggle
 
@@ -277,11 +278,17 @@ private fun Content(
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
-            ctaMarketingBannerComponent.Content(Modifier.fillMaxWidth())
+            ctaMarketingBannerComponent.CtaContent(slot = null, modifier = Modifier.fillMaxWidth())
+            if (!state.offersBlockState.takesSlots()) {
+                ctaMarketingBannerComponent.replacedSlots().forEach { slot ->
+                    ctaMarketingBannerComponent.CtaContent(slot = slot, modifier = Modifier.fillMaxWidth())
+                }
+            }
         }
 
         OnrampOffersContent(
             state = state.offersBlockState,
+            ctaMarketingBannerComponent = ctaMarketingBannerComponent,
             linkedMarketingBannerComponent = linkedMarketingBannerComponent,
         )
 

@@ -2,6 +2,7 @@ package com.tangem.features.onramp.main.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import kotlinx.collections.immutable.ImmutableList
@@ -17,6 +18,7 @@ internal sealed interface OnrampOffersBlockUM {
         val recentOffer: OnrampOfferUM?,
         val recommended: ImmutableList<OnrampOfferUM>,
         val onrampAllOffersButtonConfig: OnrampAllOffersButtonConfig?,
+        val allOffersButtonIfOfferHidden: OnrampAllOffersButtonConfig? = null,
     ) : OnrampOffersBlockUM
 }
 
@@ -29,6 +31,7 @@ internal data class OnrampOfferUM(
     val rate: String,
     val diff: TextReference?,
     val onBuyClicked: () -> Unit,
+    val recommendedSlot: MarketingBanner.RecommendedSlot? = null,
 )
 
 internal enum class OnrampOfferCategoryUM {
