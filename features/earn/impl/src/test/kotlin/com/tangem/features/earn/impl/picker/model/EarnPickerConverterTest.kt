@@ -460,6 +460,7 @@ internal class EarnPickerConverterTest {
         summaries = summaries,
         selectedId = selectedId,
         ethBalance = ethBalance,
+        capacity = EarnPickerDepositCapacity.Unknown,
         intents = intents,
     )
 

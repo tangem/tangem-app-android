@@ -269,12 +269,14 @@ internal class EarnPickerModel @Inject constructor(
                 Frame(converter.initial(intents = this))
             else -> {
                 val state = selection?.takeIf { it.product.id == chosen.id }?.state ?: EarnProductState.Loading
+                val capacity = EarnPickerDepositCapacity.Unknown
                 val um = converter.convert(
                     product = chosen,
                     state = state,
                     summaries = currencySummaries,
                     selectedId = chosen.id,
                     ethBalance = ethBalance,
+                    capacity = capacity,
                     intents = this,
                 )
                 Frame(
@@ -284,6 +286,7 @@ internal class EarnPickerModel @Inject constructor(
                         state = state,
                         summaries = currencySummaries,
                         ethBalance = ethBalance,
+                        capacity = capacity,
                     ),
                 )
             }
@@ -323,7 +326,7 @@ internal class EarnPickerModel @Inject constructor(
             )
         }
 
-        val isNoFunds = cta.kind(shown.state, shown.ethBalance) == EarnPickerCta.Kind.AddFunds
+        val isNoFunds = cta.kind(shown.state, shown.ethBalance, shown.capacity) == EarnPickerCta.Kind.AddFunds
         noFundsNotice.onCta(
             EarnNoFundsNoticeAnalytics.Notice(
                 token = params.cryptoCurrency.symbol,
@@ -458,6 +461,7 @@ internal class EarnPickerModel @Inject constructor(
         val state: EarnProductState,
         val summaries: List<EarnProductSummary>,
         val ethBalance: BigDecimal?,
+        val capacity: EarnPickerDepositCapacity,
     )
 
     private data class Frame(val um: EarnPickerUM, val shown: Shown? = null)

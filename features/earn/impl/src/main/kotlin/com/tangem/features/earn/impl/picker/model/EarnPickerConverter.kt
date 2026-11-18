@@ -38,11 +38,13 @@ internal class EarnPickerConverter @Inject constructor(
         summaries: List<EarnProductSummary>,
         selectedId: EarnProductId,
         ethBalance: BigDecimal?,
+        capacity: EarnPickerDepositCapacity,
         intents: EarnPickerClickIntents,
     ): EarnPickerUM {
         val button = cta.resolve(
             state = state,
             ethBalance = ethBalance,
+            capacity = capacity,
             onActionClick = { intents.onActionClick(product, it) },
             onBlocked = intents::onBlockedClick,
             onAddFunds = intents::onAddFundsClick,
@@ -63,6 +65,7 @@ internal class EarnPickerConverter @Inject constructor(
         val button = cta.resolve(
             state = EarnProductState.Loading,
             ethBalance = null,
+            capacity = EarnPickerDepositCapacity.Unknown,
             onActionClick = {},
             onBlocked = {},
             onAddFunds = {},

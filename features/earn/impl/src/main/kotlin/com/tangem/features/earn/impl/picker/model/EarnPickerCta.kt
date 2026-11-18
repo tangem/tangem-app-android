@@ -15,16 +15,20 @@ import javax.inject.Inject
 
 internal class EarnPickerCta @Inject constructor() {
 
-    fun kind(state: EarnProductState, ethBalance: BigDecimal?): Kind = when {
+    fun kind(state: EarnProductState, ethBalance: BigDecimal?, capacity: EarnPickerDepositCapacity): Kind = when {
         state !is EarnProductState.Ready || ethBalance == null -> Kind.Disabled
         blockOf(state) != null -> Kind.Blocked
-        state.position == EarnPositionState.None && isBelowDeposit(state, ethBalance) -> Kind.AddFunds
+        state.position != EarnPositionState.None -> Kind.Primary
+        isBelowDeposit(state, ethBalance) || isFeeUncovered(state, capacity) -> Kind.AddFunds
+        capacity == EarnPickerDepositCapacity.Loading -> Kind.Loading
         else -> Kind.Primary
     }
 
+    @Suppress("LongParameterList")
     fun resolve(
         state: EarnProductState,
         ethBalance: BigDecimal?,
+        capacity: EarnPickerDepositCapacity,
         onActionClick: (EarnAction) -> Unit,
         onBlocked: (EarnBlock) -> Unit,
         onAddFunds: () -> Unit,
@@ -34,15 +38,16 @@ internal class EarnPickerCta @Inject constructor() {
         }
 
         val primary = state.primary
-        return when (kind(state, ethBalance)) {
+        return when (kind(state, ethBalance, capacity)) {
             Kind.Disabled -> button(primary.label, isEnabled = false)
             Kind.Blocked -> button(primary.label, isDimmed = true, onClick = { blockOf(state)?.let(onBlocked) })
             Kind.AddFunds -> button(resourceReference(R.string.common_add_funds), onClick = onAddFunds)
+            Kind.Loading -> button(primary.label, isEnabled = false, isLoading = true)
             Kind.Primary -> button(primary.label, onClick = { onActionClick(primary.action) })
         }
     }
 
-    enum class Kind { Disabled, Blocked, AddFunds, Primary }
+    enum class Kind { Disabled, Blocked, AddFunds, Loading, Primary }
 
     private fun blockOf(state: EarnProductState.Ready): EarnBlock? = state.primary.guardedBy(state).block
 
@@ -50,15 +55,21 @@ internal class EarnPickerCta @Inject constructor() {
     private fun isBelowDeposit(state: EarnProductState.Ready, ethBalance: BigDecimal): Boolean =
         ethBalance.signum() == 0 || ethBalance < state.limits.minDeposit
 
+    private fun isFeeUncovered(state: EarnProductState.Ready, capacity: EarnPickerDepositCapacity): Boolean =
+        capacity is EarnPickerDepositCapacity.Known &&
+            (capacity.availableMax.signum() <= 0 || capacity.availableMax < state.limits.minDeposit)
+
     private fun button(
         text: TextReference,
         isEnabled: Boolean = true,
         isDimmed: Boolean = false,
+        isLoading: Boolean = false,
         onClick: () -> Unit = {},
     ) = TangemButtonUM(
         text = text,
         isEnabled = isEnabled,
         isDimmed = isDimmed,
+        isLoading = isLoading,
         type = TangemButtonType.Primary,
         onClick = onClick,
     )

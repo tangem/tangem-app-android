@@ -36,6 +36,7 @@ internal class EarnPickerCtaTest {
         val result = cta.resolve(
             state = model.state,
             ethBalance = model.ethBalance,
+            capacity = model.capacity,
             onActionClick = { calls += Call.Action(it) },
             onBlocked = { calls += Call.Blocked(it) },
             onAddFunds = { calls += Call.AddFunds },
@@ -47,6 +48,7 @@ internal class EarnPickerCtaTest {
             text = model.text,
             isEnabled = model.isEnabled,
             isDimmed = model.isDimmed,
+            isLoading = model.isLoading,
             type = TangemButtonType.Primary,
             onClick = NoOp,
         )
@@ -91,6 +93,54 @@ internal class EarnPickerCtaTest {
                 label = staked.primary.label,
                 action = staked.primary.action,
             ),
+            ResolveModel(
+                state = ready,
+                ethBalance = BigDecimal.ONE,
+                capacity = EarnPickerDepositCapacity.Loading,
+                text = label,
+                isEnabled = false,
+                isDimmed = false,
+                isLoading = true,
+            ),
+            addFunds(state = ready, ethBalance = BigDecimal.ONE, capacity = known(BigDecimal.ZERO)),
+            addFunds(state = ready, ethBalance = BigDecimal.ONE, capacity = known(minDeposit - BigDecimal("0.000001"))),
+            start(
+                state = ready,
+                ethBalance = BigDecimal.ONE,
+                capacity = known(minDeposit),
+                label = label,
+                action = action,
+            ),
+            addFunds(state = noMinimum, ethBalance = BigDecimal("0.001"), capacity = known(BigDecimal.ZERO)),
+            start(
+                state = noMinimum,
+                ethBalance = BigDecimal("0.001"),
+                capacity = known(BigDecimal("0.0001")),
+                label = label,
+                action = action,
+            ),
+            blocked(
+                state = productBlocked,
+                ethBalance = BigDecimal.ONE,
+                capacity = known(BigDecimal.ZERO),
+                block = PRODUCT_BLOCK,
+                label = label,
+            ),
+            blocked(
+                state = stale,
+                ethBalance = BigDecimal.ONE,
+                capacity = EarnPickerDepositCapacity.Loading,
+                block = OUT_OF_DATE_BLOCK,
+                label = label,
+            ),
+            start(
+                state = staked,
+                ethBalance = BigDecimal.ONE,
+                capacity = known(BigDecimal.ZERO),
+                label = staked.primary.label,
+                action = staked.primary.action,
+            ),
+            addFunds(state = ready, ethBalance = BigDecimal.ZERO, capacity = known(BigDecimal.ONE)),
         )
     }
 
@@ -100,9 +150,9 @@ internal class EarnPickerCtaTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN product state and balance WHEN kind THEN button kind`(model: KindModel) {
+        fun `GIVEN product state, balance and capacity WHEN kind THEN button kind`(model: KindModel) {
             // Act
-            val actual = cta.kind(state = model.state, ethBalance = model.ethBalance)
+            val actual = cta.kind(state = model.state, ethBalance = model.ethBalance, capacity = model.capacity)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -114,6 +164,7 @@ internal class EarnPickerCtaTest {
             val productBlocked = ready.copy(primary = ready.primary.copy(block = PRODUCT_BLOCK))
             val stale = ready.copy(freshness = STALE)
             val staked = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
+            val loading = EarnPickerDepositCapacity.Loading
 
             return listOf(
                 KindModel(EarnProductState.Loading, BigDecimal.ONE, EarnPickerCta.Kind.Disabled),
@@ -127,9 +178,19 @@ internal class EarnPickerCtaTest {
                 KindModel(ready, minDeposit, EarnPickerCta.Kind.Primary),
                 KindModel(ready, BigDecimal("5"), EarnPickerCta.Kind.Primary),
                 KindModel(staked, BigDecimal.ZERO, EarnPickerCta.Kind.Primary),
+                KindModel(ready, BigDecimal.ONE, EarnPickerCta.Kind.Loading, loading),
+                KindModel(ready, BigDecimal.ZERO, EarnPickerCta.Kind.AddFunds, loading),
+                KindModel(ready, BigDecimal.ONE, EarnPickerCta.Kind.AddFunds, known(BigDecimal.ZERO)),
+                KindModel(ready, BigDecimal.ONE, EarnPickerCta.Kind.AddFunds, known(minDeposit - SMALLEST_STEP)),
+                KindModel(ready, BigDecimal.ONE, EarnPickerCta.Kind.Primary, known(minDeposit)),
+                KindModel(stale, BigDecimal.ONE, EarnPickerCta.Kind.Blocked, loading),
+                KindModel(staked, BigDecimal.ONE, EarnPickerCta.Kind.Primary, known(BigDecimal.ZERO)),
+                KindModel(staked, BigDecimal.ONE, EarnPickerCta.Kind.Primary, loading),
             )
         }
     }
+
+    private fun known(availableMax: BigDecimal) = EarnPickerDepositCapacity.Known(availableMax)
 
     private fun idle(state: EarnProductState) = ResolveModel(
         state = state,
@@ -139,29 +200,48 @@ internal class EarnPickerCtaTest {
         isDimmed = false,
     )
 
-    private fun blocked(state: EarnProductState, ethBalance: BigDecimal, block: EarnBlock, label: TextReference) =
+    private fun blocked(
+        state: EarnProductState,
+        ethBalance: BigDecimal,
+        block: EarnBlock,
+        label: TextReference,
+        capacity: EarnPickerDepositCapacity = EarnPickerDepositCapacity.Unknown,
+    ) =
         ResolveModel(
             state = state,
             ethBalance = ethBalance,
+            capacity = capacity,
             text = label,
             isEnabled = true,
             isDimmed = true,
             expectedCalls = listOf(Call.Blocked(block)),
         )
 
-    private fun addFunds(state: EarnProductState, ethBalance: BigDecimal) = ResolveModel(
+    private fun addFunds(
+        state: EarnProductState,
+        ethBalance: BigDecimal,
+        capacity: EarnPickerDepositCapacity = EarnPickerDepositCapacity.Unknown,
+    ) = ResolveModel(
         state = state,
         ethBalance = ethBalance,
+        capacity = capacity,
         text = resourceReference(R.string.common_add_funds),
         isEnabled = true,
         isDimmed = false,
         expectedCalls = listOf(Call.AddFunds),
     )
 
-    private fun start(state: EarnProductState, ethBalance: BigDecimal, label: TextReference, action: EarnAction) =
+    private fun start(
+        state: EarnProductState,
+        ethBalance: BigDecimal,
+        label: TextReference,
+        action: EarnAction,
+        capacity: EarnPickerDepositCapacity = EarnPickerDepositCapacity.Unknown,
+    ) =
         ResolveModel(
             state = state,
             ethBalance = ethBalance,
+            capacity = capacity,
             text = label,
             isEnabled = true,
             isDimmed = false,
@@ -174,6 +254,8 @@ internal class EarnPickerCtaTest {
         val text: TextReference,
         val isEnabled: Boolean,
         val isDimmed: Boolean,
+        val capacity: EarnPickerDepositCapacity = EarnPickerDepositCapacity.Unknown,
+        val isLoading: Boolean = false,
         val expectedCalls: List<Call> = emptyList(),
     )
 
@@ -181,6 +263,7 @@ internal class EarnPickerCtaTest {
         val state: EarnProductState,
         val ethBalance: BigDecimal?,
         val expected: EarnPickerCta.Kind,
+        val capacity: EarnPickerDepositCapacity = EarnPickerDepositCapacity.Unknown,
     )
 
     internal sealed interface Call {
@@ -192,6 +275,7 @@ internal class EarnPickerCtaTest {
     private companion object {
 
         val NoOp: () -> Unit = {}
+        val SMALLEST_STEP = BigDecimal("0.000001")
         val STALE = EarnFreshness(asOf = Instant.fromEpochSeconds(0), isStale = true)
         val PRODUCT_BLOCK = EarnBlock(reason = stringReference("blocked"))
         val OUT_OF_DATE_BLOCK = EarnBlock(
