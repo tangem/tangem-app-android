@@ -121,13 +121,6 @@ private fun FormField(state: FieldUM) {
     when (state) {
         is FieldUM.Text -> TextField(state = state, modifier = modifier)
         is FieldUM.Selector -> SelectorField(state = state, modifier = modifier)
-        is FieldUM.Locked -> TextInput(
-            label = state.field.label,
-            value = state.value,
-            onValueChange = {},
-            modifier = modifier,
-            state = TextInputState.Disabled,
-        )
     }
 }
 
@@ -202,7 +195,7 @@ private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdr
         TangemPayBankWithdrawFormPreviewData.personalWithError,
         TangemPayBankWithdrawFormPreviewData.personalFreeTextRegion,
         TangemPayBankWithdrawFormPreviewData.personalUsRegion,
-        TangemPayBankWithdrawFormPreviewData.speiWithProfileNames,
+        TangemPayBankWithdrawFormPreviewData.speiPersonal,
         TangemPayBankWithdrawFormPreviewData.businessBank,
     )
 }
