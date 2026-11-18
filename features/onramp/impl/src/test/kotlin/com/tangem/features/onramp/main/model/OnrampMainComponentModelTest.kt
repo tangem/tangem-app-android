@@ -58,10 +58,7 @@ import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory.Companion.BUY_NOT_SUPPORTED_MESSAGE_ID
-import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory.Companion.COUNTRY_NOT_SUPPORTED_MESSAGE_ID
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.MutableStateFlow
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -500,7 +497,7 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
 
         // Assert
-        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
         coVerify(exactly = 1) { fetchPairsUseCase.invoke(any(), any()) }
         model.onDestroy()
     }
@@ -952,7 +949,7 @@ internal class OnrampMainComponentModelTest {
             scheduler.runCurrent()
             lookup.complete(onrampCountry("USD").right())
             scheduler.runCurrent()
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
 
             // Act
             tokenSupport.complete(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.name))
@@ -960,7 +957,7 @@ internal class OnrampMainComponentModelTest {
 
             // Assert
             assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(BUY_NOT_SUPPORTED_MESSAGE_ID)
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("buy_not_supported")
             assertThat(sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeBuyNotSupported>()).hasSize(1)
             model.onDestroy()
         }

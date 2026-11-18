@@ -127,7 +127,7 @@ internal class OnrampStateFactoryTest {
             as OnrampMainComponentUM.Content
 
         // Assert
-        assertThat(result.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
+        assertThat(result.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
         assertThat(result.buyNotSupportedMessage?.title)
             .isEqualTo(resourceReference(R.string.onramp_residency_bottomsheet_country_not_supported))
         assertThat(result.amountBlockState.amountFieldModel.isError).isFalse()
