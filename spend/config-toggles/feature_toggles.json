@@ -22,5 +22,9 @@
     {
         "name": "TWI_1525_TANGEM_PAY_GROUP_ENABLED",
         "version": "6.10"
+    },
+    {
+        "name": "AND_19706_PAY_COMPACT_EMPTY_HISTORY_ENABLED",
+        "version": "undefined"
     }
 ]

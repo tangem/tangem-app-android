@@ -23,7 +23,7 @@ internal sealed interface TangemPayTxHistoryUM {
         )
     }
 
-    data class Empty(override val isBalanceHidden: Boolean) : TangemPayTxHistoryUM
+    data class Empty(override val isBalanceHidden: Boolean, val isCompact: Boolean) : TangemPayTxHistoryUM
     data class Error(override val isBalanceHidden: Boolean, val onReload: () -> Unit) : TangemPayTxHistoryUM
 
     data class Content(
