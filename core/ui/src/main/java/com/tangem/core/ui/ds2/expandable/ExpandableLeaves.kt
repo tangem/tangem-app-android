@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -87,6 +88,16 @@ internal fun ExpandableTitleAnchor(title: TextReference, modifier: Modifier = Mo
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
+    )
+}
+
+@Composable
+internal fun ExpandableTitleIcon(imageVector: ImageVector, modifier: Modifier = Modifier) {
+    Icon(
+        imageVector = imageVector,
+        contentDescription = null,
+        tint = TangemTheme.colors3.icon.secondary,
+        modifier = modifier.size(16.dp),
     )
 }
 

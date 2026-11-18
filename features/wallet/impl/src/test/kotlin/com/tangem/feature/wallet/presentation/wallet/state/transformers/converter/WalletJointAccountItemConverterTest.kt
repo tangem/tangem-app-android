@@ -16,6 +16,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
+import com.tangem.core.ui.res.generated.icons.ic_users_16_filled
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -49,6 +50,7 @@ internal class WalletJointAccountItemConverterTest {
         userWalletId = userWalletId,
         onAccountClick = { walletId, accountId -> clickedAccounts += walletId to accountId },
         onCompromisedAccountClick = { walletId -> compromisedClicks += walletId },
+        isRedesignedAccountRowsEnabled = true,
     )
 
     @BeforeEach
@@ -73,6 +75,7 @@ internal class WalletJointAccountItemConverterTest {
         assertThat(actual.avatar).isEqualTo(account.toAvatarState())
         val state = actual.state as TangemAccountRow.State.NotActive
         assertThat(state.title).isEqualTo(stringReference("Joint #0"))
+        assertThat(state.titleIcon).isEqualTo(Icons.ic_users_16_filled)
         assertThat(state.label).isNull()
         assertThat(state.description).isEqualTo(MEMBERS_THREE)
         assertThat(state.balance).isEqualTo(stringReference(zeroBalance()))
@@ -178,6 +181,24 @@ internal class WalletJointAccountItemConverterTest {
     }
 
     @Test
+    fun `GIVEN redesigned account rows disabled WHEN convert pending THEN no members icon`() {
+        // Arrange
+        val legacyConverter = WalletJointAccountItemConverter(
+            appCurrency = AppCurrency.Default,
+            userWalletId = userWalletId,
+            onAccountClick = { _, _ -> },
+            onCompromisedAccountClick = {},
+        )
+        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 3, threshold = 2))
+
+        // Act
+        val state = legacyConverter.convert(status).state as TangemAccountRow.State.NotActive
+
+        // Assert
+        assertThat(state.titleIcon).isNull()
+    }
+
+    @Test
     fun `GIVEN loading status WHEN convert THEN a shimmer row`() {
         // Act
         val actual = converter.convert(createStatus(JointAccountStatusValue.Loading))
@@ -193,7 +214,11 @@ internal class WalletJointAccountItemConverterTest {
 
         // Assert
         assertThat(actual.state).isEqualTo(
-            TangemAccountRow.State.BalanceError(id = account.accountId.value, title = stringReference("Joint #0")),
+            TangemAccountRow.State.BalanceError(
+                id = account.accountId.value,
+                title = stringReference("Joint #0"),
+                titleIcon = Icons.ic_users_16_filled,
+            ),
         )
     }
 
@@ -213,6 +238,7 @@ internal class WalletJointAccountItemConverterTest {
 
         // Assert
         assertThat(state.title).isEqualTo(stringReference("Joint #0"))
+        assertThat(state.titleIcon).isEqualTo(Icons.ic_users_16_filled)
         assertThat(state.badge).isEqualTo(resourceReference(R.string.joint_account_main_unavailable))
         assertThat(state.label).isEqualTo(resourceReference(R.string.joint_account_main_paused_for_safety))
         assertThat(state.description).isNull()

@@ -589,6 +589,7 @@ private fun AccountRowV2(item: TokensListItemUM2.AccountV2, isBalanceHidden: Boo
             avatar = item.avatar,
             title = state.title,
             modifier = modifier,
+            titleIcon = state.titleIcon,
             label = state.label,
             description = state.description,
             balance = state.balance,
