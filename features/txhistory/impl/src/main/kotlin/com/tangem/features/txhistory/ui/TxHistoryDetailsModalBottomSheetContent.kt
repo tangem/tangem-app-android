@@ -2,12 +2,15 @@ package com.tangem.features.txhistory.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +39,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.excludeExitingFromModalHeight
 import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
@@ -104,21 +108,28 @@ internal fun TxHistoryDetailsModalBottomSheetContent(
             AnimatedContent(
                 targetState = route,
                 transitionSpec = {
-                    fadeIn(tween(durationMillis = ANIMATION_MILLIS)) togetherWith
-                        fadeOut(tween(durationMillis = ANIMATION_MILLIS))
+                    fadeIn(tween(durationMillis = FADE_IN_MILLIS, delayMillis = FADE_OUT_MILLIS)) togetherWith
+                        fadeOut(tween(durationMillis = FADE_OUT_MILLIS)) using
+                        SizeTransform(clip = false) { _, _ -> snap() }
                 },
                 label = "TxHistoryDetailsRoute",
             ) { shown ->
-                when (shown) {
-                    JointOperationRoutes.Operation -> TxHistoryDetailsContent(state = um, ratingContent = ratingContent)
-                    JointOperationRoutes.Signers -> signers?.let { JointOperationSignersContent(state = it) }
+                Box(modifier = Modifier.excludeExitingFromModalHeight(scope = this)) {
+                    when (shown) {
+                        JointOperationRoutes.Operation -> TxHistoryDetailsContent(
+                            state = um,
+                            ratingContent = ratingContent,
+                        )
+                        JointOperationRoutes.Signers -> signers?.let { JointOperationSignersContent(state = it) }
+                    }
                 }
             }
         },
     )
 }
 
-private const val ANIMATION_MILLIS = 100
+private const val FADE_OUT_MILLIS = 90
+private const val FADE_IN_MILLIS = 150
 
 // region Preview
 
