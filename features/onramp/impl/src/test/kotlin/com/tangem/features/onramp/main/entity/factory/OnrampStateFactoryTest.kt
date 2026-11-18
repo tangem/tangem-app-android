@@ -123,7 +123,8 @@ internal class OnrampStateFactoryTest {
         currentState = factory.getReadyState(currency = USD_CURRENCY)
 
         // Act
-        val result = factory.getRegionRestrictionState(currentState, null, isCountryBlocked = true) as OnrampMainComponentUM.Content
+        val result = factory.getRegionRestrictionState(currentState, regionName = null, isCountryBlocked = true)
+            as OnrampMainComponentUM.Content
 
         // Assert
         assertThat(result.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.COUNTRY_NOT_SUPPORTED_MESSAGE_ID)

@@ -12,10 +12,10 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageIconPosition
 import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.onramp.model.OnrampCurrency
@@ -26,9 +26,9 @@ import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.utils.Provider
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import com.tangem.core.ui.R as CoreUiR
-import kotlinx.collections.immutable.toImmutableList
 
 internal class OnrampStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,

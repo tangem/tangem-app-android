@@ -26,10 +26,10 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.ds.message.TangemMessage
-import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference

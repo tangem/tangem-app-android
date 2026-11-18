@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.main.model
 
 import arrow.core.Either
-
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss

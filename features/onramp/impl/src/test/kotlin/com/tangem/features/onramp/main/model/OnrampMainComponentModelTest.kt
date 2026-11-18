@@ -57,7 +57,8 @@ import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
+import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory.Companion.BUY_NOT_SUPPORTED_MESSAGE_ID
+import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory.Companion.COUNTRY_NOT_SUPPORTED_MESSAGE_ID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.tangem.test.core.ProvideTestModels
@@ -498,7 +499,7 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
 
         // Assert
-        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
         coVerify(exactly = 1) { fetchPairsUseCase.invoke(any(), any()) }
         model.onDestroy()
     }
@@ -523,7 +524,7 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
-    fun `GIVEN IP country restricted WHEN available country picked THEN region banner stays and buy not blocked by country`() {
+    fun `GIVEN restricted IP WHEN available country picked THEN banner stays and country does not block buy`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
         val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
@@ -899,7 +900,7 @@ internal class OnrampMainComponentModelTest {
             scheduler.runCurrent()
             lookup.complete(onrampCountry("USD").right())
             scheduler.runCurrent()
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(COUNTRY_NOT_SUPPORTED_MESSAGE_ID)
 
             // Act
             tokenSupport.complete(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.name))
@@ -907,7 +908,7 @@ internal class OnrampMainComponentModelTest {
 
             // Assert
             assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(OnrampStateFactory.BUY_NOT_SUPPORTED_MESSAGE_ID)
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo(BUY_NOT_SUPPORTED_MESSAGE_ID)
             assertThat(sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeBuyNotSupported>()).hasSize(1)
             model.onDestroy()
         }
@@ -1045,7 +1046,7 @@ internal class OnrampMainComponentModelTest {
         }
 
         @Test
-        fun `GIVEN IP restriction WHEN screen returns in supported region THEN banner clears and purchase is allowed`() {
+        fun `GIVEN IP restriction WHEN screen returns in allowed region THEN banner clears and buy is allowed`() {
             // Arrange
             val scheduler = TestCoroutineScheduler()
             coEvery { getOnrampCountryByIpUseCase(userWallet) } returns
