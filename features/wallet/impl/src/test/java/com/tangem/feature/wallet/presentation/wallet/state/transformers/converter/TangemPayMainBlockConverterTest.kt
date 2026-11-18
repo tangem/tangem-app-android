@@ -67,6 +67,28 @@ internal class TangemPayMainBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN loaded account with single card WHEN convert THEN subtitle is card last digits`() {
+        // Act
+        val result = converter.convert(paymentAccount(loadedValue(cardsCount = 1)))
+
+        // Assert
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(stringReference("*$LAST_DIGITS"))
+    }
+
+    @Test
+    fun `GIVEN loaded account with single card without last digits WHEN convert THEN subtitle is cards count`() {
+        // Act
+        val result = converter.convert(paymentAccount(loadedValue(cardsCount = 1, lastDigits = "")))
+
+        // Assert
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(
+            pluralReference(id = R.plurals.tangempay_cards_count, count = 1, formatArgs = wrappedList(1)),
+        )
+    }
+
+    @Test
     fun `GIVEN loaded account without cards WHEN convert THEN subtitle is zero cards count`() {
         // Act
         val result = converter.convert(paymentAccount(loadedValue(cardsCount = 0)))
@@ -193,6 +215,7 @@ internal class TangemPayMainBlockConverterTest {
         cardsCount: Int = 1,
         isPaymentAccountIssuing: Boolean = false,
         isKycAdditionalInfoRequired: Boolean = false,
+        lastDigits: String = LAST_DIGITS,
     ): PaymentAccountStatusValue.Loaded {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
@@ -201,7 +224,7 @@ internal class TangemPayMainBlockConverterTest {
             balance = null,
             cryptoCurrency = accountToken(),
             networks = emptyList(),
-            cards = List(cardsCount) { mockk<TangemPayCard>() },
+            cards = List(cardsCount) { mockk<TangemPayCard> { every { this@mockk.lastDigits } returns lastDigits } },
             fiatRate = null,
             error = null,
             virtualAccount = null,
@@ -228,6 +251,7 @@ internal class TangemPayMainBlockConverterTest {
 
     private companion object {
         const val USD_CURRENCY_CODE = "USD"
+        const val LAST_DIGITS = "1234"
         val RESIDENCY = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX")
     }
 }
