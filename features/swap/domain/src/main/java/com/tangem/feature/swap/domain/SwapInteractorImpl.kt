@@ -745,7 +745,8 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         }
 
-        val isWithdrawOverBalance = fromSwapCurrencyStatus.account is Account.Payment &&
+        val fromAccount = fromSwapCurrencyStatus.account
+        val isWithdrawOverBalance = (fromAccount is Account.Payment || fromAccount is Account.Collectibles) &&
             !isBalanceEnough(fromSwapCurrencyStatus, amount, null)
         val quoteBalanceStatus = if (isWithdrawOverBalance) {
             SwapBalanceStatus.InsufficientAmount
@@ -1360,7 +1361,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    @Suppress("LongMethod", "LongParameterList", "CanBeNonNullable")
+    @Suppress("LongMethod", "LongParameterList", "CanBeNonNullable", "CyclomaticComplexMethod")
     private suspend fun onSwapCex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -1401,6 +1402,15 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
+
+        if (fromSwapCurrencyStatus.account is Account.Collectibles) {
+            return createCollectiblesWithdrawalData(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                amount = amount,
+                exchangeData = exchangeData,
+            )
+        }
 
         if (isTangemPayWithdrawal) {
             return SwapTransactionState.TangemPayWithdrawalData(
@@ -1812,6 +1822,39 @@ internal class SwapInteractorImpl @Inject constructor(
             network = network,
             gasLimit = gasLimit?.toBigInteger(),
         ).getOrNull() ?: error("failed to create extras")
+    }
+
+    private fun createCollectiblesWithdrawalData(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        amount: SwapAmount,
+        exchangeData: SwapDataModel,
+    ) = SwapTransactionState.CollectiblesWithdrawalData(
+        amount = amount,
+        swapData = exchangeData,
+        fromAmount = amountFormatter.formatSwapAmountToUI(amount, fromSwapCurrencyStatus.currency.symbol),
+        toAmount = amountFormatter.formatSwapAmountToUI(
+            exchangeData.toTokenAmount,
+            toSwapCurrencyStatus.currency.symbol,
+        ),
+    )
+
+    override suspend fun notifyExchangeSent(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        cexTransaction: ExpressTransactionModel.CEX,
+        txHash: String,
+    ): Either<ExpressDataError, Unit> {
+        val networkAddress = fromSwapCurrencyStatus.status.value.networkAddress
+        val fromAddress = networkAddress?.defaultAddress?.value.orEmpty()
+        return repository.exchangeSent(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            txId = cexTransaction.txId,
+            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+            fromAddress = fromAddress,
+            payInAddress = cexTransaction.txTo,
+            txHash = txHash,
+            payInExtraId = cexTransaction.txExtraId,
+        )
     }
 
     override suspend fun storeSwapTransaction(
