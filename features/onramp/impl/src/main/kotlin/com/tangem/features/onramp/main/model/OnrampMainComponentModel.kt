@@ -217,8 +217,10 @@ internal class OnrampMainComponentModel @Inject constructor(
     private var isCountryBlocked = false
     private var ipRestrictedRegionName: String? = null
     private var isIpCheckPending = isCountryByIpEnabled
+    private var isIpCheckFailed = false
     private var hasStarted = false
-    val isBuyRestricted: Boolean get() = isCountryBlocked || isIpCheckPending || ipRestrictedRegionName != null
+    val isBuyRestricted: Boolean
+        get() = isCountryBlocked || isIpCheckPending || isIpCheckFailed || ipRestrictedRegionName != null
 
     val isBuyEnabled: StateFlow<Boolean>
         field = MutableStateFlow(!isCountryByIpEnabled)
@@ -440,6 +442,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         result.onRight { ipCountry ->
             ipRestrictedRegionName = ipCountry.name.takeIf { !ipCountry.isOnrampAvailable }
         }
+        // An earlier "allowed" answer is stale once a re-check fails, so Buy stays off until one succeeds.
+        isIpCheckFailed = result.isLeft()
         isIpCheckPending = false
         updateRegionRestriction()
         return result

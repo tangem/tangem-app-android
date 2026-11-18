@@ -593,6 +593,51 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
+    fun `GIVEN IP country allowed WHEN lookup on screen return fails THEN buy is disabled`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            openRedirectPage = { opened += it },
+        )
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.PairsNotFound.left()
+
+        // Act
+        model.onStart()
+        scheduler.runCurrent()
+        model.openRedirectPage(mockk())
+
+        // Assert
+        assertThat(model.isBuyEnabled.value).isFalse()
+        assertThat(model.state.value.regionRestrictionMessage).isNull()
+        assertThat(opened).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed WHEN next lookup allowed THEN buy is enabled`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.PairsNotFound.left()
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("USD").right()
+
+        // Act
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.isBuyEnabled.value).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN IP country available WHEN openRedirectPage THEN purchase is launched`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
