@@ -33,7 +33,7 @@ import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
  * coloured glyph or letter, a person's initial, an address identicon, a status glyph, a transaction's icon,
  * or an arbitrary image asset.
  *
- * Version: 1.3.1
+ * Version: 1.3.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9737-838)
  *
@@ -72,7 +72,7 @@ fun TangemAvatar(
 /** Public API surface of [TangemAvatar]. */
 object TangemAvatar {
 
-    val version = DsVersion(major = 1, minor = 3, patch = 1)
+    val version = DsVersion(major = 1, minor = 3, patch = 2)
 
     /** Fixed size presets: `X72` = 72dp … `X16` = 16dp. */
     enum class Size { X72, X44, X40, X16 }
