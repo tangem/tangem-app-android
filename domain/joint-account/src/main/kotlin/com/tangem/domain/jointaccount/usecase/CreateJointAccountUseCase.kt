@@ -149,8 +149,8 @@ class CreateJointAccountUseCase(
     private suspend fun toRejectionError(userWalletId: UserWalletId, cause: Throwable): JointAccountCreationError {
         val failed = JointAccountFlowError.Failed(cause = cause)
 
-        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
-            TangemLogger.e("Failed to refetch joint accounts of $userWalletId after a rejected creation", it)
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft { refetchError ->
+            TangemLogger.e("Failed to refetch joint accounts of $userWalletId after a rejected creation", refetchError)
             return failed
         }
         val jointAccountsCount = repository.getStoredJointAccounts(userWalletId = userWalletId).size
