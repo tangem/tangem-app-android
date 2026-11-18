@@ -27,6 +27,7 @@ import com.tangem.domain.quotes.GetFiatUSDRateUseCase
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.MoneyAccountBannerAction
+import com.tangem.features.marketing.api.MarketingFeatureToggles
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -68,6 +69,7 @@ internal class MarketingBannerModel @Inject constructor(
     private val appCoroutineScope: AppCoroutineScope,
     private val urlOpener: UrlOpener,
     private val clock: Clock,
+    private val marketingFeatureToggles: MarketingFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
@@ -263,7 +265,9 @@ internal class MarketingBannerModel @Inject constructor(
     private fun classifyCtaLinks(campaigns: List<MarketingCampaign>): Map<String?, CtaBannerLink> {
         if (params !is MarketingBannerComponent.Params.Cta) return emptyMap()
         return campaigns.map { it.banner.deeplink }.distinct().associateWith { link ->
-            resolveCtaBannerLink(link?.trim())
+            resolveCtaBannerLink(link?.trim()).takeUnless {
+                it == CtaBannerLink.MONEY_ACCOUNT && !marketingFeatureToggles.isMoneyAccountBannerEnabled
+            } ?: CtaBannerLink.UNSUPPORTED
         }
     }
 

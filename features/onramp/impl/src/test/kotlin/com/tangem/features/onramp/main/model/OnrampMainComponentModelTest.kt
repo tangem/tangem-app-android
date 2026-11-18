@@ -9,8 +9,11 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.marketing.ObserveDemandSurveyCompletedUseCase
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.GetOnrampQuotesUseCase
@@ -28,6 +31,8 @@ import com.tangem.features.marketing.api.CtaBannerRequest
 import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.marketing.api.MarketingFeatureToggles
+import com.tangem.features.marketing.api.MoneyAccountBannerAction
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
 import com.tangem.domain.exchange.RampStateManager
@@ -50,6 +55,7 @@ import io.mockk.verify
 import java.math.BigDecimal
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
@@ -100,6 +106,8 @@ internal class OnrampMainComponentModelTest {
     private val resetOnrampCountryUseCase: ResetOnrampCountryUseCase = mockk()
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase = mockk()
     private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase = mockk()
+    private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
+    private val marketingFeatureToggles: MarketingFeatureToggles = mockk()
     private val onrampFeatureToggles: OnrampFeatureToggles = mockk()
 
     private val cryptoCurrency = MockCryptoCurrencyFactory().ethereum
@@ -121,9 +129,13 @@ internal class OnrampMainComponentModelTest {
             resetOnrampCountryUseCase,
             checkOnrampAvailabilityUseCase,
             observeDemandSurveyCompletedUseCase,
+            moneyAccountStatusSupplier,
+            marketingFeatureToggles,
             onrampFeatureToggles,
         )
         every { observeDemandSurveyCompletedUseCase(any()) } returns flowOf(false)
+        every { moneyAccountStatusSupplier(any<UserWalletId>()) } returns emptyFlow()
+        every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns true
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
         every { getOnrampCountryUseCase.invoke() } returns emptyFlow()
         coEvery { fetchPairsUseCase.invoke(any(), any()) } returns Unit.right()
@@ -682,6 +694,123 @@ internal class OnrampMainComponentModelTest {
             onrampModel.onDestroy()
         }
 
+        @Test
+        fun `GIVEN money account onboarding WHEN status arrives THEN request asks to activate`() {
+            // Arrange
+            val status = mockk<AccountStatus.Money> {
+                every { value } returns mockk<MoneyAccountStatusValue.Onboarding.Failed>()
+            }
+            every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns flowOf(status)
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+
+            // Act
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.last()).isEqualTo(
+                ctaRequest(
+                    fiatCode = "USD",
+                    amount = "100",
+                    isDemandSurveyCompleted = false,
+                    moneyAccountAction = MoneyAccountBannerAction.ACTIVATE,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account error WHEN status becomes known THEN request updates without changing amount`() {
+            // Arrange
+            val unknown = mockk<AccountStatus.Money> {
+                every { value } returns mockk<MoneyAccountStatusValue.Error.NotSynced>()
+            }
+            val onboarding = mockk<AccountStatus.Money> {
+                every { value } returns mockk<MoneyAccountStatusValue.Onboarding.Failed>()
+            }
+            val statuses = MutableStateFlow(unknown)
+            every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns statuses
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+
+            // Act
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+            val before = requests.last()
+            statuses.value = onboarding
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(before).isEqualTo(ctaRequest("USD", "100", isDemandSurveyCompleted = false))
+            assertThat(requests.last()).isEqualTo(
+                ctaRequest("USD", "100", isDemandSurveyCompleted = false, moneyAccountAction = MoneyAccountBannerAction.ACTIVATE),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account status empty WHEN request built THEN campaign keeps its own button text`() {
+            // Arrange
+            val status = mockk<AccountStatus.Money> { every { value } returns MoneyAccountStatusValue.Empty }
+            every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns flowOf(status)
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+
+            // Act
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.last()).isEqualTo(ctaRequest("USD", "100", isDemandSurveyCompleted = false))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account status fails WHEN request built THEN action stays unknown`() {
+            // Arrange
+            every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns flow { error("no status") }
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+
+            // Act
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.last()).isEqualTo(
+                ctaRequest(fiatCode = "USD", amount = "100", isDemandSurveyCompleted = false),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account banner disabled WHEN request built THEN status not looked up`() {
+            // Arrange
+            every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns false
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+
+            // Act
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.last()).isEqualTo(ctaRequest("USD", "100", isDemandSurveyCompleted = false))
+            verify(exactly = 0) { moneyAccountStatusSupplier(any<UserWalletId>()) }
+            model.onDestroy()
+        }
+
         /** A failed status request reaches the model as `false`, see `DefaultDemandSurveyRepository` */
         private fun provideTestModels() = listOf(
             SurveyStatusModel(isCompleted = true),
@@ -748,10 +877,16 @@ internal class OnrampMainComponentModelTest {
 
     internal data class SurveyStatusModel(val isCompleted: Boolean)
 
-    private fun ctaRequest(fiatCode: String, amount: String?, isDemandSurveyCompleted: Boolean) = CtaBannerRequest(
+    private fun ctaRequest(
+        fiatCode: String,
+        amount: String?,
+        isDemandSurveyCompleted: Boolean,
+        moneyAccountAction: MoneyAccountBannerAction? = null,
+    ) = CtaBannerRequest(
         screen = onrampScreen(fiatCode),
         amount = amount?.let { MarketingBannerAmount.Fiat(value = BigDecimal(it), currencyCode = fiatCode) },
         isDemandSurveyCompleted = isDemandSurveyCompleted,
+        moneyAccountAction = moneyAccountAction,
     )
 
     private fun <T> collectAll(scheduler: TestCoroutineScheduler, flow: Flow<T>): List<T> {
@@ -978,6 +1113,8 @@ internal class OnrampMainComponentModelTest {
             messageSender = mockk(relaxed = true),
             conciergeWaitlistListener = conciergeWaitlistTrigger,
             observeDemandSurveyCompletedUseCase = observeDemandSurveyCompletedUseCase,
+            moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+            marketingFeatureToggles = marketingFeatureToggles,
             onrampFeatureToggles = onrampFeatureToggles,
             appCoroutineScope = TestAppCoroutineScope(),
             paramsContainer = MutableParamsContainer(value = params),
