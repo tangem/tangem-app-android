@@ -14,11 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,6 +28,8 @@ import com.tangem.common.ui.account.picker.AccountColorPicker
 import com.tangem.common.ui.account.picker.AccountIconPicker
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.fields.SimpleTextField
+import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -201,11 +201,9 @@ private fun WalletCard(wallet: JointAccountConfigUM.WalletUM) {
         },
         valueSlot = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(
+                TangemDeviceIcon(
+                    state = wallet.deviceIcon,
                     modifier = Modifier.size(20.dp),
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_key_card_20),
-                    tint = TangemTheme.colors3.icon.secondary,
-                    contentDescription = null,
                 )
 
                 TangemRowText(text = stringReference(value = wallet.name), role = TangemRowTextRole.Value)
@@ -262,7 +260,11 @@ private class JointAccountConfigStateProvider : CollectionPreviewParameterProvid
         // Single wallet: the selector row is absent
         createPreviewState(wallet = null),
         createPreviewState(
-            wallet = JointAccountConfigUM.WalletUM(name = "My wallet", onClick = {}),
+            wallet = JointAccountConfigUM.WalletUM(
+                name = "My wallet",
+                deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+                onClick = {},
+            ),
         ),
     ),
 )
