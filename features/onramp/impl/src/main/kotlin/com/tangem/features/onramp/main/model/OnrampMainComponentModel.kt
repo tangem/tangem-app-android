@@ -216,10 +216,10 @@ internal class OnrampMainComponentModel @Inject constructor(
     private var isCountryBlocked = false
     private var ipRestrictedRegionName: String? = null
     private var isIpCheckPending = isCountryByIpEnabled
-    private var isIpCheckFailed = false
+    private var ipCheckError: OnrampError? = null
     private var hasStarted = false
     val isBuyRestricted: Boolean
-        get() = isCountryBlocked || isIpCheckPending || isIpCheckFailed || ipRestrictedRegionName != null
+        get() = isCountryBlocked || isIpCheckPending || ipCheckError != null || ipRestrictedRegionName != null
 
     val isBuyEnabled: StateFlow<Boolean>
         field = MutableStateFlow(!isCountryByIpEnabled)
@@ -269,6 +269,8 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     override fun onAmountValueChanged(value: String) {
         state.update { amountStateFactory.getOnAmountValueChange(value) }
+        // Typing clears the error notice, but Buy stays off until the lookup succeeds, so its Refresh must stay.
+        ipCheckError?.let { error -> state.update { stateFactory.getOnrampErrorState(error) } }
         modelScope.launch { amountInputManager.update(value) }
     }
 
@@ -340,7 +342,8 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     fun onStart() {
         if (hasStarted && isCountryByIpEnabled) {
-            launchAvailabilityCheck()
+            // A failed lookup left an error and no offers; an unchanged country won't reload them, so start over.
+            if (ipCheckError != null) onRefresh() else launchAvailabilityCheck()
         }
         hasStarted = true
         conciergeWaitlistListener.openWaitlistFlow
@@ -379,6 +382,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun startLoadingQuotes() {
         quotesTaskScheduler.cancelTask()
+        if (ipCheckError != null) return
         quotesTaskScheduler.scheduleTask(scope = modelScope, task = loadQuotesTask())
     }
 
@@ -442,7 +446,8 @@ internal class OnrampMainComponentModel @Inject constructor(
             ipRestrictedRegionName = ipCountry.name.takeIf { !ipCountry.isOnrampAvailable }
         }
         // An earlier "allowed" answer is stale once a re-check fails, so Buy stays off until one succeeds.
-        isIpCheckFailed = result.isLeft()
+        ipCheckError = result.leftOrNull()
+        if (ipCheckError != null) quotesTaskScheduler.cancelTask()
         isIpCheckPending = false
         updateRegionRestriction()
         return result

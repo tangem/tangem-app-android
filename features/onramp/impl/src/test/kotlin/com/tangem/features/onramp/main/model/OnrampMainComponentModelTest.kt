@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -636,6 +637,57 @@ internal class OnrampMainComponentModelTest {
 
         // Assert
         assertThat(model.isBuyEnabled.value).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed on screen return WHEN amount typed THEN error with refresh stays`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("USD").right())
+        val model = createModel(scheduler = scheduler, quotesFlow = emptyFlow())
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.DomainError(null).left()
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("100")
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.errorNotification)
+            .isInstanceOf(NotificationUM.Warning.OnrampErrorNotification::class.java)
+        assertThat(model.isBuyEnabled.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed on screen return WHEN next return lookup succeeds THEN error clears and pairs reload`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("USD").right())
+        val model = createModel(scheduler = scheduler, quotesFlow = emptyFlow())
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.DomainError(null).left()
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("USD").right()
+
+        // Act
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
+        assertThat(model.state.value.errorNotification).isNull()
+        assertThat(model.isBuyEnabled.value).isTrue()
+        coVerify(exactly = 2) { fetchPairsUseCase.invoke(userWallet, cryptoCurrency) }
         model.onDestroy()
     }
 
