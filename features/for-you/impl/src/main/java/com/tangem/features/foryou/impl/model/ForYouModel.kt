@@ -43,6 +43,8 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.earn.api.overview.EarnOverviewSupplier
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
@@ -98,6 +100,7 @@ internal class ForYouModel @Inject constructor(
     private val walletHeaderConverter: ForYouWalletHeaderConverter,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val earnOverviewSupplier: EarnOverviewSupplier,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -220,7 +223,7 @@ internal class ForYouModel @Inject constructor(
 
         combine7(
             flow1 = selectedPortfolio,
-            flow2 = yieldSupplyApyFlowUseCase(),
+            flow2 = combine(yieldSupplyApyFlowUseCase(), createEarnOverviewsFlow(), ::Pair),
             flow3 = createTopEarnTokensFlow(),
             flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
             flow5 = combine(
@@ -235,8 +238,9 @@ internal class ForYouModel @Inject constructor(
             },
             flow6 = getCoinIndicatorsUpdatesUseCase(),
             flow7 = selectedPeriod,
-        ) { selectedPortfolio, yieldAvailability, topEarnTokens, isBalanceHidden, wallets, indicators, selectedPeriod ->
+        ) { selectedPortfolio, yieldAndEarn, topEarnTokens, isBalanceHidden, wallets, indicators, selectedPeriod ->
             val (selectedUserWallet, walletHeaders) = wallets
+            val (yieldAvailability, earnOverviews) = yieldAndEarn
 
             val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
                 .groupBy { it.account.userWalletId }
@@ -265,6 +269,7 @@ internal class ForYouModel @Inject constructor(
                 isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync(),
                 yieldSupplyAvailability = yieldAvailability,
                 yieldStakingAvailability = stakingAvailability,
+                earnOverviews = earnOverviews,
                 topEarnTokens = topEarnTokens,
                 expandClick = ::onExpandEarnOpportunitiesClick,
                 onTokenClick = ::onEarnOpportunitiesTokenClick,
@@ -287,6 +292,19 @@ internal class ForYouModel @Inject constructor(
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun createEarnOverviewsFlow(): Flow<Map<UserWalletId, EarnOverviews>> = portfolioSelectorController
+        .selectedAccounts
+        .map { accountIds -> accountIds.mapTo(mutableSetOf()) { it.userWalletId } }
+        .distinctUntilChanged()
+        .flatMapLatest { walletIds ->
+            if (walletIds.isEmpty()) return@flatMapLatest flowOf(emptyMap())
+
+            combine(
+                walletIds.map { walletId -> earnOverviewSupplier(walletId).map { walletId to it } },
+            ) { overviews -> overviews.toMap() }
+        }
 
     private fun closeSelectorOnSelectionApplied() {
         portfolioSelectorController.selectedAccounts
@@ -576,6 +594,14 @@ internal class ForYouModel @Inject constructor(
                         userWalletId = userWalletId,
                         cryptoCurrency = currency,
                         apy = type.apy,
+                    )
+                }
+                is ForYouEarnOpportunitiesType.Earn -> {
+                    type.activeRoute ?: AppRoute.EarnEntry(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = currency,
+                        source = AppRoute.EarnEntry.Source.ForYou,
+                        start = AppRoute.EarnEntry.Start.Auto,
                     )
                 }
             },
