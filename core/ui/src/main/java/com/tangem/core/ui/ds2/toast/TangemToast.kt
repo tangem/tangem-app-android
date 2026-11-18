@@ -26,7 +26,7 @@ import com.tangem.core.ui.res.generated.icons.ic_eye_cross_20
  * Design-system v2 (DS3) **Toast** — a short, non-blocking notice on a material pill: a leading icon, a label,
  * an optional action button and an optional close button.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=13978-477)
  *
@@ -73,7 +73,7 @@ fun TangemToast(
 /**
  * Design-system v2 (DS3) **Toast** drawn from a [TangemToastMessage] — see the base [TangemToast] overload.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=13978-477)
  *
@@ -99,7 +99,7 @@ fun TangemToast(message: TangemToastMessage, modifier: Modifier = Modifier, onCl
 /** Public API surface of [TangemToast]. */
 object TangemToast {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /** Leading icon and its tint. */
     enum class Appearance {

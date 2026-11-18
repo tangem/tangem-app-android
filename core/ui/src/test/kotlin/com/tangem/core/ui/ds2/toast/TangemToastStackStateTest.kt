@@ -182,10 +182,27 @@ internal class TangemToastStackStateTest {
         }
 
         @Test
-        fun `GIVEN toast owned by sheet stack WHEN sheet stack leaves THEN root stack owns it`() = runTest {
+        fun `GIVEN toast owned by sheet stack WHEN sheet stack leaves THEN toast is removed and dismissal reported`() =
+            runTest {
+                // Arrange
+                var dismissCount = 0
+                val sheetDepth = state.registerHost(accessibilityManager = null)
+                showInBackground(createMessage(onDismissRequest = { dismissCount++ }))
+
+                // Act
+                state.unregisterHost(sheetDepth)
+                runCurrent()
+
+                // Assert
+                assertThat(state.entries).isEmpty()
+                assertThat(dismissCount).isEqualTo(1)
+            }
+
+        @Test
+        fun `GIVEN toast owned by root stack WHEN sheet stack leaves THEN root stack keeps it`() = runTest {
             // Arrange
-            val sheetDepth = state.registerHost(accessibilityManager = null)
             showInBackground(createMessage())
+            val sheetDepth = state.registerHost(accessibilityManager = null)
 
             // Act
             state.unregisterHost(sheetDepth)

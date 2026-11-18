@@ -9,11 +9,12 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.EventMessage
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.TangemToastMessage
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -110,7 +111,7 @@ internal class TokenReceiveScreenModelTest {
     }
 
     @Test
-    fun `GIVEN address WHEN copy address button THEN copies it with copy button source and shows copied snackbar`() {
+    fun `GIVEN address WHEN copy address button THEN copies it with copy button source and shows copied toast`() {
         // Arrange
         val screenModel = createModel(addresses = listOf(defaultAddress, ensAddress))
 
@@ -119,12 +120,12 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onCopyClick(defaultAddress, TokenReceiveCopyActionSource.CopyButton) }
-        assertThat(sentSnackbars()).containsExactly(copiedSnackbar())
+        assertThat(sentToasts()).containsExactly(copiedToast())
         screenModel.onDestroy()
     }
 
     @Test
-    fun `GIVEN address card WHEN tap qr or address THEN copies it with qr code source and shows copied snackbar`() {
+    fun `GIVEN address card WHEN tap qr or address THEN copies it with qr code source and shows copied toast`() {
         // Arrange
         val screenModel = createModel(addresses = listOf(defaultAddress, legacyAddress))
 
@@ -133,12 +134,12 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onCopyClick(legacyAddress, TokenReceiveCopyActionSource.QrCode) }
-        assertThat(sentSnackbars()).containsExactly(copiedSnackbar())
+        assertThat(sentToasts()).containsExactly(copiedToast())
         screenModel.onDestroy()
     }
 
     @Test
-    fun `GIVEN ens name WHEN copy ens THEN copies it from receive and shows copied snackbar`() {
+    fun `GIVEN ens name WHEN copy ens THEN copies it from receive and shows copied toast`() {
         // Arrange
         val screenModel = createModel(addresses = listOf(defaultAddress, ensAddress))
 
@@ -147,7 +148,7 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onCopyClick(ensAddress, TokenReceiveCopyActionSource.Receive) }
-        assertThat(sentSnackbars()).containsExactly(copiedSnackbar())
+        assertThat(sentToasts()).containsExactly(copiedToast())
         screenModel.onDestroy()
     }
 
@@ -191,14 +192,21 @@ internal class TokenReceiveScreenModelTest {
 
     data class OpenedModel(val addresses: List<ReceiveAddress>, val expectedEns: String)
 
-    private fun sentSnackbars(): List<Pair<TextReference, Int?>> {
+    private fun sentToasts(): List<CopiedToast> {
         val messages = mutableListOf<EventMessage>()
         verify { messageSender.send(capture(messages)) }
-        return messages.filterIsInstance<SnackbarMessage>().map { it.message to it.startIconId }
+        return messages.filterIsInstance<TangemToastMessage>().map {
+            CopiedToast(label = it.label, appearance = it.appearance, isClosable = it.isClosable)
+        }
     }
 
-    private fun copiedSnackbar(): Pair<TextReference, Int?> =
-        resourceReference(R.string.wallet_notification_address_copied) to R.drawable.ic_check_24
+    private fun copiedToast() = CopiedToast(
+        label = resourceReference(R.string.address_book_address_copied),
+        appearance = TangemToast.Appearance.Success,
+        isClosable = false,
+    )
+
+    data class CopiedToast(val label: TextReference, val appearance: TangemToast.Appearance, val isClosable: Boolean)
 
     private fun createReceiveState(addresses: List<ReceiveAddress>, isEnsResultLoading: Boolean = false) =
         TokenReceiveUM(
