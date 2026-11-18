@@ -40,6 +40,7 @@ internal class EarnRiskRowTest {
                     ),
                 ),
             ),
+            kind = EarnRowKind.Risk,
         )
         assertThat(actual).isEqualTo(expected)
     }

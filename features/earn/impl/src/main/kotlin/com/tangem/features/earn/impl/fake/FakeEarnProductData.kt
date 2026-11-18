@@ -38,6 +38,7 @@ import com.tangem.features.earn.product.api.product.EarnRewards
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -225,10 +226,16 @@ internal fun fakeHowItWorks(preset: FakeEarnProductPreset): EarnHowItWorks? = Ea
     ),
 ).takeUnless { preset == FakeEarnProductPreset.Staking }
 
-private fun fakeRow(label: TextReference, value: TextReference, info: TextReference? = null) = EarnRow(
+private fun fakeRow(
+    label: TextReference,
+    value: TextReference,
+    info: TextReference? = null,
+    kind: EarnRowKind? = null,
+) = EarnRow(
     label = label,
     value = EarnValue.Text(value),
     info = info?.let { EarnRowInfo.Text(title = label, text = it) },
+    kind = kind,
 )
 
 private fun fakeAmountRow(label: TextReference, amount: BigDecimal, info: TextReference? = null) = EarnRow(
@@ -249,16 +256,19 @@ private fun fakeDetails(): List<EarnRow> {
                 text = resourceReference(ResR.string.yield_module_provider),
                 url = "https://aave.com",
             ),
+            kind = EarnRowKind.Protocol,
         ),
         fakeRow(
             label = withdrawals,
             value = resourceReference(ResR.string.earn_product_details_usually_instant),
             info = resourceReference(ResR.string.earn_product_details_lending_withdrawals_info),
+            kind = EarnRowKind.Withdrawals,
         ),
         fakeRow(
             label = fee,
             value = resourceReference(ResR.string.earn_product_details_performance_fee_value, percent),
             info = resourceReference(ResR.string.earn_product_details_performance_fee_info, percent),
+            kind = EarnRowKind.PerformanceFee,
         ),
     )
 }

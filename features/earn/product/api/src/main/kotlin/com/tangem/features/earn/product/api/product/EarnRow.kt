@@ -8,7 +8,11 @@ data class EarnRow(
     val label: TextReference,
     val value: EarnValue,
     val info: EarnRowInfo? = null,
+    val kind: EarnRowKind? = null,
 )
+
+/** Curator and Validator rows are [Protocol]. */
+enum class EarnRowKind { Risk, Protocol, Withdrawals, PerformanceFee, Audits }
 
 sealed interface EarnRowInfo {
 

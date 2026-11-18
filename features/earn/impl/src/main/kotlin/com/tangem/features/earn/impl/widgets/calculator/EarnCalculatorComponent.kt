@@ -35,6 +35,8 @@ internal class EarnCalculatorComponent @AssistedInject constructor(
         state?.let { EarnCalculatorContent(state = it, modifier = modifier) }
     }
 
+    enum class Input { InitialBalance, MonthlyTopUp }
+
     data class Params(
         val projection: Flow<EarnProjection?>,
         val incentiveRate: Flow<EarnProductRate?> = flowOf(null),

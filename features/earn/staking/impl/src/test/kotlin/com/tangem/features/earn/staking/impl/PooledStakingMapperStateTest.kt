@@ -24,6 +24,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.detailsRow
@@ -89,10 +90,15 @@ internal class PooledStakingMapperStateTest {
             ),
             details = listOf(
                 EarnRisk.Low.detailsRow(),
-                row(label = resourceReference(R.string.staking_validator), value = stringReference("P2P")),
+                row(
+                    label = resourceReference(R.string.staking_validator),
+                    value = stringReference("P2P"),
+                    kind = EarnRowKind.Protocol,
+                ),
                 row(
                     label = resourceReference(R.string.earn_product_details_withdrawals),
                     value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
+                    kind = EarnRowKind.Withdrawals,
                     info = EarnRowInfo.Text(
                         title = resourceReference(R.string.earn_product_details_withdrawals),
                         text = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
@@ -109,6 +115,25 @@ internal class PooledStakingMapperStateTest {
         )
         assertThat(actual.copy(projection = null)).isEqualTo(expected)
         assertThat(actual.projection).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN pooled staking ready WHEN mapping details THEN rows carry Risk, Protocol, Withdrawals and PerformanceFee kinds`() {
+        // Arrange
+        val availability = StakingAvailability.Available(option())
+
+        // Act
+        val actual = mapper.state(status(), availability) as EarnProductState.Ready
+
+        // Assert
+        assertThat(actual.details.map { it.kind })
+            .containsExactly(
+                EarnRowKind.Risk,
+                EarnRowKind.Protocol,
+                EarnRowKind.Withdrawals,
+                EarnRowKind.PerformanceFee,
+            )
+            .inOrder()
     }
 
     @Test
@@ -337,10 +362,16 @@ internal class PooledStakingMapperStateTest {
             vaults = listOf(MockStaking.vault(apy = BigDecimal(apy)).copy(feePercent = BigDecimal(feePercent))),
         )
 
-    private fun row(label: TextReference, value: TextReference, info: EarnRowInfo? = null): EarnRow = EarnRow(
+    private fun row(
+        label: TextReference,
+        value: TextReference,
+        kind: EarnRowKind,
+        info: EarnRowInfo? = null,
+    ): EarnRow = EarnRow(
         label = label,
         value = EarnValue.Text(value),
         info = info,
+        kind = kind,
     )
 
     private fun textBlock(title: TextReference, description: TextReference): EarnTextBlock = EarnTextBlock(
@@ -351,6 +382,7 @@ internal class PooledStakingMapperStateTest {
     private fun feeRow(percent: String): EarnRow = row(
         label = resourceReference(R.string.earn_product_details_performance_fee),
         value = resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList("$percent%")),
+        kind = EarnRowKind.PerformanceFee,
         info = EarnRowInfo.Text(
             title = resourceReference(R.string.earn_product_details_performance_fee),
             text = resourceReference(
