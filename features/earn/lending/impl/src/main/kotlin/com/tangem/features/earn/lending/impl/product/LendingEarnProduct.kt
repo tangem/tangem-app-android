@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
+import com.tangem.features.earn.lending.impl.supplier.LendingSnapshot
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
@@ -68,7 +69,14 @@ internal class LendingEarnProduct @Inject constructor(
 
     override fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries> {
         if (!isOffered) return flowOf(EarnSummaries(byCurrency = emptyMap()))
-        return lendingSupplier(userWalletId).map { EarnSummaries(byCurrency = summaryConverter.convert(it)) }
+        return lendingSupplier(userWalletId).map { snapshot ->
+            // The fallback has no data: failing lets the Earn summaries keep the last answer as cache
+            check(snapshot != LendingSnapshot.Failed) { "Lending snapshot failed" }
+            EarnSummaries(
+                byCurrency = summaryConverter.convert(snapshot),
+                loadingCurrencies = summaryConverter.loadingCurrencies(snapshot),
+            )
+        }
     }
 
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> {

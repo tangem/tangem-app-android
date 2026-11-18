@@ -1,5 +1,6 @@
 package com.tangem.features.earn.lending.impl.product
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
 import com.tangem.features.earn.lending.impl.supplier.LendingSnapshot
@@ -15,6 +16,11 @@ internal class LendingSummaryConverter(
 
     override fun convert(value: LendingSnapshot): Map<CryptoCurrency.ID, EarnProductSummary> =
         value.assets.mapNotNull { (id, state) -> toSummary(state)?.let { id to it } }.toMap()
+
+    fun loadingCurrencies(value: LendingSnapshot): Set<CryptoCurrency.ID> = value.assets.filterValues { state ->
+        val market = state.market
+        market.rate == null && market.rateSource == StatusSource.CACHE || market.isPositionLoading
+    }.keys
 
     private fun toSummary(state: LendingAssetState): EarnProductSummary? {
         val rate = state.market.rate ?: return null
