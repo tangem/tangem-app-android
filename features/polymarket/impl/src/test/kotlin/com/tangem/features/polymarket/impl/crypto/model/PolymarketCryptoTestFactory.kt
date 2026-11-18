@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.crypto.model
 
 import com.tangem.domain.polymarket.model.PolymarketCryptoNextWindow
+import com.tangem.domain.polymarket.model.PolymarketCryptoPriceFeed
 import com.tangem.domain.polymarket.model.PolymarketCryptoWindow
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketOutcome
@@ -23,6 +24,7 @@ internal fun createCryptoEvent(
     priceToBeat: BigDecimal? = null,
     finalPrice: BigDecimal? = null,
     liveEventId: String? = null,
+    priceFeed: PolymarketCryptoPriceFeed? = null,
     outcomes: List<PolymarketOutcome> = listOf(
         createPolymarketOutcome(assetId = "up-$index", title = "Up"),
         createPolymarketOutcome(assetId = "down-$index", title = "Down"),
@@ -38,7 +40,7 @@ internal fun createCryptoEvent(
         cryptoWindow = PolymarketCryptoWindow(
             start = Instant.ofEpochMilli(cryptoWindowStart(index)),
             end = Instant.ofEpochMilli(cryptoWindowStart(index + 1)),
-            priceFeed = null,
+            priceFeed = priceFeed,
             priceToBeat = priceToBeat,
             finalPrice = finalPrice,
             nextWindows = (index + 1..index + following).map { next ->
