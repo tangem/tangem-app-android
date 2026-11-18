@@ -87,6 +87,11 @@ internal class AmplitudeABTestsManager(
         return client.all()[key]?.value
     }
 
+    override fun getCachedValue(key: String): String? {
+        if (peekValue(key) == null) return null
+        return client.variant(key).value
+    }
+
     // The tracking context is set several times in a row for the same wallet
     @Synchronized
     private fun fetchIfUserChanged(user: ExperimentUser) {

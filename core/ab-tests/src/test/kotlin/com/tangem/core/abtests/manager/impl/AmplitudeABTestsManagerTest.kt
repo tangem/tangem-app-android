@@ -5,6 +5,7 @@ import com.amplitude.experiment.Experiment
 import com.amplitude.experiment.ExperimentClient
 import com.amplitude.experiment.ExperimentConfig
 import com.amplitude.experiment.ExperimentUser
+import com.amplitude.experiment.Variant
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.test.core.TestAppCoroutineScope
@@ -159,6 +160,46 @@ internal class AmplitudeABTestsManagerTest {
         verify(exactly = 2) { client.fetch(walletUser) }
     }
 
+    @Test
+    fun `GIVEN no variant on device WHEN getCachedValue THEN returns null without exposure`() {
+        // Arrange
+        val manager = createManager()
+        manager.init()
+
+        // Act
+        val actual = manager.getCachedValue(FLAG_KEY)
+
+        // Assert
+        assertThat(actual).isNull()
+        verify(exactly = 0) { client.variant(any()) }
+    }
+
+    @Test
+    fun `GIVEN variant on device WHEN getCachedValue THEN returns it through the exposure tracking read`() {
+        // Arrange
+        val variant = Variant(value = "treatment")
+        every { client.all() } returns mapOf(FLAG_KEY to variant)
+        every { client.variant(FLAG_KEY) } returns variant
+        val manager = createManager()
+        manager.init()
+
+        // Act
+        val actual = manager.getCachedValue(FLAG_KEY)
+
+        // Assert
+        assertThat(actual).isEqualTo("treatment")
+        verify(exactly = 1) { client.variant(FLAG_KEY) }
+    }
+
+    @Test
+    fun `GIVEN manager not initialized WHEN getCachedValue THEN returns null`() {
+        // Act
+        val actual = createManager().getCachedValue(FLAG_KEY)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
     private fun AmplitudeABTestsManager.setWalletUser() {
         setUserProperties(userId = USER_ID, batch = BATCH, productType = PRODUCT_TYPE, firmware = FIRMWARE)
     }
@@ -175,5 +216,6 @@ internal class AmplitudeABTestsManagerTest {
         const val BATCH = "AC03"
         const val PRODUCT_TYPE = "Wallet"
         const val FIRMWARE = "4.52r"
+        const val FLAG_KEY = "flag_key"
     }
 }
