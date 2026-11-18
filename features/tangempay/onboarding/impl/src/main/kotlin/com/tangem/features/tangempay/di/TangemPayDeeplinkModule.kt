@@ -4,6 +4,7 @@ import com.tangem.core.navigation.deeplink.DeepLinkHandler
 import com.tangem.core.navigation.deeplink.DeepLinkKey
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayMainDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayOnboardDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.MoneyAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler
@@ -39,8 +40,8 @@ internal interface TangemPayDeeplinkModule {
 
     @Binds
     @IntoMap
-    @DeepLinkKey(TangemPayOnboardDeepLinkHandler.MONEY_ACCOUNT_DEEPLINK_KEY)
-    fun bindTangemPayOnboardMoneyAccountDeepLinkHandler(impl: DefaultTangemPayOnboardDeepLinkHandler): DeepLinkHandler
+    @DeepLinkKey(MoneyAccountDeepLinkHandler.DEEPLINK_KEY)
+    fun bindMoneyAccountDeepLinkHandler(impl: MoneyAccountDeepLinkHandler): DeepLinkHandler
 
     @Binds
     @IntoMap
