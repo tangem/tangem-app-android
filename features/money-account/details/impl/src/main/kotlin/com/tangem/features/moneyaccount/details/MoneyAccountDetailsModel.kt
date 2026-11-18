@@ -43,7 +43,6 @@ import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.kyc.KycAdditionalInfoNotice
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -73,7 +72,6 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
     private val uiMessageSender: UiMessageSender,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     getUserWalletUseCase: GetUserWalletUseCase,
     kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
@@ -106,6 +104,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         popupStore = kycAdditionalInfoPopupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
+        isOpenedFromPush = params.isOpenedFromKycPush,
         onProvideInformation = ::openKyc,
         onContactSupport = ::sendSupportEmail,
     )
@@ -141,7 +140,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     }
 
     fun onStart() {
-        if (tangemPayFeatureToggles.isKycAdditionalInfoEnabled && !statusRefreshJobHolder.isActive) refreshStatus()
+        if (!statusRefreshJobHolder.isActive) refreshStatus()
     }
 
     private fun refreshStatus(): Job = modelScope.launch { moneyAccountStatusFetcher(params.userWalletId) }
@@ -328,10 +327,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         },
         balanceBand = balance?.cryptoAmount?.let(MoneyAccountAnalyticsEvents.BalanceBand::of),
         currency = balance?.currencyCode,
-        additionalVerificationNotice = NoticeState.of(
-            isEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
-            isRequired = isKycAdditionalInfoRequired,
-        ),
+        additionalVerificationNotice = NoticeState.of(isRequired = isKycAdditionalInfoRequired),
     )
 
     private companion object {

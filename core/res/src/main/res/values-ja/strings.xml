@@ -353,6 +353,7 @@
   <plurals name="common_days_time_ago">
     <item quantity="other">%d日前</item>
   </plurals>
+  <string name="common_decline">拒否</string>
   <string name="common_delete">削除</string>
   <string name="common_disable">無効にする</string>
   <string name="common_disabled">無効</string>
@@ -572,6 +573,7 @@
   <string name="custom_token_derivation_path">派生パス</string>
   <string name="custom_token_derivation_path_default">デフォルト</string>
   <string name="custom_token_derivation_path_input_title">BIP44コインタイプ</string>
+  <string name="custom_token_derivation_path_reserved">この派生パスは予約済みです</string>
   <string name="custom_token_invalid_derivation_path">入力した派生パスは無効です</string>
   <string name="custom_token_name_input_placeholder">USD Coin</string>
   <string name="custom_token_name_input_title">名前</string>
@@ -2899,7 +2901,7 @@
   <string name="tangempay_issuing_new_digital_card_title">新しいデジタルカードを発行中</string>
   <string name="tangempay_issuing_your_card">カードを発行しています</string>
   <string name="tangempay_issuing_your_card_description">カードは通常、5分以内に自動で発行されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
-  <string name="tangempay_kyc_additional_info_banner_description">お客様から追加の情報をいただく必要があります。引き続きアカウントをご利用いただくため、14日以内にご提出ください</string>
+  <string name="tangempay_kyc_additional_info_banner_description">引き続きアカウントをご利用いただくため、当社の依頼日から14日以内にご提出ください</string>
   <string name="tangempay_kyc_additional_info_button">情報を提出する</string>
   <string name="tangempay_kyc_additional_info_popup_description">引き続きアカウントをご利用いただくため、当社の依頼日から14日以内にご提出ください</string>
   <string name="tangempay_kyc_additional_info_title">追加の情報が必要です</string>
@@ -3260,6 +3262,7 @@
   <plurals name="top_assets_count">
     <item quantity="other">上位%d資産</item>
   </plurals>
+  <string name="transaction_history_awaiting_signatures">署名待ち</string>
   <string name="transaction_history_claiming_reward">報酬受け取り中</string>
   <string name="transaction_history_contract_address">コントラクト: %s</string>
   <string name="transaction_history_disabling_yield_mode">利息モードを無効化中</string>
@@ -3271,9 +3274,12 @@
   <string name="transaction_history_not_supported_description">現在、このブロックチェーンでは取引履歴はサポートされていません。しかしご心配なく！弊社で対応中です。その間、エクスプローラーで確認することができます。</string>
   <string name="transaction_history_operation">処理</string>
   <string name="transaction_history_pending">保留中</string>
+  <string name="transaction_history_pending_send">保留中の送信</string>
   <string name="transaction_history_rewards_restaked">報酬を再ステーキングしました</string>
   <string name="transaction_history_rewards_restaking">報酬の再ステーキング</string>
   <string name="transaction_history_staking_reward">ステーキング報酬</string>
+  <string name="transaction_history_status_send_cancelled">送信キャンセル済み</string>
+  <string name="transaction_history_status_transfer_cancelled">送金キャンセル済み</string>
   <string name="transaction_history_to_inline_address">%%image%% %s へ</string>
   <string name="transaction_history_transaction_for_address">対象：%s</string>
   <string name="transaction_history_transaction_from_address">送金元: %s</string>

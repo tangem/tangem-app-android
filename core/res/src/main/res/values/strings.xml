@@ -423,6 +423,9 @@
   <string name="collectibles_welcome_legal_privacy_notice">Privacy Notice</string>
   <string name="collectibles_welcome_legal_tangem_terms">Tangem T&amp;Cs</string>
   <string name="collectibles_welcome_title">Create your Tangem Packs account</string>
+  <string name="collectibles_withdraw_transfer_error_expired">The transaction expired before being sent. Please try again.</string>
+  <string name="collectibles_withdraw_transfer_error_maybe_sent">Your transaction may already be on the network. Check its status before submitting another one.</string>
+  <string name="collectibles_withdraw_transfer_error_rate_limited">Too many sponsored transactions. Please try again in an hour.</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
   <string name="common_account">Account</string>
@@ -3503,7 +3506,7 @@
   <string name="tangempay_issuing_new_digital_card_title">Issuing a new digital card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
   <string name="tangempay_issuing_your_card_description">The card is usually issued automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">We need a few more details from you. Please share them within 14 days to keep using your account</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Please share them within 14 days of our request to keep using your account</string>
   <string name="tangempay_kyc_additional_info_button">Provide information</string>
   <string name="tangempay_kyc_additional_info_popup_description">Please share them within 14 days of our request so you can keep using your account</string>
   <string name="tangempay_kyc_additional_info_title">We need a few more details</string>

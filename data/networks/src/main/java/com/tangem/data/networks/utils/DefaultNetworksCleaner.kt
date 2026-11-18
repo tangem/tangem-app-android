@@ -5,7 +5,6 @@ import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -31,7 +30,7 @@ internal class DefaultNetworksCleaner @Inject constructor(
     private val networksStatusesStore: NetworksStatusesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
-) : CryptoCurrencyDataCleaner, NetworksCleaner {
+) : CryptoCurrencyDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
         runSuspendCatching { networksStatusesStore.remove(userWalletIds) }

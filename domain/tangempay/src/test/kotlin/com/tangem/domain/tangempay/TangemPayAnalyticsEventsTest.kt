@@ -90,11 +90,6 @@ internal class TangemPayAnalyticsEventsTest {
             expectedParams = mapOf("additional_verification_notice" to "not_shown"),
         ),
         EventModel(
-            event = TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = null),
-            expectedId = "[Visa Screen] Visa Main Screen Opened",
-            expectedParams = emptyMap(),
-        ),
-        EventModel(
             event = TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.CARD),
             expectedId = "[Visa Screen] Button - Terms And Limits",
             expectedParams = mapOf("product" to "card"),

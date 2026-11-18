@@ -48,7 +48,8 @@ data class ToastMessage(
 
 /**
  * Shows a design-system [TangemToast] in the app-wide [com.tangem.core.ui.ds2.toast.TangemToastStack]: on top of
- * the screen, its modals and bottom sheets, newest on top. It survives closing the screen that sent it.
+ * the screen, its modals and bottom sheets, newest on top. It survives closing the screen that sent it, unless that
+ * screen is a window of its own (a bottom sheet or a dialog-window modal): the toast leaves together with it.
  *
  * @param label The message, up to three lines.
  * @param appearance Leading icon and its tint. Optional, [TangemToast.Appearance.Neutral] by default.

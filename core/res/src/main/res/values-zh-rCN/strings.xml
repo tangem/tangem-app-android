@@ -352,6 +352,7 @@
   <plurals name="common_days_time_ago">
     <item quantity="other">%d天之前</item>
   </plurals>
+  <string name="common_decline">拒绝</string>
   <string name="common_delete">删除</string>
   <string name="common_disable">禁用</string>
   <string name="common_disabled">已禁用</string>
@@ -575,6 +576,7 @@
   <string name="custom_token_derivation_path">派生路径</string>
   <string name="custom_token_derivation_path_default">默认</string>
   <string name="custom_token_derivation_path_input_title">BIP44 代币类型</string>
+  <string name="custom_token_derivation_path_reserved">此派生路径已被保留</string>
   <string name="custom_token_invalid_derivation_path">您输入的派生路径无效</string>
   <string name="custom_token_name_input_placeholder">例如USD币</string>
   <string name="custom_token_name_input_title">名称</string>
@@ -2899,7 +2901,7 @@
   <string name="tangempay_issuing_new_digital_card_title">发行新的数字卡</string>
   <string name="tangempay_issuing_your_card">正在发放您的卡片</string>
   <string name="tangempay_issuing_your_card_description">该卡通常会在 5 分钟内自动发放。极少数情况下，如果需要人工审核，则可能需要长达 48 小时。</string>
-  <string name="tangempay_kyc_additional_info_banner_description">我们还需要您提供一些信息。请在 14 天内提交，以便继续使用您的账户</string>
+  <string name="tangempay_kyc_additional_info_banner_description">请在我们发出请求后 14 天内提供，以便继续使用您的账户</string>
   <string name="tangempay_kyc_additional_info_button">提供信息</string>
   <string name="tangempay_kyc_additional_info_popup_description">请在我们发出请求后 14 天内提供，以便继续使用您的账户</string>
   <string name="tangempay_kyc_additional_info_title">我们还需要一些信息</string>
@@ -3255,6 +3257,7 @@
   <plurals name="top_assets_count">
     <item quantity="other">头部%d种资产</item>
   </plurals>
+  <string name="transaction_history_awaiting_signatures">等待签名</string>
   <string name="transaction_history_claiming_reward">领取奖励</string>
   <string name="transaction_history_contract_address">合约： %s</string>
   <string name="transaction_history_disabling_yield_mode">禁用收益模式</string>
@@ -3266,9 +3269,12 @@
   <string name="transaction_history_not_supported_description">本区块链目前不支持交易历史记录。不过不用担心，我们正在努力！在此期间，您可以在资源管理器中查看。</string>
   <string name="transaction_history_operation">操作</string>
   <string name="transaction_history_pending">待定</string>
+  <string name="transaction_history_pending_send">待处理的发送</string>
   <string name="transaction_history_rewards_restaked">奖励已再质押</string>
   <string name="transaction_history_rewards_restaking">奖励再质押</string>
   <string name="transaction_history_staking_reward">质押奖励</string>
+  <string name="transaction_history_status_send_cancelled">发送已取消</string>
+  <string name="transaction_history_status_transfer_cancelled">转账已取消</string>
   <string name="transaction_history_to_inline_address">%%image%%%s</string>
   <string name="transaction_history_transaction_for_address">为 %s</string>
   <string name="transaction_history_transaction_from_address">来自 %s</string>

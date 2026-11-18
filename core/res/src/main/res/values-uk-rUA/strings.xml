@@ -379,6 +379,7 @@
     <item quantity="many">%d днів тому</item>
     <item quantity="other">%d днів тому</item>
   </plurals>
+  <string name="common_decline">Відхилити</string>
   <string name="common_delete">Видалити</string>
   <string name="common_disable">Вимкнути</string>
   <string name="common_disabled">Вимкнуто</string>
@@ -613,6 +614,7 @@
   <string name="custom_token_derivation_path">Шлях деривації</string>
   <string name="custom_token_derivation_path_default">За замовчуванням</string>
   <string name="custom_token_derivation_path_input_title">Тип монети BIP44</string>
+  <string name="custom_token_derivation_path_reserved">Цей шлях деривації зарезервовано</string>
   <string name="custom_token_invalid_derivation_path">Введений шлях деривації недійсний</string>
   <string name="custom_token_name_input_placeholder">Наприклад, USD Coin</string>
   <string name="custom_token_name_input_title">Назва токену</string>
@@ -3018,7 +3020,7 @@
   <string name="tangempay_issuing_new_digital_card_title">Випуск нової цифрової картки</string>
   <string name="tangempay_issuing_your_card">Випускаємо картку</string>
   <string name="tangempay_issuing_your_card_description">Карту зазвичай випускають автоматично протягом 5 хвилин. У рідкісних випадках, коли потрібна ручна перевірка, процес може тривати до 48 годин.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">Нам потрібно ще трохи даних від вас. Будь ласка, надайте їх протягом 14 днів, щоб і далі користуватися акаунтом</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Будь ласка, надайте їх протягом 14 днів після нашого запиту, щоб і далі користуватися акаунтом</string>
   <string name="tangempay_kyc_additional_info_button">Надати дані</string>
   <string name="tangempay_kyc_additional_info_popup_description">Будь ласка, надайте їх протягом 14 днів після нашого запиту, щоб і далі користуватися акаунтом</string>
   <string name="tangempay_kyc_additional_info_title">Нам потрібно ще трохи даних</string>
@@ -3027,7 +3029,7 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Ви впевнені, що хочете припинити верифікацію? Ви зможете повернутися до неї будь-коли.</string>
   <string name="tangempay_kyc_failed_description">Не вдалося підтвердити ваш профіль. Якщо у вас є питання, зверніться у службу підтримки.</string>
   <string name="tangempay_kyc_failed_title">На жаль, нам не вдалося підтвердити вашу особу</string>
-  <string name="tangempay_kyc_has_failed">Верифікація відхилена</string>
+  <string name="tangempay_kyc_has_failed">Верифікацію відхилено</string>
   <string name="tangempay_kyc_in_progress">Верифікація в процесі</string>
   <string name="tangempay_kyc_in_progress_notification_button">Переглянути статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">Верифікація для Tangem Pay в процесі</string>
@@ -3391,6 +3393,7 @@
     <item quantity="many">%d найбільших активів</item>
     <item quantity="other">%d найбільших активів</item>
   </plurals>
+  <string name="transaction_history_awaiting_signatures">Очікує підписів</string>
   <string name="transaction_history_claiming_reward">Отримання нагороди</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_disabling_yield_mode">Вимкнення режиму дохідності</string>
@@ -3402,9 +3405,12 @@
   <string name="transaction_history_not_supported_description">Історія транзакцій наразі не підтримується для цього блокчейну. Але не хвилюйтеся, ми працюємо над цим! А поки можете перевірити це в оглядачі.</string>
   <string name="transaction_history_operation">Операція</string>
   <string name="transaction_history_pending">В очікуванні</string>
+  <string name="transaction_history_pending_send">Очікує надсилання</string>
   <string name="transaction_history_rewards_restaked">Нагороди рестейкнуто</string>
   <string name="transaction_history_rewards_restaking">Рестейкінг нагород</string>
   <string name="transaction_history_staking_reward">Нагорода за стейкінг</string>
+  <string name="transaction_history_status_send_cancelled">Надсилання скасовано</string>
+  <string name="transaction_history_status_transfer_cancelled">Переказ скасовано</string>
   <string name="transaction_history_to_inline_address">на: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">для: %s</string>
   <string name="transaction_history_transaction_from_address">від: %s</string>

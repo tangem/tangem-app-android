@@ -578,6 +578,7 @@
   <string name="custom_token_derivation_path">Ruta de derivación</string>
   <string name="custom_token_derivation_path_default">Por defecto</string>
   <string name="custom_token_derivation_path_input_title">Tipo de moneda BIP44</string>
+  <string name="custom_token_derivation_path_reserved">Esta ruta de derivación está reservada</string>
   <string name="custom_token_invalid_derivation_path">La ruta de derivación que ha ingresado no es válida</string>
   <string name="custom_token_name_input_placeholder">Por ejemplo moneda USD</string>
   <string name="custom_token_name_input_title">Nombre</string>
@@ -2952,7 +2953,7 @@
   <string name="tangempay_issuing_new_digital_card_title">Emisión de una nueva tarjeta digital</string>
   <string name="tangempay_issuing_your_card">Emisión de tu tarjeta</string>
   <string name="tangempay_issuing_your_card_description">La tarjeta suele emitirse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, la emisión puede tardar hasta 48 horas.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">Necesitamos algunos datos más de tu parte. Por favor, envíalos en un plazo de 14 días para seguir usando tu cuenta</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Por favor, envíalos en un plazo de 14 días desde nuestra solicitud para seguir usando tu cuenta</string>
   <string name="tangempay_kyc_additional_info_button">Proporcionar datos</string>
   <string name="tangempay_kyc_additional_info_popup_description">Por favor, envíalos en un plazo de 14 días desde nuestra solicitud para seguir usando tu cuenta</string>
   <string name="tangempay_kyc_additional_info_title">Necesitamos algunos datos más</string>
@@ -2961,7 +2962,7 @@
   <string name="tangempay_kyc_confirm_cancellation_description">¿Seguro que quieres interrumpir la verificación? Puedes retomarla en cualquier momento.</string>
   <string name="tangempay_kyc_failed_description">No pudimos verificar tu perfil. Si tienes alguna pregunta, contacta con el soporte.</string>
   <string name="tangempay_kyc_failed_title">Lamentablemente, no pudimos verificar tu identidad</string>
-  <string name="tangempay_kyc_has_failed">Verificación rechazado</string>
+  <string name="tangempay_kyc_has_failed">Verificación rechazada</string>
   <string name="tangempay_kyc_in_progress">Verificación en curso</string>
   <string name="tangempay_kyc_in_progress_notification_button">Ver estado</string>
   <string name="tangempay_kyc_in_progress_notification_title">Verificación en progreso para Tangem Pay</string>
@@ -3317,6 +3318,7 @@
     <item quantity="one">%d activo principal</item>
     <item quantity="other">Principales %d activos</item>
   </plurals>
+  <string name="transaction_history_awaiting_signatures">Esperando firmas</string>
   <string name="transaction_history_claiming_reward">Reclamar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
   <string name="transaction_history_disabling_yield_mode">Desactivar el modo Rendimiento</string>
@@ -3328,9 +3330,12 @@
   <string name="transaction_history_not_supported_description">El historial de transacciones no está soportado actualmente para esta blockchain. Pero no se preocupe, ¡estamos trabajando en ello! Mientras tanto, puede consultarlo en el explorador.</string>
   <string name="transaction_history_operation">Operación</string>
   <string name="transaction_history_pending">Pendiente</string>
+  <string name="transaction_history_pending_send">Envío pendiente</string>
   <string name="transaction_history_rewards_restaked">Recompensas reinvertidas</string>
   <string name="transaction_history_rewards_restaking">Reinversión de recompensas</string>
   <string name="transaction_history_staking_reward">Recompensa por staking</string>
+  <string name="transaction_history_status_send_cancelled">Envío cancelado</string>
+  <string name="transaction_history_status_transfer_cancelled">Transferencia cancelada</string>
   <string name="transaction_history_to_inline_address">para: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">para: %s</string>
   <string name="transaction_history_transaction_from_address">desde: %s</string>
@@ -3632,9 +3637,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
   <string name="warning_last_balance_updated_time">Última actualización hace %s</string>
-  <string name="warning_link_wallet_cold_message">Usa tu tarjeta para añadir una capa adicional de seguridad al conectarte a los servicios de Tangem.</string>
-  <string name="warning_link_wallet_hot_message">Añade una capa adicional de seguridad al conectarte a los servicios de Tangem.</string>
-  <string name="warning_link_wallet_title">Protege tu conexión</string>
+  <string name="warning_link_wallet_cold_message">Use su tarjeta para añadir una capa adicional de seguridad al conectarse a los servicios de Tangem.</string>
+  <string name="warning_link_wallet_hot_message">Añada una capa adicional de seguridad al conectarse a los servicios de Tangem.</string>
+  <string name="warning_link_wallet_title">Proteja su conexión</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Debe retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Los tokens en diferentes redes pueden tener direcciones diferentes. Verifique que su dirección coincida con la red cuando transfieras fondos.</string>

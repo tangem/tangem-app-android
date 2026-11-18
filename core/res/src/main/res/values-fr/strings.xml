@@ -356,6 +356,7 @@
     <item quantity="one">Il y a %d jour</item>
     <item quantity="other">Il y a %d jours</item>
   </plurals>
+  <string name="common_decline">Refuser</string>
   <string name="common_delete">Supprimer</string>
   <string name="common_disable">Désactiver</string>
   <string name="common_disabled">Désactivé</string>
@@ -571,6 +572,7 @@
   <string name="custom_token_derivation_path">Chemin de dérivation</string>
   <string name="custom_token_derivation_path_default">Par défaut</string>
   <string name="custom_token_derivation_path_input_title">Coin de type BIP44</string>
+  <string name="custom_token_derivation_path_reserved">Ce chemin de dérivation est réservé</string>
   <string name="custom_token_invalid_derivation_path">Le chemin de dérivation entré est invalide</string>
   <string name="custom_token_name_input_placeholder">Par exemple USD coin</string>
   <string name="custom_token_name_input_title">Nom</string>
@@ -2827,7 +2829,7 @@
   <string name="tangempay_issuing_new_digital_card_title">Nouvelle carte virtuelle en cours d\'émission</string>
   <string name="tangempay_issuing_your_card">Émission de votre carte</string>
   <string name="tangempay_issuing_your_card_description">La carte est généralement émise automatiquement en moins de 5 minutes. Dans de rares cas nécessitant une vérification manuelle, l’émission peut prendre jusqu’à 48 heures.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">Il nous faut quelques précisions de votre part. Veuillez les fournir sous 14 jours pour continuer à utiliser votre compte</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Fournissez-les dans les 14 jours suivant notre demande pour continuer à utiliser votre compte</string>
   <string name="tangempay_kyc_additional_info_button">Fournir les informations</string>
   <string name="tangempay_kyc_additional_info_popup_description">Veuillez les fournir sous 14 jours à compter de notre demande pour continuer à utiliser votre compte</string>
   <string name="tangempay_kyc_additional_info_title">Il nous faut quelques précisions</string>
@@ -2836,7 +2838,7 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Voulez-vous vraiment arrêter la vérification ? Vous pourrez la reprendre à tout moment.</string>
   <string name="tangempay_kyc_failed_description">Nous n\'avons pas pu vérifier votre profil. Pour toute question, veuillez contacter le support.</string>
   <string name="tangempay_kyc_failed_title">Malheureusement, nous n\'avons pas pu vérifier votre identité</string>
-  <string name="tangempay_kyc_has_failed">Vérification a échoué</string>
+  <string name="tangempay_kyc_has_failed">Vérification refusée</string>
   <string name="tangempay_kyc_in_progress">Vérification en cours</string>
   <string name="tangempay_kyc_in_progress_notification_button">Voir le statut</string>
   <string name="tangempay_kyc_in_progress_notification_title">Vérification en cours pour Tangem Pay</string>
@@ -3186,6 +3188,7 @@
     <item quantity="one">Actif principal</item>
     <item quantity="other">%d principaux actifs</item>
   </plurals>
+  <string name="transaction_history_awaiting_signatures">En attente de signatures</string>
   <string name="transaction_history_claiming_reward">Réclamation de récompense</string>
   <string name="transaction_history_contract_address">contrat : %s</string>
   <string name="transaction_history_empty_transactions">Vous n\'avez pas encore de transactions</string>
@@ -3193,7 +3196,10 @@
   <string name="transaction_history_multiple_addresses">Adresses multiples</string>
   <string name="transaction_history_not_supported_description">L\'historique des transactions n\'est actuellement pas pris en charge pour cette blockchain. Mais ne vous inquiétez pas, nous y travaillons ! En attendant, vous pouvez le vérifier dans l\'explorateur.</string>
   <string name="transaction_history_operation">Opération</string>
+  <string name="transaction_history_pending_send">Envoi en attente</string>
   <string name="transaction_history_staking_reward">Récompense de staking</string>
+  <string name="transaction_history_status_send_cancelled">Envoi annulé</string>
+  <string name="transaction_history_status_transfer_cancelled">Transfert annulé</string>
   <string name="transaction_history_transaction_for_address">pour : %s</string>
   <string name="transaction_history_transaction_from_address">de : %s</string>
   <string name="transaction_history_transaction_to_address">à : %s</string>

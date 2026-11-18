@@ -488,7 +488,7 @@
     <item quantity="one">vor %d Tag</item>
     <item quantity="other">vor %d Tagen</item>
   </plurals>
-  <string name="common_decline">Abgelehnt</string>
+  <string name="common_decline">Ablehnen</string>
   <string name="common_default">Standard</string>
   <string name="common_delete">Entfernen</string>
   <string name="common_disable">Deaktivieren</string>
@@ -3246,16 +3246,16 @@
   <string name="tangempay_issuing_new_digital_card_title">Ausstellung einer neuen digitalen Karte</string>
   <string name="tangempay_issuing_your_card">Ihre Karte wird ausgestellt</string>
   <string name="tangempay_issuing_your_card_description">Die Karte wird in der Regel innerhalb von 5 Minuten automatisch ausgestellt. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann die Ausstellung bis zu 48 Stunden dauern.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">Wir brauchen noch einige Angaben von Ihnen. Bitte senden Sie uns diese innerhalb von 14 Tagen, um Ihr Konto weiter zu nutzen</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Bitte senden Sie uns diese binnen 14 Tagen nach unserer Anfrage, um Ihr Konto weiter zu nutzen</string>
   <string name="tangempay_kyc_additional_info_button">Angaben machen</string>
-  <string name="tangempay_kyc_additional_info_popup_description">Bitte senden Sie uns diese innerhalb von 14 Tagen nach unserer Anfrage, um Ihr Konto weiter zu nutzen</string>
+  <string name="tangempay_kyc_additional_info_popup_description">Bitte senden Sie uns diese binnen 14 Tagen nach unserer Anfrage, um Ihr Konto weiter zu nutzen</string>
   <string name="tangempay_kyc_additional_info_title">Wir brauchen noch einige Angaben</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Konvertierung bestätigen</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Möchten Sie die Verifizierung wirklich beenden? Sie können jederzeit fortfahren.</string>
   <string name="tangempay_kyc_failed_description">Wir konnten Ihr Profil nicht verifizieren. Bei Fragen wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_kyc_failed_title">Leider konnten wir Ihre Identität nicht verifizieren</string>
-  <string name="tangempay_kyc_has_failed">Identitätsprüfung ist gescheitert</string>
+  <string name="tangempay_kyc_has_failed">Identitätsprüfung abgelehnt</string>
   <string name="tangempay_kyc_in_progress">Identitätsprüfung in Bearbeitung</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">Identitätsprüfung für Tangem Pay in Arbeit</string>

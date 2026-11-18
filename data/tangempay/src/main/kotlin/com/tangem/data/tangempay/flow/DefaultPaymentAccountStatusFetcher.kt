@@ -208,18 +208,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 customerId = customerId,
                 networks = multichainNetworkStatuses,
                 isPaymentAccountIssuing = isPaymentAccountIssuing(userWalletId),
-                isKycAdditionalInfoRequired = tangemPayFeatureToggles.isKycAdditionalInfoEnabled &&
-                    isKycAdditionalInfoRequested,
+                isKycAdditionalInfoRequired = isKycAdditionalInfoRequested,
             )
         }
     }
 
     private suspend fun isPaymentAccountIssuing(userWalletId: UserWalletId): Boolean {
         val summary = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull() ?: return false
-        val state = TangemPayCustomerStateConverter.convert(
-            value = summary,
-            isKycAdditionalInfoEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
-        ) as? TangemPayCustomerState.Accounts
+        val state = TangemPayCustomerStateConverter.convert(summary) as? TangemPayCustomerState.Accounts
         return state?.paymentAccount == PaymentAccountActivationState.Issuing(
             step = PaymentAccountActivationState.Issuing.Step.ISSUING,
         )

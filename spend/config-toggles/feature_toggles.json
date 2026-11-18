@@ -13,18 +13,14 @@
     },
     {
         "name": "AND_15342_ORDER_FRAMEWORK_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "TWI_1525_MONEY_ACCOUNT_YIELD_MODE_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1329_KYC_ADDITIONAL_INFO_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "TWI_1525_TANGEM_PAY_GROUP_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     }
 ]

@@ -86,6 +86,14 @@ interface AccountsCRUDRepository {
     suspend fun syncTokens(userWalletId: UserWalletId)
 
     /**
+     * Synchronizes tokens unless the remote data source holds a newer list. In that case nothing is sent and the
+     * local accounts are replaced by the remote ones: an edit has to be repeated on them.
+     *
+     * @return `true` when the local accounts were replaced
+     */
+    suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean
+
+    /**
      * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts
      *
      * @param userWalletId the unique identifier of the user wallet

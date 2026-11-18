@@ -31,6 +31,9 @@ import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.domain.collectibles.models.CollectiblesRegionStatus
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
+import com.tangem.features.collectibles.impl.common.ui.handleRegionStatus
 import com.tangem.features.collectibles.impl.main.CollectiblesMainBottomSheetConfig
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.addfunds.CollectiblesReceiveConfigFactory
@@ -63,7 +66,7 @@ import javax.inject.Inject
  * Model of the screen's own chrome — balance, actions, the collection widget and the menu. The packs catalogue
  * itself lives in the embedded discovery component, and the collection is a stand-in until its service exists.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class CollectiblesMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -80,6 +83,7 @@ internal class CollectiblesMainModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val getCollectiblePendingPacksUseCase: GetCollectiblePendingPacksUseCase,
     private val dismissCollectiblePendingPackUseCase: DismissCollectiblePendingPackUseCase,
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -116,10 +120,12 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var pendingPacks: List<CollectiblePendingPack> = emptyList()
     private val pendingPacksJobHolder = JobHolder()
+    private val addFundsJobHolder = JobHolder()
 
     init {
         observeBalance()
         observeCollectiblesStatus()
+        refreshRegion()
         loadSessionKey()
     }
 
@@ -226,6 +232,17 @@ internal class CollectiblesMainModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun refreshRegion() {
+        modelScope.launch {
+            val isRestricted = when (getRegionStatusUseCase(params.userWalletId, skipCache = true)) {
+                CollectiblesRegionStatus.ALLOWED -> false
+                CollectiblesRegionStatus.RESTRICTED -> true
+                CollectiblesRegionStatus.UNKNOWN -> return@launch
+            }
+            uiState.update { state -> state.copy(isRegionRestricted = isRestricted) }
+        }
+    }
+
     private fun buildInitialState(): CollectiblesMainUM {
         return CollectiblesMainUM(
             title = TextReference.Res(R.string.collectibles_main_title),
@@ -247,6 +264,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 ),
                 onClick = ::onCollectionClick,
             ),
+            isRegionRestricted = false,
             relink = CollectiblesMainUM.RelinkUM.Hidden,
             pendingPacks = persistentListOf(),
             menu = menuConverter.convert(null),
@@ -257,6 +275,7 @@ internal class CollectiblesMainModel @Inject constructor(
 
     fun onRefresh() {
         observePendingPacks()
+        refreshRegion()
         modelScope.launch {
             uiState.update { state -> state.copy(isBalanceRefreshing = true) }
 
@@ -295,7 +314,17 @@ internal class CollectiblesMainModel @Inject constructor(
     }
 
     private fun onAddFundsClick() {
-        bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.TopUp)
+        if (addFundsJobHolder.isActive) return
+
+        modelScope.launch {
+            val status = getRegionStatusUseCase(params.userWalletId)
+            val isAllowed = handleRegionStatus(status, messageSender) {
+                bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.RegionRestricted)
+            }
+            if (!isAllowed) return@launch
+
+            bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.TopUp)
+        }.saveIn(addFundsJobHolder)
     }
 
     fun onDismissBottomSheet() {

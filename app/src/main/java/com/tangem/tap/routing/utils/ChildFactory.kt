@@ -727,6 +727,7 @@ internal class ChildFactory @Inject constructor(
                     params = TangemPayDetailsContainerComponent.Params(
                         initialStatus = route.status,
                         initialRoute = route.initialRoute,
+                        isOpenedFromKycPush = route.isOpenedFromKycPush,
                     ),
                     componentFactory = tangemPayDetailsContainerComponentFactory,
                 )
@@ -777,6 +778,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = MoneyAccountDetailsComponent.Params(
                         userWalletId = route.userWalletId,
+                        isOpenedFromKycPush = route.isOpenedFromKycPush,
                     ),
                     componentFactory = moneyAccountDetailsComponentFactory,
                 )

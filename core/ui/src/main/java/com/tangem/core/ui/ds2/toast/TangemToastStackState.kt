@@ -19,7 +19,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * UI message sender; create your own only for a stack that lives outside that pipeline (e.g. the Storybook).
  *
  * Several stacks may share one state — the app root and every bottom-sheet window host one. A toast is drawn by the
- * stack that was registered last when it was shown, and moves to the deepest remaining stack if that one leaves.
+ * stack that was registered last when it was shown, and is dismissed at once if that stack leaves.
  */
 @Stable
 class TangemToastStackState {
@@ -78,10 +78,9 @@ class TangemToastStackState {
         if (depth != hostDepthCounter) return
 
         hostDepthCounter--
-        entries.forEach { entry ->
-            if (entry.hostDepth > hostDepthCounter) entry.hostDepth = hostDepthCounter
-        }
-        if (hostDepthCounter == 0) entries.removeAll { !it.isVisible }
+        val leftEntries = entries.filter { it.hostDepth == depth }
+        leftEntries.forEach { it.dismissal.complete(DismissReason.HostLeft) }
+        entries.removeAll(leftEntries)
     }
 
     private fun dismissOverflow() {
@@ -123,4 +122,4 @@ internal class ToastEntry(val id: Long, val message: TangemToastMessage, hostDep
     val dismissal = CompletableDeferred<DismissReason>()
 }
 
-internal enum class DismissReason { Timeout, Closed, Action, Overflow }
+internal enum class DismissReason { Timeout, Closed, Action, Overflow, HostLeft }

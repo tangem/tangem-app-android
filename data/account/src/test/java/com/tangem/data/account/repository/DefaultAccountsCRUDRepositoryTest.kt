@@ -122,6 +122,18 @@ class DefaultAccountsCRUDRepositoryTest {
             // Assert
             coVerify(exactly = 1) { walletAccountsSaver.syncTokens(userWalletId) }
         }
+
+        @Test
+        fun `GIVEN the saver replaced the document WHEN syncTokensOrRefresh THEN the caller is told so`() = runTest {
+            // Arrange
+            coEvery { walletAccountsSaver.syncTokensOrRefresh(userWalletId) } returns true
+
+            // Act
+            val actual = repository.syncTokensOrRefresh(userWalletId)
+
+            // Assert
+            Truth.assertThat(actual).isTrue()
+        }
     }
 
     @Nested

@@ -615,6 +615,7 @@
   <string name="custom_token_derivation_path">Путь деривации</string>
   <string name="custom_token_derivation_path_default">По умолчанию</string>
   <string name="custom_token_derivation_path_input_title">Деривация по BIP44</string>
+  <string name="custom_token_derivation_path_reserved">Этот путь деривации зарезервирован</string>
   <string name="custom_token_invalid_derivation_path">Введенный путь деривации некорректен</string>
   <string name="custom_token_name_input_placeholder">Например, USD Coin</string>
   <string name="custom_token_name_input_title">Название токена</string>
@@ -3021,7 +3022,7 @@
   <string name="tangempay_issuing_new_digital_card_title">Выпуск новой цифровой карты</string>
   <string name="tangempay_issuing_your_card">Выпускаем карту</string>
   <string name="tangempay_issuing_your_card_description">Обычно это занимает не больше 5 минут, в редких случаях при необходимости ручной проверки – до 48 часов.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">Нам нужно ещё немного данных от вас. Пожалуйста, пришлите их в течение 14 дней, чтобы и дальше пользоваться аккаунтом</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Пришлите их в течение 14 дней после нашего запроса, чтобы и дальше пользоваться аккаунтом</string>
   <string name="tangempay_kyc_additional_info_button">Предоставить данные</string>
   <string name="tangempay_kyc_additional_info_popup_description">Пожалуйста, пришлите их в течение 14 дней после нашего запроса, чтобы и дальше пользоваться аккаунтом</string>
   <string name="tangempay_kyc_additional_info_title">Нам нужно ещё немного данных</string>
@@ -3394,6 +3395,7 @@
     <item quantity="many">%d крупнейших активов</item>
     <item quantity="other">%d крупнейших активов</item>
   </plurals>
+  <string name="transaction_history_awaiting_signatures">Ожидает подписей</string>
   <string name="transaction_history_claiming_reward">Получение награды</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_disabling_yield_mode">Отключение режима доходности</string>
@@ -3405,9 +3407,12 @@
   <string name="transaction_history_not_supported_description">История транзакций в настоящее время не поддерживается для этого блокчейна. Но не волнуйтесь, мы работаем над этим! А пока вы можете проверить ее в обозревателе.</string>
   <string name="transaction_history_operation">Операция</string>
   <string name="transaction_history_pending">В ожидании</string>
+  <string name="transaction_history_pending_send">Ожидает отправки</string>
   <string name="transaction_history_rewards_restaked">Награды рестейкнуты</string>
   <string name="transaction_history_rewards_restaking">Рестейкинг наград</string>
   <string name="transaction_history_staking_reward">Награда за стейкинг</string>
+  <string name="transaction_history_status_send_cancelled">Отправка отменена</string>
+  <string name="transaction_history_status_transfer_cancelled">Перевод отменён</string>
   <string name="transaction_history_to_inline_address">на: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">для: %s</string>
   <string name="transaction_history_transaction_from_address">от: %s</string>

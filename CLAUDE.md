@@ -76,6 +76,7 @@ Exception: `// Arrange`, `// Act`, `// Assert` in unit tests are required — se
 
 - Unit testing: @.claude/rules/unit-testing.md
 - Analytics events — every added/changed event ships unit tests, creating the test file if it doesn't exist: @.claude/rules/analytics-testing.md
+- Feature Kit (how a feature plugs into the app, which shape to use): @.claude/rules/feature-kit.md
 - Decompose child contexts (`child(key)` / `childByContext`, never `this`): @.claude/rules/codestyle/decompose-child-context.md
 - Logging (`TangemLogger`; prefer `i`/`e` — only these persist to the log file): @.claude/rules/codestyle/logging.md
 - Drawable/image resource naming: @.claude/rules/codestyle/drawable-naming.md

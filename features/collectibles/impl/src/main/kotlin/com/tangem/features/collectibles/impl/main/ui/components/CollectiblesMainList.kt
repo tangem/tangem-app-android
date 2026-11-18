@@ -91,11 +91,22 @@ private fun LazyListScope.headerItem(state: CollectiblesMainUM, isHeaderShown: B
         Column(modifier = Modifier.alpha(alpha).animateContentSize()) {
             CollectiblesBalanceBlock(balance = state.balance)
             CollectiblesActionsBlock(actions = state.actions)
+            if (state.isRegionRestricted) RegionRestrictedBanner()
             (state.relink as? CollectiblesMainUM.RelinkUM.Shown)?.let { relink -> RelinkBanner(relink = relink) }
             CollectiblesPendingPacks(packs = state.pendingPacks, modifier = Modifier.padding(bottom = 8.dp))
             state.collection?.let { collection -> CollectiblesCollectionWidget(state = collection) }
         }
     }
+}
+
+@Composable
+private fun RegionRestrictedBanner() {
+    TangemMessageBanner(
+        title = resourceReference(R.string.collectibles_region_restrictions_title),
+        description = resourceReference(R.string.collectibles_region_restrictions_subtitle),
+        variant = TangemMessageBanner.Variant.Warning,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+    )
 }
 
 @Composable

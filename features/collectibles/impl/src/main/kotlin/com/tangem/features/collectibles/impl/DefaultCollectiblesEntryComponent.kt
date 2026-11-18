@@ -94,7 +94,10 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             )
             is CollectiblesRoute.MachineDetails -> machineDetailsComponentFactory.create(
                 context = childContext,
-                params = CollectiblesMachineDetailsComponent.Params(externalId = route.externalId),
+                params = CollectiblesMachineDetailsComponent.Params(
+                    userWalletId = params.userWalletId,
+                    externalId = route.externalId,
+                ),
             )
             is CollectiblesRoute.ConfirmOrder -> packOpeningComponentFactory.create(
                 context = childContext,

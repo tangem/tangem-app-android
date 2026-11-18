@@ -27,6 +27,7 @@ class KycAdditionalInfoNotice(
     private val popupStore: KycAdditionalInfoPopupStore,
     private val analytics: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
+    isOpenedFromPush: Boolean = false,
     private val onProvideInformation: () -> Unit,
     private val onContactSupport: () -> Unit,
 ) {
@@ -35,14 +36,24 @@ class KycAdditionalInfoNotice(
 
     private var isRequired: Boolean = false
 
+    private var isPushEntryPending: Boolean = isOpenedFromPush
+
     suspend fun onStatus(isRequired: Boolean, isPopupAllowed: Boolean) {
         val hasAppeared = isRequired && !this.isRequired
         this.isRequired = isRequired
         if (!isRequired) popupStore.reset(account)
         if (!hasAppeared) return
 
+        val isFromPush = isPushEntryPending
+        isPushEntryPending = false
         analytics.send(NoticeShown(accountType = accountType, placement = Placement.ACCOUNT_BLOCK))
-        if (isPopupAllowed && popupStore.tryMarkShown(account)) showPopup()
+        if (!isPopupAllowed) return
+
+        val isMarked = popupStore.tryMarkShown(account)
+        when {
+            isFromPush -> showPopup(EntryPoint.PUSH)
+            isMarked -> showPopup(EntryPoint.ACCOUNT_ENTRY)
+        }
     }
 
     fun onBannerProvideInformationClick() {
@@ -56,12 +67,12 @@ class KycAdditionalInfoNotice(
         onProvideInformation()
     }
 
-    private fun showPopup() {
-        analytics.send(PopupShown(accountType = accountType, entryPoint = EntryPoint.ACCOUNT_ENTRY))
-        uiMessageSender.send(createPopup())
+    private fun showPopup(entryPoint: EntryPoint) {
+        analytics.send(PopupShown(accountType = accountType, entryPoint = entryPoint))
+        uiMessageSender.send(createPopup(entryPoint))
     }
 
-    private fun createPopup(): ModalMessage {
+    private fun createPopup(entryPoint: EntryPoint): ModalMessage {
         val isResolved = AtomicBoolean(false)
 
         return modalMessage {
@@ -75,9 +86,7 @@ class KycAdditionalInfoNotice(
                 text = resourceReference(R.string.common_contact_support)
                 onClick {
                     if (isResolved.compareAndSet(false, true)) {
-                        analytics.send(
-                            ContactSupportClicked(accountType = accountType, entryPoint = EntryPoint.ACCOUNT_ENTRY),
-                        )
+                        analytics.send(ContactSupportClicked(accountType = accountType, entryPoint = entryPoint))
                         onContactSupport()
                         dismiss()
                     }
@@ -91,7 +100,7 @@ class KycAdditionalInfoNotice(
                             ProvideInformationClicked(
                                 accountType = accountType,
                                 source = Source.POPUP,
-                                entryPoint = EntryPoint.ACCOUNT_ENTRY,
+                                entryPoint = entryPoint,
                             ),
                         )
                         onProvideInformation()
@@ -104,7 +113,7 @@ class KycAdditionalInfoNotice(
                     analytics.send(
                         PopupClosed(
                             accountType = accountType,
-                            entryPoint = EntryPoint.ACCOUNT_ENTRY,
+                            entryPoint = entryPoint,
                             closeMethod = CloseMethod.UNKNOWN,
                         ),
                     )

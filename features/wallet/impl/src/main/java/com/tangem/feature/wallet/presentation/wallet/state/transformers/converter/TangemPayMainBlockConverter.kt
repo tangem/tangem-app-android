@@ -13,6 +13,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.utils.StringsSigns.ASTERISK
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import java.util.Currency
@@ -93,13 +94,19 @@ internal class TangemPayMainBlockConverter(
     }
 
     private fun getLoadedSubtitle(statusValue: PaymentAccountStatusValue.Loaded): TextReference {
-        if (statusValue.isKycAdditionalInfoRequired) return TextReference.Res(R.string.tangempay_action_required_title)
-        val cardsCount = statusValue.cards.count()
-        return pluralReference(
-            id = R.plurals.tangempay_cards_count,
-            count = cardsCount,
-            formatArgs = wrappedList(cardsCount),
-        )
+        val singleCardLastDigits = statusValue.cards.singleOrNull()?.lastDigits
+        return if (statusValue.isKycAdditionalInfoRequired) {
+            TextReference.Res(R.string.tangempay_action_required_title)
+        } else if (!singleCardLastDigits.isNullOrBlank()) {
+            stringReference("$ASTERISK$singleCardLastDigits")
+        } else {
+            val cardsCount = statusValue.cards.count()
+            pluralReference(
+                id = R.plurals.tangempay_cards_count,
+                count = cardsCount,
+                formatArgs = wrappedList(cardsCount),
+            )
+        }
     }
 
     /** Balance figure, or a dash when the account exists but its balances are unavailable. */

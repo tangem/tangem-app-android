@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.IntegratedApprovalData
@@ -129,6 +130,13 @@ interface SwapInteractor {
      * @param token
      */
     fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
+
+    /** Tells Express the deposit of a collectibles vault withdrawal swap was sent. */
+    suspend fun notifyExchangeSent(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        cexTransaction: ExpressTransactionModel.CEX,
+        txHash: String,
+    ): Either<ExpressDataError, Unit>
 
     @Suppress("LongParameterList")
     suspend fun storeSwapTransaction(

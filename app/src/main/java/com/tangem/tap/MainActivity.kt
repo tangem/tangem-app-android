@@ -368,7 +368,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
-        if (isFromPush) {
+        val pushPayload = PayloadToDeeplinkConverter.bundleToPayload(intent.extras)
+        if (isFromPush && !PayloadToDeeplinkConverter.isOpenReportedByTangemPayHandler(pushPayload)) {
             analyticsEventsHandler.send(Push.PushNotificationOpened())
         }
 
