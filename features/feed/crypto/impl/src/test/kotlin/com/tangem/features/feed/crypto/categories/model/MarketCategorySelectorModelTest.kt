@@ -12,6 +12,7 @@ import com.tangem.domain.markets.MarketCategoryListBatchFlow
 import com.tangem.domain.markets.MarketCategoryListBatchingContext
 import com.tangem.domain.markets.MarketCategoryListConfig
 import com.tangem.domain.markets.MarketCategoryPage
+import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.createCategory
@@ -63,6 +64,7 @@ internal class MarketCategorySelectorModelTest {
     private val getMarketCategoriesUseCase: GetMarketCategoriesUseCase = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getMarketCategoryListFlowUseCase: GetMarketCategoryListFlowUseCase = mockk()
+    private val feedFeatureToggles: FeedFeatureToggles = mockk()
 
     private val batchingContextSlot = slot<MarketCategoryListBatchingContext>()
     private var batchFlow = FakeCategoryBatchFlow()
@@ -78,8 +80,10 @@ internal class MarketCategorySelectorModelTest {
             getMarketCategoriesUseCase,
             getSelectedAppCurrencyUseCase,
             getMarketCategoryListFlowUseCase,
+            feedFeatureToggles,
         )
         batchFlow = FakeCategoryBatchFlow()
+        every { feedFeatureToggles.isCategoryFiltersRedesignEnabled } returns true
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
         every {
             getMarketCategoryListFlowUseCase(batchingContext = capture(batchingContextSlot), batchFlowType = any())
@@ -507,8 +511,8 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN results for a query WHEN they arrive THEN the rail is gone and only matches remain`() = runTest {
-        // Arrange — the list is then a result set: an unfiltered shortcut strip is not one of the results
+    fun `GIVEN results for a query WHEN they arrive THEN the rail and the list keep only matches`() = runTest {
+        // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, meme)
@@ -521,7 +525,7 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.content().featured).isNull()
+        assertThat(model.content().featured?.items?.map { it.id }).containsExactly(meme.id)
         assertThat(model.rows().map { it.id }).containsExactly(meme.id)
     }
 
@@ -583,8 +587,23 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN the search field WHEN the screen opens THEN it offers no close of its own`() = runTest {
-        // Arrange — the screen's close button is a sibling in the header; the built-in one hides while idle
+    fun `GIVEN a typed query WHEN the field close is clicked THEN the query is cleared`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.type(query = "meme")
+
+        // Act
+        model.uiState.value.search.onCloseClick!!.invoke()
+
+        // Assert
+        assertThat(model.uiState.value.search.query).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN redesign off WHEN the screen opens THEN the field offers no close of its own`() = runTest {
+        // Arrange
+        every { feedFeatureToggles.isCategoryFiltersRedesignEnabled } returns false
         val model = createModel(testScope = this)
 
         // Act
@@ -593,6 +612,27 @@ internal class MarketCategorySelectorModelTest {
         // Assert
         assertThat(model.uiState.value.search.onCloseClick).isNull()
     }
+
+    @Test
+    fun `GIVEN redesign off WHEN results for a query arrive THEN the rail is gone and only matches remain`() =
+        runTest {
+            // Arrange
+            every { feedFeatureToggles.isCategoryFiltersRedesignEnabled } returns false
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            batchFlow.emitFirstPage(ai, meme)
+            advanceUntilIdle()
+
+            // Act
+            model.type(query = "meme")
+            advanceUntilIdle()
+            batchFlow.emitFirstPage(meme)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.content().featured).isNull()
+            assertThat(model.rows().map { it.id }).containsExactly(meme.id)
+        }
 
     @Test
     fun `GIVEN the search field WHEN it is focused THEN the state follows`() = runTest {
@@ -686,6 +726,7 @@ internal class MarketCategorySelectorModelTest {
             getMarketCategoriesUseCase = getMarketCategoriesUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getMarketCategoryListFlowUseCase = getMarketCategoryListFlowUseCase,
+            feedFeatureToggles = feedFeatureToggles,
         ).also { model = it }
     }
 

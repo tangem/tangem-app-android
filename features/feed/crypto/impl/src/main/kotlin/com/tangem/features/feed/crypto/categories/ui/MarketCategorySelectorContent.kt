@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,16 +28,19 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -43,6 +48,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_search_20
 import com.tangem.features.feed.crypto.categories.ui.state.*
 import com.tangem.features.feed.crypto.impl.R
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -50,17 +56,44 @@ private const val LOAD_NEXT_PAGE_ON_END_INDEX = 10
 private const val NO_RESULTS_ICON_ALPHA = 0.9f
 
 /**
- * The hosting chrome — feed modal and header — is owned by the feed host and the component; the
- * search field lives in that header, not here.
+ * The hosting chrome — feed modal and title header — is owned by the feed host and the component.
+ *
+ * The search field floats over the body rather than scrolling with the list: it must remain
+ * reachable over the loading, empty and error bodies too. The list scrolls under it, behind a top fade.
  */
 @Composable
 internal fun MarketCategorySelectorContent(state: MarketCategorySelectorUM, modifier: Modifier = Modifier) {
+    // shtorka content inherits the haze of the screen behind the shtorka; the field must blur this
+    // screen instead, as the search in the shtorka header does
+    val outerHazeState = LocalHazeState.current
+    val contentHazeState = rememberHazeState()
+    SideEffect { contentHazeState.blurEnabled = outerHazeState.blurEnabled }
+
     Box(modifier = modifier.fillMaxSize()) {
-        when (val content = state.content) {
-            is MarketCategorySelectorUM.ContentUM.Loading -> LoadingSkeleton()
-            is MarketCategorySelectorUM.ContentUM.Content -> SectionsContent(state = content)
-            is MarketCategorySelectorUM.ContentUM.Empty -> NoResults()
-            is MarketCategorySelectorUM.ContentUM.Error -> LoadError(onRetry = content.onRetry)
+        Body(
+            content = state.content,
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSourceTangem(state = contentHazeState),
+        )
+
+        TangemFade(
+            position = TangemFade.Position.Top,
+            variant = TangemFade.Variant.Hard,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .height(72.dp)
+                .hazeSourceTangem(state = contentHazeState, zIndex = 1f),
+        )
+
+        CompositionLocalProvider(LocalHazeState provides contentHazeState) {
+            TangemSearch(
+                state = state.search,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            )
         }
 
         Footer(
@@ -72,24 +105,41 @@ internal fun MarketCategorySelectorContent(state: MarketCategorySelectorUM, modi
 }
 
 @Composable
+private fun Body(content: MarketCategorySelectorUM.ContentUM, modifier: Modifier = Modifier) {
+    val belowSearchModifier = modifier.padding(top = 56.dp)
+    when (content) {
+        is MarketCategorySelectorUM.ContentUM.Loading -> LoadingSkeleton(modifier = belowSearchModifier)
+        is MarketCategorySelectorUM.ContentUM.Content -> SectionsContent(state = content, modifier = modifier)
+        is MarketCategorySelectorUM.ContentUM.Empty -> NoResults(modifier = belowSearchModifier)
+        is MarketCategorySelectorUM.ContentUM.Error -> LoadError(
+            onRetry = content.onRetry,
+            modifier = belowSearchModifier,
+        )
+    }
+}
+
+@Composable
 private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val categories = state.categories
 
-    LazyColumn(state = listState, modifier = modifier.fillMaxSize()) {
-        item(key = "topSpacer") { SpacerH(22.dp) }
+    LazyColumn(
+        state = listState,
+        contentPadding = PaddingValues(top = 56.dp),
+        modifier = modifier.fillMaxSize(),
+    ) {
+        item(key = "topSpacer") { SpacerH(24.dp) }
 
         if (state.featured != null) {
             item(key = "featuredSection") {
                 FeaturedSection(section = state.featured)
-                SpacerH(34.dp)
+                SpacerH(24.dp)
             }
         }
 
         if (categories.items.isNotEmpty()) {
             item(key = "categoriesHeader") {
-                SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
-                SpacerH(8.dp)
+                SectionHeader(title = categories.title)
             }
         }
 
@@ -120,14 +170,13 @@ private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, m
 @Composable
 private fun FeaturedSection(section: FeaturedCategoriesUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
-        SectionHeader(title = section.title, modifier = Modifier.padding(horizontal = 16.dp))
-        SpacerH(18.dp)
+        SectionHeader(title = section.title)
+        SpacerH(8.dp)
         FeaturedRail(items = section.items, modifier = Modifier.padding(horizontal = 16.dp))
     }
 }
 
 /** Wraps instead of scrolling: the rail is a shortcut strip, and a hidden shortcut is no shortcut. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FeaturedRail(items: ImmutableList<FeaturedCategoryUM>, modifier: Modifier = Modifier) {
     FlowRow(
@@ -173,7 +222,7 @@ private fun LoadingMoreRow(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(70.dp)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -183,13 +232,20 @@ private fun LoadingMoreRow(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SectionHeader(title: TextReference, modifier: Modifier = Modifier) {
-    Text(
-        text = title.resolveReference(),
-        style = TangemTheme.typography3.subheading.medium,
-        color = TangemTheme.colors3.text.secondary,
-        modifier = modifier,
-        maxLines = 1,
-    )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 38.dp)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Text(
+            text = title.resolveReference(),
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.secondary,
+            maxLines = 1,
+        )
+    }
 }
 
 /** Keeps the last rows scrollable above the [Footer], which sits over the list including the navigation bar inset. */
@@ -291,20 +347,16 @@ private fun LoadError(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LoadingSkeleton(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = 22.dp, bottom = 24.dp)
+            .padding(top = 24.dp, bottom = 24.dp)
             .padding(horizontal = 16.dp),
     ) {
-        TangemShimmer(
-            style = TangemTheme.typography3.subheading.medium,
-            modifier = Modifier.width(width = 160.dp),
-        )
-        SpacerH(18.dp)
+        SectionHeaderShimmer()
+        SpacerH(8.dp)
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -317,22 +369,33 @@ private fun LoadingSkeleton(modifier: Modifier = Modifier) {
                 )
             }
         }
-        SpacerH(34.dp)
-        TangemShimmer(
-            style = TangemTheme.typography3.subheading.medium,
-            modifier = Modifier.width(width = 160.dp),
-        )
-        SpacerH(10.dp)
+        SpacerH(24.dp)
+        SectionHeaderShimmer()
         repeat(times = 6) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(70.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 TangemShimmer(style = TangemTheme.typography3.body.medium)
             }
         }
+    }
+}
+
+@Composable
+private fun SectionHeaderShimmer() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(38.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        TangemShimmer(
+            style = TangemTheme.typography3.subheading.medium,
+            modifier = Modifier.width(width = 160.dp),
+        )
     }
 }
 
@@ -353,7 +416,7 @@ private class MarketCategorySelectorPreviewProvider : PreviewParameterProvider<M
         get() = sequenceOf(
             previewState(body = previewBody(withFeatured = true), isResetVisible = true),
             previewState(body = previewBody(withFeatured = false), isResetVisible = false),
-            previewState(body = previewBody(withFeatured = false, query = "mem"), query = "mem"),
+            previewState(body = previewBody(withFeatured = true, query = "mem"), query = "mem"),
             previewState(body = MarketCategorySelectorUM.ContentUM.Empty, query = "zzz"),
             previewState(body = MarketCategorySelectorUM.ContentUM.Loading),
             previewState(body = MarketCategorySelectorUM.ContentUM.Error(onRetry = {})),
@@ -380,20 +443,18 @@ private fun previewState(
 private fun previewBody(withFeatured: Boolean, query: String = ""): MarketCategorySelectorUM.ContentUM.Content {
     val featured = listOf("AI", "Meme", "Real world assets", "Gaming", "Layer 1")
     val all = listOf("AI", "DeFi", "Gaming", "Meme", "Layer 1", "AI 2", "DeFi 2", "Gaming 2", "Meme 2", "Layer 2")
-    val isSearching = query.isNotEmpty()
-
     return MarketCategorySelectorUM.ContentUM.Content(
         featured = FeaturedCategoriesUM(
             title = resourceReference(R.string.common_featured),
-            items = featured.mapIndexed { index, label ->
+            items = featured.filter { it.contains(other = query, ignoreCase = true) }.map { label ->
                 FeaturedCategoryUM(
                     id = label,
                     label = stringReference(label),
-                    isSelected = index == 1,
+                    isSelected = label == "Meme",
                     onItemClick = {},
                 )
             }.toImmutableList(),
-        ).takeIf { withFeatured && !isSearching },
+        ).takeIf { withFeatured && it.items.isNotEmpty() },
         categories = MarketCategoryListUM(
             title = resourceReference(R.string.market_categories),
             items = buildList {

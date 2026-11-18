@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
@@ -205,9 +204,6 @@ private fun IntervalFilter(intervalMenu: MarketPulseIntervalUM, modifier: Modifi
             um = intervalMenu,
             expanded = isMenuExpanded,
             onDismiss = { isMenuExpanded = false },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .hazeEffectTangem { blurRadius = 10.dp },
         )
     }
 }

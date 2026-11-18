@@ -42,7 +42,7 @@ Two category **codes** are reserved (`ReservedCategoryCodes`), so nothing render
 
 - **An empty `CategorySelection` is the only "no filter".** The umbrella id lives only in `listRequest`
   (`orUmbrella` at request time), never in `appliedSelection` — the chip reads "no filter" as
-  `category == null`. Sector "All" likewise unfilters the sector only.
+  `category == null`. No sector chip selected (`sector == null`) likewise unfilters the sector only.
 - **The list is never requested unscoped** — that returns the whole coin universe. `reloadList()`
   re-fetches categories while the umbrella id is unresolved.
 - Missing `featured-assets` → rail hidden; missing `real-world-assets` → `RwaListUM.Error`.
@@ -70,11 +70,16 @@ Shared search chrome: `FeedSearchSections.kt` in `:features:feed:api`.
 Pushed via `CategorySelectorRoute` (not a sheet), carrying the applied `CategorySelection` and the tab
 model as `ModelCallback`.
 
-- **A tap applies and closes**, except a category with a sector choice: it becomes a draft, sector taps
-  move the draft, and the Apply footer (shown while the draft differs) confirms. No Reset — "All" is the
-  reset. An unchanged pick only closes, without `ModelCallback` (no reload, no `Select Category`).
-- **Sectors exist only from two up** — `CoinCategory.hasSectorChoice`, read by both the transformer's
-  section list and the model's apply-or-draft branch.
+The behaviour below is behind `AND_19514_CATEGORY_FILTERS_REDESIGN_ENABLED`. With it off, the pre-redesign
+draft/Apply flow runs (`Legacy*` transformer, converters, UM and `LegacySectionsContent`, tested by
+`LegacyCategorySelectorModelTest`) — delete all of it together with the toggle.
+
+- **Every tap applies and closes** (no footer, no Apply/Reset — "All" is the reset). An unchanged pick
+  skips `ModelCallback` (no reload, no `Select Category`).
+- **Sector chips are always shown** under every category with a sector choice. No "All" chip: none
+  selected = whole category, tapping the selected chip toggles it off. A row is checked only for its
+  whole category — a picked sector moves the check to its chip, and tapping the row drops the sector.
+- **Sectors exist only from two up** — `CoinCategory.hasSectorChoice`, read by `CategoryTagConverter`.
 - UM is built with a real `Transformer` + `Converter`s (`CategorySelectorTransformer`, `CategoryTagConverter`,
   `CategorySectorConverter`) — extend that, not inline `copy`.
 
