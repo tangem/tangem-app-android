@@ -1,5 +1,6 @@
 package com.tangem.features.earn.staking.impl
 
+import app.cash.turbine.Event
 import app.cash.turbine.test
 import arrow.core.Either
 import arrow.core.left
@@ -14,6 +15,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
@@ -39,7 +42,9 @@ import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
+import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProvider
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.staking.impl.fixtures.coin
 import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
@@ -54,10 +59,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -136,7 +145,7 @@ internal class PooledStakingEarnProductTest {
             every { stakingRepository.getStakingAvailability(userWalletId, secondEthereum) } returns flowOf(available)
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = settledSummaries().first()
 
             // Assert
             assertThat(actual.keys).containsExactly(ethereum.id, secondEthereum.id)
@@ -154,10 +163,162 @@ internal class PooledStakingEarnProductTest {
             flowOf(accountList(currencyStatus(currency = coin(Blockchain.Solana))))
 
         // Act
-        val actual = product.summaries(userWalletId).first()
+        val actual = product.summaries(userWalletId).first().byCurrency
 
         // Assert
         assertThat(actual).isEmpty()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LoadingCurrencies {
+
+        @Test
+        fun `GIVEN a pool currency still Loading WHEN summaries THEN it is loading until its status loads`() =
+            runTest {
+                // Arrange
+                val ticks = MutableSharedFlow<AccountStatusList>(replay = 1)
+                ticks.tryEmit(accountList(loadingStatus(ethereum)))
+                every { accountStatusListSupplier(userWalletId) } returns ticks
+                every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
+
+                // Act & Assert
+                product.summaries(userWalletId).test {
+                    assertThat(awaitItem())
+                        .isEqualTo(EarnSummaries(byCurrency = emptyMap(), loadingCurrencies = setOf(ethereum.id)))
+                    ticks.emit(accountList(status(ethereum)))
+                    assertThat(awaitItem()).isEqualTo(EarnSummaries(mapOf(ethereum.id to summaryOf(ethereum))))
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
+
+        @Test
+        fun `GIVEN one ETH account loaded and another Loading WHEN summaries THEN the loaded one is published`() =
+            runTest {
+                // Arrange
+                every { accountStatusListSupplier(userWalletId) } returns
+                    flowOf(accountList(status(ethereum), loadingStatus(secondEthereum)))
+                every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
+                every { stakingRepository.getStakingAvailability(userWalletId, secondEthereum) } returns flowOf(available)
+
+                // Act
+                val actual = latestAnswer()
+
+                // Assert
+                val expected = EarnSummaries(
+                    byCurrency = mapOf(ethereum.id to summaryOf(ethereum)),
+                    loadingCurrencies = setOf(secondEthereum.id),
+                )
+                assertThat(actual).isEqualTo(expected)
+            }
+
+        @Test
+        fun `GIVEN two ETH accounts and one availability still silent WHEN summaries THEN the other one is published`() =
+            runTest {
+                // Arrange
+                every { accountStatusListSupplier(userWalletId) } returns
+                    flowOf(accountList(status(ethereum), status(secondEthereum)))
+                every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
+                every { stakingRepository.getStakingAvailability(userWalletId, secondEthereum) } returns MutableSharedFlow()
+
+                // Act
+                val actual = latestAnswer()
+
+                // Assert
+                val expected = EarnSummaries(
+                    byCurrency = mapOf(ethereum.id to summaryOf(ethereum)),
+                    loadingCurrencies = setOf(secondEthereum.id),
+                )
+                assertThat(actual).isEqualTo(expected)
+            }
+
+        @Test
+        fun `GIVEN a new pool currency without availability yet WHEN summaries THEN it is loading`() = runTest {
+            // Arrange
+            val ticks = MutableSharedFlow<AccountStatusList>(replay = 1)
+            ticks.tryEmit(accountList(status(ethereum)))
+            every { accountStatusListSupplier(userWalletId) } returns ticks
+            every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
+            every { stakingRepository.getStakingAvailability(userWalletId, secondEthereum) } returns MutableSharedFlow()
+
+            // Act & Assert
+            product.summaries(userWalletId).test {
+                ticks.emit(accountList(status(ethereum), status(secondEthereum)))
+                val expected = EarnSummaries(
+                    byCurrency = mapOf(ethereum.id to summaryOf(ethereum)),
+                    loadingCurrencies = setOf(secondEthereum.id),
+                )
+                assertThat(expectMostRecentItem()).isEqualTo(expected)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        fun `GIVEN a joint account with ETH still loading WHEN summaries THEN its ETH is loading`() = runTest {
+            // Arrange
+            val joint: AccountStatus.Joint = mockk {
+                every { value } returns JointAccountStatusValue.Loading
+                every { account.cryptoCurrencies } returns listOf(secondEthereum, polygonToken())
+            }
+            every { accountStatusListSupplier(userWalletId) } returns
+                flowOf(accountList(status(ethereum), accountStatuses = listOf(joint)))
+            every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
+
+            // Act
+            val actual = latestAnswer()
+
+            // Assert
+            val expected = EarnSummaries(
+                byCurrency = mapOf(ethereum.id to summaryOf(ethereum)),
+                loadingCurrencies = setOf(secondEthereum.id),
+            )
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN the pool currency set changes WHEN the restarted availabilities are silent THEN ETH keeps its summary`() =
+            runTest {
+                // Arrange
+                val ticks = MutableSharedFlow<AccountStatusList>(replay = 1)
+                ticks.tryEmit(accountList(status(ethereum)))
+                every { accountStatusListSupplier(userWalletId) } returns ticks
+                var ethSubscriptions = 0
+                every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flow {
+                    if (ethSubscriptions++ > 0) awaitCancellation()
+                    emit(available)
+                }
+                every { stakingRepository.getStakingAvailability(userWalletId, secondEthereum) } returns MutableSharedFlow()
+
+                // Act & Assert
+                product.summaries(userWalletId).test {
+                    expectMostRecentItem()
+                    ticks.emit(accountList(status(ethereum), status(secondEthereum)))
+                    val afterChange = cancelAndConsumeRemainingEvents()
+                        .filterIsInstance<Event.Item<EarnSummaries>>()
+                        .map { it.value }
+                    val expected = EarnSummaries(
+                        byCurrency = mapOf(ethereum.id to summaryOf(ethereum)),
+                        loadingCurrencies = setOf(secondEthereum.id),
+                    )
+                    assertThat(afterChange).containsExactly(expected)
+                }
+            }
+
+        private suspend fun latestAnswer(): EarnSummaries {
+            var latest: EarnSummaries? = null
+            product.summaries(userWalletId).test {
+                latest = expectMostRecentItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            return requireNotNull(latest)
+        }
+
+        private fun loadingStatus(currency: CryptoCurrency): CryptoCurrencyStatus =
+            CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
+
+        private fun summaryOf(currency: CryptoCurrency): EarnProductSummary = requireNotNull(
+            PooledStakingMapper().summary(userWalletId = userWalletId, status = status(currency), availability = available),
+        )
     }
 
     @Test
@@ -170,7 +331,7 @@ internal class PooledStakingEarnProductTest {
             every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns availability
 
             // Act & Assert
-            product.summaries(userWalletId).test {
+            settledSummaries().test {
                 assertThat(awaitItem().keys).containsExactly(ethereum.id)
                 availability.emit(StakingAvailability.TemporaryUnavailable)
                 assertThat(awaitItem()).isEmpty()
@@ -189,7 +350,7 @@ internal class PooledStakingEarnProductTest {
             val staked = status(ethereum, MockStaking.p2pBalance(accounts = listOf(MockStaking.p2pAccount())))
 
             // Act & Assert
-            product.summaries(userWalletId).test {
+            settledSummaries().test {
                 assertThat(awaitItem().getValue(ethereum.id).position).isNull()
                 ticks.emit(accountList(staked))
                 assertThat(awaitItem().getValue(ethereum.id).position).isEqualTo(EarnPositionSummary(BigDecimal.ONE))
@@ -258,7 +419,7 @@ internal class PooledStakingEarnProductTest {
         val params = EarnProduct.Params(userWalletId, ethereum)
         every { accountStatusListSupplier(userWalletId) } returns flowOf(accountList(status(ethereum)))
         every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
-        val summary = product.summaries(userWalletId).first().getValue(ethereum.id)
+        val summary = settledSummaries().first().getValue(ethereum.id)
         val ready = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
         val navigator: EarnNavigator = mockk(relaxed = true)
         val expectedRoute = stakingRoute(userWalletId, ethereum)
@@ -465,7 +626,7 @@ internal class PooledStakingEarnProductTest {
             arrangeBalances(flowOf(setOf(failure)))
 
             // Act
-            val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
+            val actual = settledSummaries().first().getValue(ethereum.id)
 
             // Assert
             assertThat(actual.position).isNull()
@@ -494,7 +655,7 @@ internal class PooledStakingEarnProductTest {
             arrangeBalances(flowOf(setOf(StakingBalance.Empty(poolStakingId, StatusSource.ONLY_CACHE))))
 
             // Act
-            val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
+            val actual = settledSummaries().first().getValue(ethereum.id)
 
             // Assert
             assertThat(actual.position).isNull()
@@ -592,8 +753,17 @@ internal class PooledStakingEarnProductTest {
     private fun status(currency: CryptoCurrency, position: StakingBalance? = null): CryptoCurrencyStatus =
         currencyStatus(currency = currency, stakingBalance = position)
 
-    private fun accountList(vararg statuses: CryptoCurrencyStatus): AccountStatusList = mockk {
+    private fun settledSummaries(): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> = product
+        .summaries(userWalletId)
+        .filter { it.loadingCurrencies.isEmpty() }
+        .map { it.byCurrency }
+
+    private fun accountList(
+        vararg statuses: CryptoCurrencyStatus,
+        accountStatuses: List<AccountStatus> = emptyList(),
+    ): AccountStatusList = mockk {
         every { flattenCurrencies() } returns statuses.toList()
+        every { this@mockk.accountStatuses } returns accountStatuses
     }
 
     private fun secondAccountOf(currency: CryptoCurrency.Coin): CryptoCurrency.Coin {

@@ -10,8 +10,11 @@ import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
@@ -34,18 +37,20 @@ import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
-import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProvider
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.scan
 import javax.inject.Inject
 
 /** Staking of ETH in the P2P.org pool. It has no shared Earn flow: every click opens the existing staking screen. */
@@ -75,26 +80,21 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
     override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "ETH Staking", product = "Staking")
 
-    override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> {
-        val poolStatuses = accountStatusListSupplier(userWalletId)
-            .map { statuses -> statuses.flattenCurrencies().filter { it.isPoolCurrency() } }
+    override fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries> {
+        val statusLists = accountStatusListSupplier(userWalletId)
 
         return combine(
-            flow = poolStatuses,
-            flow2 = availabilities(userWalletId, poolStatuses),
+            flow = statusLists,
+            flow2 = availabilities(userWalletId, statusLists.map { it.poolStatuses() }),
             flow3 = failedBalanceIds(userWalletId),
-        ) { statuses, availabilities, failedIds ->
-            statuses.mapNotNull { status ->
-                val availability = availabilities[status.currency.id] ?: return@mapNotNull null
-                val isBalanceFailed = status.isBalanceFailed(failedIds)
-                mapper.summary(
-                    userWalletId = userWalletId,
-                    status = status,
-                    availability = availability,
-                    isBalanceFailed = isBalanceFailed,
-                )?.let { summary -> status.currency.id to summary }
-            }.toMap()
-        }
+        ) { statusList, availabilities, failedIds ->
+            summariesOf(
+                userWalletId = userWalletId,
+                statusList = statusList,
+                availabilities = availabilities,
+                failedIds = failedIds,
+            )
+        }.distinctUntilChanged()
     }
 
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> = combine(
@@ -150,15 +150,23 @@ internal class PooledStakingEarnProduct @Inject constructor(
         .distinctUntilChangedBy { currencies -> currencies.map { it.id } }
         .flatMapLatest { currencies ->
             if (currencies.isEmpty()) {
-                flowOf(emptyMap())
+                flowOf(emptyList())
             } else {
-                combine(
-                    currencies.map { currency ->
-                        stakingRepository.getStakingAvailability(userWalletId, currency).map { currency.id to it }
-                    },
-                ) { entries -> entries.toMap() }
+                combine(currencies.map { currency -> availabilityEntry(userWalletId, currency) }) { it.toList() }
             }
         }
+        .scan(emptyMap<CryptoCurrency.ID, StakingAvailability>()) { known, entries ->
+            entries.mapNotNull { (id, availability) -> (availability ?: known[id])?.let { id to it } }.toMap()
+        }
+        .drop(1)
+
+    private fun availabilityEntry(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Flow<Pair<CryptoCurrency.ID, StakingAvailability?>> = stakingRepository
+        .getStakingAvailability(userWalletId, currency)
+        .map<StakingAvailability, Pair<CryptoCurrency.ID, StakingAvailability?>> { currency.id to it }
+        .onStart { emit(currency.id to null) }
 
     /**
      * Read from the balances, not the statuses, which carry only a loaded stake. The first frame is awaited, as the
@@ -181,6 +189,44 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
         return stakingId != null && stakingId in failedIds
     }
+
+    private fun summariesOf(
+        userWalletId: UserWalletId,
+        statusList: AccountStatusList,
+        availabilities: Map<CryptoCurrency.ID, StakingAvailability>,
+        failedIds: Set<StakingID>,
+    ): EarnSummaries {
+        val statuses = statusList.poolStatuses()
+        val summaries = statuses.mapNotNull { status ->
+            val availability = availabilities[status.currency.id] ?: return@mapNotNull null
+            mapper.summary(
+                userWalletId = userWalletId,
+                status = status,
+                availability = availability,
+                isBalanceFailed = status.isBalanceFailed(failedIds),
+            )?.let { summary -> status.currency.id to summary }
+        }
+        val loadingIds = statuses
+            .filter { status -> status.value is CryptoCurrencyStatus.Loading || status.currency.id !in availabilities }
+            .mapTo(hashSetOf()) { it.currency.id }
+
+        return EarnSummaries(
+            byCurrency = summaries.toMap(),
+            loadingCurrencies = loadingIds + statusList.loadingJointPoolCurrencies(),
+        )
+    }
+
+    private fun AccountStatusList.poolStatuses(): List<CryptoCurrencyStatus> =
+        flattenCurrencies().filter { it.isPoolCurrency() }
+
+    /** A joint account has no tokens until it loads, so its currencies come from the account itself. */
+    private fun AccountStatusList.loadingJointPoolCurrencies(): Set<CryptoCurrency.ID> = accountStatuses
+        .asSequence()
+        .filterIsInstance<AccountStatus.Joint>()
+        .filter { it.value is JointAccountStatusValue.Loading }
+        .flatMap { it.account.cryptoCurrencies }
+        .filter { it.isPoolCurrency() }
+        .mapTo(hashSetOf()) { it.id }
 
     private fun CryptoCurrencyStatus.isPoolCurrency(): Boolean = currency.isPoolCurrency()
 

@@ -8,11 +8,11 @@ import com.tangem.core.ui.R
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.getResultStatusSource
+import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.yield.supply.YieldSupplyRepository
-import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import com.tangem.domain.yield.supply.models.status.findFor
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
@@ -38,8 +38,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -76,42 +76,46 @@ internal class AaveLendingProvider @Inject constructor(
     override fun resolveAsset(currency: CryptoCurrency): LendingAsset? = assetResolver.resolve(currency)
 
     override fun market(userWalletId: UserWalletId, asset: LendingAsset): Flow<LendingMarket> = channelFlow {
-        val isStatusFetchFailed = MutableStateFlow(false)
+        val statusFetch = MutableStateFlow(StatusFetch.Pending)
 
         val isSupported = yieldSupplyRepository.isYieldSupplySupported(userWalletId, asset.currency)
 
         // Re-read on every network update of the wallet rather than on a timer. The wallet refresh reads the reserve
         // token only when it is in the portfolio, so Lending asks for its status itself
         val onChain = networkStatusSupplier(SingleNetworkStatusProducer.Params(userWalletId, asset.currency.network))
-            .mapLatest {
+            .mapLatest { networkStatus ->
                 coroutineScope {
-                    val statusFetch = async { fetchStatus(userWalletId, asset) }
-                    val read = moduleReader.read(userWalletId, asset)
-                    isStatusFetchFailed.value = statusFetch.await().isLeft()
-                    read
+                    launch {
+                        val isFailed = fetchStatus(userWalletId, asset).isLeft()
+                        statusFetch.value = when {
+                            isFailed -> StatusFetch.Failed
+                            // Without a derivation the fetcher has no wallet manager and stores no status
+                            networkStatus.value is NetworkStatus.MissedDerivation -> StatusFetch.NoWallet
+                            else -> StatusFetch.Pending
+                        }
+                    }
+                    moduleReader.read(userWalletId, asset)
                 }
             }
             .scan(OnChainState.Initial, OnChainState::next)
 
         combine(
-            flow = markets.observe(asset),
+            flow = markets.observeRead(asset),
             flow2 = onChain,
             flow3 = observeStatus(userWalletId, asset),
-            flow4 = isStatusFetchFailed,
-        ) { market, chain, status, isFetchFailed ->
+            flow4 = statusFetch,
+        ) { market, chain, status, fetch ->
             toMarket(
                 market = market,
                 chain = chain,
-                status = StatusRead(status = status, isFetchFailed = isFetchFailed),
+                status = StatusRead(status = status, fetch = fetch),
                 isSupported = isSupported,
             )
         }.collect(::send)
     }
 
     override suspend fun refresh(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit> = either {
-        Either.catch { yieldSupplyRepository.updateMarkets() }
-            .onLeft { TangemLogger.e("Aave markets update failed", it) }
-            .bind()
+        markets.update().bind()
         fetchStatus(userWalletId, asset).bind()
     }
 
@@ -132,7 +136,7 @@ internal class AaveLendingProvider @Inject constructor(
             .distinctUntilChanged()
 
     private fun toMarket(
-        market: YieldMarketToken?,
+        market: AaveMarketRead,
         chain: OnChainState,
         status: StatusRead,
         isSupported: Boolean,
@@ -143,7 +147,7 @@ internal class AaveLendingProvider @Inject constructor(
         val liquidity = read?.withdrawLiquidity
 
         return LendingMarket(
-            rate = market?.effectiveApy?.percentToApy(),
+            rate = market.market?.effectiveApy?.percentToApy(),
             // The market's isActive is the Yield Mode switch of WETH, which the backend keeps off while Lending owns it
             isOpen = isSupported,
             deposit = read?.let { status.depositGate(it.toState()) } ?: chain.unreadGate(),
@@ -151,17 +155,25 @@ internal class AaveLendingProvider @Inject constructor(
             maxWithdraw = if (position != null && liquidity != null) position.min(liquidity) else position,
             providerState = read,
             source = listOf(chain.source, status.source).getResultStatusSource(),
+            rateSource = market.source,
+            isPositionLoading = status.isPositionLoading,
         )
     }
 
     /**
-     * A failed fetch leaves no trace in the status store for a token it has never held, so without this flag a missing
+     * A failed fetch leaves no trace in the status store for a token it has never held, so without [fetch] a missing
      * reserve status would look like a status still on its way
      */
-    private data class StatusRead(val status: YieldModuleStatus?, val isFetchFailed: Boolean) {
+    private data class StatusRead(val status: YieldModuleStatus?, val fetch: StatusFetch) {
+
+        private val isFetchFailed: Boolean
+            get() = fetch == StatusFetch.Failed
 
         val source: StatusSource
             get() = status?.source ?: if (isFetchFailed) StatusSource.ONLY_CACHE else StatusSource.CACHE
+
+        val isPositionLoading: Boolean
+            get() = status?.source == StatusSource.CACHE || status == null && fetch == StatusFetch.Pending
 
         fun depositGate(state: AaveModuleState): LendingDepositGate =
             if (state is AaveModuleState.StatusUnknown && isFetchFailed) {
@@ -186,4 +198,6 @@ internal class AaveLendingProvider @Inject constructor(
             val Initial = OnChainState(read = null, source = StatusSource.CACHE)
         }
     }
+
+    private enum class StatusFetch { Pending, Failed, NoWallet }
 }

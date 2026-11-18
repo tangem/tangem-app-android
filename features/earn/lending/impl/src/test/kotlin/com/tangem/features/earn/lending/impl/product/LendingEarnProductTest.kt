@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.EarnFeatureToggles
@@ -46,6 +47,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
@@ -240,7 +242,7 @@ internal class LendingEarnProductTest {
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState(position = model.position)))
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual).containsExactly(
@@ -255,7 +257,7 @@ internal class LendingEarnProductTest {
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState(position = null)))
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual).containsExactly(
@@ -270,10 +272,22 @@ internal class LendingEarnProductTest {
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState(rate = null)))
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN the failed snapshot WHEN summaries THEN the flow fails instead of answering empty`() = runTest {
+            // Arrange
+            every { lendingSupplier(userWalletId) } returns flowOf(LendingSnapshot.Failed)
+
+            // Act
+            val actual = runCatching { product.summaries(userWalletId).first() }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(IllegalStateException::class.java)
         }
 
         private fun provideTestModels() = listOf(
@@ -287,6 +301,61 @@ internal class LendingEarnProductTest {
                 expectedPosition = EarnPositionSummary(BigDecimal("1.5")),
                 expectedAction = LendingNavigationAction.OpenPosition,
             ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LoadingCurrencies {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an asset without a rate WHEN summaries THEN it is loading only while its rate source is CACHE`(
+            model: LoadingModel,
+        ) = runTest {
+            // Arrange
+            every { lendingSupplier(userWalletId) } returns
+                flowOf(snapshotOf(assetState(rate = null, rateSource = model.rateSource, source = model.source)))
+
+            // Act
+            val actual = product.summaries(userWalletId).first()
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnSummaries(byCurrency = emptyMap(), loadingCurrencies = model.expected))
+        }
+
+        private fun provideTestModels() = listOf(
+            LoadingModel(rateSource = StatusSource.CACHE, source = StatusSource.ACTUAL, expected = setOf(eth.id)),
+            LoadingModel(rateSource = StatusSource.ACTUAL, source = StatusSource.CACHE, expected = emptySet()),
+            LoadingModel(rateSource = StatusSource.ONLY_CACHE, source = StatusSource.ACTUAL, expected = emptySet()),
+            LoadingModel(rateSource = StatusSource.ACTUAL, source = StatusSource.ACTUAL, expected = emptySet()),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LoadingPositions {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an asset with a rate on ONLY_CACHE WHEN summaries THEN it is loading only while its position is`(
+            model: PositionLoadingModel,
+        ) = runTest {
+            // Arrange
+            every { lendingSupplier(userWalletId) } returns flowOf(
+                snapshotOf(assetState(isPositionLoading = model.isPositionLoading, source = StatusSource.ONLY_CACHE)),
+            )
+
+            // Act
+            val actual = product.summaries(userWalletId).first().loadingCurrencies
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            PositionLoadingModel(isPositionLoading = true, expected = setOf(eth.id)),
+            PositionLoadingModel(isPositionLoading = false, expected = emptySet()),
         )
     }
 
@@ -311,6 +380,20 @@ internal class LendingEarnProductTest {
             // Arrange
             every { lendingSupplier(userWalletId) } returns flowOf(
                 snapshotOf(assetState(rate = null, gate = LendingDepositGate.Loading, isOpen = false)),
+            )
+
+            // Act
+            val actual = product.state(params).first()
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnProductState.Loading)
+        }
+
+        @Test
+        fun `GIVEN the market list still loading after the deposit gate WHEN state THEN loading`() = runTest {
+            // Arrange
+            every { lendingSupplier(userWalletId) } returns flowOf(
+                snapshotOf(assetState(rate = null, gate = LendingDepositGate.Open, rateSource = StatusSource.CACHE)),
             )
 
             // Act
@@ -514,7 +597,7 @@ internal class LendingEarnProductTest {
             val product = createProduct(provider)
 
             // Act
-            val summaries = product.summaries(userWalletId).first()
+            val summaries = product.summaries(userWalletId).first().byCurrency
             val state = product.state(params).first()
             val apyHistory = product.apyHistory(params, period = mockk())
             val refresh = product.refresh(params)
@@ -609,6 +692,9 @@ internal class LendingEarnProductTest {
         isOpen: Boolean = true,
         rate: EarnProductRate? = RATE,
         gate: LendingDepositGate = LendingDepositGate.Open,
+        rateSource: StatusSource = StatusSource.ACTUAL,
+        source: StatusSource = StatusSource.ACTUAL,
+        isPositionLoading: Boolean = false,
     ) = LendingAssetState(
         asset = asset,
         address = "0x1",
@@ -622,11 +708,21 @@ internal class LendingEarnProductTest {
             maxWithdraw = position,
             providerState = null,
             source = StatusSource.ACTUAL,
+            rateSource = rateSource,
+            isPositionLoading = isPositionLoading,
         ),
         hasPendingTx = hasPendingTx,
         isWrappedTokenInWallet = false,
-        source = StatusSource.ACTUAL,
+        source = source,
     )
+
+    data class LoadingModel(
+        val rateSource: StatusSource,
+        val source: StatusSource,
+        val expected: Set<CryptoCurrency.ID>,
+    )
+
+    data class PositionLoadingModel(val isPositionLoading: Boolean, val expected: Set<CryptoCurrency.ID>)
 
     data class SummaryModel(
         val position: BigDecimal?,

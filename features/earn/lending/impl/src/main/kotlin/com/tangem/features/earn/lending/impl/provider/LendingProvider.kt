@@ -70,6 +70,8 @@ internal data class LendingMarket(
     val maxWithdraw: BigDecimal?,
     val providerState: LendingProviderState?,
     val source: StatusSource,
+    val rateSource: StatusSource = StatusSource.ACTUAL,
+    val isPositionLoading: Boolean = false,
 )
 
 internal data class LendingPosition(val cryptoAmount: BigDecimal)

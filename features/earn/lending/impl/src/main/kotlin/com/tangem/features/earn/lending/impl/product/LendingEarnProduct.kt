@@ -6,12 +6,12 @@ import arrow.core.right
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
+import com.tangem.features.earn.lending.impl.supplier.LendingSnapshot
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
@@ -26,8 +26,8 @@ import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
-import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProvider
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.EarnFlowAction
@@ -67,9 +67,16 @@ internal class LendingEarnProduct @Inject constructor(
     private val isOffered: Boolean
         get() = toggles.isEarnEnabled && lendingProvider.isAvailable
 
-    override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> {
-        if (!isOffered) return flowOf(emptyMap())
-        return lendingSupplier(userWalletId).map(summaryConverter::convert)
+    override fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries> {
+        if (!isOffered) return flowOf(EarnSummaries(byCurrency = emptyMap()))
+        return lendingSupplier(userWalletId).map { snapshot ->
+            // The fallback has no data: failing lets the Earn summaries keep the last answer as cache
+            check(snapshot != LendingSnapshot.Failed) { "Lending snapshot failed" }
+            EarnSummaries(
+                byCurrency = summaryConverter.convert(snapshot),
+                loadingCurrencies = summaryConverter.loadingCurrencies(snapshot),
+            )
+        }
     }
 
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> {
