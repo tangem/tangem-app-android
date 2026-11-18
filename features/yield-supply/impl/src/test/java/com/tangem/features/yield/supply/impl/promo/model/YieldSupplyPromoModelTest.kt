@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.promo.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -80,6 +81,7 @@ internal class YieldSupplyPromoModelTest {
                 userWalletId = UserWalletId("011"),
                 currency = currency,
                 apy = "5",
+                account = AccountKind.Portfolio,
             ),
         ),
         analytics = analytics,

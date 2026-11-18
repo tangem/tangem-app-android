@@ -6,6 +6,7 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
@@ -453,12 +454,11 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     @Test
     fun `GIVEN currency held outside the portfolio WHEN sheet opens THEN fee status read from its holder`() = runTest {
         // Arrange
-        coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns true
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
             cryptoCurrencyStatus.right()
 
         // Act
-        val model = createModel()
+        val model = createModel(account = AccountKind.Money)
         advanceUntilIdle()
 
         // Assert
@@ -743,11 +743,12 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         model.onDestroy()
     }
 
-    private fun TestScope.createModel() = YieldSupplyClaimModel(
+    private fun TestScope.createModel(account: AccountKind = AccountKind.Portfolio) = YieldSupplyClaimModel(
         paramsContainer = MutableParamsContainer(
             YieldSupplyClaimComponent.Params(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
+                account = account,
                 chainId = CHAIN_ID,
                 userAddress = SOURCE_ADDRESS,
                 onSubmitted = { submittedResults += it },
@@ -763,7 +764,6 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         buildYieldClaimTransactionUseCase = buildClaimTransactionUseCase,
         getFeeUseCase = getFeeUseCase,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
-        currencyStatusResolver = currencyStatusResolver,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         sendTransactionUseCase = sendTransactionUseCase,

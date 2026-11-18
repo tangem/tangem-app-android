@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.active.model
 import arrow.core.left
 import arrow.core.right
 import arrow.core.some
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -22,7 +23,7 @@ internal class YieldSupplyActiveModelFeesTest : YieldSupplyActiveModelTestBase()
     @BeforeEach
     fun setUp() {
         val status = CryptoCurrencyStatus(currency = token, value = CryptoCurrencyStatus.Loading)
-        every { currencyStatusResolver.observe(userWalletId, token) } returns flowOf(status.some())
+        every { currencyStatusResolver.observe(userWalletId, token, any()) } returns flowOf(status.some())
         coEvery { getYieldBoostStatusUseCase(any(), any()) } returns YieldBoostStatus.NotStarted.right()
         coEvery { yieldSupplyGetTokenStatusUseCase(any()) } returns Throwable("no apy").left()
         coEvery { minAmountUseCase(any(), any(), any()) } returns Throwable("no min amount").left()
@@ -33,11 +34,11 @@ internal class YieldSupplyActiveModelFeesTest : YieldSupplyActiveModelTestBase()
     @Test
     fun `GIVEN currency held outside the portfolio WHEN status loaded THEN min amount and fees use its holder`() =
         runTest {
-            // Arrange
-            coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns true
-
             // Act
-            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            val model = createModel(
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+                account = AccountKind.Money,
+            )
             advanceUntilIdle()
 
             // Assert
@@ -50,9 +51,6 @@ internal class YieldSupplyActiveModelFeesTest : YieldSupplyActiveModelTestBase()
 
     @Test
     fun `GIVEN a portfolio currency WHEN status loaded THEN min amount and fees use the portfolio`() = runTest {
-        // Arrange
-        coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns false
-
         // Act
         val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
         advanceUntilIdle()
