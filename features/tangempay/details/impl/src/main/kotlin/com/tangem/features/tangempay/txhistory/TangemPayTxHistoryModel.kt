@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -21,6 +22,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
@@ -125,7 +127,10 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     }
 
     private fun getEmptyState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Empty {
-        return TangemPayTxHistoryUM.Empty(isBalanceHidden = isBalanceHidden)
+        return TangemPayTxHistoryUM.Empty(
+            isBalanceHidden = isBalanceHidden,
+            isCompact = tangemPayFeatureToggles.isCompactEmptyHistoryEnabled,
+        )
     }
 
     private fun getErrorState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Error {

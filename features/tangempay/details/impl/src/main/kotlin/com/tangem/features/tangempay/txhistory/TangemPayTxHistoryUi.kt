@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -27,12 +28,17 @@ import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.common.TangemPayEmptyTransactionHistoryState
 import com.tangem.features.tangempay.common.tangemPayTxHistoryNonContentItem
+import com.tangem.features.tangempay.details.impl.R
+import com.tangem.core.ui.R as CoreUiR
 
 private const val LOAD_ITEMS_BUFFER = 20
+private const val COMPACT_EMPTY_ITEM_KEY = "compactEmptyHistory"
 
 internal fun LazyListScope.tangemPayTxHistoryItems(listState: LazyListState, state: TangemPayTxHistoryUM) {
     when (state) {
@@ -40,7 +46,14 @@ internal fun LazyListScope.tangemPayTxHistoryItems(listState: LazyListState, sta
             contentItems(listState = listState, state = state)
         }
         is TangemPayTxHistoryUM.Empty -> {
-            tangemPayTxHistoryNonContentItem(listState = listState, state = TangemPayEmptyTransactionHistoryState.Empty)
+            if (state.isCompact) {
+                compactEmptyItem()
+            } else {
+                tangemPayTxHistoryNonContentItem(
+                    listState = listState,
+                    state = TangemPayEmptyTransactionHistoryState.Empty,
+                )
+            }
         }
         is TangemPayTxHistoryUM.Error -> {
             tangemPayTxHistoryNonContentItem(
@@ -78,6 +91,38 @@ private fun LazyListScope.contentItems(listState: LazyListState, state: TangemPa
             listState = listState,
             buffer = LOAD_ITEMS_BUFFER,
             onLoadMore = state.loadMore,
+        )
+    }
+}
+
+private fun LazyListScope.compactEmptyItem() {
+    item(key = COMPACT_EMPTY_ITEM_KEY, contentType = COMPACT_EMPTY_ITEM_KEY) {
+        TangemPayCompactTransactionEmptyBlock(
+            modifier = Modifier
+                .padding(start = 16.dp, top = 64.dp, end = 16.dp)
+                .fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun TangemPayCompactTransactionEmptyBlock(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.testTag(EmptyTransactionBlockTestTags.BLOCK),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        TangemAvatar(
+            state = TangemAvatar.UiState.Icon(iconRes = R.drawable.ic_tangem_pay_empty_history_20),
+            size = TangemAvatar.Size.X40,
+            modifier = Modifier.testTag(EmptyTransactionBlockTestTags.ICON),
+        )
+        Text(
+            modifier = Modifier.testTag(EmptyTransactionBlockTestTags.TEXT),
+            text = stringResourceSafe(CoreUiR.string.tangempay_transaction_history_empty),
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.primary,
+            textAlign = TextAlign.Center,
         )
     }
 }
