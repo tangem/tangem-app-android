@@ -9,6 +9,9 @@ import com.tangem.core.socket.SocketSpec
 import com.tangem.core.socket.SocketState
 import com.tangem.grow.datasource.BuildConfig
 import com.tangem.grow.datasource.config.PolymarketClob
+import com.tangem.grow.datasource.polymarket.socket.PolymarketPriceCloseCode.AUTHENTICATION_FAILED
+import com.tangem.grow.datasource.polymarket.socket.PolymarketPriceCloseCode.POLICY_VIOLATION
+import com.tangem.grow.datasource.polymarket.socket.PolymarketPriceCloseCode.SERVER_DRAINING
 import com.tangem.grow.datasource.polymarket.socket.PolymarketPriceMessageDto.Companion.OP_ERROR
 import com.tangem.grow.datasource.polymarket.socket.PolymarketPriceSubscriptionsDto.Operation
 import kotlinx.coroutines.CoroutineScope
@@ -131,8 +134,8 @@ private fun PolymarketPriceMessageDto.belongsTo(key: PolymarketPriceFeedKey): Bo
 private fun String.normalizedSymbol(): String = filter(Char::isLetterOrDigit).lowercase()
 
 /**
- * Close codes of the live-data socket: `4001` rejects the credentials and `4008` reports a policy violation, so
- * neither is retried; `4003` announces a restart and asks for one reconnect at a random moment within ten seconds.
+ * Rejected credentials and a policy violation are not retried; a server that announces a restart asks for one
+ * reconnect at a random moment within ten seconds.
  */
 internal class PolymarketPriceClosePolicy(private val random: Random = Random.Default) : ClosePolicy {
 
@@ -143,9 +146,6 @@ internal class PolymarketPriceClosePolicy(private val random: Random = Random.De
     }
 
     private companion object {
-        const val AUTHENTICATION_FAILED = 4001
-        const val SERVER_DRAINING = 4003
-        const val POLICY_VIOLATION = 4008
         const val MAX_DRAINING_DELAY_MILLIS = 10_000L
     }
 }
