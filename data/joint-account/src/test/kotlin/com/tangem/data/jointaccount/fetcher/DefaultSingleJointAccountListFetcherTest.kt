@@ -25,8 +25,11 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -192,6 +195,35 @@ internal class DefaultSingleJointAccountListFetcherTest {
     }
 
     @Suppress("UNCHECKED_CAST")
+    @Test
+    fun `GIVEN a fetch in flight WHEN the same wallet is fetched again THEN the second request waits for the first`() =
+        runTest {
+            // Arrange
+            val context = TestScopeContext(TestAppCoroutineScope(testScope = this))
+            advanceUntilIdle()
+            val fetcher = with(context) { createFetcher() }
+            val firstAnswer = CompletableDeferred<ApiResponse<GetJointAccountsResponse>>()
+            val response = ApiResponse.Success(
+                data = GetJointAccountsResponse(jointAccounts = listOf(createJointAccountDto())),
+                headers = mapOf(ETAG_HEADER to listOf(NEW_ETAG)),
+            )
+            coEvery { jointAccountApi.getJointAccounts(walletId = walletId.stringValue, eTag = any()) } coAnswers {
+                firstAnswer.await()
+            } andThen response
+
+            // Act
+            launch { fetcher(walletId) }
+            launch { fetcher(walletId) }
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { jointAccountApi.getJointAccounts(walletId = any(), eTag = any()) }
+
+            firstAnswer.complete(response)
+            advanceUntilIdle()
+            coVerify(exactly = 2) { jointAccountApi.getJointAccounts(walletId = any(), eTag = any()) }
+        }
+
     private fun notModified(): ApiResponse<GetJointAccountsResponse> = ApiResponse.Error(
         cause = ApiResponseError.HttpException(
             code = ApiResponseError.HttpException.Code.NOT_MODIFIED,
