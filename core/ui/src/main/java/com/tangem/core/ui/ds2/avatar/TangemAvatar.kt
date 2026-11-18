@@ -107,7 +107,7 @@ object TangemAvatar {
         /** Yellow fill with the two-tone gacha cards icon. */
         Gacha,
 
-        /** Visa-violet fill with the Visa wordmark, drawn larger than the other account icons. */
+        /** Azure-blue fill with the Visa wordmark, drawn larger than the other account icons. */
         Visa,
 
         /** Green fill with the safe icon. */
