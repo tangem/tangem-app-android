@@ -152,6 +152,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         popupStore = kycAdditionalInfoPopupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
+        isOpenedFromPush = params.isOpenedFromKycPush,
         onProvideInformation = ::openKyc,
         onContactSupport = ::sendFeatureIsBetaSupportEmail,
     )

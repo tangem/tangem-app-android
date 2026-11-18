@@ -64,6 +64,15 @@ internal class TangemPayKycAdditionalInfoAnalyticsEventsTest {
                 ),
             ),
             EventModel(
+                event = PopupShown(accountType = AccountType.MONEY, entryPoint = EntryPoint.PUSH),
+                expectedId = "[Visa CDD/EDD] Popup Shown",
+                expectedParams = mapOf(
+                    "account_type" to "money",
+                    "kyc_status" to "in_progress",
+                    "entry_point" to "push",
+                ),
+            ),
+            EventModel(
                 event = PopupClosed(
                     accountType = AccountType.MONEY,
                     entryPoint = EntryPoint.ACCOUNT_ENTRY,
@@ -174,6 +183,7 @@ internal class TangemPayKycAdditionalInfoAnalyticsEventsTest {
             val expected = when (entryPoint) {
                 EntryPoint.ACCOUNT_ENTRY -> "account_entry"
                 EntryPoint.ACCOUNT_BLOCK -> "account_block"
+                EntryPoint.PUSH -> "push"
             }
 
             // Act

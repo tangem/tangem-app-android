@@ -713,6 +713,40 @@ internal class MoneyAccountDetailsModelTest {
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN opened from kyc push AND popup already shown in session WHEN cdd required THEN popup shown with push entry point`() =
+            runTest {
+                // Arrange
+                coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returns false
+
+                // Act
+                val model = createModel(
+                    status = activeAccount(balance = balance(), isKycAdditionalInfoRequired = true),
+                    isOpenedFromKycPush = true,
+                )
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.MONEY, EntryPoint.PUSH)) }
+                verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN opened from kyc push WHEN cdd not required THEN no popup`() = runTest {
+            // Act
+            val model = createModel(
+                status = activeAccount(balance = balance(), isKycAdditionalInfoRequired = false),
+                isOpenedFromKycPush = true,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analytics.send(ofType<PopupShown>()) }
+            verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
         @ParameterizedTest
         @MethodSource("provideIntermediateStatusModels")
         fun `GIVEN flag shown WHEN intermediate status and flag again THEN popup reshown only after account without flag`(
@@ -1420,14 +1454,23 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(moneyAccountStatusFetcher, answers = false)
     }
 
-    private fun TestScope.createModel(status: MoneyAccountStatusValue) = createModel(flowOf(status))
+    private fun TestScope.createModel(status: MoneyAccountStatusValue, isOpenedFromKycPush: Boolean = false) =
+        createModel(statuses = flowOf(status), isOpenedFromKycPush = isOpenedFromKycPush)
 
-    private fun TestScope.createModel(statuses: Flow<MoneyAccountStatusValue>): MoneyAccountDetailsModel {
+    private fun TestScope.createModel(
+        statuses: Flow<MoneyAccountStatusValue>,
+        isOpenedFromKycPush: Boolean = false,
+    ): MoneyAccountDetailsModel {
         every { moneyAccountStatusSupplier(userWalletId) } returns statuses.map { status ->
             AccountStatus.Money(account = Account.Money(userWalletId = userWalletId), value = status)
         }
         return MoneyAccountDetailsModel(
-            paramsContainer = MutableParamsContainer(MoneyAccountDetailsComponent.Params(userWalletId = userWalletId)),
+            paramsContainer = MutableParamsContainer(
+                MoneyAccountDetailsComponent.Params(
+                    userWalletId = userWalletId,
+                    isOpenedFromKycPush = isOpenedFromKycPush,
+                ),
+            ),
             moneyAccountStatusSupplier = moneyAccountStatusSupplier,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             dispatchers = createTestingCoroutineDispatcherProvider(),

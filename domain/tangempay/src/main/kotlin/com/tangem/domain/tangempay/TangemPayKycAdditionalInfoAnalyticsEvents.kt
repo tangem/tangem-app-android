@@ -65,6 +65,7 @@ sealed class TangemPayKycAdditionalInfoAnalyticsEvents(
     enum class EntryPoint(val value: String) {
         ACCOUNT_ENTRY("account_entry"),
         ACCOUNT_BLOCK("account_block"),
+        PUSH("push"),
     }
 
     enum class Source(val value: String) {

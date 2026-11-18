@@ -1089,6 +1089,43 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN opened from kyc push AND popup already shown in session WHEN cdd required THEN popup shown with push entry point`() =
+            runTest {
+                // Arrange
+                coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returns false
+
+                // Act
+                val model = createModel(
+                    testScope = this,
+                    statusValue = loadedStatus(isKycAdditionalInfoRequired = true, isPaymentAccountIssuing = false),
+                    initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+                    isOpenedFromKycPush = true,
+                )
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.PUSH)) }
+                verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN opened from kyc push WHEN cdd not required THEN no popup`() = runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                statusValue = loadedStatus(isKycAdditionalInfoRequired = false),
+                isOpenedFromKycPush = true,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analytics.send(ofType<PopupShown>()) }
+            verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN flag shown WHEN intermediate status and flag again THEN popup reshown only after content status`(
@@ -1269,6 +1306,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         statusEmissions: Int = 1,
         statusFlow: Flow<AccountStatus.Payment>? = null,
         isBalanceHidden: Boolean = false,
+        isOpenedFromKycPush: Boolean = false,
     ): TangemPayDetailsModel {
         val initialStatus = paymentStatus(
             value = statusValue ?: loadedStatus(
@@ -1283,6 +1321,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         val params = TangemPayDetailsContainerComponent.Params(
             initialStatus = initialStatus,
             initialRoute = initialRoute,
+            isOpenedFromKycPush = isOpenedFromKycPush,
         )
 
         val statuses = statusFlow ?: List(statusEmissions) { initialStatus }.asFlow()

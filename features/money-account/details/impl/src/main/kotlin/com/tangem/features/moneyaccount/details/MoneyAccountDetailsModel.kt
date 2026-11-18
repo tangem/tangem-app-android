@@ -104,6 +104,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         popupStore = kycAdditionalInfoPopupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
+        isOpenedFromPush = params.isOpenedFromKycPush,
         onProvideInformation = ::openKyc,
         onContactSupport = ::sendSupportEmail,
     )

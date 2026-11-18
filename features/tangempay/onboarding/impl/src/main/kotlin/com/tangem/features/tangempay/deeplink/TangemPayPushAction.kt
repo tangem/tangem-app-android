@@ -17,4 +17,6 @@ internal sealed class TangemPayPushAction {
     ) : TangemPayPushAction()
 
     data object TopUp : TangemPayPushAction()
+
+    data object KycAdditionalInfo : TangemPayPushAction()
 }
