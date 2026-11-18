@@ -531,15 +531,17 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object CryptoAccountIntro : AppRoute(path = "/crypto_account_intro")
 
+    /** [userWalletId] is null when the caller can't tell which wallet: the flow asks after its intro. */
     @Serializable
     data class JointAccountCreation(
-        val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId?,
         val source: Source,
-    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}") {
+    ) : AppRoute(path = "/joint_account_creation" + userWalletId?.let { "/${it.stringValue}" }.orEmpty()) {
 
         enum class Source {
             AddAccount,
             MainScreen,
+            AllServices,
         }
     }
 

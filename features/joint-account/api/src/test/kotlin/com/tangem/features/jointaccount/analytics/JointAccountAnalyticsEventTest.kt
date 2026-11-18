@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.analytics
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidResult
@@ -170,6 +171,43 @@ internal class JointAccountAnalyticsEventTest {
                 expectedResult = "Unsupported Network",
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreationSource {
+
+        @ParameterizedTest
+        @EnumSource(AppRoute.JointAccountCreation.Source::class)
+        fun `GIVEN a source WHEN Intro Screen Opened built THEN id and params match the spec`(
+            source: AppRoute.JointAccountCreation.Source,
+        ) {
+            // Act
+            val event = JointAccountAnalyticsEvent.IntroScreenOpened(source = source)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Intro Screen Opened")
+            assertThat(event.params).isEqualTo(mapOf("Source" to source.specValue()))
+        }
+
+        @ParameterizedTest
+        @EnumSource(AppRoute.JointAccountCreation.Source::class)
+        fun `GIVEN a source WHEN Button Create Joint Account built THEN id and params match the spec`(
+            source: AppRoute.JointAccountCreation.Source,
+        ) {
+            // Act
+            val event = JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Button - Create Joint Account")
+            assertThat(event.params).isEqualTo(mapOf("Source" to source.specValue()))
+        }
+
+        private fun AppRoute.JointAccountCreation.Source.specValue(): String = when (this) {
+            AppRoute.JointAccountCreation.Source.AddAccount -> "Add Account"
+            AppRoute.JointAccountCreation.Source.MainScreen -> "Main Screen"
+            AppRoute.JointAccountCreation.Source.AllServices -> "All Services"
+        }
     }
 
     data class CheckModel(

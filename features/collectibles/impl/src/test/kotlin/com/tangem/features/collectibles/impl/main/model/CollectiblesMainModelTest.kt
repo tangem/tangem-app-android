@@ -40,6 +40,11 @@ import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBa
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.collectibles.models.CollectiblesRegionStatus
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -61,12 +66,14 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CollectiblesMainModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val createOrReactivateUseCase: CreateOrReactivateCollectiblesAccountUseCase = mockk()
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
@@ -105,7 +112,9 @@ internal class CollectiblesMainModelTest {
             clipboardManager,
             getPendingPacksUseCase,
             dismissPendingPackUseCase,
+            getRegionStatusUseCase,
         )
+        coEvery { getRegionStatusUseCase(any(), any()) } returns CollectiblesRegionStatus.ALLOWED
         pendingPacksFlow = MutableSharedFlow(replay = 1)
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
         statusFlow = MutableStateFlow(CollectiblesAccountStatusValue.Loading)
@@ -324,6 +333,156 @@ internal class CollectiblesMainModelTest {
                     onComplete = any(),
                 )
             }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Region {
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN the region verdict WHEN the screen opens THEN the banner follows it`(isBlocked: Boolean) = runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returns
+                if (isBlocked) CollectiblesRegionStatus.RESTRICTED else CollectiblesRegionStatus.ALLOWED
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.isRegionRestricted).isEqualTo(isBlocked)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the region check fails WHEN the screen opens THEN no banner is shown`() = runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returns CollectiblesRegionStatus.UNKNOWN
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.isRegionRestricted).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a restricted region WHEN refreshed in an allowed one THEN the banner is gone`() = runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returnsMany listOf(
+                CollectiblesRegionStatus.RESTRICTED,
+                CollectiblesRegionStatus.ALLOWED,
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.isRegionRestricted).isFalse()
+            coVerify(exactly = 2) { getRegionStatusUseCase(coldWallet.walletId, skipCache = true) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a restricted region WHEN the refresh check fails THEN the banner stays`() = runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returnsMany listOf(
+                CollectiblesRegionStatus.RESTRICTED,
+                CollectiblesRegionStatus.UNKNOWN,
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.isRegionRestricted).isTrue()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a restricted region WHEN add funds clicked THEN the restriction is shown instead of the sheet`() =
+            runTest {
+                // Arrange
+                coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returns CollectiblesRegionStatus.RESTRICTED
+                val model = createModel(testScope = this)
+                val slot = FakeSlotHost(model.bottomSheetNavigation)
+                statusFlow.value = PRICED_VAULT
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.actions.first().onClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(slot.configuration).isEqualTo(CollectiblesMainBottomSheetConfig.RegionRestricted)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an allowed region WHEN add funds clicked THEN the top up sheet opens`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.bottomSheetNavigation)
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.actions.first().onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(CollectiblesMainBottomSheetConfig.TopUp)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the region is unknown WHEN add funds clicked THEN it is asked again and the failure reported`() =
+            runTest {
+                // Arrange
+                coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returns CollectiblesRegionStatus.UNKNOWN
+                val model = createModel(testScope = this)
+                val slot = FakeSlotHost(model.bottomSheetNavigation)
+                statusFlow.value = PRICED_VAULT
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.actions.first().onClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(slot.configuration).isNull()
+                coVerify(exactly = 1) { getRegionStatusUseCase(coldWallet.walletId, skipCache = false) }
+                verify(exactly = 1) {
+                    messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a restricted region WHEN withdrawal clicked THEN the swap still opens`() = runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(coldWallet.walletId, any()) } returns CollectiblesRegionStatus.RESTRICTED
+            val model = createModel(testScope = this)
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.actions.last().onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(any<AppRoute.Swap>(), onComplete = any()) }
             model.onDestroy()
         }
     }
@@ -730,6 +889,7 @@ internal class CollectiblesMainModelTest {
             clipboardManager = clipboardManager,
             getCollectiblePendingPacksUseCase = getPendingPacksUseCase,
             dismissCollectiblePendingPackUseCase = dismissPendingPackUseCase,
+            getRegionStatusUseCase = getRegionStatusUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
     }
@@ -755,6 +915,7 @@ internal class CollectiblesMainModelTest {
     private companion object {
 
         const val SESSION_KEY = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
+
 
         val PAYMENT_IN_PROGRESS = CollectiblePendingPack.PaymentInProgress(txId = "payment")
         val READY_TO_OPEN = CollectiblePendingPack.ReadyToOpen(

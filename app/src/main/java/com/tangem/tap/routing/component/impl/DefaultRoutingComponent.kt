@@ -45,6 +45,7 @@ import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceProvider
+import com.tangem.tap.LockUserWalletsTimer
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeeplinkRouter
 import com.tangem.tap.features.hot.TangemHotSDKProxy
@@ -86,6 +87,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val appsFlyerDeeplinkRouter: AppsFlyerDeeplinkRouter,
     private val promoPageRouter: PromoPageRouter,
+    private val lockUserWalletsTimer: LockUserWalletsTimer,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -174,7 +176,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         initializeInitialNavigation()
         rootDeepLinkDispatcher.observe(scope = componentScope, currentRoute = currentRoute, router = router)
         appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute, router = router)
-        promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute)
+        promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute, router = router)
+        lockUserWalletsTimer.observe(scope = componentScope, router = router)
     }
 
     private fun initializeInitialNavigation() {

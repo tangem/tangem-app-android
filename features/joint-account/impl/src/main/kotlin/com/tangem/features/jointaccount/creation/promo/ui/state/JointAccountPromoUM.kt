@@ -8,6 +8,7 @@ internal data class JointAccountPromoUM(
     val title: TextReference,
     val subtitle: TextReference,
     val points: ImmutableList<PointUM>,
+    val isContinueLoading: Boolean = false,
     val onContinueClick: () -> Unit,
     val onCloseClick: () -> Unit,
 ) {

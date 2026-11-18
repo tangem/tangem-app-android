@@ -284,6 +284,27 @@ The reward card's "Sell back" sells the won card for the backend's instant buyba
 `CollectiblesSellBackButtonConverter` turns it into `SellBackButtonUM` (text, `isEnabled`, `isLoading`), which lives
 in `RevealUM`, not in `RewardCardUM`, because it changes while the card is on screen.
 
+## Region (geoblock)
+
+`GET /api/v1/geoblock` decides by the request's IP. `GetCollectiblesRegionStatusUseCase(userWalletId, skipCache)`
+returns a `CollectiblesRegionStatus` (`domain/collectibles/models`): `ALLOWED`, `RESTRICTED`, or `UNKNOWN` when the
+check failed. The last verdict is one for every wallet, kept in memory by `CollectiblesRegionStore` and served by
+`DefaultCollectiblesRepository.isRegionBlocked` under a mutex; a failed request keeps the known verdict.
+
+- **Onboarding's "Create account".** `CollectiblesOnboardingModel` asks with `skipCache = true` on every tap, under
+  the button's own loader, and creates the account only in an allowed region. An existing account is entered from
+  anywhere.
+- **Main** asks with `skipCache = true` on open and on pull-to-refresh and shows the warning banner on `RESTRICTED`;
+  `UNKNOWN` leaves the banner as it was.
+- **Add funds, "Open for …" (machine details) and Sell back (reward card)** ask with the cache.
+
+Every gate passes the status to `handleRegionStatus` (`impl/common/ui/CollectiblesRegionRestrictionsSheet.kt`): `RESTRICTED` calls `onRestricted`, `UNKNOWN`
+sends a "Something went wrong" snackbar, and only `ALLOWED` lets the action run. `onRestricted` opens a
+`RegionRestricted` config in the screen's own sheet slot (onboarding, main, machine details, confirm order), which
+draws `CollectiblesRegionRestrictionsSheet`. The sheet is not a `ModalMessage`: those are drawn by the root
+`EventMessageEffect` outside the modal host, as an opaque dialog window without glass. Withdrawal, opening an already
+bought pack and the catalogue are never gated.
+
 ## Domain & data
 
 ```
@@ -315,8 +336,8 @@ anywhere, so that annotation is the whole wiring. A use case without it cannot b
 into its header map. The id is one UUID per process (`DefaultCollectiblesAuthProvider` is provided
 `@Singleton` in `GrowDatasourceModule`). Every endpoint is also annotated `@RequiresSessionAuth`
 (`libs/auth`). `user-id` is a per-method Retrofit `@Header` carrying `UserWalletId.stringValue` on
-`getMachineNfts`, `generatePurchaseTx`, `purchaseTxSent`, `getTxStatus`, `openPack` and the four
-`buyback/*` endpoints. Adding a header to
+`getMachineNfts`, `generatePurchaseTx`, `purchaseTxSent`, `getTxStatus`, `openPack`, the four
+`buyback/*` endpoints and `getGeoblock`. Adding a header to
 the config requires updating `CollectiblesConfigTest`, which asserts the exact header set per environment.
 
 ## DI modules

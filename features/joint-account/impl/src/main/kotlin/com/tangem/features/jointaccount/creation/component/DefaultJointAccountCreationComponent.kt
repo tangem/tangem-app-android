@@ -42,11 +42,18 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
     private val model: JointAccountCreationModel = getOrCreateModel()
 
     private val childParams = JointAccountCreationChildParams(
-        userWalletId = params.userWalletId,
+        source = params.source,
         draftHolder = model.draftHolder,
     )
 
     private val stackNavigation = StackNavigation<JointAccountCreationRoute>()
+
+    init {
+        // The model outlives re-creation, so a wallet picked after the intro is not overwritten by the input
+        if (model.draftHolder.draft.value.walletId == null) {
+            params.userWalletId?.let(model.draftHolder::setWalletId)
+        }
+    }
 
     private val innerRouter = InnerRouter<JointAccountCreationRoute>(
         stackNavigation = stackNavigation,
@@ -93,7 +100,8 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
     private fun createPromoComponent(childContext: AppComponentContext): JointAccountPromoComponent {
         return JointAccountPromoComponent(
             appComponentContext = childContext,
-            params = params,
+            params = childParams,
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         )
     }
 
@@ -116,11 +124,14 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
 
     private fun createDisplayNameComponent(childContext: AppComponentContext): JointAccountDisplayNameComponent {
         val draft = model.draftHolder.draft.value
+        val walletId = checkNotNull(draft.config?.walletId ?: draft.walletId) {
+            "The display name step is reached only after the config step has settled the wallet"
+        }
 
         return displayNameComponentFactory.create(
             context = childContext,
             params = JointAccountDisplayNameComponent.Params(
-                userWalletId = draft.config?.walletId ?: params.userWalletId,
+                userWalletId = walletId,
                 buttonText = resourceReference(R.string.common_create_account),
                 initialName = draft.displayName,
                 onContinueClick = ::onDisplayNameContinue,

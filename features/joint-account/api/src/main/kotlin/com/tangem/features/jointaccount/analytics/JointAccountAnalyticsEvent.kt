@@ -168,6 +168,7 @@ private val AppRoute.JointAccountCreation.Source.value: String
     get() = when (this) {
         AppRoute.JointAccountCreation.Source.AddAccount -> "Add Account"
         AppRoute.JointAccountCreation.Source.MainScreen -> "Main Screen"
+        AppRoute.JointAccountCreation.Source.AllServices -> "All Services"
     }
 
 private fun ApiResponseError.HttpException.errorCode(): String = bodyCode() ?: code.numericCode.toString()
