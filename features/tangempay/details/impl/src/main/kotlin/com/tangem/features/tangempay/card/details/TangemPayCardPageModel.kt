@@ -17,6 +17,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.menu.TangemMenu
+import com.tangem.core.ui.ds2.menu.tangemMenuUi
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -27,6 +29,9 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_gear_24
+import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -35,6 +40,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.tangempay.TangemPayCard
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
@@ -49,20 +55,26 @@ import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.tangempay.model.TangemPayTopUpData
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.model.CashbackSummary
 import com.tangem.domain.tangempay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.tangempay.usecase.ObserveCashbackSummaryUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.CloseCardClicked.Source as CloseCardSource
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
+import com.tangem.features.tangempay.card.closure.CloseCardConfirmListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
+import com.tangem.features.tangempay.card.closure.TangemPayCardCloseCoordinator
 import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
 import com.tangem.features.tangempay.card.pin.ViewPinListener
 import com.tangem.features.tangempay.card.reissue.ReissueCardListener
+import com.tangem.features.tangempay.common.PayMenuItems
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -71,6 +83,7 @@ import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.common.firstDepositAddress
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.networksOrNull
+import com.tangem.features.tangempay.common.tariffPlanState
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
@@ -113,8 +126,16 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val closeCoordinator: TangemPayCardCloseCoordinator,
+    observeCashbackSummaryUseCase: ObserveCashbackSummaryUseCase,
     googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
-) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
+) : Model(),
+    ViewPinListener,
+    ReissueCardListener,
+    AddFundsListener,
+    CloseCardListener,
+    CloseCardConfirmListener,
+    ChooseNetworkListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
 
@@ -132,6 +153,10 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val frozenStateChangingCardIds = MutableStateFlow<Set<String>>(emptySet())
 
     private var isDeliveryDetailsShown = false
+
+    private var isCloseUnavailableShownSent = false
+
+    private var removedSelectedCardId: String? = null
 
     private var isPendingActivationOpen = params.shouldOpenActivation &&
         params.initialStatus.ifLoadedOrNull { it.findCardWithId(params.cardId) } == null
@@ -161,7 +186,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onBackClick = router::pop,
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
                 settings = persistentListOf(),
-                menuItems = buildMenuItems(
+                menuItems = buildTopMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
                     isAwaitingActivation = params.initialStatus
                         .ifLoadedOrNull { it.findCardWithId(params.cardId) }
@@ -183,6 +208,20 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
 
         modelScope.launch { subscribeOnDetailsState() }
+
+        if (tangemPayFeatureToggles.isCardActionsEnabled) {
+            closeCoordinator.closedCards
+                .filter { it.userWalletId == userWalletId }
+                .onEach { onCardClosed(it.cardId) }
+                .launchIn(modelScope)
+
+            combine(
+                flow = currentStatus,
+                flow2 = observeCashbackSummaryUseCase(userWalletId).onStart { emit(null) },
+            ) { status, cashbackSummary -> buildPayMenu(status = status, cashbackSummary = cashbackSummary) }
+                .onEach { payMenu -> uiState.update { it.copy(payMenu = payMenu) } }
+                .launchIn(modelScope)
+        }
 
         combine(googleWalletController.entry, shouldShowGooglePayBanner) { entry, shouldShowBanner ->
             updateAddToWalletBlocks(entry = entry, shouldShowBanner = shouldShowBanner)
@@ -290,6 +329,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         cardControllersState.update { ordered.values.toPersistentList() }
 
         if (selectedCardId.value !in newIds) {
+            removedSelectedCardId = selectedCardId.value
             ordered.keys.firstOrNull()?.let { selectedCardId.value = it }
         }
     }
@@ -317,7 +357,8 @@ internal class TangemPayCardPageModel @Inject constructor(
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
                     settings = status.buildSettings(frozenState, isDetailsShown),
-                    menuItems = buildMenuItems(
+                    actionsMenu = status.buildActionsMenu(card = card, frozenState = frozenState),
+                    menuItems = buildTopMenuItems(
                         isLastCard = status.cards.isLastCard(),
                         isAwaitingActivation = card.state.isAwaitingActivation,
                     ),
@@ -389,10 +430,15 @@ internal class TangemPayCardPageModel @Inject constructor(
             .onEach { cardFrozenState ->
                 googleWalletController.updateFrozenState(cardFrozenState)
                 uiState.update { state ->
-                    val settings = currentStatus.value.ifLoadedOrNull {
-                        it.buildSettings(frozenState = cardFrozenState, isDetailsShown = isDetailsShown.value)
+                    val status = currentStatus.value.value as? PaymentAccountStatusValue.Loaded
+                    val settings = status?.buildSettings(
+                        frozenState = cardFrozenState,
+                        isDetailsShown = isDetailsShown.value,
+                    )
+                    val actionsMenu = status?.findCardWithId(selectedCardId.value)?.let { card ->
+                        status.buildActionsMenu(card = card, frozenState = cardFrozenState)
                     }
-                    state.copy(settings = settings ?: persistentListOf())
+                    state.copy(settings = settings ?: persistentListOf(), actionsMenu = actionsMenu)
                 }
             }
             .launchIn(modelScope)
@@ -422,6 +468,9 @@ internal class TangemPayCardPageModel @Inject constructor(
         isDetailsShown: Boolean,
     ): ImmutableList<TangemPayCardPageSetting> {
         val card = findCardWithId(selectedCardId.value) ?: return persistentListOf()
+        if (tangemPayFeatureToggles.isCardActionsEnabled) {
+            return buildCardActionsSettings(card = card, frozenState = frozenState, isDetailsShown = isDetailsShown)
+        }
         return persistentListOf(
             TangemPayCardPageSetting(
                 id = TangemPayCardPageSetting.Id.Details,
@@ -455,6 +504,116 @@ internal class TangemPayCardPageModel @Inject constructor(
                 isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen,
             ),
         )
+    }
+
+    private fun buildCardActionsSettings(
+        card: TangemPayCard,
+        frozenState: TangemPayCardFrozenState,
+        isDetailsShown: Boolean,
+    ): ImmutableList<TangemPayCardPageSetting> = persistentListOf(
+        TangemPayCardPageSetting(
+            id = TangemPayCardPageSetting.Id.Details,
+            title = TextReference.Res(R.string.tangempay_card_details_title),
+            onClick = ::onClickViewDetails,
+            iconRes = CoreUiR.drawable.ic_tangem_pay_card_details_24,
+            testTag = TangemPayTestTags.SHOW_DETAILS_ROW,
+            isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen && !isDetailsShown,
+        ),
+        TangemPayCardPageSetting(
+            id = TangemPayCardPageSetting.Id.ChangePin,
+            title = TextReference.Res(R.string.tangempay_card_details_change_pin),
+            onClick = { onClickChangePIN(card.hasPinCode) },
+            iconRes = CoreUiR.drawable.ic_card_pin_24,
+            testTag = TangemPayTestTags.CHANGE_PIN_ROW,
+            isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen,
+        ),
+        TangemPayCardPageSetting(
+            id = TangemPayCardPageSetting.Id.Actions,
+            title = TextReference.Res(R.string.tangempay_card_actions_more),
+            onClick = ::onActionsMenuOpened,
+            iconRes = CoreUiR.drawable.ic_gear_24,
+            iconVector = Icons.ic_gear_24,
+            isLoading = frozenState == TangemPayCardFrozenState.Pending,
+        ),
+    )
+
+    private fun PaymentAccountStatusValue.Loaded.buildActionsMenu(
+        card: TangemPayCard,
+        frozenState: TangemPayCardFrozenState,
+    ): TangemMenu.UiState? {
+        if (!tangemPayFeatureToggles.isCardActionsEnabled) return null
+        val isLastCard = cards.isLastCard()
+        return tangemMenuUi {
+            item(
+                label = resourceReference(
+                    if (card.isFrozen) {
+                        R.string.tangem_pay_freeze_card_unfreeze
+                    } else {
+                        R.string.tangem_pay_freeze_card_freeze
+                    },
+                ),
+                iconStart = Icons.ic_snowflake_20,
+                isEnabled = frozenState != TangemPayCardFrozenState.Pending,
+                onClick = { onClickFreezeOrUnfreezeCard(card) },
+            )
+            if (!card.state.isAwaitingActivation) {
+                item(
+                    label = resourceReference(R.string.tangempay_card_replace),
+                    iconStart = Icons.ic_arrow_refresh_20,
+                    onClick = ::onClickReissueCard,
+                )
+                divider()
+                item(
+                    label = resourceReference(R.string.tangempay_card_close),
+                    description = resourceReference(R.string.tangempay_card_close_last_card_disabled)
+                        .takeIf { isLastCard },
+                    iconStart = Icons.ic_trash_bin_20,
+                    variant = TangemMenu.ItemVariant.Error,
+                    isEnabled = !isLastCard,
+                    onClick = ::onClickCloseCard,
+                )
+            }
+        }
+    }
+
+    private fun onActionsMenuOpened() {
+        if (isCloseUnavailableShownSent) return
+        val status = currentStatus.value.value as? PaymentAccountStatusValue.Loaded ?: return
+        val card = status.findCardWithId(selectedCardId.value) ?: return
+        if (card.state.isAwaitingActivation || !status.cards.isLastCard()) return
+        isCloseUnavailableShownSent = true
+        analytics.send(TangemPayAnalyticsEvents.CloseCardUnavailableShown())
+    }
+
+    private fun buildPayMenu(status: AccountStatus.Payment, cashbackSummary: CashbackSummary?): TangemMenu.UiState =
+        TangemMenu.UiState(
+            entries = listOfNotNull(
+                status.tariffPlanState?.let { plan -> PayMenuItems.currentPlan(plan) { onClickCurrentPlan(plan) } },
+                PayMenuItems.cashback(
+                    label = resourceReference(R.string.tangempay_cashback_title),
+                    onClick = ::onClickCashback,
+                ).takeIf { cashbackSummary is CashbackSummary.Enabled },
+                PayMenuItems.support(::onContactSupportClicked),
+            ).toPersistentList(),
+        )
+
+    private fun onClickCurrentPlan(tariffPlan: TangemPayTariffPlanState) {
+        analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked())
+        router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
+    }
+
+    private fun onClickCashback() {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.ButtonInSettingsClicked())
+        router.push(TangemPayAccountDetailsInnerRoute.Cashback)
+    }
+
+    private fun buildTopMenuItems(
+        isLastCard: Boolean,
+        isAwaitingActivation: Boolean,
+    ): ImmutableList<TangemPayDropDownItemUM> = if (tangemPayFeatureToggles.isCardActionsEnabled) {
+        persistentListOf()
+    } else {
+        buildMenuItems(isLastCard = isLastCard, isAwaitingActivation = isAwaitingActivation)
     }
 
     private fun buildMenuItems(
@@ -596,6 +755,10 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickCloseCard() {
+        if (tangemPayFeatureToggles.isCardActionsEnabled) {
+            openCloseCardConfirm()
+            return
+        }
         analytics.send(TangemPayAnalyticsEvents.CloseCardClicked())
         val card = selectedCard() ?: return
         bottomSheetNavigation.activate(
@@ -604,6 +767,38 @@ internal class TangemPayCardPageModel @Inject constructor(
                 cardId = card.id,
             ),
         )
+    }
+
+    private fun openCloseCardConfirm() {
+        analytics.send(TangemPayAnalyticsEvents.CloseCardClicked(CloseCardSource.ActionsMenu))
+        val card = selectedCard() ?: return
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.CloseCardConfirm(
+                userWalletId = userWalletId,
+                cardId = card.id,
+                customerId = currentStatus.value.ifLoadedOrNull { it.customerId },
+                cardName = card.displayName?.value?.takeIf { it.isNotBlank() },
+                lastDigits = card.lastDigits,
+                canFreeze = !card.isFrozen,
+            ),
+        )
+    }
+
+    override fun onCloseCardConfirmDismissed() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    override fun onFreezeInsteadOfClose() {
+        bottomSheetNavigation.dismiss()
+        val card = selectedCard() ?: return
+        if (card.frozenState == TangemPayCardFrozenState.Pending) return
+        freezeCard(card)
+    }
+
+    private fun onCardClosed(cardId: String) {
+        if (selectedCardId.value == cardId || removedSelectedCardId == cardId) {
+            router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
+        }
     }
 
     override fun onClickAddFunds() {

@@ -99,10 +99,15 @@ sealed class TangemPayAnalyticsEvents(
         params = mapOf("product" to product.value),
     )
 
-    class FreezeCardClicked : TangemPayAnalyticsEvents(
+    class FreezeCardClicked(source: Source? = null) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Freeze Card",
-    )
+        params = source?.let { mapOf(AnalyticsParam.SOURCE to it.value) }.orEmpty(),
+    ) {
+        enum class Source(val value: String) {
+            ClosePopup("close_popup"),
+        }
+    }
 
     class FreezeCardConfirmShown : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
@@ -327,19 +332,64 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Replace Card Confirmed",
     )
 
-    class CloseCardClicked : TangemPayAnalyticsEvents(
+    class CloseCardClicked(source: Source? = null) : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Close Card Clicked",
-    )
+        params = source?.let { mapOf(AnalyticsParam.SOURCE to it.value) }.orEmpty(),
+    ) {
+        enum class Source(val value: String) {
+            ActionsMenu("actions_menu"),
+        }
+    }
 
-    class CloseCardConfirmationPopupOpened : TangemPayAnalyticsEvents(
+    class CloseCardConfirmationPopupOpened(cardState: CardState? = null) : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Close Card Confirmation Popup Opened",
-    )
+        params = cardState?.let { mapOf(AnalyticsParam.CARD_STATE to it.value) }.orEmpty(),
+    ) {
+        enum class CardState(val value: String) {
+            Active("active"),
+            Frozen("frozen"),
+        }
+    }
 
     class CloseCardConfirmed : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Close Card Confirmed",
+    )
+
+    class CloseCardPopupDismissed(action: Action) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Popup Dismissed",
+        params = mapOf(AnalyticsParam.ACTION to action.value),
+    ) {
+        enum class Action(val value: String) {
+            KeepCard("keep_card"),
+            CloseButton("close_button"),
+        }
+    }
+
+    class CloseCardResult(result: Result) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Result",
+        params = mapOf(AnalyticsParam.RESULT to result.value),
+    ) {
+        enum class Result(val value: String) {
+            Success("success"),
+            Error("error"),
+            LastCard("last_card"),
+        }
+    }
+
+    class CloseCardUnavailableShown : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Unavailable Shown",
+        params = mapOf(AnalyticsParam.REASON to "last_card"),
+    )
+
+    class CloseCardErrorDismissed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Error Dismissed",
     )
 
     class LimitChangeClicked : TangemPayAnalyticsEvents(

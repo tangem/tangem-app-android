@@ -50,6 +50,7 @@ private val previewContentBalanceBlockState = TangemPayDetailsBalanceBlockState.
     cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
         cards = persistentListOf(
             TangemPayDetailsBalanceBlockState.Card(
+                id = "preview_card_1",
                 lastDigits = "1234",
                 imageUrl = null,
                 cardType = TangemPayCardType.VIRTUAL,
@@ -59,6 +60,7 @@ private val previewContentBalanceBlockState = TangemPayDetailsBalanceBlockState.
                 state = TangemPayCardUiState.Active,
             ),
             TangemPayDetailsBalanceBlockState.Card(
+                id = "preview_card_2",
                 lastDigits = "3456",
                 imageUrl = null,
                 cardType = TangemPayCardType.PHYSICAL,
@@ -106,6 +108,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
+                            id = "preview_card_3",
                             lastDigits = "1234",
                             imageUrl = null,
                             cardType = TangemPayCardType.VIRTUAL,

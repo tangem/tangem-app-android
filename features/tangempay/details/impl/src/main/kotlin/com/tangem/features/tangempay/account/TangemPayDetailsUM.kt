@@ -88,9 +88,11 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val onAddCardClick: () -> Unit,
         val isAddCardEnabled: Boolean,
         val progressBanner: CardsProgressBannerUM? = null,
+        val isCardRemovalAnimated: Boolean = false,
     )
 
     data class Card(
+        val id: String,
         val lastDigits: String,
         val imageUrl: String?,
         val cardType: TangemPayCardType,

@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.account
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -11,6 +12,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -25,6 +27,7 @@ import com.tangem.domain.models.tangempay.isAwaitingActivation
 import com.tangem.domain.models.tangempay.isFrozen
 import com.tangem.domain.models.tangempay.thumbnailUrl
 import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
+import com.tangem.features.tangempay.common.PayMenuItems
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.canAddFunds
 import com.tangem.features.tangempay.common.hasWithdrawableAmount
@@ -33,6 +36,7 @@ import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
@@ -43,6 +47,8 @@ internal class TangemPayDetailsStateFactory(
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     isColdWallet: Boolean,
+    private val isCardRemovalAnimated: Boolean,
+    private val isDsMenuEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
         intents = intents,
@@ -58,6 +64,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
                 subtitle = subtitle,
+                menu = getTopBarMenu(tariffPlan = null),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -101,6 +108,7 @@ internal class TangemPayDetailsStateFactory(
                 .map { cardItem ->
                     val isAwaitingActivation = cardItem.state.isAwaitingActivation
                     TangemPayDetailsBalanceBlockState.Card(
+                        id = cardItem.id,
                         lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
                         imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
                         cardType = cardItem.cardType,
@@ -115,6 +123,7 @@ internal class TangemPayDetailsStateFactory(
             onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
             isAddCardEnabled = isAddCardEnabled,
             progressBanner = issueCardNotificationType,
+            isCardRemovalAnimated = isCardRemovalAnimated,
         )
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -122,6 +131,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
                 subtitle = subtitle,
+                menu = getTopBarMenu(tariffPlan = status.tariffPlan),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -222,6 +232,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getDeactivatedMenuItems(),
                 subtitle = subtitle,
+                menu = getDeactivatedMenu(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -253,6 +264,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = tariffPlan),
                 subtitle = subtitle,
+                menu = getTopBarMenu(tariffPlan = tariffPlan),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -283,6 +295,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     private fun issuingPlaceholderCard() = TangemPayDetailsBalanceBlockState.Card(
+        id = ISSUING_PLACEHOLDER_CARD_ID,
         lastDigits = "",
         imageUrl = null,
         cardType = TangemPayCardType.UNDEFINED,
@@ -297,6 +310,32 @@ internal class TangemPayDetailsStateFactory(
         currency = tariffPlan?.tariff?.plan?.feeCurrencyOrDefault(FALLBACK_FIAT_CURRENCY)
             ?: FALLBACK_FIAT_CURRENCY,
     )
+
+    private fun getTopBarMenu(tariffPlan: TangemPayTariffPlanState?): TangemMenu.UiState? {
+        if (!isDsMenuEnabled) return null
+        return TangemMenu.UiState(
+            entries = listOfNotNull(
+                tariffPlan?.let { plan -> PayMenuItems.currentPlan(plan) { intents.onClickCurrentPlan(plan) } },
+                PayMenuItems.support(intents::onContactSupportClicked),
+            ).toPersistentList(),
+        )
+    }
+
+    private fun getDeactivatedMenu(): TangemMenu.UiState? {
+        if (!isDsMenuEnabled) return null
+        return TangemMenu.UiState(
+            entries = persistentListOf(
+                PayMenuItems.support(intents::onContactSupportClicked),
+                TangemMenu.UiState.Divider(),
+                TangemMenu.UiState.Item(
+                    label = resourceReference(R.string.tangempay_remove_account),
+                    onClick = intents::onRemoveAccount,
+                    iconStart = Icons.ic_trash_bin_20,
+                    variant = TangemMenu.ItemVariant.Error,
+                ),
+            ),
+        )
+    }
 
     private fun getDeactivatedMenuItems(): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
@@ -387,6 +426,7 @@ internal class TangemPayDetailsStateFactory(
 
     private companion object {
         const val FALLBACK_FIAT_CURRENCY = "USD"
+        const val ISSUING_PLACEHOLDER_CARD_ID = "issuing_placeholder"
     }
 }
 
