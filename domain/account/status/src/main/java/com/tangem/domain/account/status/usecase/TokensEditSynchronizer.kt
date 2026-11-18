@@ -1,6 +1,7 @@
 package com.tangem.domain.account.status.usecase
 
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -21,7 +22,7 @@ internal data class TokensEdit(
  * Pushes token edits to the backend. Syncs of one wallet run one at a time, because a refused one replaces the
  * whole local list with the backend's one — along with every edit that is saved locally but not pushed yet. Those
  * edits are therefore kept from the moment they are saved, in the order they were made, and are all repeated on
- * the refreshed list.
+ * the refreshed list. Edits are saved through [save], so that a local write never lands in the middle of a repeat.
  *
  * @param applyEdit makes the edit on the account's currencies
  */
@@ -33,13 +34,37 @@ internal class TokensEditSynchronizer(
     private val pendingEditsByWallet = ConcurrentHashMap<UserWalletId, List<TokensEdit>>()
     private val syncMutexes = ConcurrentHashMap<UserWalletId, Mutex>()
 
-    /** Called before the edited account is saved, so a refresh that lands in between still repeats the edit */
-    fun register(edit: TokensEdit) {
+    /** Guards the local list only and is never held across a request, unlike [syncMutexes] */
+    private val localListMutexes = ConcurrentHashMap<UserWalletId, Mutex>()
+
+    /**
+     * Saves the edit locally and keeps it pending until [sync] is over.
+     *
+     * The edit is made on the list stored right now rather than on the one the caller read: deriving keys for an
+     * addition takes a card tap, and a refresh may replace the list meanwhile. Saving what the caller built would
+     * then bring the old list back and push it over the other device's change.
+     *
+     * @param account what the caller built, saved as is when the stored account can't be read
+     */
+    suspend fun save(edit: TokensEdit, account: Account.CryptoPortfolio) {
+        localListMutex(edit.accountId.userWalletId).withLock {
+            val editedAccount = accountsCRUDRepository.getAccountSync(edit.accountId).getOrNull()
+                ?.let { stored -> stored.copySealed(cryptoCurrencies = applyEdit(stored.cryptoCurrencies, edit).total) }
+                ?: account
+
+            register(edit)
+            runSuspendCatching { accountsCRUDRepository.saveAccount(editedAccount) }
+                .onFailure { unregister(edit) }
+                .getOrThrow()
+        }
+    }
+
+    private fun register(edit: TokensEdit) {
         pendingEditsByWallet.compute(edit.accountId.userWalletId) { _, edits -> edits.orEmpty() + edit }
     }
 
     /** By identity: two equal edits in a row are still two edits */
-    fun unregister(edit: TokensEdit) {
+    private fun unregister(edit: TokensEdit) {
         pendingEditsByWallet.computeIfPresent(edit.accountId.userWalletId) { _, edits ->
             edits.filterNot { it === edit }.ifEmpty { null }
         }
@@ -78,6 +103,10 @@ internal class TokensEditSynchronizer(
 
     /** @return `true` when at least one account was changed */
     private suspend fun applyPendingEdits(userWalletId: UserWalletId): Boolean {
+        return localListMutex(userWalletId).withLock { applyPendingEditsLocked(userWalletId) }
+    }
+
+    private suspend fun applyPendingEditsLocked(userWalletId: UserWalletId): Boolean {
         var hasChanges = false
 
         pendingEditsByWallet[userWalletId].orEmpty().groupBy(TokensEdit::accountId).forEach { (accountId, edits) ->
@@ -99,5 +128,9 @@ internal class TokensEditSynchronizer(
         }
 
         return hasChanges
+    }
+
+    private fun localListMutex(userWalletId: UserWalletId): Mutex {
+        return localListMutexes.computeIfAbsent(userWalletId) { Mutex() }
     }
 }

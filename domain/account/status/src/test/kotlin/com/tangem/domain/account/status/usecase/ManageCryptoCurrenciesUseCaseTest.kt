@@ -1,5 +1,6 @@
 package com.tangem.domain.account.status.usecase
 
+import arrow.core.none
 import arrow.core.some
 import com.google.common.truth.Truth
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -77,6 +78,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             cryptoCurrencyBalanceFetcher,
         )
         coEvery { accountsCRUDRepository.syncTokensOrRefresh(any()) } returns false
+        coEvery { accountsCRUDRepository.getAccountSync(any()) } returns none()
     }
 
     /**
@@ -107,8 +109,10 @@ internal class ManageCryptoCurrenciesUseCaseTest {
                 singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
             } returns createAccountStatusList(account = account, currencies = model.local)
             coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } returnsMany listOf(true, false)
-            coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
-                account.copy(cryptoCurrencies = model.refreshed).some()
+            coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returnsMany listOf(
+                account.some(),
+                account.copy(cryptoCurrencies = model.refreshed).some(),
+            )
 
             // Act
             useCase.invokeAndAwait(accountId = account.accountId, add = model.add, remove = model.remove)
@@ -216,8 +220,29 @@ internal class ManageCryptoCurrenciesUseCaseTest {
 
             // Assert
             coVerify(exactly = 1) { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) }
-            coVerify(exactly = 0) { accountsCRUDRepository.getAccountSync(any()) }
+            coVerify(exactly = 1) { accountsCRUDRepository.saveAccount(any()) }
         }
+
+        @Test
+        fun `GIVEN the list was refreshed after the edit was read WHEN edit is saved THEN it is made on the stored list`() =
+            runTest {
+                // Arrange
+                val account = createAccount(currencies = listOf(coin))
+                coEvery {
+                    singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+                } returns createAccountStatusList(account = account, currencies = listOf(coin))
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
+                    account.copy(cryptoCurrencies = listOf(coin, peer)).some()
+
+                // Act
+                useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own))
+
+                // Assert
+                coVerify(exactly = 1) {
+                    accountsCRUDRepository.saveAccount(account.copy(cryptoCurrencies = listOf(coin, peer, own)))
+                }
+                coVerify(exactly = 1) { accountsCRUDRepository.saveAccount(any()) }
+            }
 
         @Test
         fun `GIVEN a second edit made while the first sync is refused WHEN the list is refreshed THEN both repeat`() =
@@ -231,8 +256,11 @@ internal class ManageCryptoCurrenciesUseCaseTest {
                 coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } coAnswers {
                     firstSync.await()
                 } andThen false
-                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
-                    account.copy(cryptoCurrencies = listOf(coin, peer)).some()
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returnsMany listOf(
+                    account.some(),
+                    account.some(),
+                    account.copy(cryptoCurrencies = listOf(coin, peer)).some(),
+                )
 
                 // Act
                 launch { useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own)) }
@@ -261,8 +289,11 @@ internal class ManageCryptoCurrenciesUseCaseTest {
                 coEvery { accountsCRUDRepository.syncTokensOrRefresh(userWalletId) } coAnswers {
                     firstSync.await()
                 } andThen true andThen false
-                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returns
-                    account.copy(cryptoCurrencies = listOf(coin, peer)).some()
+                coEvery { accountsCRUDRepository.getAccountSync(account.accountId) } returnsMany listOf(
+                    account.some(),
+                    account.some(),
+                    account.copy(cryptoCurrencies = listOf(coin, peer)).some(),
+                )
 
                 // Act
                 launch { useCase.invokeAndAwait(accountId = account.accountId, add = listOf(own)) }

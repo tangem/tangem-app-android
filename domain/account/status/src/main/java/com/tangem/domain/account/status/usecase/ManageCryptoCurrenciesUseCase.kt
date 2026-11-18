@@ -291,16 +291,10 @@ class ManageCryptoCurrenciesUseCase(
         return ModifiedCurrencyList(added = added, removed = removed, total = mutableCurrencies)
     }
 
-    /** The edit is pending before the account is saved, so a refresh that lands in between still repeats it */
     private suspend fun Raise<Throwable>.saveEditedAccount(account: Account.CryptoPortfolio, edit: TokensEdit) {
-        tokensEditSynchronizer.register(edit)
-
         catch(
-            block = { accountsCRUDRepository.saveAccount(account) },
-            catch = { error ->
-                tokensEditSynchronizer.unregister(edit)
-                raise(error)
-            },
+            block = { tokensEditSynchronizer.save(edit = edit, account = account) },
+            catch = ::raise,
         )
     }
 
