@@ -98,6 +98,7 @@ internal class DefaultSwapRepository(
                 val providers = tangemExpressApi.getProviders(
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
+                    batchId = expressUtils.getBatchId(userWallet = userWallet),
                 ).getOrThrow()
 
                 return@withContext swapPairInfoConverter.convert(
@@ -124,6 +125,7 @@ internal class DefaultSwapRepository(
         return tangemExpressApi.getPairs(
             userWalletId = userWallet.walletId.stringValue,
             refCode = expressUtils.getRefCode(userWallet = userWallet),
+            batchId = expressUtils.getBatchId(userWallet = userWallet),
             body = PairsRequestBody(
                 from = from,
                 to = to,
@@ -188,6 +190,7 @@ internal class DefaultSwapRepository(
                     rateType = rateType.name.lowercase(),
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
+                    batchId = expressUtils.getBatchId(userWallet = userWallet),
                     slippage = ExpressSlippageConverter.toApi(customSlippage),
                 ).getOrThrow()
 
@@ -245,6 +248,7 @@ internal class DefaultSwapRepository(
                     partnerOperationType = expressOperationType.value,
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
+                    batchId = expressUtils.getBatchId(userWallet = userWallet),
                     toExtraId = toExtraId?.ifEmpty { null },
                     quoteId = null, // TODO add when implementing fixed rate in swap
                     slippage = ExpressSlippageConverter.toApi(customSlippage),
@@ -287,6 +291,7 @@ internal class DefaultSwapRepository(
             tangemExpressApi.exchangeSent(
                 userWalletId = userWallet.walletId.stringValue,
                 refCode = expressUtils.getRefCode(userWallet = userWallet),
+                batchId = expressUtils.getBatchId(userWallet = userWallet),
                 body = ExchangeSentRequestBody(
                     txId = txId,
                     fromNetwork = fromNetwork,

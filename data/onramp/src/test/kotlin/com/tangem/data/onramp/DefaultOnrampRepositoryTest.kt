@@ -105,6 +105,7 @@ internal class DefaultOnrampRepositoryTest {
 
     init {
         coEvery { expressUtils.getRefCode(wallet) } returns null
+        every { expressUtils.getBatchId(wallet) } returns null
     }
 
         @ParameterizedTest
@@ -123,7 +124,7 @@ internal class DefaultOnrampRepositoryTest {
                 paymentMethod = "card", countryCode = "US",
             )
             coEvery { api.getStatus("0011", null, "tx") } returns if (failed) {
-                ApiResponse.Error(ApiResponseError.NetworkException()).map<Nothing, OnrampItemResponse> { it }
+                ApiResponse.Error(ApiResponseError.NetworkException()).map { it }
             } else {
                 ApiResponse.Success(response)
             }
@@ -290,10 +291,10 @@ internal class DefaultOnrampRepositoryTest {
                         18, "provider", null, null, null, null,
                     ),
                 )
-                "small" -> ApiResponse.Error(tooSmall).map<Nothing, OnrampQuoteResponse> { it }
-                "failed" -> ApiResponse.Error(generic).map<Nothing, OnrampQuoteResponse> { it }
+                "small" -> ApiResponse.Error(tooSmall).map { it }
+                "failed" -> ApiResponse.Error(generic).map { it }
                 else -> ApiResponse.Error(ApiResponseError.NetworkException())
-                    .map<Nothing, OnrampQuoteResponse> { it }
+                    .map { it }
             }
         }
 
@@ -336,7 +337,7 @@ internal class DefaultOnrampRepositoryTest {
             coEvery { api.getPairs("0011", null, OnrampPairsRequest("USD", "US", listOf(destination))) } returns
                 when (kind) {
                     "empty" -> ApiResponse.Success(emptyList())
-                    "pairsError" -> ApiResponse.Error(failure).map<Nothing, List<OnrampPairDTO>> { it }
+                    "pairsError" -> ApiResponse.Error(failure).map { it }
                     else -> ApiResponse.Success(response)
                 }
             val metadata = mockk<ExchangeProvider>(relaxed = true) {
@@ -346,9 +347,9 @@ internal class DefaultOnrampRepositoryTest {
                 every { termsOfUse } returns null
                 every { privacyPolicy } returns null
             }
-            coEvery { expressApi.getProviders("0011", null) } returns when (kind) {
+            coEvery { expressApi.getProviders("0011", null, null) } returns when (kind) {
                 "missingProvider" -> ApiResponse.Success(emptyList())
-                "providersError" -> ApiResponse.Error(failure).map<Nothing, List<ExchangeProvider>> { it }
+                "providersError" -> ApiResponse.Error(failure).map { it }
                 else -> ApiResponse.Success(listOf(metadata))
             }
 

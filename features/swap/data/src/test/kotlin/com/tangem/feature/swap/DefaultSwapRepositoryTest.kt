@@ -38,10 +38,12 @@ internal class DefaultSwapRepositoryTest {
     fun setUp() {
         every { userWallet.walletId } returns UserWalletId(stringValue = "0123456789ABCDEF")
         coEvery { expressUtils.getRefCode(any()) } returns null
+        every { expressUtils.getBatchId(any()) } returns null
         coEvery {
             tangemExpressApi.getExchangeData(
                 userWalletId = any(),
                 refCode = any(),
+                batchId = any(),
                 fromContractAddress = any(),
                 fromNetwork = any(),
                 toContractAddress = any(),
@@ -107,6 +109,7 @@ internal class DefaultSwapRepositoryTest {
         tangemExpressApi.getExchangeData(
             userWalletId = any(),
             refCode = any(),
+            batchId = any(),
             fromContractAddress = any(),
             fromNetwork = any(),
             toContractAddress = any(),
