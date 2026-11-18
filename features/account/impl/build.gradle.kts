@@ -42,6 +42,7 @@ dependencies {
     /** Features */
     implementation(projects.features.commonFeatures.api)
     implementation(projects.features.jointAccount.api)
+    implementation(projects.domain.jointAccount)
 
     /** AndroidX libraries */
     implementation(deps.androidx.annotation)

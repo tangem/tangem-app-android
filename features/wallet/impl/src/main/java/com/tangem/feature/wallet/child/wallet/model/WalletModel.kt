@@ -520,7 +520,8 @@ internal class WalletModel @Inject constructor(
      * a co-signature), so while the main screen is in the foreground, the selected wallet's joint account gets a
      * 5-second poll to keep it fresh — the current status can't tell us whether it's stale, so it isn't used to
      * gate this. Only the selected wallet is polled, since it's the only one actually visible in the pager. The
-     * coordinator paces itself — this only decides which wallet (if any) to collect for.
+     * coordinator paces itself — this only decides which wallet (if any) to collect for. A wallet selected for the
+     * first time is fetched at once: nothing else refreshes its joint accounts on a switch.
      */
     private fun subscribeJointAccountPolling() {
         combine(
@@ -533,7 +534,7 @@ internal class WalletModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { walletId ->
                 if (walletId != null) {
-                    jointAccountPollingCoordinator.poll(walletId)
+                    jointAccountPollingCoordinator.poll(walletId = walletId, isFirstFetchImmediate = true)
                 } else {
                     emptyFlow()
                 }

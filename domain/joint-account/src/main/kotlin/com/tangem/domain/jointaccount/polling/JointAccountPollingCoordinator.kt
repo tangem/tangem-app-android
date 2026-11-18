@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -29,12 +30,18 @@ import kotlin.time.Duration.Companion.seconds
  * fires on subscribe. Every current caller starts collecting [poll] alongside its own explicit initial fetch
  * (a screen's `refreshAccounts()`, an already-resolved account elsewhere), so an immediate first fetch here
  * would race that unserialized write to the same wallet's cache; waiting it out leaves that first fetch solely
- * to the caller.
+ * to the caller. A caller with no fetch of its own — the main screen on a wallet switch — asks for it through
+ * `isFirstFetchImmediate`.
  *
  * The ticker's underlying producer coroutine can still be torn down by [SharingStarted.WhileSubscribed] once
  * every subscriber is gone for [STOP_TIMEOUT_MILLIS] — that's fine: [lastFetchAt] lives outside that
  * coroutine, so a restart doesn't lose the wait. Coming back mid-interval waits out only what's left of it;
  * coming back once the interval has already fully elapsed fetches right away, same as a brand-new ticker.
+ *
+ * A failed fetch doubles the wait before the next one, up to [MAX_POLL_INTERVAL], so a backend that is down is
+ * not hit every [POLL_INTERVAL]; the first success brings the pace back. The streak of failures lives in the
+ * producer coroutine, so it is forgotten once every subscriber has been gone for [STOP_TIMEOUT_MILLIS] — coming
+ * back to the app asks again at the usual pace.
  *
  * [fetch] itself never throws — a failed request surfaces as [arrow.core.Either.Left] and is only logged — but
  * should the producer coroutine still die for some other reason, it retries after [POLL_INTERVAL] rather than
@@ -50,8 +57,17 @@ class JointAccountPollingCoordinator(
 
     private val tickers = ConcurrentHashMap<UserWalletId, Flow<Unit>>()
     private val lastFetchAt = ConcurrentHashMap<UserWalletId, Long>()
+    private val walletsFetchedOnFirstPoll = ConcurrentHashMap.newKeySet<UserWalletId>()
 
-    fun poll(walletId: UserWalletId): Flow<Unit> = tickers.computeIfAbsent(walletId, ::createTicker)
+    /**
+     * @param isFirstFetchImmediate fetch right away when the wallet has never been polled, instead of waiting out
+     * the first interval. A wallet that has been polled before is paced by its last fetch either way
+     */
+    fun poll(walletId: UserWalletId, isFirstFetchImmediate: Boolean = false): Flow<Unit> {
+        if (isFirstFetchImmediate) walletsFetchedOnFirstPoll += walletId
+
+        return tickers.computeIfAbsent(walletId, ::createTicker)
+    }
 
     private fun createTicker(walletId: UserWalletId): Flow<Unit> = isWalletLinked(walletId)
         .distinctUntilChanged()
@@ -68,28 +84,44 @@ class JointAccountPollingCoordinator(
         )
 
     private fun ticks(walletId: UserWalletId): Flow<Unit> = flow {
+        var failuresInRow = 0
+
         while (currentCoroutineContext().isActive) {
-            awaitNextFetch(walletId)
-            fetch(walletId)
+            awaitNextFetch(walletId = walletId, interval = pollInterval(failuresInRow))
+            failuresInRow = if (fetch(walletId)) 0 else failuresInRow + 1
             emit(Unit)
         }
     }
 
-    private suspend fun awaitNextFetch(walletId: UserWalletId) {
-        val elapsedSinceLastFetch = lastFetchAt[walletId]?.let { now() - it } ?: 0L
-        val remaining = POLL_INTERVAL.inWholeMilliseconds - elapsedSinceLastFetch
+    private fun pollInterval(failuresInRow: Int): Duration {
+        val multiplier = 1 shl failuresInRow.coerceAtMost(MAX_BACKOFF_DOUBLINGS)
+
+        return (POLL_INTERVAL * multiplier).coerceAtMost(MAX_POLL_INTERVAL)
+    }
+
+    private suspend fun awaitNextFetch(walletId: UserWalletId, interval: Duration) {
+        val lastFetch = lastFetchAt[walletId]
+        if (lastFetch == null && walletId in walletsFetchedOnFirstPoll) return
+
+        val elapsedSinceLastFetch = lastFetch?.let { now() - it } ?: 0L
+        val remaining = interval.inWholeMilliseconds - elapsedSinceLastFetch
         if (remaining > 0) delay(remaining.milliseconds)
     }
 
-    private suspend fun fetch(walletId: UserWalletId) {
-        fetcher(walletId).onLeft { error ->
+    /** @return `true` when the request succeeded */
+    private suspend fun fetch(walletId: UserWalletId): Boolean {
+        val result = fetcher(walletId).onLeft { error ->
             TangemLogger.e("Failed to poll joint account state for wallet $walletId", error)
         }
         lastFetchAt[walletId] = now()
+
+        return result.isRight()
     }
 
     private companion object {
         val POLL_INTERVAL = 5.seconds
+        val MAX_POLL_INTERVAL = 60.seconds
+        const val MAX_BACKOFF_DOUBLINGS = 4
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

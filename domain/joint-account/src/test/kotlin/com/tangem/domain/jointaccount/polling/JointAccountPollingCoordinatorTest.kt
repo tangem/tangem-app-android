@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -221,27 +222,111 @@ internal class JointAccountPollingCoordinatorTest {
         }
 
     @Test
-    fun `GIVEN a fetch returns Left WHEN the next interval elapses THEN the ticker keeps polling`() = runTest {
+    fun `GIVEN a wallet never polled WHEN polled with an immediate first fetch THEN it fetches at once and then paces itself`() =
+        runTest {
+            // Arrange
+            val coordinator = createCoordinator(testScope = this)
+
+            // Act
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID, isFirstFetchImmediate = true).collect { } }
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+
+            advanceTimeBy(POLL_INTERVAL_MILLIS - 1)
+            runCurrent()
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+
+            advanceTimeBy(1)
+            runCurrent()
+            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN a wallet fetched a moment ago WHEN polled with an immediate first fetch THEN it waits out the interval`() =
+        runTest {
+            // Arrange
+            val coordinator = createCoordinator(testScope = this)
+            val firstJob = backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { } }
+            runCurrent()
+            advanceTimeBy(POLL_INTERVAL_MILLIS)
+            runCurrent()
+            firstJob.cancel()
+            runCurrent()
+
+            // Act
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID, isFirstFetchImmediate = true).collect { } }
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN every fetch fails WHEN time advances THEN the wait doubles up to a minute`() = runTest {
         // Arrange
-        coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returns RuntimeException("network error").left()
+        coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returns RuntimeException("503").left()
         val coordinator = createCoordinator(testScope = this)
-        val received = mutableListOf<Unit>()
+        val fetchTimes = mutableListOf<Long>()
 
         // Act
-        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { received += it } }
-        runCurrent()
-        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { fetchTimes += currentTime } }
+        advanceTimeBy(delayTimeMillis = 300_000L)
         runCurrent()
 
-        // Assert — a failed fetch still emits and still paces the next one an interval out
-        coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
-        assertThat(received).hasSize(1)
-
-        advanceTimeBy(POLL_INTERVAL_MILLIS)
-        runCurrent()
-        coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
-        assertThat(received).hasSize(2)
+        // Assert
+        val waits = (listOf(0L) + fetchTimes).zipWithNext { previous, next -> next - previous }
+        assertThat(waits.take(n = 7))
+            .containsExactly(5_000L, 10_000L, 20_000L, 40_000L, 60_000L, 60_000L, 60_000L)
+            .inOrder()
     }
+
+    @Test
+    fun `GIVEN fetches failed in a row WHEN one succeeds THEN the next one is back at the poll interval`() = runTest {
+        // Arrange
+        coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returnsMany listOf(
+            RuntimeException("503").left(),
+            RuntimeException("503").left(),
+            Unit.right(),
+        )
+        val coordinator = createCoordinator(testScope = this)
+        val fetchTimes = mutableListOf<Long>()
+
+        // Act
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { fetchTimes += currentTime } }
+        advanceTimeBy(delayTimeMillis = 45_000L)
+        runCurrent()
+
+        // Assert
+        val waits = (listOf(0L) + fetchTimes).zipWithNext { previous, next -> next - previous }
+        assertThat(waits).containsExactly(5_000L, 10_000L, 20_000L, 5_000L, 5_000L).inOrder()
+    }
+
+    @Test
+    fun `GIVEN fetches failed in a row WHEN every subscriber leaves and one returns THEN the pace starts over`() =
+        runTest {
+            // Arrange
+            coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returns RuntimeException("503").left()
+            val coordinator = createCoordinator(testScope = this)
+            val firstJob = backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { } }
+            advanceTimeBy(delayTimeMillis = 35_000L)
+            runCurrent()
+            firstJob.cancel()
+            advanceTimeBy(GRACE_PERIOD_MILLIS + 1)
+            runCurrent()
+            clearMocks(fetcher, answers = false)
+            val returnedAt = currentTime
+            val fetchTimes = mutableListOf<Long>()
+
+            // Act
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { fetchTimes += currentTime } }
+            advanceTimeBy(delayTimeMillis = 16_000L)
+            runCurrent()
+
+            // Assert — asked at once, and the failure doubles the wait from the base interval, not from 40 seconds
+            assertThat(fetchTimes.map { it - returnedAt }).containsExactly(0L, 10_000L).inOrder()
+        }
 
     /**
      * `fetch` itself never throws — a failed request surfaces as [arrow.core.Either.Left] — but the ticker must
