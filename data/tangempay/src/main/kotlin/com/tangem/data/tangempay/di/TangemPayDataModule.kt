@@ -638,7 +638,6 @@ internal interface TangemPayDataModule {
             tangemPayCurrencyFactory: TangemPayCurrencyFactory,
             getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
             paymentAccountStatusesStore: PaymentAccountStatusesStore,
-            tangemPayFeatureToggles: TangemPayFeatureToggles,
         ): ResolvePaymentAccountStatusFromSummaryUseCase {
             return ResolvePaymentAccountStatusFromSummaryUseCase(
                 onboardingRepository = onboardingRepository,
@@ -646,15 +645,12 @@ internal interface TangemPayDataModule {
                 tangemPayCurrencyFactory = tangemPayCurrencyFactory,
                 getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
                 paymentAccountStatusCache = paymentAccountStatusesStore,
-                tangemPayFeatureToggles = tangemPayFeatureToggles,
             )
         }
 
         @Provides
-        fun provideResolveMoneyAccountStatusFromSummaryUseCase(
-            tangemPayFeatureToggles: TangemPayFeatureToggles,
-        ): ResolveMoneyAccountStatusFromSummaryUseCase {
-            return ResolveMoneyAccountStatusFromSummaryUseCase(tangemPayFeatureToggles = tangemPayFeatureToggles)
+        fun provideResolveMoneyAccountStatusFromSummaryUseCase(): ResolveMoneyAccountStatusFromSummaryUseCase {
+            return ResolveMoneyAccountStatusFromSummaryUseCase()
         }
 
         @Provides

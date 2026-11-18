@@ -13,11 +13,9 @@ import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -30,7 +28,6 @@ import java.math.BigDecimal
 internal class PaymentAccountStatusValueDMConverterTest {
 
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val cryptoCurrency: CryptoCurrency.Token = mockk()
 
@@ -38,12 +35,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         every { tangemPayCurrencyFactory.create(userWalletId) } returns cryptoCurrency
     }
 
-    private val converter = PaymentAccountStatusValueDMConverter(tangemPayCurrencyFactory, tangemPayFeatureToggles)
-
-    @BeforeEach
-    fun setUp() {
-        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
-    }
+    private val converter = PaymentAccountStatusValueDMConverter(tangemPayCurrencyFactory)
 
     private fun accountBalance() = PaymentAccountStatusValue.Balance(
         fiatBalance = PaymentAccountStatusValue.FiatBalance(
@@ -172,27 +164,12 @@ internal class PaymentAccountStatusValueDMConverterTest {
         }
 
         @Test
-        fun `GIVEN cached active account with flag AND toggle on WHEN convertBack THEN flag kept`() {
-            // Arrange
-            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
-
+        fun `GIVEN cached active account with flag WHEN convertBack THEN flag kept`() {
             // Act
             val result = converter.convertBack(userWalletId, activeAccountWithKycAdditionalInfoFlag())
 
             // Assert
             assertThat(result).isEqualTo(restoredActiveAccount(isKycAdditionalInfoRequired = true))
-        }
-
-        @Test
-        fun `GIVEN cached active account with flag AND toggle off WHEN convertBack THEN flag dropped`() {
-            // Arrange
-            every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
-
-            // Act
-            val result = converter.convertBack(userWalletId, activeAccountWithKycAdditionalInfoFlag())
-
-            // Assert
-            assertThat(result).isEqualTo(restoredActiveAccount(isKycAdditionalInfoRequired = false))
         }
 
         private fun provideTestModels() = listOf(

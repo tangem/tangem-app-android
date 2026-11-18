@@ -14,7 +14,7 @@ sealed class MoneyAccountAnalyticsEvents(
         val accountState: AccountState,
         val balanceBand: BalanceBand?,
         val currency: String?,
-        val additionalVerificationNotice: NoticeState?,
+        val additionalVerificationNotice: NoticeState,
     ) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Account Screen Opened",
@@ -23,7 +23,7 @@ sealed class MoneyAccountAnalyticsEvents(
             balanceBand?.let { put("balance_band", it.value) }
             put("yield_enabled", "no")
             currency?.let { put("currency", it) }
-            additionalVerificationNotice?.let { put("additional_verification_notice", it.value) }
+            put("additional_verification_notice", additionalVerificationNotice.value)
         },
     )
 

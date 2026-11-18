@@ -575,6 +575,7 @@ sealed class AppRoute(val path: String) : Route {
     data class TangemPayDetails(
         val status: AccountStatus.Payment,
         val initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        val isOpenedFromKycPush: Boolean = false,
     ) : AppRoute(path = "/tangem_pay_details/${status.account}")
 
     @Serializable
@@ -652,6 +653,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class MoneyAccountDetails(
         val userWalletId: UserWalletId,
+        val isOpenedFromKycPush: Boolean = false,
     ) : AppRoute(path = "/money_account_details/${userWalletId.stringValue}")
 
     @Serializable

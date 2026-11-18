@@ -62,12 +62,10 @@ sealed class TangemPayAnalyticsEvents(
         params = entryParams(EntryChannel.DETAILS),
     )
 
-    class MainScreenOpened(additionalVerificationNotice: NoticeState?) : TangemPayAnalyticsEvents(
+    class MainScreenOpened(additionalVerificationNotice: NoticeState) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Visa Main Screen Opened",
-        params = buildMap {
-            additionalVerificationNotice?.let { put("additional_verification_notice", it.value) }
-        },
+        params = mapOf("additional_verification_notice" to additionalVerificationNotice.value),
     )
 
     class ReceiveFundsClicked : TangemPayAnalyticsEvents(

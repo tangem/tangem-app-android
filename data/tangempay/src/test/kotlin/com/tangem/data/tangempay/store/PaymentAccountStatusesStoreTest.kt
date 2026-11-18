@@ -13,7 +13,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayCurrencyFactory
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.spend.datasource.tangempay.entity.PaymentAccountStatusValueDM
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.DelayedReadDataStore
@@ -177,10 +176,7 @@ internal class PaymentAccountStatusesStoreTest {
     ) = PaymentAccountStatusesStore(
         runtimeStore = RuntimeSharedStore<WalletIdWithPaymentStatus>(),
         persistenceDataStore = persistenceDataStore,
-        converter = PaymentAccountStatusValueDMConverter(
-            tangemPayCurrencyFactory = currencyFactory,
-            tangemPayFeatureToggles = mockk<TangemPayFeatureToggles>(relaxed = true),
-        ),
+        converter = PaymentAccountStatusValueDMConverter(tangemPayCurrencyFactory = currencyFactory),
         userWalletsListRepository = mockk<UserWalletsListRepository> {
             every { this@mockk.userWallets } returns userWallets
         },

@@ -21,7 +21,7 @@ internal class TangemPayCustomerStateConverterTest {
     @ProvideTestModels
     fun `GIVEN summary WHEN convert THEN expected customer state`(model: ConvertModel) {
         // Act
-        val actual = TangemPayCustomerStateConverter.convert(model.summary, model.isKycAdditionalInfoEnabled)
+        val actual = TangemPayCustomerStateConverter.convert(model.summary)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
@@ -279,7 +279,6 @@ internal class TangemPayCustomerStateConverterTest {
                 payment = payment(COMPLETED),
                 banking = banking(MoneyAccount.Activation.Status.COMPLETED),
             ),
-            isKycAdditionalInfoEnabled = true,
             expected = accounts(
                 payment = PaymentAccountActivationState.Completed(CARDS),
                 money = MoneyAccountActivationState.Completed,
@@ -288,7 +287,6 @@ internal class TangemPayCustomerStateConverterTest {
         ConvertModel(
             name = "cdd: money only",
             summary = cddSummary(banking = banking(MoneyAccount.Activation.Status.COMPLETED)),
-            isKycAdditionalInfoEnabled = true,
             expected = accounts(
                 payment = PaymentAccountActivationState.NotStarted,
                 money = MoneyAccountActivationState.Completed,
@@ -297,7 +295,6 @@ internal class TangemPayCustomerStateConverterTest {
         ConvertModel(
             name = "cdd: payment issuing",
             summary = cddSummary(payment = payment(PROCESSING)),
-            isKycAdditionalInfoEnabled = true,
             expected = accounts(
                 payment = Issuing(Issuing.Step.ISSUING),
                 money = MoneyAccountActivationState.NotStarted,
@@ -306,7 +303,6 @@ internal class TangemPayCustomerStateConverterTest {
         ConvertModel(
             name = "cdd: money issuing",
             summary = cddSummary(banking = banking(MoneyAccount.Activation.Status.PROCESSING)),
-            isKycAdditionalInfoEnabled = true,
             expected = accounts(
                 payment = PaymentAccountActivationState.NotStarted,
                 money = MoneyAccountActivationState.Issuing(MoneyAccountActivationState.Issuing.Step.ISSUING),
@@ -315,19 +311,9 @@ internal class TangemPayCustomerStateConverterTest {
         ConvertModel(
             name = "cdd: nothing started",
             summary = cddSummary(),
-            isKycAdditionalInfoEnabled = true,
             expected = accounts(
                 payment = PaymentAccountActivationState.NotStarted,
                 money = MoneyAccountActivationState.NotStarted,
-            ),
-        ),
-        ConvertModel(
-            name = "cdd toggle off: money only",
-            summary = cddSummary(banking = banking(MoneyAccount.Activation.Status.COMPLETED)),
-            isKycAdditionalInfoEnabled = false,
-            expected = accounts(
-                payment = PaymentAccountActivationState.AwaitingKyc(KycStatus.IN_PROGRESS),
-                money = MoneyAccountActivationState.Completed,
             ),
         ),
         ConvertModel(
@@ -337,7 +323,6 @@ internal class TangemPayCustomerStateConverterTest {
                 kycStatus = KycStatus.UNKNOWN,
                 banking = banking(MoneyAccount.Activation.Status.COMPLETED),
             ),
-            isKycAdditionalInfoEnabled = true,
             expected = accounts(
                 payment = PaymentAccountActivationState.AwaitingKyc(KycStatus.UNKNOWN),
                 money = MoneyAccountActivationState.Completed,
@@ -346,7 +331,6 @@ internal class TangemPayCustomerStateConverterTest {
         ConvertModel(
             name = "cdd: new customer still onboarding",
             summary = summary(customerStatus = CustomerStatus.NEW, kycStatus = KycStatus.IN_PROGRESS),
-            isKycAdditionalInfoEnabled = true,
             expected = TangemPayCustomerState.KycInProgress,
         ),
         ConvertModel(
@@ -356,7 +340,6 @@ internal class TangemPayCustomerStateConverterTest {
                 kycStatus = KycStatus.IN_PROGRESS,
                 banking = banking(MoneyAccount.Activation.Status.COMPLETED),
             ),
-            isKycAdditionalInfoEnabled = true,
             expected = TangemPayCustomerState.Former(
                 paymentAccount = PaymentAccountActivationState.AwaitingKyc(KycStatus.IN_PROGRESS),
                 moneyAccount = MoneyAccountActivationState.Completed,
@@ -408,7 +391,6 @@ internal class TangemPayCustomerStateConverterTest {
         val name: String,
         val summary: CustomerSummary,
         val expected: TangemPayCustomerState,
-        val isKycAdditionalInfoEnabled: Boolean = false,
     ) {
         override fun toString(): String = name
     }

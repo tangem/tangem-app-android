@@ -70,10 +70,6 @@ dependencies {
     implementation(projects.domain.tangempay.models)
     // endregion
 
-    // region Project - Features
-    implementation(projects.features.tangempay.details.api)
-    // endregion
-
     // region Test
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)

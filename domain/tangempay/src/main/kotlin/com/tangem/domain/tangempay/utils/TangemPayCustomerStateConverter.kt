@@ -10,8 +10,8 @@ import com.tangem.domain.tangempay.model.TangemPayCustomerState
 
 object TangemPayCustomerStateConverter {
 
-    fun convert(value: CustomerSummary, isKycAdditionalInfoEnabled: Boolean): TangemPayCustomerState {
-        val isKycAdditionalInfoRequested = isKycAdditionalInfoEnabled && value.isKycAdditionalInfoRequested
+    fun convert(value: CustomerSummary): TangemPayCustomerState {
+        val isKycAdditionalInfoRequested = value.isKycAdditionalInfoRequested
         val isKycGateOpen = value.kycStatus == KycStatus.APPROVED || isKycAdditionalInfoRequested
 
         when (value.customerStatus) {

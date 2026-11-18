@@ -68,6 +68,8 @@ internal class TangemPayPushNotificationTypeTest {
     private fun provideFromValueCases() = listOf(
         FromValueCase("Transaction_Spend", TangemPayPushNotificationType.TRANSACTION_SPEND),
         FromValueCase("declined_reason18", null),
+        FromValueCase("KYC_Additional_Info", TangemPayPushNotificationType.KYC_ADDITIONAL_INFO),
+        FromValueCase("additional_kyc_cdd", null),
     )
 
     private fun provideTypes() = listOf(
@@ -96,5 +98,6 @@ internal class TangemPayPushNotificationTypeTest {
         TypeCase("collateral_withdraw", Action.COLLATERAL_DETAILS),
         TypeCase("cashback_topup", Action.COLLATERAL_DETAILS),
         TypeCase("threshold1_top_up", Action.TOP_UP),
+        TypeCase("kyc_additional_info", Action.KYC_ADDITIONAL_INFO),
     )
 }
