@@ -271,6 +271,32 @@ internal class BankCredentialsConverterTest {
             depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = null, amount = "1.00", currency = "USD"),
             expected = null,
         ),
+        FeeModel(
+            fee = null,
+            depositFee = sharedFee(type = "FIXED", calculationType = null, amount = "1.00", currency = "USD"),
+            expected = null,
+        ),
+        FeeModel(
+            fee = null,
+            depositFee = sharedFee(
+                type = "SPEI_ONRAMP",
+                calculationType = "VARIABLE",
+                amount = "1.00",
+                currency = "MXN",
+            ),
+            expected = null,
+        ),
+        FeeModel(
+            fee = null,
+            depositFee = sharedFee(
+                type = "SPEI_ONRAMP",
+                calculationType = "percentage",
+                amount = "1.00",
+                fixedAmount = "10",
+                currency = "MXN",
+            ),
+            expected = percentageFee("1.00", fixedAmount = "10", currency = "MXN"),
+        ),
     )
 
     private fun legacyFee(type: String?, amount: String?) =

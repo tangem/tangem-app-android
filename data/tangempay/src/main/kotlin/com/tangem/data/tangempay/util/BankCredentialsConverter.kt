@@ -36,23 +36,25 @@ internal class BankCredentialsConverter(
     }
 
     private fun convertDepositFee(value: FeesResponse.Fee): BankCredentials.DepositFee? = depositFee(
-        kind = value.calculationType ?: value.type,
+        calculationType = convertCalculationType(value.calculationType),
         amount = value.amount,
         fixedAmount = value.fixedAmount,
         currency = value.currency,
     )
 
-    private fun convertLegacyFee(value: BankCredentialsResponse.LegacyFee): BankCredentials.DepositFee? =
-        depositFee(kind = value.type, amount = value.amount?.toBigDecimalOrNull())
+    private fun convertLegacyFee(value: BankCredentialsResponse.LegacyFee): BankCredentials.DepositFee? = depositFee(
+        calculationType = convertLegacyCalculationType(value.type),
+        amount = value.amount?.toBigDecimalOrNull(),
+    )
 
     private fun depositFee(
-        kind: String?,
+        calculationType: FeeCalculationType?,
         amount: BigDecimal?,
         fixedAmount: BigDecimal? = null,
         currency: String? = null,
     ): BankCredentials.DepositFee? {
         return BankCredentials.DepositFee(
-            calculationType = convertCalculationType(kind) ?: return null,
+            calculationType = calculationType ?: return null,
             amount = amount ?: return null,
             fixedAmount = fixedAmount,
             currency = currency?.takeIf(String::isNotBlank),
@@ -62,8 +64,11 @@ internal class BankCredentialsConverter(
     @Suppress("DEPRECATION")
     private fun BankCredentialsResponse.Result.legacyFee(): BankCredentialsResponse.LegacyFee? = fee
 
-    private fun convertCalculationType(kind: String?): FeeCalculationType? {
-        return when (kind?.uppercase(Locale.US)) {
+    private fun convertCalculationType(value: String?): FeeCalculationType? =
+        FeeCalculationType.entries.firstOrNull { type -> type.name.equals(value, ignoreCase = true) }
+
+    private fun convertLegacyCalculationType(type: String?): FeeCalculationType? {
+        return when (type?.uppercase(Locale.US)) {
             FeeCalculationType.FIXED.name, LEGACY_FIXED_TYPE -> FeeCalculationType.FIXED
             FeeCalculationType.PERCENTAGE.name, LEGACY_PERCENTAGE_TYPE -> FeeCalculationType.PERCENTAGE
             else -> null
