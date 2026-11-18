@@ -104,6 +104,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val eventErrorResolver: PolymarketEventErrorResolver,
     private val placeOrderErrorResolver: PredictionPlaceOrderErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
+    private val serverClock: DefaultPolymarketServerClock,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
 
@@ -198,6 +199,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
             limit = limit,
             cursor = cursor,
         )
+        serverClock.record(response)
         return when (response) {
             is ApiResponse.Success -> PolymarketEventsPage(
                 events = response.data.events.map(PolymarketEventConverter::convert),
@@ -214,7 +216,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketEventError, PolymarketEvent> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId).bind()
+                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId)
+                    .also(serverClock::record)
+                    .bind()
                 PolymarketEventConverter.convert(response.event).right()
             },
             onError = { eventErrorResolver.resolve(it).left() },
