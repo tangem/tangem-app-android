@@ -1,9 +1,11 @@
 package com.tangem.features.onramp.main.model
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -15,17 +17,29 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
+import com.tangem.domain.onramp.GetOnrampCountryByIpUseCase
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
+import com.tangem.domain.onramp.GetOnrampOffersUseCase
 import com.tangem.domain.onramp.GetOnrampQuotesUseCase
 import com.tangem.domain.onramp.OnrampFetchPairsUseCase
 import com.tangem.domain.onramp.ResetOnrampCountryUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
+import com.tangem.domain.onramp.model.OnrampAmount
+import com.tangem.domain.onramp.model.OnrampOffer
+import com.tangem.domain.onramp.model.OnrampOffersBlock
+import com.tangem.domain.onramp.model.OnrampOfferCategory
+import com.tangem.domain.onramp.model.OnrampOfferAdvantages
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.repositories.OnrampRepository
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.onramp.impl.R
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.marketing.api.CtaBannerRequest
 import com.tangem.features.marketing.api.LinkedBannerRequest
@@ -40,6 +54,11 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
+import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
+import kotlinx.coroutines.CompletableDeferred
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -99,12 +118,14 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class OnrampMainComponentModelTest {
 
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val getOnrampOffersUseCase: GetOnrampOffersUseCase = mockk()
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase = mockk()
     private val fetchPairsUseCase: OnrampFetchPairsUseCase = mockk()
     private val resetOnrampCountryUseCase: ResetOnrampCountryUseCase = mockk()
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase = mockk()
+    private val getOnrampCountryByIpUseCase: GetOnrampCountryByIpUseCase = mockk()
     private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase = mockk()
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
     private val marketingFeatureToggles: MarketingFeatureToggles = mockk()
@@ -123,11 +144,13 @@ internal class OnrampMainComponentModelTest {
         clearMocks(
             analyticsEventHandler,
             getOnrampQuotesUseCase,
+            getOnrampOffersUseCase,
             getWalletsUseCase,
             getOnrampCountryUseCase,
             fetchPairsUseCase,
             resetOnrampCountryUseCase,
             checkOnrampAvailabilityUseCase,
+            getOnrampCountryByIpUseCase,
             observeDemandSurveyCompletedUseCase,
             moneyAccountStatusSupplier,
             marketingFeatureToggles,
@@ -138,10 +161,12 @@ internal class OnrampMainComponentModelTest {
         every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns true
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
         every { getOnrampCountryUseCase.invoke() } returns emptyFlow()
+        every { getOnrampOffersUseCase.invoke() } returns emptyFlow()
         coEvery { fetchPairsUseCase.invoke(any(), any()) } returns Unit.right()
         coEvery { resetOnrampCountryUseCase.invoke() } returns Unit.right()
-        coEvery { checkOnrampAvailabilityUseCase.invoke(any(), any()) } returns
+        coEvery { checkOnrampAvailabilityUseCase.invoke(any(), any(), any()) } returns
             OnrampAvailability.Available(onrampCountry("USD"), onrampCountry("USD").defaultCurrency).right()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("USD").right()
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
     }
@@ -437,7 +462,7 @@ internal class OnrampMainComponentModelTest {
         // Assert
         coVerifyOrder {
             resetOnrampCountryUseCase.invoke()
-            checkOnrampAvailabilityUseCase.invoke(userWallet, true)
+            checkOnrampAvailabilityUseCase.invoke(userWallet, true, any())
         }
         model.onDestroy()
     }
@@ -478,39 +503,771 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
-    fun `GIVEN availability check rejects country WHEN model created THEN onramp blocked with warning`() {
+    fun `GIVEN IP country rejected WHEN model created THEN only regional warning shown`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
-        coEvery { checkOnrampAvailabilityUseCase.invoke(any(), any()) } returns
-            OnrampAvailability.NotSupported(onrampCountry("USD").copy(isOnrampAvailable = false)).right()
+        val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+        coEvery { checkOnrampAvailabilityUseCase.invoke(any(), any(), any()) } returns
+            OnrampAvailability.NotSupported(restricted).right()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns restricted.right()
 
         // Act
         val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
         scheduler.runCurrent()
 
         // Assert
-        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(model.state.value.buyNotSupportedMessage).isNull()
+        assertThat(model.state.value.regionRestrictionMessage).isNotNull()
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN blocked country WHEN quotes arrive late THEN offers stay empty`() {
+    fun `GIVEN restricted IP WHEN available country picked THEN banner stays and country does not block buy`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
-        every { getOnrampCountryUseCase.invoke() } returns
-            flowOf(onrampCountry("USD").copy(isOnrampAvailable = false).right())
-        val quotesFlow = quotesFlow()
-        val model = createModel(scheduler = scheduler, quotesFlow = quotesFlow)
-        scheduler.runCurrent()
+        val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns restricted.right()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("EUR").right())
+        val rampStateManager: RampStateManager = mockk()
+        coEvery { rampStateManager.availableForBuy(any(), any()) } returns ScenarioUnavailabilityReason.None
 
         // Act
-        quotesFlow.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            rampStateManager = rampStateManager,
+        )
         scheduler.runCurrent()
 
         // Assert
-        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
-        assertThat(geoRestrictionEvents()).isEmpty()
+        assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+        assertThat(model.state.value.buyNotSupportedMessage).isNull()
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restricted IP WHEN another unsupported country picked THEN both warnings shown and quotes ignored`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns
+            onrampCountry("USD").copy(isOnrampAvailable = false).right()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("EUR").copy(id = "picked", isOnrampAvailable = false).right())
+        val quotes = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotes)
+        scheduler.runCurrent()
+
+        // Act
+        quotes.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+        scheduler.runCurrent()
+
+        // Assert
+        val state = model.state.value as OnrampMainComponentUM.Content
+        assertThat(state.regionRestrictionMessage).isNotNull()
+        assertThat(state.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(state.offersBlockState).isEqualTo(OnrampOffersBlockUM.Empty)
+        coVerify(exactly = 0) { fetchPairsUseCase.invoke(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN IP country restricted WHEN openRedirectPage THEN purchase is not launched`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns restricted.right()
+        val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            openRedirectPage = { opened += it },
+        )
+        scheduler.runCurrent()
+
+        // Act
+        model.openRedirectPage(mockk())
+
+        // Assert
+        assertThat(opened).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN IP country restricted WHEN later lookup fails THEN restriction is retained`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns restricted.right()
+        val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            openRedirectPage = { opened += it },
+        )
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.PairsNotFound.left()
+
+        // Act
+        model.onRefresh()
+        scheduler.runCurrent()
+        model.openRedirectPage(mockk())
+
+        // Assert
+        assertThat(opened).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN IP country allowed WHEN lookup on screen return fails THEN buy is disabled`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            openRedirectPage = { opened += it },
+        )
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.PairsNotFound.left()
+
+        // Act
+        model.onStart()
+        scheduler.runCurrent()
+        model.openRedirectPage(mockk())
+
+        // Assert
+        assertThat(model.isBuyEnabled.value).isFalse()
+        assertThat(model.state.value.regionRestrictionMessage).isNull()
+        assertThat(opened).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed WHEN next lookup allowed THEN buy is enabled`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.PairsNotFound.left()
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("USD").right()
+
+        // Act
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.isBuyEnabled.value).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed on screen return WHEN amount typed THEN error with refresh stays`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("USD").right())
+        val model = createModel(scheduler = scheduler, quotesFlow = emptyFlow())
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.DomainError(null).left()
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("100")
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.errorNotification)
+            .isInstanceOf(NotificationUM.Warning.OnrampErrorNotification::class.java)
+        assertThat(model.isBuyEnabled.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed on screen return WHEN next return lookup succeeds THEN error clears and pairs reload`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("USD").right())
+        val model = createModel(scheduler = scheduler, quotesFlow = emptyFlow())
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.DomainError(null).left()
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("USD").right()
+
+        // Act
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
+        assertThat(model.state.value.errorNotification).isNull()
+        assertThat(model.isBuyEnabled.value).isTrue()
+        coVerify(exactly = 2) { fetchPairsUseCase.invoke(userWallet, cryptoCurrency) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lookup failed on screen return WHEN late quotes arrive THEN error with refresh stays`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry("USD").right())
+        val quotes = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotes)
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns OnrampError.DomainError(null).left()
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        quotes.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.errorNotification)
+            .isInstanceOf(NotificationUM.Warning.OnrampErrorNotification::class.java)
+        assertThat(model.isBuyEnabled.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restricted IP country selected WHEN IP becomes allowed on return THEN country is blocked`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns restricted.right()
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(restricted.right())
+        val model = createModel(scheduler = scheduler, quotesFlow = emptyFlow())
+        model.onStart()
+        scheduler.runCurrent()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns onrampCountry("EUR").copy(id = "other").right()
+
+        // Act
+        model.onStop()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.regionRestrictionMessage).isNull()
+        assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(model.isBuyEnabled.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN IP country available WHEN openRedirectPage THEN purchase is launched`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            openRedirectPage = { opened += it },
+        )
+        scheduler.runCurrent()
+        val quote: OnrampProviderWithQuote.Data = mockk()
+
+        // Act
+        model.openRedirectPage(quote)
+
+        // Assert
+        assertThat(opened).containsExactly(quote)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN IP country available WHEN model created THEN no region banner`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.regionRestrictionMessage).isNull()
+        model.onDestroy()
+    }
+
+    @Nested
+    inner class RegionRestriction {
+
+        @Test
+        fun `GIVEN overlapping cache writes WHEN later refresh fails THEN newest restriction remains`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val supported = onrampCountry("USD")
+            val restricted = supported.copy(name = "Restricted IP", isOnrampAvailable = false)
+            val first = CompletableDeferred<OnrampCountry>()
+            var cached: OnrampCountry? = null
+            var requests = 0
+            val repository = mockk<OnrampRepository>()
+            coEvery { repository.getCountryByIp(userWallet, false) } coAnswers {
+                val result = when (++requests) {
+                    1 -> first.await()
+                    2 -> restricted
+                    else -> error("Offline")
+                }
+                cached = result
+                result
+            }
+            coEvery { repository.getCachedCountryByIp() } coAnswers { cached }
+            every { getOnrampCountryUseCase() } returns flowOf(supported.right())
+            val model = createModel(
+                scheduler, quotesFlow = emptyFlow(),
+                countryByIpUseCase = GetOnrampCountryByIpUseCase(repository, mockk()),
+            )
+            model.onStart()
+            scheduler.runCurrent()
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+            assertThat(model.isBuyEnabled.value).isFalse()
+            first.complete(supported)
+            scheduler.runCurrent()
+            assertThat(model.isBuyEnabled.value).isFalse()
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+
+            // Assert
+            try {
+                assertThat(model.isBuyEnabled.value).isFalse()
+                assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+            } finally {
+                model.onDestroy()
+            }
+        }
+
+        @Test
+        fun `GIVEN manual refresh pending WHEN screen returns THEN content is restored`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val countries = MutableStateFlow<Either<OnrampError, OnrampCountry?>>(onrampCountry("USD").right())
+            every { getOnrampCountryUseCase() } returns countries
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            model.onStart()
+            scheduler.runCurrent()
+            val refresh = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { refresh.await() }
+            model.onRefresh()
+            scheduler.runCurrent()
+            assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.InitialLoading::class.java)
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } returns
+                OnrampAvailability.Available(onrampCountry("USD"), onrampCountry("USD").defaultCurrency).right()
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+
+            // Assert
+            try {
+                assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
+            } finally {
+                model.onDestroy()
+            }
+        }
+
+        @Test
+        fun `GIVEN manual refresh pending WHEN screen returns THEN country loading waits for the replacement check`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            var countrySubscriptions = 0
+            every { getOnrampCountryUseCase() } answers {
+                countrySubscriptions++
+                flowOf(onrampCountry("USD").right())
+            }
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            model.onStart()
+            scheduler.runCurrent()
+            val refreshed = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { refreshed.await() }
+            model.onRefresh()
+            scheduler.runCurrent()
+            val replacement = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { replacement.await() }
+            val subscriptionsBeforeReturn = countrySubscriptions
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+            val subscriptionsWhileReplacementPending = countrySubscriptions
+            replacement.complete(
+                OnrampAvailability.Available(onrampCountry("USD"), onrampCountry("USD").defaultCurrency).right(),
+            )
+            scheduler.runCurrent()
+
+            // Assert
+            try {
+                assertThat(subscriptionsWhileReplacementPending).isEqualTo(subscriptionsBeforeReturn)
+                assertThat(countrySubscriptions).isEqualTo(subscriptionsBeforeReturn + 1)
+            } finally {
+                model.onDestroy()
+            }
+        }
+
+        @Test
+        fun `GIVEN superseded availability request WHEN old failure arrives THEN current content is retained`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val first = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { first.await() }
+            every { getOnrampCountryUseCase() } returns flowOf(onrampCountry("USD").right())
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            model.onStart()
+            scheduler.runCurrent()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } returns
+                OnrampAvailability.Available(onrampCountry("USD"), onrampCountry("USD").defaultCurrency).right()
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+            assertThat(model.state.value.errorNotification).isNull()
+
+            // Act
+            first.complete(OnrampError.DomainError("Old request failed").left())
+            scheduler.runCurrent()
+
+            // Assert
+            try {
+                assertThat(model.state.value.errorNotification).isNull()
+            } finally {
+                model.onDestroy()
+            }
+        }
+
+        @Test
+        fun `GIVEN IP country detected WHEN checking availability THEN the same result is reused`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns restricted.right()
+            val countries = MutableStateFlow<Either<OnrampError, OnrampCountry?>>(restricted.right())
+            every { getOnrampCountryUseCase() } returns countries
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            scheduler.runCurrent()
+
+            // Act
+            countries.value = onrampCountry("EUR").copy(id = "selected").right()
+            scheduler.runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { checkOnrampAvailabilityUseCase(userWallet, true, restricted) }
+            coVerify(exactly = 1) { getOnrampCountryByIpUseCase(userWallet) }
+            assertThat(model.isBuyEnabled.value).isFalse()
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN availability loading fails WHEN IP lookup succeeds THEN restricted banner and buy block remain`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } returns OnrampError.PairsNotFound.left()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns
+                onrampCountry("USD").copy(isOnrampAvailable = false).right()
+
+            // Act
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+            assertThat(model.isBuyEnabled.value).isFalse()
+            coVerify(exactly = 1) { getOnrampCountryByIpUseCase(userWallet) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN availability loading pending WHEN IP lookup completes THEN restriction is already displayed`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val availability = CompletableDeferred<Either<OnrampError, OnrampAvailability>>()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } coAnswers { availability.await() }
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns
+                onrampCountry("USD").copy(isOnrampAvailable = false).right()
+
+            // Act
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+            assertThat(model.isBuyEnabled.value).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN unsupported country and delayed token check WHEN token unsupported THEN loading becomes content`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val tokenSupport = CompletableDeferred<ScenarioUnavailabilityReason>()
+            val rampStateManager: RampStateManager = mockk()
+            coEvery { rampStateManager.availableForBuy(any(), any()) } coAnswers { tokenSupport.await() }
+            every { getOnrampCountryUseCase() } returns
+                flowOf(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+            val lookup = CompletableDeferred<Either<OnrampError, OnrampCountry>>()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } coAnswers { lookup.await() }
+            val model = createModel(scheduler, quotesFlow = emptyFlow(), rampStateManager = rampStateManager)
+            scheduler.runCurrent()
+            lookup.complete(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+            scheduler.runCurrent()
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+
+            // Act
+            tokenSupport.complete(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.name))
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(model.state.value).isInstanceOf(OnrampMainComponentUM.Content::class.java)
+            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("buy_not_supported")
+            assertThat(sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeBuyNotSupported>()).hasSize(1)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN detected restricted IP WHEN second lookup fails THEN cached region banner and buy block remain`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val restricted = onrampCountry("USD").copy(name = "IP region", isOnrampAvailable = false)
+            val repository: OnrampRepository = mockk()
+            coEvery { repository.getCountryByIp(userWallet) } throws IllegalStateException("Offline")
+            coEvery { repository.getCachedCountryByIp() } returns restricted
+            every { getOnrampCountryUseCase() } returns flowOf(onrampCountry("EUR").right())
+            val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+
+            // Act
+            val model = createModel(
+                scheduler = scheduler,
+                quotesFlow = emptyFlow(),
+                openRedirectPage = { opened += it },
+                countryByIpUseCase = GetOnrampCountryByIpUseCase(repository, mockk()),
+            )
+            scheduler.runCurrent()
+            model.openRedirectPage(mockk())
+
+            // Assert
+            assertThat(model.state.value.regionRestrictionMessage?.description).isEqualTo(
+                resourceReference(R.string.onramp_region_restriction_description_v2, wrappedList("IP region")),
+            )
+            assertThat(model.isBuyEnabled.value).isFalse()
+            assertThat(opened).isEmpty()
+            model.onDestroy()
+        }
+
+
+        @Test
+        fun `GIVEN restricted IP and country WHEN offers arrive THEN offers stay and buying is disabled`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+            every { getOnrampCountryUseCase() } returns flowOf(restricted.right())
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns restricted.right()
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } returns
+                OnrampAvailability.NotSupported(restricted).right()
+            val offers = MutableSharedFlow<Either<OnrampError, List<OnrampOffersBlock>>>()
+            every { getOnrampOffersUseCase() } returns offers
+            val quote = mockk<OnrampQuote.Data>(relaxed = true) {
+                every { isRestricted } returns false
+                every { toAmount } returns OnrampAmount(value = BigDecimal.ONE, decimals = 8, symbol = "ETH")
+            }
+            val model = createModel(scheduler, quotesFlow = emptyFlow(), initialFiatAmount = BigDecimal.TEN)
+            scheduler.runCurrent()
+
+            // Act
+            TestScope(scheduler).launch {
+                offers.emit(
+                    listOf(
+                        OnrampOffersBlock(
+                            category = OnrampOfferCategory.Recommended,
+                            offers = listOf(OnrampOffer(quote, BigDecimal.ZERO, OnrampOfferAdvantages.Default)),
+                            hasMoreOffers = true,
+                        ),
+                    ).right(),
+                )
+            }
+            scheduler.runCurrent()
+
+            // Assert
+            val content = model.state.value as OnrampMainComponentUM.Content
+            val block = content.offersBlockState as OnrampOffersBlockUM.Content
+            assertThat(block.recommended).hasSize(1)
+            assertThat(block.recommended.single().isBuyEnabled).isFalse()
+            assertThat(block.onrampAllOffersButtonConfig).isNotNull()
+            assertThat(content.regionRestrictionMessage).isNotNull()
+            assertThat(content.buyNotSupportedMessage).isNull()
+            coVerify(exactly = 1) { fetchPairsUseCase(userWallet, cryptoCurrency) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN restricted country WHEN quotes arrive THEN displayed provider analytics are sent`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+            every { getOnrampCountryUseCase() } returns flowOf(restricted.right())
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns restricted.right()
+            val quotes = quotesFlow()
+            val model = createModel(scheduler, quotesFlow = quotes)
+            scheduler.runCurrent()
+
+            // Act
+            quotes.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+            scheduler.runCurrent()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    OnrampAnalyticsEvent.ProviderCalculated(
+                        providerName = "Mercuryo",
+                        tokenSymbol = cryptoCurrency.symbol,
+                        paymentMethod = "Card",
+                    ),
+                )
+            }
+            assertThat(model.isBuyRestricted).isTrue()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN delayed IP check WHEN supported country selected THEN old result cannot restore blocked country`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+            val selected = onrampCountry("EUR").copy(id = "new", name = "Selected")
+            val countries = MutableStateFlow<Either<OnrampError, OnrampCountry?>>(restricted.right())
+            every { getOnrampCountryUseCase() } returns countries
+            coEvery { checkOnrampAvailabilityUseCase(userWallet, true, any()) } returns
+                OnrampAvailability.NotSupported(restricted).right()
+            val lookup = CompletableDeferred<Either<OnrampError, OnrampCountry>>()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } coAnswers { lookup.await() }
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            scheduler.runCurrent()
+
+            // Act
+            countries.value = selected.right()
+            scheduler.runCurrent()
+            lookup.complete(onrampCountry("USD").right())
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(model.state.value.topBarConfig.countryButtonUM?.countryName).isEqualTo("Selected")
+            assertThat(model.state.value.buyNotSupportedMessage).isNull()
+            assertThat(model.isBuyRestricted).isFalse()
+            coVerify(exactly = 1) { fetchPairsUseCase(userWallet, cryptoCurrency) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN IP restriction WHEN screen returns in allowed region THEN banner clears and buy is allowed`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns
+                onrampCountry("USD").copy(isOnrampAvailable = false).right()
+            val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+            val model = createModel(scheduler, quotesFlow = emptyFlow(), openRedirectPage = { opened += it })
+            model.onStart()
+            scheduler.runCurrent()
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns onrampCountry("USD").right()
+            val quote = mockk<OnrampProviderWithQuote.Data>()
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+            model.openRedirectPage(quote)
+
+            // Assert
+            assertThat(model.state.value.regionRestrictionMessage).isNull()
+            assertThat(model.isBuyEnabled.value).isTrue()
+            assertThat(opened).containsExactly(quote)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN overlapping IP checks WHEN older restriction arrives last THEN latest decision is retained`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val firstLookup = CompletableDeferred<Either<OnrampError, OnrampCountry>>()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } coAnswers { firstLookup.await() }
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            model.onStart()
+            scheduler.runCurrent()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns onrampCountry("USD").right()
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+            firstLookup.complete(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(model.isBuyEnabled.value).isTrue()
+            assertThat(model.state.value.regionRestrictionMessage).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN restricted country WHEN buy clicked THEN purchase and buy analytics are suppressed`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            every { getOnrampCountryUseCase() } returns
+                flowOf(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+            val opened = mutableListOf<OnrampProviderWithQuote.Data>()
+            val model = createModel(scheduler, quotesFlow = emptyFlow(), openRedirectPage = { opened += it })
+            scheduler.runCurrent()
+
+            // Act
+            model.onBuyClick(
+                quote = mockk(),
+                onrampOfferAdvantagesUM = OnrampOfferAdvantagesUM.Default,
+                categoryUM = OnrampOfferCategoryUM.Recommended,
+            )
+            model.openRedirectPage(mockk())
+
+            // Assert
+            assertThat(opened).isEmpty()
+            assertThat(sentEvents.filterIsInstance<OnrampAnalyticsEvent.OnBuyClick>()).isEmpty()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN returned screen WHEN IP changes THEN buy follows the refreshed restriction`() {
+            // Arrange
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler, quotesFlow = emptyFlow())
+            model.onStart()
+            scheduler.runCurrent()
+            val lookup = CompletableDeferred<Either<OnrampError, OnrampCountry>>()
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } coAnswers { lookup.await() }
+
+            // Act
+            model.onStop()
+            model.onStart()
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(model.isBuyRestricted).isTrue()
+            lookup.complete(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+            scheduler.runCurrent()
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
+            assertThat(model.isBuyRestricted).isTrue()
+            coVerify(exactly = 2) { getOnrampCountryByIpUseCase(userWallet) }
+            model.onDestroy()
+        }
     }
 
     @Test
@@ -995,7 +1752,7 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { checkOnrampAvailabilityUseCase.invoke(userWallet, true) }
+        coVerify(exactly = 1) { checkOnrampAvailabilityUseCase.invoke(userWallet, true, any()) }
         coVerify(exactly = 1) { resetOnrampCountryUseCase.invoke() }
         assertThat(model.state.value.topBarConfig.countryButtonUM).isNotNull()
         assertThat(model.state.value.topBarConfig.endButtonUM).isNull()
@@ -1084,7 +1841,12 @@ internal class OnrampMainComponentModelTest {
         quotesFlow: Flow<Either<OnrampError, List<OnrampQuote>>>,
         isCountryByIpEnabled: Boolean = true,
         openSettings: () -> Unit = {},
-        rampStateManager: RampStateManager = mockk(relaxed = true),
+        rampStateManager: RampStateManager = mockk {
+            coEvery { availableForBuy(any(), any()) } returns ScenarioUnavailabilityReason.None
+        },
+        openRedirectPage: (OnrampProviderWithQuote.Data) -> Unit = {},
+        initialFiatAmount: BigDecimal? = null,
+        countryByIpUseCase: GetOnrampCountryByIpUseCase = getOnrampCountryByIpUseCase,
     ): OnrampMainComponentModel {
         every { getOnrampQuotesUseCase.invoke() } returns quotesFlow
         every { onrampFeatureToggles.isCountryByIpEnabled } returns isCountryByIpEnabled
@@ -1093,13 +1855,15 @@ internal class OnrampMainComponentModelTest {
             cryptoCurrency = cryptoCurrency,
             source = OnrampSource.TOKEN_DETAILS,
             openSettings = openSettings,
-            openRedirectPage = {},
+            openRedirectPage = openRedirectPage,
+            initialFiatAmount = initialFiatAmount,
         )
         return OnrampMainComponentModel(
             dispatchers = scheduler.createTestingCoroutineDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
             router = mockk(relaxed = true),
             checkOnrampAvailabilityUseCase = checkOnrampAvailabilityUseCase,
+            getOnrampCountryByIpUseCase = countryByIpUseCase,
             getOnrampCountryUseCase = getOnrampCountryUseCase,
             clearOnrampCacheUseCase = mockk(relaxed = true),
             resetOnrampCountryUseCase = resetOnrampCountryUseCase,
@@ -1108,7 +1872,7 @@ internal class OnrampMainComponentModelTest {
             fetchPairsUseCase = fetchPairsUseCase,
             rampStateManager = rampStateManager,
             amountInputManager = mockk(relaxed = true),
-            getOnrampOffersUseCase = mockk(relaxed = true),
+            getOnrampOffersUseCase = getOnrampOffersUseCase,
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
             conciergeWaitlistListener = conciergeWaitlistTrigger,

@@ -29,6 +29,7 @@ import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
@@ -209,6 +210,7 @@ private fun InitialLoading(state: OnrampMainComponentUM.InitialLoading, modifier
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         OnrampAmountContentLoading()
+        RegionRestrictionBanner(state)
         OnrampNotifications(state = state)
     }
 }
@@ -275,6 +277,7 @@ private fun Content(
         } else {
             OnrampAmountContent(state = state)
         }
+        RegionRestrictionBanner(state)
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
@@ -300,12 +303,24 @@ private fun Content(
 private fun OnrampNotifications(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
     val buyNotSupportedMessage = state.buyNotSupportedMessage
     val errorNotification = state.errorNotification
-    when {
-        buyNotSupportedMessage != null -> if (LocalOnrampDesignSystemEnabled.current) {
-            BuyNotSupportedBannerDs(messageUM = buyNotSupportedMessage, modifier = modifier)
-        } else {
-            TangemMessage(messageUM = buyNotSupportedMessage, modifier = modifier)
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (buyNotSupportedMessage != null) {
+            if (LocalOnrampDesignSystemEnabled.current) {
+                BuyNotSupportedBannerDs(messageUM = buyNotSupportedMessage)
+            } else {
+                TangemMessage(messageUM = buyNotSupportedMessage)
+            }
         }
-        errorNotification != null -> Notification(config = errorNotification.config, modifier = modifier)
+        if (errorNotification != null) {
+            Notification(config = errorNotification.config)
+        }
+    }
+}
+
+@Composable
+private fun RegionRestrictionBanner(state: OnrampMainComponentUM) {
+    val banner = state.regionRestrictionMessage ?: return
+    TangemThemeRedesign {
+        TangemMessageBanner(state = banner, modifier = Modifier.fillMaxWidth())
     }
 }
