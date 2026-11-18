@@ -27,6 +27,7 @@ import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.marketing.impl.featuretoggles.MarketingFeatureToggles
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.features.marketing.impl.ui.state.replacedSlots
@@ -77,6 +78,7 @@ internal class MarketingBannerModelTest {
     private val quotesRepository: QuotesRepository = mockk()
     private val marketingUidBindingRepository: MarketingUidBindingRepository = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val marketingFeatureToggles: MarketingFeatureToggles = mockk()
 
     @BeforeAll
     fun mockUriParsing() {
@@ -97,8 +99,10 @@ internal class MarketingBannerModelTest {
             quotesRepository,
             marketingUidBindingRepository,
             urlOpener,
+            marketingFeatureToggles,
         )
         every { Uri.parse(any()) } returns uriWithUids()
+        every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns true
     }
 
     private fun TestScope.createModel(
@@ -124,6 +128,7 @@ internal class MarketingBannerModelTest {
             appCoroutineScope = TestAppCoroutineScope(),
             urlOpener = urlOpener,
             clock = clock,
+            marketingFeatureToggles = marketingFeatureToggles,
         )
     }
 
@@ -1040,6 +1045,32 @@ internal class MarketingBannerModelTest {
         assertThat(banners.map { it.campaignId to it.buttonText })
             .containsExactly(1 to model.expectedLabel, 2 to stringReference("Request"))
             .inOrder()
+    }
+
+    @Test
+    fun `GIVEN money account banner disabled WHEN it replaces a slot THEN banner hidden and slot kept`() = runTest {
+        // Arrange
+        every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns false
+        val moneyAccount = campaign(
+            id = 1,
+            uiType = MarketingBanner.UiType.PSEUDO_PROVIDER,
+            deeplink = "tangem://onboard-virtual-account?entry=ff1&id=VRTACC01",
+        )
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+            moneyAccount.copy(banner = moneyAccount.banner.copy(replacesSlot = MarketingBanner.RecommendedSlot.BEST)),
+            campaign(id = 2, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "tangem://support"),
+        ).right()
+        val request = ctaRequest(isDemandSurveyCompleted = false)
+        val model = createModel(MarketingBannerComponent.Params.Cta(flowOf(request)))
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat((state as MarketingBannerListUM.Content).banners.map { it.campaignId }).containsExactly(2)
+        assertThat(state.replacedSlots()).isEmpty()
+        model.onDestroy()
     }
 
     private fun MarketingCampaign.withButtonText(text: String) = copy(banner = banner.copy(buttonText = text))

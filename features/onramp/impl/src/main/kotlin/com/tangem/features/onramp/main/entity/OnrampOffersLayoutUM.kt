@@ -27,10 +27,10 @@ internal fun OnrampOffersBlockUM.layoutFor(replacedSlots: Set<RecommendedSlot>):
             if (slot in replacedSlots) {
                 add(OnrampRecommendedRowUM.Banner(slot))
             } else {
-                offers.filter { it.recommendedSlot() == slot }.forEach { add(OnrampRecommendedRowUM.Offer(it)) }
+                offers.filter { it.recommendedSlot == slot }.forEach { add(OnrampRecommendedRowUM.Offer(it)) }
             }
         }
-        offers.filter { it.recommendedSlot() == null }.forEach { add(OnrampRecommendedRowUM.Offer(it)) }
+        offers.filter { it.recommendedSlot == null }.forEach { add(OnrampRecommendedRowUM.Offer(it)) }
     }.toImmutableList()
     val hasHiddenOffers = rows.count { it is OnrampRecommendedRowUM.Offer } < offers.size
     return OnrampOffersLayoutUM(

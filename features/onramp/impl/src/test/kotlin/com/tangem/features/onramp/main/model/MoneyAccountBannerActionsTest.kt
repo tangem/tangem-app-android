@@ -29,7 +29,7 @@ internal class MoneyAccountBannerActionsTest {
     private fun provideTestModels() = listOf(
         StatusModel(status = mockk<MoneyAccountStatusValue.Account.Active>(), expected = MoneyAccountBannerAction.CONTINUE),
         StatusModel(status = mockk<MoneyAccountStatusValue.Error.NotSynced>(), expected = null),
-        StatusModel(status = MoneyAccountStatusValue.Empty, expected = MoneyAccountBannerAction.ACTIVATE),
+        StatusModel(status = MoneyAccountStatusValue.Empty, expected = null),
         StatusModel(
             status = MoneyAccountStatusValue.Onboarding.Failed(source = StatusSource.ACTUAL, customerId = "id"),
             expected = MoneyAccountBannerAction.ACTIVATE,

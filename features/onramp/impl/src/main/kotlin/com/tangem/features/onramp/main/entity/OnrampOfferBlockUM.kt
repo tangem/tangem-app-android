@@ -22,17 +22,6 @@ internal sealed interface OnrampOffersBlockUM {
     ) : OnrampOffersBlockUM
 }
 
-internal fun OnrampOfferUM.recommendedSlot(): MarketingBanner.RecommendedSlot? = when (advantages) {
-    OnrampOfferAdvantagesUM.GreatRate,
-    OnrampOfferAdvantagesUM.BestRate,
-    -> MarketingBanner.RecommendedSlot.BEST
-    OnrampOfferAdvantagesUM.Fastest -> MarketingBanner.RecommendedSlot.FASTEST
-    OnrampOfferAdvantagesUM.Default,
-    OnrampOfferAdvantagesUM.Restricted,
-    is OnrampOfferAdvantagesUM.Unavailable,
-    -> null
-}
-
 internal data class OnrampOfferUM(
     val category: OnrampOfferCategoryUM,
     val advantages: OnrampOfferAdvantagesUM,
@@ -42,6 +31,7 @@ internal data class OnrampOfferUM(
     val rate: String,
     val diff: TextReference?,
     val onBuyClicked: () -> Unit,
+    val recommendedSlot: MarketingBanner.RecommendedSlot? = null,
 )
 
 internal enum class OnrampOfferCategoryUM {

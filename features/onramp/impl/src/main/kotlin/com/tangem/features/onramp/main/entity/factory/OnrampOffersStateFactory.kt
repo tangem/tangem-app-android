@@ -3,6 +3,7 @@ package com.tangem.features.onramp.main.entity.factory
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.onramp.model.*
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
@@ -37,11 +38,9 @@ internal class OnrampOffersStateFactory(
                     is OnrampQuote.Error,
                     -> Unit
                     is OnrampQuote.Data -> if (currentQuote.isRestricted) {
-                        val restrictedOffer = createRestrictedOfferUM(
-                            quote = currentQuote,
-                            category = block.category,
+                        allOffersUM.add(
+                            createRestrictedOfferUM(offer = offer, quote = currentQuote, category = block.category),
                         )
-                        allOffersUM.add(restrictedOffer)
                     } else {
                         val advantages = mapOfferAdvantagesDTOtoUM(offer.advantages)
                         val category = mapOfferCategoryDTOtoUM(block.category)
@@ -59,6 +58,7 @@ internal class OnrampOffersStateFactory(
                                     )
                                 },
                                 diff = null, // on main screen diff should not be shown
+                                recommendedSlot = offer.recommendedSlot?.toUM(),
                                 onBuyClicked = {
                                     onrampIntents.onBuyClick(
                                         quote = OnrampProviderWithQuote.Data(
@@ -93,7 +93,11 @@ internal class OnrampOffersStateFactory(
         )
     }
 
-    private fun createRestrictedOfferUM(quote: OnrampQuote.Data, category: OnrampOfferCategory): OnrampOfferUM {
+    private fun createRestrictedOfferUM(
+        offer: OnrampOffer,
+        quote: OnrampQuote.Data,
+        category: OnrampOfferCategory,
+    ): OnrampOfferUM {
         return OnrampOfferUM(
             category = mapOfferCategoryDTOtoUM(category),
             advantages = OnrampOfferAdvantagesUM.Restricted,
@@ -108,6 +112,7 @@ internal class OnrampOffersStateFactory(
             },
             diff = null,
             onBuyClicked = {},
+            recommendedSlot = offer.recommendedSlot?.toUM(),
         )
     }
 
@@ -125,5 +130,10 @@ internal class OnrampOffersStateFactory(
             OnrampOfferAdvantages.Fastest -> OnrampOfferAdvantagesUM.Fastest
             OnrampOfferAdvantages.GreatRate -> OnrampOfferAdvantagesUM.GreatRate
         }
+    }
+
+    private fun OnrampRecommendedSlot.toUM(): MarketingBanner.RecommendedSlot = when (this) {
+        OnrampRecommendedSlot.BEST -> MarketingBanner.RecommendedSlot.BEST
+        OnrampRecommendedSlot.FASTEST -> MarketingBanner.RecommendedSlot.FASTEST
     }
 }

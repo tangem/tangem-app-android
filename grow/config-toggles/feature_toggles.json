@@ -50,5 +50,9 @@
     {
         "name": "AND_18953_EARN_UPDATE_ASSET_SELECTION",
         "version": "6.9"
+    },
+    {
+        "name": "AND_18957_MONEY_ACCOUNT_BANNER_ENABLED",
+        "version": "undefined"
     }
 ]

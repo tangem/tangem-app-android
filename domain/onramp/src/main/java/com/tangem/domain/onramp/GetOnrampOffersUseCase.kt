@@ -237,6 +237,7 @@ class GetOnrampOffersUseCase(
                                 OnrampOfferAdvantages.GreatRate
                             },
                             rateDif = null,
+                            recommendedSlot = OnrampRecommendedSlot.BEST,
                         ),
                     )
                 }
@@ -250,6 +251,7 @@ class GetOnrampOffersUseCase(
                                 OnrampOfferAdvantages.GreatRate
                             },
                             rateDif = null,
+                            recommendedSlot = OnrampRecommendedSlot.BEST,
                         ),
                     )
                 }
@@ -265,6 +267,7 @@ class GetOnrampOffersUseCase(
                                 OnrampOfferAdvantages.Fastest
                             },
                             rateDif = if (bestRateOffer != null) fastestOffer.rateDif else null,
+                            recommendedSlot = OnrampRecommendedSlot.FASTEST,
                         ),
                     )
                 }

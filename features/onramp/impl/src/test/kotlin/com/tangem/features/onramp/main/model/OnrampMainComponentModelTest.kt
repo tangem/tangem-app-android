@@ -691,9 +691,11 @@ internal class OnrampMainComponentModelTest {
         }
 
         @Test
-        fun `GIVEN user has no money account WHEN status arrives THEN request asks to activate`() {
+        fun `GIVEN money account onboarding WHEN status arrives THEN request asks to activate`() {
             // Arrange
-            val status = mockk<AccountStatus.Money> { every { value } returns MoneyAccountStatusValue.Empty }
+            val status = mockk<AccountStatus.Money> {
+                every { value } returns mockk<MoneyAccountStatusValue.Onboarding.Failed>()
+            }
             every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns flowOf(status)
             val scheduler = TestCoroutineScheduler()
             val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
@@ -722,7 +724,9 @@ internal class OnrampMainComponentModelTest {
             val unknown = mockk<AccountStatus.Money> {
                 every { value } returns mockk<MoneyAccountStatusValue.Error.NotSynced>()
             }
-            val empty = mockk<AccountStatus.Money> { every { value } returns MoneyAccountStatusValue.Empty }
+            val onboarding = mockk<AccountStatus.Money> {
+                every { value } returns mockk<MoneyAccountStatusValue.Onboarding.Failed>()
+            }
             val statuses = MutableStateFlow(unknown)
             every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns statuses
             val scheduler = TestCoroutineScheduler()
@@ -734,7 +738,7 @@ internal class OnrampMainComponentModelTest {
             model.onAmountValueChanged("100")
             scheduler.runCurrent()
             val before = requests.last()
-            statuses.value = empty
+            statuses.value = onboarding
             scheduler.runCurrent()
 
             // Assert
@@ -742,6 +746,25 @@ internal class OnrampMainComponentModelTest {
             assertThat(requests.last()).isEqualTo(
                 ctaRequest("USD", "100", isDemandSurveyCompleted = false, moneyAccountAction = MoneyAccountBannerAction.ACTIVATE),
             )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account status empty WHEN request built THEN campaign keeps its own button text`() {
+            // Arrange
+            val status = mockk<AccountStatus.Money> { every { value } returns MoneyAccountStatusValue.Empty }
+            every { moneyAccountStatusSupplier(USER_WALLET_ID) } returns flowOf(status)
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+
+            // Act
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.last()).isEqualTo(ctaRequest("USD", "100", isDemandSurveyCompleted = false))
             model.onDestroy()
         }
 
