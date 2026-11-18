@@ -173,7 +173,7 @@ internal class AaveLendingProvider @Inject constructor(
             get() = status?.source ?: if (isFetchFailed) StatusSource.ONLY_CACHE else StatusSource.CACHE
 
         val isPositionLoading: Boolean
-            get() = status == null && fetch == StatusFetch.Pending
+            get() = status?.source == StatusSource.CACHE || status == null && fetch == StatusFetch.Pending
 
         fun depositGate(state: AaveModuleState): LendingDepositGate =
             if (state is AaveModuleState.StatusUnknown && isFetchFailed) {

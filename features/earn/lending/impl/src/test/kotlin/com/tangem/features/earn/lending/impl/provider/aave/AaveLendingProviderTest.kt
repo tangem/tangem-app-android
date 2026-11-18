@@ -27,6 +27,7 @@ import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingMarket
 import com.tangem.features.earn.lending.impl.provider.LendingPosition
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
@@ -42,6 +43,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -212,6 +214,27 @@ internal class AaveLendingProviderTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a stored WETH status WHEN market THEN position loading only while the status is on CACHE`(
+        model: StoredStatusModel,
+    ) = runTest {
+        // Arrange
+        statuses.value = setOf(wethStatus(balance = "0", source = model.source))
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().isPositionLoading).isEqualTo(model.isPositionLoading)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private fun provideTestModels() = listOf(
+        StoredStatusModel(source = StatusSource.CACHE, isPositionLoading = true),
+        StoredStatusModel(source = StatusSource.ACTUAL, isPositionLoading = false),
+        StoredStatusModel(source = StatusSource.ONLY_CACHE, isPositionLoading = false),
+    )
 
     @Test
     fun `GIVEN a network without a derivation WHEN market THEN position not loading`() = runTest {
@@ -666,10 +689,11 @@ internal class AaveLendingProviderTest {
         totalApyEst = BigDecimal(totalApyEst),
     )
 
-    private fun wethStatus(balance: String) = MockYieldSupply.moduleStatus(
+    private fun wethStatus(balance: String, source: StatusSource = StatusSource.ACTUAL) = MockYieldSupply.moduleStatus(
         networkId = eth.network.id,
         tokenAddress = WETH.lowercase(),
         effectiveProtocolBalance = BigDecimal(balance),
+        source = source,
     )
 
     private fun networkUpdate() = NetworkStatus(network = eth.network, value = NetworkStatus.Unreachable(address = null))
@@ -691,6 +715,8 @@ internal class AaveLendingProviderTest {
         rateSource = rateSource,
         isPositionLoading = true,
     )
+
+    data class StoredStatusModel(val source: StatusSource, val isPositionLoading: Boolean)
 
     private companion object {
         const val WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
