@@ -218,6 +218,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletHardwareBackupComponent.Params(
                         userWalletId = route.userWalletId,
+                        source = route.source,
                     ),
                     componentFactory = walletHardwareBackupComponentFactory,
                 )

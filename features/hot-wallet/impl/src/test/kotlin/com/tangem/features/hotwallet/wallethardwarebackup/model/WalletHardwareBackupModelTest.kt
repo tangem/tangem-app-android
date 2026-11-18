@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 
 internal class WalletHardwareBackupModelTest {
@@ -44,7 +45,10 @@ internal class WalletHardwareBackupModelTest {
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk {
         every { require<WalletHardwareBackupComponent.Params>() } returns
-            WalletHardwareBackupComponent.Params(userWalletId = WALLET_ID)
+            WalletHardwareBackupComponent.Params(
+                userWalletId = WALLET_ID,
+                source = AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS,
+            )
     }
     private val hotWalletId: HotWalletId = mockk {
         every { authType } returns HotWalletId.AuthType.NoPassword
@@ -62,6 +66,30 @@ internal class WalletHardwareBackupModelTest {
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
         every { hotWallet.isBackedUp } returns false
         coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns false
+    }
+
+    @ParameterizedTest
+    @EnumSource(AppRoute.WalletHardwareBackup.Source::class)
+    fun `GIVEN an entry point WHEN the screen opens THEN the opening is reported with its source`(
+        source: AppRoute.WalletHardwareBackup.Source,
+    ) = runTest {
+        // Arrange
+        every { paramsContainer.require<WalletHardwareBackupComponent.Params>() } returns
+            WalletHardwareBackupComponent.Params(userWalletId = WALLET_ID, source = source)
+        val expectedSource = when (source) {
+            AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> AnalyticsParam.ScreensSources.UpgradeBanner
+            AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> AnalyticsParam.ScreensSources.PermanentBanner
+            AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> AnalyticsParam.ScreensSources.WalletSettings
+            AppRoute.WalletHardwareBackup.Source.BACKUP -> AnalyticsParam.ScreensSources.Backup
+        }
+
+        // Act
+        createModel(this)
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened(source = expectedSource))
+        }
     }
 
     @ParameterizedTest

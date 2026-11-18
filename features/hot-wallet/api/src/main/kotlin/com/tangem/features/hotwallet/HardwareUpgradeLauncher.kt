@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  */
 interface HardwareUpgradeLauncher {
 
-    suspend fun launch(userWalletId: UserWalletId, source: AppRoute.HardwareUpgradeStories.Source)
+    suspend fun launch(userWalletId: UserWalletId, source: AppRoute.WalletHardwareBackup.Source)
 
     /** Warms the upgrade story up if the experiment on the device shows it; call it when an entry point appears. */
     fun prefetch()
