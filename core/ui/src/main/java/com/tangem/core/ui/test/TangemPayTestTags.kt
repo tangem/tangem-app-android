@@ -1,5 +1,7 @@
 package com.tangem.core.ui.test
 
+import androidx.compose.ui.semantics.SemanticsPropertyKey
+
 object TangemPayTestTags {
     // Main wallet screen tile (entry point into Tangem Pay)
     const val MAIN_SCREEN_TILE = "TANGEM_PAY_MAIN_SCREEN_TILE"
@@ -15,6 +17,7 @@ object TangemPayTestTags {
     // Payment account details screen
     const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
     const val PAYMENT_ACCOUNT_BALANCE = "TANGEM_PAY_PAYMENT_ACCOUNT_BALANCE"
+    const val PAYMENT_ACCOUNT_INACTIVE_BADGE = "TANGEM_PAY_PAYMENT_ACCOUNT_INACTIVE_BADGE"
     const val PAYMENT_ACCOUNT_CARD_BUTTON = "TANGEM_PAY_PAYMENT_ACCOUNT_CARD_BUTTON"
     const val PAYMENT_ACCOUNT_CARD_FROZEN_ICON = "TANGEM_PAY_PAYMENT_ACCOUNT_CARD_FROZEN_ICON"
     const val PAYMENT_ACCOUNT_ADD_CARD_BUTTON = "TANGEM_PAY_PAYMENT_ACCOUNT_ADD_CARD_BUTTON"
@@ -49,6 +52,7 @@ object TangemPayTestTags {
 
     // Payment account / card page top bar more-actions menu item
     const val CONTEXT_MENU_ITEM = "TANGEM_PAY_CONTEXT_MENU_ITEM"
+    const val CONTEXT_MENU_ITEM_ICON = "TANGEM_PAY_CONTEXT_MENU_ITEM_ICON"
 
     // Card page top bar more-actions menu (redesign)
     const val CARD_PAGE_MORE_BUTTON = "TANGEM_PAY_CARD_PAGE_MORE_BUTTON"
@@ -263,3 +267,5 @@ object TangemPayTestTags {
     /** [index] is the bar position in the cashback histogram, oldest month first. */
     fun cashbackHistogramAmount(index: Int): String = "TANGEM_PAY_CASHBACK_HISTOGRAM_AMOUNT_$index"
 }
+
+val ContextMenuItemIconResKey = SemanticsPropertyKey<Int>("ContextMenuItemIconRes")
