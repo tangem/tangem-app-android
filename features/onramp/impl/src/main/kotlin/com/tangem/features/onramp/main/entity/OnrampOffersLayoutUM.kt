@@ -16,15 +16,11 @@ internal sealed interface OnrampRecommendedRowUM {
 }
 
 /**
- * Whether CTA banners may take Recommended slots. Without Recommended offers, e.g. when Buy is not supported, a banner
- * there would read as a recommendation, so it stays above the offers as a plain campaign, as on iOS. A loading block
- * keeps its slots so the banner does not jump while the amount is typed.
+ * Whether CTA banners may take Recommended slots. With offers loaded they always do, even when only a Recently used
+ * offer is left, so the banners form the Recommended block. A loading block keeps its slots so the banner does not
+ * jump while the amount is typed; only an empty block leaves them above the offers.
  */
-internal fun OnrampOffersBlockUM.takesSlots(): Boolean = when (this) {
-    is OnrampOffersBlockUM.Content -> recommended.isNotEmpty()
-    OnrampOffersBlockUM.Loading -> true
-    OnrampOffersBlockUM.Empty -> false
-}
+internal fun OnrampOffersBlockUM.takesSlots(): Boolean = this != OnrampOffersBlockUM.Empty
 
 /**
  * Lays out the offers block with CTA banners taking the [replacedSlots]. The All offers button is derived from the

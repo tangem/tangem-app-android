@@ -2,7 +2,6 @@ package com.tangem.features.onramp.main.entity.factory
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.onramp.model.OnrampAmount
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampOffer
@@ -61,7 +60,7 @@ internal class OnrampOffersStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN restricted offer WHEN getOffersState THEN card is restricted and buy click is inert`() {
+    fun `GIVEN restricted offer WHEN getOffersState THEN card is restricted, buy click is inert and no slot is kept`() {
         // Arrange — a restricted offer that the domain still labelled GreatRate
         val blocks = listOf(
             buildBlock(
@@ -81,7 +80,7 @@ internal class OnrampOffersStateFactoryTest {
 
         // Assert
         assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantagesUM.Restricted)
-        assertThat(offer.recommendedSlot).isEqualTo(MarketingBanner.RecommendedSlot.BEST)
+        assertThat(offer.recommendedSlot).isNull()
         assertThat(offer.diff).isNull()
         offer.onBuyClicked()
         verify(exactly = 0) { onrampIntents.onBuyClick(any(), any(), any()) }
