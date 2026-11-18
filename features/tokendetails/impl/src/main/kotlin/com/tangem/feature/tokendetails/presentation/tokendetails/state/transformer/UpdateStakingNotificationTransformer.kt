@@ -29,12 +29,14 @@ import java.math.BigDecimal
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 internal class UpdateStakingNotificationTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val stakingAvailability: StakingAvailability,
     private val stakingEntryInfo: StakingEntryInfo?,
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
+    private val isEarnBannerShown: Boolean,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
@@ -43,6 +45,10 @@ internal class UpdateStakingNotificationTransformer(
     }
 
     private fun buildEarnBlock(isBalanceHidden: Boolean): EarnBlockUM? {
+        // The Earn banner counts this staking and is the only earn entry on the page. A stake blocked in the region is
+        // not part of it, so that block stays.
+        if (isEarnBannerShown && stakingAvailability !is StakingAvailability.RegionUnavailable) return null
+
         return when (val availability = stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> buildTemporaryUnavailable()
             StakingAvailability.RegionUnavailable -> buildRegionUnavailableOrNull()
