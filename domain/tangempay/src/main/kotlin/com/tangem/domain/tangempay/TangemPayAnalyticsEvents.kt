@@ -345,7 +345,7 @@ sealed class TangemPayAnalyticsEvents(
     class CloseCardConfirmationPopupOpened(cardState: CardState? = null) : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Close Card Confirmation Popup Opened",
-        params = cardState?.let { mapOf(AnalyticsParam.CARD_STATE to it.value) }.orEmpty(),
+        params = cardState?.let { mapOf(CARD_STATE_PARAM to it.value) }.orEmpty(),
     ) {
         enum class CardState(val value: String) {
             Active("active"),
@@ -372,7 +372,7 @@ sealed class TangemPayAnalyticsEvents(
     class CloseCardResult(result: Result) : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Close Card Result",
-        params = mapOf(AnalyticsParam.RESULT to result.value),
+        params = mapOf(RESULT_PARAM to result.value),
     ) {
         enum class Result(val value: String) {
             Success("success"),
@@ -1176,6 +1176,8 @@ sealed class TangemPayAnalyticsEvents(
 }
 
 private const val MISSING_WIRE_TYPE = "missing"
+private const val CARD_STATE_PARAM = "Card State"
+private const val RESULT_PARAM = "Result"
 
 private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"
 

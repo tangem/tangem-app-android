@@ -440,8 +440,6 @@ sealed class AnalyticsParam {
         const val SCREEN = "Screen"
         const val REASON = "Reason"
         const val VALUE = "Value"
-        const val RESULT = "Result"
-        const val CARD_STATE = "Card State"
     }
 }
 
