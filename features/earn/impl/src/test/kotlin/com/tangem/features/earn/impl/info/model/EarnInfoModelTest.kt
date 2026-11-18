@@ -60,6 +60,7 @@ import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.logging.TangemLogger
@@ -82,6 +83,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -905,6 +907,25 @@ internal class EarnInfoModelTest {
             }
 
         @Test
+        fun `GIVEN a refresh in flight WHEN the screen closes THEN the refresh still finishes`() = runTest {
+            // Arrange
+            val gate = CompletableDeferred<Unit>()
+            product.refreshGate = gate
+            val model = createModel()
+            advanceUntilIdle()
+            model.pull()
+            runCurrent()
+
+            // Act
+            model.onDestroy()
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(product.refreshesFinished).isEqualTo(1)
+        }
+
+        @Test
         fun `GIVEN a refresh in flight WHEN pulled again THEN refresh is not called twice`() = runTest {
             // Arrange
             val gate = CompletableDeferred<Unit>()
@@ -1111,6 +1132,7 @@ internal class EarnInfoModelTest {
         uiMessageSender = uiMessageSender,
         urlOpener = urlOpener,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+        appScope = TestAppCoroutineScope(StandardTestDispatcher(testScheduler)),
         blogUrlBuilder = blogUrlBuilder,
     )
 
@@ -1197,6 +1219,8 @@ internal class EarnInfoModelTest {
 
         var refreshGate: CompletableDeferred<Unit>? = null
 
+        var refreshesFinished: Int = 0
+
         fun readyState(): EarnProductState.Ready = stateFlow.value as EarnProductState.Ready
 
         override fun state(params: EarnProduct.Params): Flow<EarnProductState> = customState ?: stateFlow
@@ -1209,6 +1233,7 @@ internal class EarnInfoModelTest {
         override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> {
             refreshCalls += params
             refreshGate?.await()
+            refreshesFinished++
             return refreshResult
         }
 
