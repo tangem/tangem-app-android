@@ -375,7 +375,7 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
             subtitle = TextReference.Str("*1234"),
             isBalanceFlickering = true,
             balance = TextReference.Str("$ 101.56"),
-            balanceSubtitle = TextReference.Str("USDC"),
+            balanceSubtitle = TextReference.Str("USD"),
             onClick = {},
             shouldShowOnlyCacheWarning = true,
             isActionRequired = false,
