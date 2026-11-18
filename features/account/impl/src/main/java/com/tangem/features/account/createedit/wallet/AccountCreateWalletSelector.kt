@@ -15,7 +15,7 @@ internal class AccountCreateWalletSelector(
     initialWalletId: UserWalletId,
     private val scope: CoroutineScope,
     val picker: AccountWalletPicker,
-    onFullWalletPicked: () -> Unit,
+    private val onFullWalletPicked: () -> Unit,
 ) {
 
     val selectedWalletId: StateFlow<UserWalletId>
@@ -53,8 +53,14 @@ internal class AccountCreateWalletSelector(
     private fun openChooser() {
         if (openChooserJob?.isActive == true) return
         openChooserJob = scope.launch {
-            val resolution = picker.resolve(hasRoom = AccountList::canAddMoreCryptoAccounts)
-            picker.openChooser(fullWalletIds = (resolution as? Resolution.Choose)?.fullWalletIds.orEmpty())
+            when (val resolution = picker.resolve(hasRoom = AccountList::canAddMoreCryptoAccounts)) {
+                // The chooser disables wallets whose list didn't load, so the full one would be the only pickable
+                Resolution.LimitReached -> onFullWalletPicked()
+                is Resolution.Choose -> picker.openChooser(fullWalletIds = resolution.fullWalletIds)
+                is Resolution.Single,
+                Resolution.Unavailable,
+                -> picker.openChooser(fullWalletIds = emptySet())
+            }
         }
     }
 }

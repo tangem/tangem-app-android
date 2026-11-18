@@ -105,6 +105,23 @@ internal class AccountCreateEditModelTest {
     }
 
     @Test
+    fun `GIVEN only a full wallet's list loaded WHEN wallet row clicked THEN limit dialog shown without chooser`() =
+        runTest {
+            // Arrange
+            coEvery { walletPicker.resolve(any()) } returns Resolution.LimitReached
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.wallet?.onClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { messageSender.send(match(::isLimitDialog)) }
+            verify(exactly = 0) { walletPicker.openChooser(any()) }
+        }
+
+    @Test
     fun `GIVEN chooser open WHEN a full wallet picked THEN limit dialog shown and wallet kept`() = runTest {
         // Arrange
         val model = createModel()
@@ -208,6 +225,29 @@ internal class AccountCreateEditModelTest {
             assertThat(model.uiState.value.wallet?.name).isEqualTo("A")
             assertThat(model.uiState.value.account.derivationInfo.index).isEqualTo(1)
         }
+
+    @Test
+    fun `GIVEN previous wallet index fails again on fallback WHEN error dismissed THEN screen closed`() = runTest {
+        // Arrange
+        coEvery { getUnoccupiedAccountIndexUseCase(WALLET_A) } returnsMany
+            listOf(derivationIndex(1).right(), indexNotFound)
+        coEvery { getUnoccupiedAccountIndexUseCase(WALLET_B) } returns indexNotFound
+        val messages = mutableListOf<UiMessage>()
+        every { messageSender.send(capture(messages)) } just Runs
+        createModel()
+        advanceUntilIdle()
+        picks.emit(Pick.Wallet(WALLET_B))
+        advanceUntilIdle()
+        (messages.last() as DialogMessage).onDismissRequest()
+        advanceUntilIdle()
+
+        // Act
+        (messages.last() as DialogMessage).onDismissRequest()
+
+        // Assert
+        assertThat(messages).hasSize(2)
+        verify(exactly = 1) { router.pop(any()) }
+    }
 
     @Test
     fun `GIVEN opening wallet index fails WHEN error dismissed THEN screen closed`() = runTest {

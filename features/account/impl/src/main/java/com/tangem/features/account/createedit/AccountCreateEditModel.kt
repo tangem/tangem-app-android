@@ -328,7 +328,8 @@ internal class AccountCreateEditModel @Inject constructor(
                 val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
                 logError(error = error, params = mapOf("cause" to cause.toString()))
 
-                val fallbackWalletId = lastLoadedWalletId
+                // Re-selecting the failing wallet wouldn't reload it, so there's nothing left to fall back to
+                val fallbackWalletId = lastLoadedWalletId?.takeIf { it != userWalletId }
                 messageSender.showErrorDialog(
                     universalError = error,
                     onDismiss = {
