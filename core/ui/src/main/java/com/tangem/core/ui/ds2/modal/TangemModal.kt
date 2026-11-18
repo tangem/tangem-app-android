@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
@@ -58,6 +59,7 @@ import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.toast.TangemToastStack
 import com.tangem.core.ui.ds2.messagebanner.LocalMessageBannerDefaultVariant
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -65,6 +67,7 @@ import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.LocalToastStackState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.TangemThemeRedesign
@@ -77,7 +80,7 @@ import dev.chrisbanes.haze.rememberHazeState
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
  *
- * Version: 1.1.3
+ * Version: 1.1.4
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -203,7 +206,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 /** Public namespace of the modal component. */
 object TangemModal {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 3)
+    val version = DsVersion(major = 1, minor = 1, patch = 4)
 
     /**
      * Where the modal is presented.
@@ -459,24 +462,37 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
             ),
         ) {
             ModalDialogWindowEffect()
-            ModalPalette(forceDarkTheme = forceDarkTheme) {
-                OverlayModalScaffold(
-                    sheetState = transition.sheetState,
-                    backProgress = transition.backProgress,
-                    openProgress = transition::openProgress,
-                    isDismissEnabled = dismissOnClickOutside,
-                    onDismissRequest = config.onDismissRequest,
-                    onBack = onBack,
-                ) {
-                    TangemModalContainer<T>(
-                        config = config,
-                        isMaterial = false,
-                        containerColor = containerColor,
-                        showDragIndicator = showDragIndicator,
-                        scrollableContent = scrollableContent,
-                        chromePlacement = chromePlacement,
-                        title = title,
-                        content = content,
+            val outerHazeState = LocalHazeState.current
+            val windowHazeState = rememberHazeState()
+            SideEffect { windowHazeState.blurEnabled = outerHazeState.blurEnabled }
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize().hazeSourceTangem(state = windowHazeState)) {
+                    ModalPalette(forceDarkTheme = forceDarkTheme) {
+                        OverlayModalScaffold(
+                            sheetState = transition.sheetState,
+                            backProgress = transition.backProgress,
+                            openProgress = transition::openProgress,
+                            isDismissEnabled = dismissOnClickOutside,
+                            onDismissRequest = config.onDismissRequest,
+                            onBack = onBack,
+                        ) {
+                            TangemModalContainer<T>(
+                                config = config,
+                                isMaterial = false,
+                                containerColor = containerColor,
+                                showDragIndicator = showDragIndicator,
+                                scrollableContent = scrollableContent,
+                                chromePlacement = chromePlacement,
+                                title = title,
+                                content = content,
+                            )
+                        }
+                    }
+                }
+                CompositionLocalProvider(LocalHazeState provides windowHazeState) {
+                    TangemToastStack(
+                        state = LocalToastStackState.current,
+                        modifier = Modifier.align(Alignment.TopCenter),
                     )
                 }
             }

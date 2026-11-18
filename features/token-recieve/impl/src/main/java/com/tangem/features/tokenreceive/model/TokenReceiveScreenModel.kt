@@ -6,8 +6,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.TangemToastMessage
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.features.tokenreceive.component.TokenReceiveScreenComponent
@@ -97,9 +98,10 @@ internal class TokenReceiveScreenModel @Inject constructor(
     private fun copy(address: ReceiveAddress, source: TokenReceiveCopyActionSource) {
         params.callback.onCopyClick(address = address, source = source)
         messageSender.send(
-            SnackbarMessage(
-                startIconId = R.drawable.ic_check_24,
-                message = resourceReference(R.string.wallet_notification_address_copied),
+            TangemToastMessage(
+                label = resourceReference(R.string.address_book_address_copied),
+                appearance = TangemToast.Appearance.Success,
+                isClosable = false,
             ),
         )
     }

@@ -43,8 +43,9 @@ import kotlinx.coroutines.launch
 
 /**
  * Design-system v2 (DS3) **Toast Stack** — the host that shows the toasts of a [TangemToastStackState] with the
- * show, push and auto-dismiss animation. The app root and every bottom-sheet window already host one for the
- * app-wide state, so features show toasts by sending a [TangemToastMessage], not by placing a stack.
+ * show, push and auto-dismiss animation. The app root, every bottom-sheet window and every dialog-window modal
+ * already host one for the app-wide state, so features show toasts by sending a [TangemToastMessage], not by
+ * placing a stack.
  *
  * Ships as part of [TangemToast] and shares its version.
  *
