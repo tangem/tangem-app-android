@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
@@ -86,6 +87,10 @@ class CreateJointAccountUseCase(
             .mapLeft(JointAccountFlowError::Failed)
             .bind()
 
+        if (result is JointAccountCreationResult.Rejected) {
+            raise(toRejectionError(userWalletId = userWalletId, cause = result.cause))
+        }
+
         val refresh = refreshAccounts(userWalletId = userWalletId)
 
         when (result) {
@@ -101,6 +106,7 @@ class CreateJointAccountUseCase(
 
                 ensureNotNull(own) { JointAccountCreationError.ExistingAccountNotFound }
             }
+            is JointAccountCreationResult.Rejected -> raise(JointAccountFlowError.Failed(cause = result.cause))
         }
     }
 
@@ -136,6 +142,23 @@ class CreateJointAccountUseCase(
     private suspend fun refreshAccountList(userWalletId: UserWalletId) {
         accountListFetcher(params = SingleAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
             TangemLogger.e("Failed to refetch the account list of $userWalletId after joint account creation", it)
+        }
+    }
+
+    /** Only a list that was just refreshed can blame the limit: a stale one may count an archived account. */
+    private suspend fun toRejectionError(userWalletId: UserWalletId, cause: Throwable): JointAccountCreationError {
+        val failed = JointAccountFlowError.Failed(cause = cause)
+
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft { refetchError ->
+            TangemLogger.e("Failed to refetch joint accounts of $userWalletId after a rejected creation", refetchError)
+            return failed
+        }
+        val jointAccountsCount = repository.getStoredJointAccounts(userWalletId = userWalletId).size
+
+        return if (jointAccountsCount >= AccountList.MAX_JOINT_ACCOUNTS_COUNT) {
+            JointAccountCreationError.AccountsLimitReached
+        } else {
+            failed
         }
     }
 

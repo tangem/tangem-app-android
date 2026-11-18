@@ -101,11 +101,12 @@ internal class DefaultJointAccountRepository @Inject constructor(
                     JointAccountCreationResult.Created(account = converter.convert(value = response))
                 },
                 onError = { error ->
-                    // The HTTP code stays in the data layer: the domain branches on the result, not on 409
-                    if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
-                        JointAccountCreationResult.CreatorAlreadyRegistered
-                    } else {
-                        throw error
+                    // The HTTP code stays in the data layer: the domain branches on the result, not on 409 or 400
+                    val code = (error as? ApiResponseError.HttpException)?.code
+                    when (code) {
+                        Code.CONFLICT -> JointAccountCreationResult.CreatorAlreadyRegistered
+                        Code.BAD_REQUEST -> JointAccountCreationResult.Rejected(cause = error)
+                        else -> throw error
                     }
                 },
             )
