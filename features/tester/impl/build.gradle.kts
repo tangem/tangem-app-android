@@ -42,6 +42,7 @@ dependencies {
     api(projects.domain.markets)
     api(projects.domain.settings)
     api(projects.domain.wallets)
+    implementation(projects.domain.hotWallet)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.demo.models)
     implementation(projects.domain.feedback.models)

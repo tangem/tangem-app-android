@@ -17,4 +17,7 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
 
     override val isTangemPayGroupEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1525_TANGEM_PAY_GROUP_ENABLED)
+
+    override val isPermanentUpgradeBannerEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1821_PERMANENT_UPGRADE_BANNER_ENABLED)
 }

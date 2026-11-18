@@ -105,6 +105,8 @@ internal interface WalletWarningsClickIntents {
 
     fun onUpgradeHotWalletClick(userWalletId: UserWalletId)
 
+    fun onPermanentUpgradeBannerClick(userWalletId: UserWalletId)
+
     fun onCloseUpgradeBannerClick(userWalletId: UserWalletId)
 
     fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId)
@@ -426,10 +428,18 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onUpgradeHotWalletClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(MainScreen.ButtonUpgrade())
+        launchHardwareUpgrade(userWalletId, WalletHardwareBackup.Source.UPGRADE_BANNER)
+    }
+
+    override fun onPermanentUpgradeBannerClick(userWalletId: UserWalletId) {
+        launchHardwareUpgrade(userWalletId, WalletHardwareBackup.Source.PERMANENT_BANNER)
+    }
+
+    private fun launchHardwareUpgrade(userWalletId: UserWalletId, source: WalletHardwareBackup.Source) {
         modelScope.launch(dispatchers.main) {
             // Whichever ends first: a slow experiment fetch must not navigate once the user has left the screen.
             merge(
-                flow { emit(hardwareUpgradeLauncher.launch(userWalletId, WalletHardwareBackup.Source.UPGRADE_BANNER)) },
+                flow { emit(hardwareUpgradeLauncher.launch(userWalletId, source)) },
                 screenLifecycleProvider.isBackgroundState.filter { isBackground -> isBackground }.map { },
             ).first()
         }

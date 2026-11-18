@@ -61,6 +61,7 @@ internal sealed interface WalletUM {
          */
         val isTangemPayPromoVisible: Boolean = false,
         val promoCardsCheck: PromoCardsCheck = PromoCardsCheck.OnOpen,
+        val permanentUpgradeBannerUM: PermanentUpgradeBannerUM? = null,
     ) : WalletUM
 
     data class Locked(

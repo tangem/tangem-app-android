@@ -7,4 +7,6 @@ interface WalletFeatureToggles {
     val isRedesignedTokenRowsEnabled: Boolean
 
     val isTangemPayGroupEnabled: Boolean
+
+    val isPermanentUpgradeBannerEnabled: Boolean
 }
