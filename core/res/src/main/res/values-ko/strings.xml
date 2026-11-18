@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="email_fallback_alert_description">고객 지원은 연중무휴 24시간 운영됩니다. 답변까지 최대 24시간이 걸릴 수 있습니다. 진단 데이터를 요청드릴 수 있습니다.</string>
+  <string name="email_fallback_alert_share_logs_button">로그 공유</string>
   <string name="hw_upgrade_to_cold_badge">콜드 지갑으로 업그레이드</string>
   <string name="money_account_add_funds_bank_description">은행 계좌에서 ACH/Wire 또는 SPEI로 USD 수취</string>
   <string name="money_account_add_funds_receive_description">Polygon 네트워크의 USDC를 계좌 주소로 전송</string>

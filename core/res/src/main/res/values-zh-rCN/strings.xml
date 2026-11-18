@@ -36,9 +36,11 @@
   <string name="account_details_archive_description">您正在存档此帐户，但您可以随时恢复它。</string>
   <string name="account_details_archive_joint_description">这只会隐藏您的帐户并关闭其通知。其他成员仍可访问该帐户，您也可以随时恢复帐户。</string>
   <string name="account_details_archiving">存档...</string>
+  <string name="account_details_joint_members_confirmed">%1$s/%2$s 人已确认</string>
   <plurals name="account_details_joint_members_count">
     <item quantity="other">%d人</item>
   </plurals>
+  <string name="account_details_joint_members_joined">%1$s/%2$s 人已加入</string>
   <string name="account_details_joint_members_progress">%1$s/%2$s 人</string>
   <string name="account_details_joint_networks_info">支持的网络。</string>
   <string name="account_details_joint_pending_description">等待成员加入</string>
@@ -94,9 +96,11 @@
   <string name="add_and_manage_sheet_manage_title">添加代币</string>
   <string name="add_and_manage_sheet_organize_subtitle">排序和分组</string>
   <string name="add_and_manage_sheet_organize_title">整理代币</string>
+  <string name="add_crypto_account_subtitle">获取独立地址，按用途管理您的资金</string>
   <string name="add_custom_token_choose_network">选择网络</string>
   <string name="add_custom_token_title">添加自定义代币</string>
-  <string name="add_joint_account_subtitle">用于共同管理资金的共享账户</string>
+  <string name="add_joint_account_subtitle">每笔交易需多方批准，可用于共享资金或保护您自己的资金</string>
+  <string name="add_joint_account_title">联名加密货币账户</string>
   <string name="add_tokens_title">管理代币</string>
   <string name="addfunds_buy_row_description">信用卡或银行账户</string>
   <string name="addfunds_fund_token">资金代币</string>
@@ -164,6 +168,7 @@
   <string name="alert_manage_tokens_unsupported_message">由于固件限制，该卡片或指环不支持 %1$s 网络中的代币。</string>
   <string name="alert_troubleshooting_scan_card_title">您是否在扫描卡片或指环时遇到困难？</string>
   <string name="alert_unsupported_card">此卡片不适用于此应用程序</string>
+  <string name="all_services_joint_account_subtitle">通过群组审批共享资金</string>
   <string name="app_settings_access_code_warning">设置访问码以启用生物识别功能</string>
   <string name="app_settings_biometrics_footer">使用 %1$s 解锁钱包并批准敏感操作，例如签署交易。对于硬件钱包，仍然需要使用卡片或指环进行签名。</string>
   <string name="app_settings_default_fee">默认费用</string>
@@ -329,10 +334,12 @@
   <string name="common_contact_visa_support">联系VISA技术支持</string>
   <string name="common_continue">继续</string>
   <string name="common_convert">转换</string>
+  <string name="common_copied">已复制</string>
   <string name="common_copy">复制</string>
   <string name="common_copy_address">复制地址</string>
   <string name="common_create">创建</string>
   <string name="common_create_account">创建账户</string>
+  <string name="common_crypto_account">加密货币账户</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">定制</string>
   <string name="common_day">天</string>
@@ -648,6 +655,8 @@
   <string name="earn_mostly_used">热门</string>
   <string name="earn_no_results">无结果</string>
   <string name="earn_title">质押与收益模式</string>
+  <string name="email_fallback_alert_description">我们提供全天候24小时支持服务。回复最长可能需要24小时。我们可能会要求您提供诊断数据。</string>
+  <string name="email_fallback_alert_share_logs_button">分享日志</string>
   <string name="email_preface_wc_error">您好，技术支持团队，我遇到了代码错误： %s</string>
   <string name="email_subject_wc_error">WalletConnect 错误</string>
   <string name="error_wrong_wallet_tapped">您使用了另一个钱包中的卡或指环。点击与此钱包关联的卡或指环</string>
@@ -746,6 +755,8 @@
   <string name="feed_promo_earn_active_title">让更多资源投入运作</string>
   <string name="feed_promo_earn_description">让你的加密货币为你工作，最高可赚取 %1$s APY</string>
   <string name="feed_promo_earn_title">开始赚钱</string>
+  <string name="feed_promo_joint_account_description">共同管理共享资金</string>
+  <string name="feed_promo_joint_account_title">创建联名账户</string>
   <string name="feed_promo_referral_description">每邀请一位朋友可获得 %1$s</string>
   <string name="feed_promo_referral_title">邀请朋友加入Tangem</string>
   <string name="feed_promo_tangem_pay_description">日常消费即可获得现金返还</string>
@@ -1037,17 +1048,60 @@
   <string name="joint_account_activation_title">您正在激活一个共享账户</string>
   <string name="joint_account_coming_soon_description">该操作目前尚不支持联合账户。我们正在开发中</string>
   <string name="joint_account_coming_soon_title">联名账户即将推出</string>
+  <string name="joint_account_compromised_message">您设备上的账户地址与我们服务器上的地址不一致。</string>
+  <string name="joint_account_compromised_message_v2">我们无法确认此账户的信息是否正确，为保护您的资金安全，已暂停该账户。</string>
+  <string name="joint_account_compromised_title">无法验证此账户</string>
+  <string name="joint_account_compromised_title_v2">为安全起见，账户已暂停</string>
+  <string name="joint_account_confirm_account_subtitle">使用联名账户前，请确保所有成员看到的地址完全相同。</string>
+  <string name="joint_account_confirm_account_title">确认账户</string>
+  <string name="joint_account_confirm_address_compare_subtitle">请在 Tangem 之外通过电话、即时通讯软件或当面联系所有成员，确认每个人看到的地址完全相同。</string>
+  <string name="joint_account_confirm_address_compare_title">与其他成员核对</string>
+  <string name="joint_account_confirm_address_confirm_button">已与所有人核对</string>
+  <string name="joint_account_confirm_address_everyone_subtitle">所有成员确认地址后，账户即可使用。</string>
+  <string name="joint_account_confirm_address_everyone_title">所有人都需确认</string>
+  <string name="joint_account_confirm_address_label">共享地址</string>
+  <string name="joint_account_confirm_address_mismatch_button">地址不一致</string>
+  <string name="joint_account_confirm_address_share_message">请确认共享地址：%s</string>
+  <string name="joint_account_confirm_shared_address">确认共享地址</string>
   <string name="joint_account_invite_invalid_subtitle">请确认您打开的是正确的链接，或者请账户创建者重新发送一次</string>
   <string name="joint_account_invite_invalid_title">邀请链接无效</string>
   <string name="joint_account_invite_load_failed_subtitle">无法加载邀请页面。\n点击重新加载</string>
+  <string name="joint_account_invite_member_joins_first_subtitle">账户会等待所有成员加入</string>
+  <string name="joint_account_invite_member_joins_first_title">首先，所有人加入</string>
+  <string name="joint_account_invite_member_message">加入我在 Tangem 的联名账户“%1$s”\n%2$s</string>
+  <string name="joint_account_invite_member_message_label">邀请消息</string>
+  <string name="joint_account_invite_member_one_link_subtitle">仅分享给您想添加的人</string>
+  <string name="joint_account_invite_member_one_link_title">一个链接，一位成员</string>
+  <string name="joint_account_invite_member_title">邀请成员</string>
+  <string name="joint_account_invite_member_verifies_subtitle">所有人验证后，账户即可开始使用。</string>
+  <string name="joint_account_invite_member_verifies_title">然后，每个人分别验证</string>
+  <string name="joint_account_invite_members_about_signatures_description">此账户的每笔交易都需要 %2$s 名成员中的 %1$s 名批准。每位成员使用自己的钱包签名。收集到足够的签名后，交易才会发送。</string>
+  <string name="joint_account_invite_members_about_signatures_title">关于签名</string>
+  <string name="joint_account_invite_members_approvals_value">%2$s 人中任意 %1$s 人</string>
+  <plurals name="joint_account_invite_members_awaiting_to_join">
+    <item quantity="other">等待 %d 名成员加入</item>
+  </plurals>
   <string name="joint_account_invite_members_creator">创建者</string>
+  <string name="joint_account_invite_members_everyone_joined">所有人都已加入</string>
   <string name="joint_account_invite_members_invite">邀请</string>
+  <plurals name="joint_account_invite_members_invite_count">
+    <item quantity="other">邀请 %d 名成员</item>
+  </plurals>
+  <string name="joint_account_invite_members_invite_expired">邀请已过期</string>
+  <plurals name="joint_account_invite_members_invite_more">
+    <item quantity="other">再邀请 %d 名成员</item>
+  </plurals>
   <string name="joint_account_invite_members_invited">已邀请</string>
+  <string name="joint_account_invite_members_joined_progress">%2$s 名成员中已有 %1$s 名加入</string>
   <string name="joint_account_invite_members_member">成员</string>
   <string name="joint_account_invite_members_member_info">成员信息</string>
+  <string name="joint_account_invite_members_member_number">成员 %1$d</string>
   <string name="joint_account_invite_members_new_member">新成员</string>
   <string name="joint_account_invite_members_not_invited">未受邀</string>
   <string name="joint_account_invite_members_other_members">其他成员</string>
+  <string name="joint_account_invite_members_re_invite">重新邀请</string>
+  <string name="joint_account_invite_members_required_approvals">所需批准数</string>
+  <string name="joint_account_invite_members_resend">重新发送</string>
   <string name="joint_account_invite_members_safety_first_point_subtitle">任何打开它的人都可以加入并签名。请仅发送给合适的人——切勿公开发布</string>
   <string name="joint_account_invite_members_safety_first_point_title">链接就像一把钥匙</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">每位成员都可以批准与其他成员之间的交易。请仅邀请您信任的人</string>
@@ -1057,21 +1111,45 @@
   <string name="joint_account_invite_members_safety_third_point_subtitle">当有人加入时，请核对其地址是否属于本人——请直接与本人确认</string>
   <string name="joint_account_invite_members_safety_third_point_title">查看谁加入了</string>
   <string name="joint_account_invite_members_safety_title">安全地分享邀请</string>
+  <plurals name="joint_account_invite_members_still_need_to_join">
+    <item quantity="other">还有 %d 名成员需要加入</item>
+  </plurals>
   <string name="joint_account_invite_members_subtitle">%2$s 分之 %1$s 的成员已加入，包括你在内</string>
   <string name="joint_account_invite_members_title">邀请成员</string>
   <string name="joint_account_invite_members_to_join">邀请成员加入</string>
+  <string name="joint_account_invite_members_until">截至 %s</string>
+  <string name="joint_account_invite_members_until_today">截至今天 %s</string>
+  <string name="joint_account_invite_members_until_tomorrow">截至明天 %s</string>
+  <string name="joint_account_invite_members_verify_account">验证账户</string>
   <string name="joint_account_invite_members_waiting_title">等待成员</string>
+  <string name="joint_account_invite_members_waiting_to_join">等待加入</string>
   <string name="joint_account_invite_share_title">邀请参加 %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">该账户中的所有成员共用一个余额。其他成员在收集到足够签名后，无需您的批准即可调拨资金。</string>
   <string name="joint_account_join_confirm_sheet_title">您正在加入一个共享帐户</string>
   <string name="joint_account_join_invalid_link_subtitle">请确认您打开的是正确的链接，或者请账号创建者重新发送一次</string>
   <string name="joint_account_join_invalid_link_title">邀请链接无效</string>
   <string name="joint_account_join_load_failed">无法加载邀请页面。点击重新加载</string>
+  <plurals name="joint_account_join_signatures_count">
+    <item quantity="other">%d 个签名</item>
+  </plurals>
   <string name="joint_account_join_subtitle">这是一个联合账户。该账户的每笔交易都需要 %1$s 签字</string>
   <string name="joint_account_join_subtitle_value">%2$s分之%1$s 的成员</string>
   <string name="joint_account_join_success_message">账户已添加</string>
   <string name="joint_account_join_title">您已受邀参加 %1$s</string>
   <string name="joint_account_join_to_account_btn_text">联合账户</string>
+  <string name="joint_account_join_to_approve">批准所需</string>
+  <string name="joint_account_main_cant_verify">无法验证</string>
+  <string name="joint_account_main_paused_for_safety">为安全起见已暂停</string>
+  <string name="joint_account_main_unavailable">不可用</string>
+  <plurals name="joint_account_main_waiting_confirmations">
+    <item quantity="other">等待 %d 位成员确认</item>
+  </plurals>
+  <plurals name="joint_account_main_waiting_members">
+    <item quantity="other">等待 %d 名成员</item>
+  </plurals>
+  <string name="joint_account_members_access_loss_all">如果所有成员都无法访问钱包，资金将永久丢失</string>
+  <string name="joint_account_members_access_loss_any">只要有一名成员无法访问钱包，资金就会永久丢失</string>
+  <string name="joint_account_members_access_loss_some">如果 %2$s 名成员中有 %1$s 名无法访问钱包，资金将永久丢失</string>
   <plurals name="joint_account_members_count">
     <item quantity="other">%d成员</item>
   </plurals>
@@ -1080,9 +1158,14 @@
   <string name="joint_account_members_role_you">你</string>
   <string name="joint_account_members_signers_subtitle">批准操作</string>
   <string name="joint_account_members_signers_title">需要签名</string>
+  <string name="joint_account_members_status_confirmed">已确认</string>
+  <string name="joint_account_members_status_not_confirmed">未确认</string>
+  <plurals name="joint_account_members_still_need_to_confirm">
+    <item quantity="other">还有 %d 名成员需要确认</item>
+  </plurals>
   <string name="joint_account_members_subtitle">设置共享该账户的人数。每笔交易都需要等待 %2$s 名成员中的 %1$s 位签名。此设置无法在后续修改。</string>
-  <string name="joint_account_members_subtitle_helper_part">%2$s 分之 %1$s 的签名</string>
-  <string name="joint_account_members_subtitle_main_part">设置共享该账户的人数。每笔交易都会等待 %1$s。此设置无法在后续修改。</string>
+  <string name="joint_account_members_subtitle_helper_part">%2$s 名成员中的 %1$s 名</string>
+  <string name="joint_account_members_subtitle_main_part">设置共享该账户的人数。每笔交易都需要 %1$s 批准。这些设置之后无法更改。</string>
   <string name="joint_account_members_title">成员</string>
   <string name="joint_account_members_total_subtitle">最多 %1$s 人，包括您在内</string>
   <string name="joint_account_members_total_title">总人数</string>
@@ -1114,6 +1197,7 @@
   <string name="joint_account_send_pending_network_title">%1$s 网络上的待处理交易</string>
   <string name="joint_account_send_sends_automatically">收集完成后自动发送</string>
   <string name="joint_account_send_sends_automatically_setup_fee">收集完成后自动发送。首次发送包含一次性设置费。</string>
+  <string name="joint_account_send_setup_fee_included">包含 %s 的联名账户设置费，仅需支付一次。</string>
   <string name="joint_account_send_setup_fee_note">%1$s上的首笔交易。该手续费包含一次 %2$s ，用于在链上开设联名账户。</string>
   <string name="joint_account_send_signatures_required">需要 %2$s 中的%1$s个签名</string>
   <plurals name="joint_account_send_signatures_required_banner">
@@ -1123,10 +1207,22 @@
   <string name="joint_account_send_slot_busy_title">操作正在进行中</string>
   <string name="joint_account_settings_networks_info">该账户仅在受支持的网络中有效。</string>
   <string name="joint_account_waiting_activation">等待激活</string>
+  <string name="joint_blockaid_create_anyway">仍然创建</string>
+  <string name="joint_blockaid_decline_transaction">拒绝交易</string>
+  <string name="joint_blockaid_malicious_body">该地址已被标记为恶意地址。如果向其发送资金，您很可能会损失这些资金。</string>
+  <string name="joint_blockaid_malicious_title">恶意交易</string>
+  <string name="joint_blockaid_risky_body">该收款地址可能不安全。请仅在信任收款人时继续。</string>
+  <string name="joint_blockaid_risky_title">潜在风险地址</string>
+  <string name="joint_blockaid_sign_anyway">仍然签名</string>
   <string name="joint_operation_auto_sends_footer">当 %2$s 分之 %1$s 成员签名后，将立刻自动发送</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
-  <string name="joint_operation_banner_title">%1$s 想发送 %2$s</string>
-  <string name="joint_operation_banner_title_own">你想发送 %1$s</string>
+  <string name="joint_operation_banner_title">%1$s 已请求发送 %2$s</string>
+  <string name="joint_operation_banner_title_own">您已请求发送 %1$s</string>
+  <string name="joint_operation_cancel_alert_title">取消此笔交易？</string>
+  <string name="joint_operation_canceled_at">取消于 %s</string>
+  <string name="joint_operation_canceled_by_creator">已被创建者取消</string>
+  <string name="joint_operation_canceled_by_members">已被成员取消</string>
+  <string name="joint_operation_cancelled_snackbar">交易已取消</string>
   <string name="joint_operation_completed_subtitle">该操作已执行或已取消</string>
   <string name="joint_operation_completed_title">操作已完成</string>
   <string name="joint_operation_created_at">创建于 %s</string>
@@ -1140,12 +1236,13 @@
   <string name="joint_operation_deleted_snackbar">交易已删除</string>
   <string name="joint_operation_malicious_subtitle">此交易被标记为恶意交易，签名已被阻止。</string>
   <string name="joint_operation_malicious_title">危险交易</string>
+  <string name="joint_operation_no_response">未响应</string>
   <string name="joint_operation_sending_to_network">发送至网络</string>
   <string name="joint_operation_sent_footer">签名 %1$s 的 %2$s 并发送到网络</string>
   <string name="joint_operation_signatures_progress">%2$s 分之 %1$s 签名</string>
   <string name="joint_operation_signed">已签署</string>
   <string name="joint_operation_signed_at">签名于 %s</string>
-  <string name="joint_operation_signed_footer">当  %2$s 分之%1$s 签名后会自动发送</string>
+  <string name="joint_operation_signed_footer">%2$s 名成员中有 %1$s 名批准后，交易将自动发送</string>
   <string name="joint_operation_signers_title">签署人</string>
   <string name="joint_operation_signing_blocked_subtitle">出于安全原因，已阻止签名。请联系客服</string>
   <string name="joint_operation_signing_blocked_title">签名已阻止</string>
@@ -1382,6 +1479,7 @@
   <string name="money_account_balance_unavailable_description">加载余额时遇到问题。请稍后重试。</string>
   <string name="money_account_balance_unavailable_title">余额不可用</string>
   <string name="money_account_close_account">关闭账户</string>
+  <string name="money_account_main_details_button">详情</string>
   <string name="money_account_main_name">美元账户</string>
   <string name="money_account_main_status_action_required">需要操作</string>
   <string name="money_account_main_status_activating">正在激活…</string>
@@ -1397,6 +1495,9 @@
   <string name="money_account_main_status_dialog_failed_title">无法激活您的账户</string>
   <string name="money_account_main_status_dialog_hide_account">从首页隐藏账户</string>
   <string name="money_account_main_status_dialog_join_waitlist">加入候补名单</string>
+  <string name="money_account_main_status_dialog_not_started_description">使用您专属的美国账户信息接收 ACH 转账。余额独立，您的卡片保持不变。通常 2 天内即可开通。</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Pay 虚拟账户条款</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">点击“激活”即表示您同意\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">抱歉，根据您提供的信息，我们无法验证您的身份</string>
   <string name="money_account_main_status_dialog_verification_declined_title">我们无法验证您的身份</string>
   <string name="money_account_main_status_dialog_verification_description">通常需要几分钟。您可以在下方查看状态</string>
@@ -1413,6 +1514,7 @@
   <string name="money_account_onboarding_fees_provider">服务提供方</string>
   <string name="money_account_onboarding_fees_title">费用</string>
   <string name="money_account_onboarding_secondary_button">条款和费用</string>
+  <string name="money_account_onboarding_success_title">正在开设您的美元账户</string>
   <string name="money_account_onboarding_terms_link">服务条款</string>
   <string name="money_account_onboarding_terms_notice">使用本服务即表示您同意服务提供方的%1$s</string>
   <string name="money_account_onboarding_title">开通美元账户</string>
@@ -2797,6 +2899,10 @@
   <string name="tangempay_issuing_new_digital_card_title">发行新的数字卡</string>
   <string name="tangempay_issuing_your_card">正在发放您的卡片</string>
   <string name="tangempay_issuing_your_card_description">该卡通常会在 5 分钟内自动发放。极少数情况下，如果需要人工审核，则可能需要长达 48 小时。</string>
+  <string name="tangempay_kyc_additional_info_banner_description">我们还需要您提供一些信息。请在 14 天内提交，以便继续使用您的账户</string>
+  <string name="tangempay_kyc_additional_info_button">提供信息</string>
+  <string name="tangempay_kyc_additional_info_popup_description">请在我们发出请求后 14 天内提供，以便继续使用您的账户</string>
+  <string name="tangempay_kyc_additional_info_title">我们还需要一些信息</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">确认取消</string>
   <string name="tangempay_kyc_confirm_cancellation_description">您确定要停止身份验证流程吗？您可以随时返回继续。</string>
@@ -2811,6 +2917,10 @@
   <string name="tangempay_kyc_rejected_button_text">隐藏状态</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我们无法验证</string>
   <string name="tangempay_kyc_rejected_description_span">您的个人资料</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="other">%d个账户</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">选择套餐</string>
   <string name="tangempay_maximum_cards_issued_description">注销一张卡即可添加新卡</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升级套餐以获得更多卡片</string>
@@ -2971,6 +3081,7 @@
   <string name="tangempay_topup_receive_title">从其他钱包或交易所</string>
   <string name="tangempay_topup_swap_body">使用您钱包中的任意代币为支付账户充值</string>
   <string name="tangempay_topup_swap_title">从您的 Tangem Wallet</string>
+  <string name="tangempay_transaction_history_empty">暂无交易记录</string>
   <string name="tangempay_unified_onboarding_cashback_caption">返现</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">以 USDC 支付</string>
   <string name="tangempay_unified_onboarding_cashback_title">最高 2%%\n%1$s</string>

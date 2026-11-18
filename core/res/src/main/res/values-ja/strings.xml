@@ -36,9 +36,11 @@
   <string name="account_details_archive_description">このアカウントをアーカイブしますが、いつでも復元できます。</string>
   <string name="account_details_archive_joint_description">この操作では、あなたの画面でアカウントが非表示になり、通知がオフになるだけです。他のメンバーは引き続きアクセスでき、いつでも元に戻せます。</string>
   <string name="account_details_archiving">アーカイブ中・・・</string>
+  <string name="account_details_joint_members_confirmed">%2$s人中%1$s人が確認済み</string>
   <plurals name="account_details_joint_members_count">
     <item quantity="other">%d人</item>
   </plurals>
+  <string name="account_details_joint_members_joined">%2$s人中%1$s人が参加済み</string>
   <string name="account_details_joint_members_progress">%2$s人中%1$s人</string>
   <string name="account_details_joint_networks_info">対応ネットワーク</string>
   <string name="account_details_joint_pending_description">メンバーの参加を待っています</string>
@@ -94,9 +96,11 @@
   <string name="add_and_manage_sheet_manage_title">トークンを追加</string>
   <string name="add_and_manage_sheet_organize_subtitle">並べ替え・グループ化</string>
   <string name="add_and_manage_sheet_organize_title">トークンを整理</string>
+  <string name="add_crypto_account_subtitle">個別のアドレスを使って、目的別に資金を管理できます</string>
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
   <string name="add_custom_token_title">カスタムトークンの追加</string>
-  <string name="add_joint_account_subtitle">資金を共同管理するための共有アカウント</string>
+  <string name="add_joint_account_subtitle">取引ごとに複数の承認を必要とし、資金の共有や自分の資金の保護に活用できます</string>
+  <string name="add_joint_account_title">共同暗号資産アカウント</string>
   <string name="add_tokens_title">トークンの管理</string>
   <string name="addfunds_buy_row_description">クレジットカードまたは銀行口座</string>
   <string name="addfunds_fund_token">トークンを追加</string>
@@ -164,6 +168,7 @@
   <string name="alert_manage_tokens_unsupported_message">%1$s ネットワークのトークンは、ファームウェアの制限により、このカードまたはリングではサポートされていません。</string>
   <string name="alert_troubleshooting_scan_card_title">カードまたはリングのスキャンに問題がありますか？</string>
   <string name="alert_unsupported_card">このカードはこのアプリでは使用できません。</string>
+  <string name="all_services_joint_account_subtitle">グループ承認で資金を共有</string>
   <string name="app_settings_access_code_warning">生体認証を有効にするには、アクセスコードを設定してください</string>
   <string name="app_settings_biometrics_footer">%1$sを使用してウォレットのロックを解除し、取引の署名などの機密性の高い操作を承認してください。ハードウェアウォレットの場合は、署名にカードまたはリングが必要です。</string>
   <string name="app_settings_default_fee">デフォルト手数料</string>
@@ -330,10 +335,12 @@
   <string name="common_contact_visa_support">Visaサポートへ問い合わせる</string>
   <string name="common_continue">続ける</string>
   <string name="common_convert">変換する</string>
+  <string name="common_copied">コピーしました</string>
   <string name="common_copy">コピー</string>
   <string name="common_copy_address">アドレスをコピー</string>
   <string name="common_create">作成</string>
   <string name="common_create_account">アカウントを作成</string>
+  <string name="common_crypto_account">暗号資産アカウント</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">設定</string>
   <string name="common_day">日</string>
@@ -645,6 +652,8 @@
   <string name="earn_mostly_used">人気</string>
   <string name="earn_no_results">該当する結果はありません</string>
   <string name="earn_title">ステーキング・利息モード</string>
+  <string name="email_fallback_alert_description">サポートは24時間365日対応しています。返信には最大24時間かかる場合があります。診断データの提供をお願いすることがあります。</string>
+  <string name="email_fallback_alert_share_logs_button">ログを共有</string>
   <string name="email_preface_wc_error">こんにちは、サポートチームの皆さん、コード %s のエラーが発生しました。</string>
   <string name="email_subject_wc_error">WalletConnectエラー</string>
   <string name="error_wrong_wallet_tapped">別のウォレットのカードまたはリングを使用しました。このウォレットにリンクしているカードまたはリングをタップしてください。</string>
@@ -743,6 +752,8 @@
   <string name="feed_promo_earn_active_title">もっと運用しよう</string>
   <string name="feed_promo_earn_description">暗号資産を運用して、最大%1$sのAPYを獲得</string>
   <string name="feed_promo_earn_title">運用を始める</string>
+  <string name="feed_promo_joint_account_description">共有資金をみんなで管理</string>
+  <string name="feed_promo_joint_account_title">共同アカウントを作成</string>
   <string name="feed_promo_referral_description">友達1人につき%1$sを獲得</string>
   <string name="feed_promo_referral_title">友達をTangemに招待</string>
   <string name="feed_promo_tangem_pay_description">日常の支払いにキャッシュバックを</string>
@@ -1035,17 +1046,60 @@
   <string name="joint_account_activation_title">共有アカウントを有効化しようとしています</string>
   <string name="joint_account_coming_soon_description">この操作は共同アカウントではまだサポートされていません。現在対応中です</string>
   <string name="joint_account_coming_soon_title">共同アカウントでは近日対応予定</string>
+  <string name="joint_account_compromised_message">お使いのデバイス上のアカウントアドレスが、サーバー上のアドレスと一致しません。</string>
+  <string name="joint_account_compromised_message_v2">このアカウントの情報が正しいことを確認できなかったため、資金を守るためにアカウントを一時停止しました。</string>
+  <string name="joint_account_compromised_title">このアカウントを確認できません</string>
+  <string name="joint_account_compromised_title_v2">安全のためアカウントを一時停止しました</string>
+  <string name="joint_account_confirm_account_subtitle">共同アカウントを使用する前に、すべてのメンバーにまったく同じアドレスが表示されていることを確認してください。</string>
+  <string name="joint_account_confirm_account_title">アカウントを確認</string>
+  <string name="joint_account_confirm_address_compare_subtitle">Tangem以外の方法（電話、メッセンジャー、対面など）ですべてのメンバーに連絡し、全員にまったく同じアドレスが表示されていることを確認してください。</string>
+  <string name="joint_account_confirm_address_compare_title">他のメンバーと照合</string>
+  <string name="joint_account_confirm_address_confirm_button">全員と確認済み</string>
+  <string name="joint_account_confirm_address_everyone_subtitle">全員がアドレスを確認すると、アカウントが使えるようになります。</string>
+  <string name="joint_account_confirm_address_everyone_title">全員の確認が必要です</string>
+  <string name="joint_account_confirm_address_label">共有アドレス</string>
+  <string name="joint_account_confirm_address_mismatch_button">アドレスが一致しません</string>
+  <string name="joint_account_confirm_address_share_message">共有アドレスを確認してください：%s</string>
+  <string name="joint_account_confirm_shared_address">共有アドレスを確認</string>
   <string name="joint_account_invite_invalid_subtitle">正しいリンクを開いたことを確認するか、アカウント作成者に再送を依頼してください</string>
   <string name="joint_account_invite_invalid_title">招待リンクが無効です</string>
   <string name="joint_account_invite_load_failed_subtitle">招待ページを読み込めませんでした。\nタップして再読み込みしてください</string>
+  <string name="joint_account_invite_member_joins_first_subtitle">全メンバーが参加するまでアカウントは待機します</string>
+  <string name="joint_account_invite_member_joins_first_title">まず全員が参加</string>
+  <string name="joint_account_invite_member_message">Tangemの共同アカウント「%1$s」に参加してください\n%2$s</string>
+  <string name="joint_account_invite_member_message_label">招待メッセージ</string>
+  <string name="joint_account_invite_member_one_link_subtitle">追加したい相手とだけ共有してください</string>
+  <string name="joint_account_invite_member_one_link_title">1つのリンクにつき1人</string>
+  <string name="joint_account_invite_member_title">メンバーを招待</string>
+  <string name="joint_account_invite_member_verifies_subtitle">全員が確認すると利用できるようになります。</string>
+  <string name="joint_account_invite_member_verifies_title">その後、各自が確認</string>
+  <string name="joint_account_invite_members_about_signatures_description">このアカウントからの取引には、%2$s人中%1$s人のメンバーの承認が必要です。各メンバーは自分のウォレットで署名します。必要な署名が集まった時点で取引が送信されます。</string>
+  <string name="joint_account_invite_members_about_signatures_title">署名について</string>
+  <string name="joint_account_invite_members_approvals_value">%2$s人中任意の%1$s人</string>
+  <plurals name="joint_account_invite_members_awaiting_to_join">
+    <item quantity="other">%d人のメンバーの参加待ち</item>
+  </plurals>
   <string name="joint_account_invite_members_creator">クリエイター</string>
+  <string name="joint_account_invite_members_everyone_joined">全員が参加しました</string>
   <string name="joint_account_invite_members_invite">招待する</string>
+  <plurals name="joint_account_invite_members_invite_count">
+    <item quantity="other">%d人のメンバーを招待</item>
+  </plurals>
+  <string name="joint_account_invite_members_invite_expired">招待の有効期限切れ</string>
+  <plurals name="joint_account_invite_members_invite_more">
+    <item quantity="other">あと%d人のメンバーを招待</item>
+  </plurals>
   <string name="joint_account_invite_members_invited">招待済み</string>
+  <string name="joint_account_invite_members_joined_progress">%2$s人中%1$s人のメンバーが参加済み</string>
   <string name="joint_account_invite_members_member">メンバー</string>
   <string name="joint_account_invite_members_member_info">メンバー情報</string>
+  <string name="joint_account_invite_members_member_number">メンバー%1$d</string>
   <string name="joint_account_invite_members_new_member">新しいメンバー</string>
   <string name="joint_account_invite_members_not_invited">未招待</string>
   <string name="joint_account_invite_members_other_members">その他のメンバー</string>
+  <string name="joint_account_invite_members_re_invite">再招待</string>
+  <string name="joint_account_invite_members_required_approvals">必要な承認数</string>
+  <string name="joint_account_invite_members_resend">再送信</string>
   <string name="joint_account_invite_members_safety_first_point_subtitle">このリンクを開いた人は誰でも参加して署名できます。招待する本人にのみ送り、公開しないでください</string>
   <string name="joint_account_invite_members_safety_first_point_title">リンクは鍵のようなものです</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">各メンバーは、他のメンバーと共同で取引を承認できます。信頼できる人だけを招待してください</string>
@@ -1055,21 +1109,45 @@
   <string name="joint_account_invite_members_safety_third_point_subtitle">メンバーが参加したら、アドレスが本人のものであることを、本人に直接確認してください</string>
   <string name="joint_account_invite_members_safety_third_point_title">参加したメンバーを確認</string>
   <string name="joint_account_invite_members_safety_title">招待リンクを安全に共有</string>
+  <plurals name="joint_account_invite_members_still_need_to_join">
+    <item quantity="other">あと%d人のメンバーの参加が必要です</item>
+  </plurals>
   <string name="joint_account_invite_members_subtitle">あなたを含む%2$s人中%1$s人が参加済み</string>
   <string name="joint_account_invite_members_title">メンバーを招待</string>
   <string name="joint_account_invite_members_to_join">メンバーを招待して参加してもらう</string>
+  <string name="joint_account_invite_members_until">%sまで</string>
+  <string name="joint_account_invite_members_until_today">今日の%sまで</string>
+  <string name="joint_account_invite_members_until_tomorrow">明日の%sまで</string>
+  <string name="joint_account_invite_members_verify_account">アカウントを確認</string>
   <string name="joint_account_invite_members_waiting_title">メンバーの参加待ち</string>
+  <string name="joint_account_invite_members_waiting_to_join">参加待ち</string>
   <string name="joint_account_invite_share_title">%sに招待</string>
   <string name="joint_account_join_confirm_sheet_subtitle">このアカウントでは、全員が1つの残高を共有します。メンバーは誰でも、あなたの承認なしでも、いつでも資金を使用または出金できます</string>
   <string name="joint_account_join_confirm_sheet_title">共有アカウントに参加しようとしています</string>
   <string name="joint_account_join_invalid_link_subtitle">正しいリンクを開いたことを確認するか、アカウント作成者に再送を依頼してください</string>
   <string name="joint_account_join_invalid_link_title">招待リンクが無効です</string>
   <string name="joint_account_join_load_failed">招待ページを読み込めませんでした。タップして再読み込みしてください</string>
+  <plurals name="joint_account_join_signatures_count">
+    <item quantity="other">%d件の署名</item>
+  </plurals>
   <string name="joint_account_join_subtitle">これは共同アカウントです。このアカウントからのすべての取引には、%1$sの署名が必要です</string>
   <string name="joint_account_join_subtitle_value">%1$s / %2$s人のメンバー</string>
   <string name="joint_account_join_success_message">アカウントを追加しました</string>
   <string name="joint_account_join_title">%1$sから招待されています</string>
   <string name="joint_account_join_to_account_btn_text">アカウントに参加</string>
+  <string name="joint_account_join_to_approve">承認に必要</string>
+  <string name="joint_account_main_cant_verify">確認不可</string>
+  <string name="joint_account_main_paused_for_safety">安全のため一時停止中</string>
+  <string name="joint_account_main_unavailable">利用不可</string>
+  <plurals name="joint_account_main_waiting_confirmations">
+    <item quantity="other">%d件の確認待ち</item>
+  </plurals>
+  <plurals name="joint_account_main_waiting_members">
+    <item quantity="other">%d人のメンバーを待っています</item>
+  </plurals>
+  <string name="joint_account_members_access_loss_all">すべてのメンバーがウォレットへのアクセスを失うと、資金は永久に失われます</string>
+  <string name="joint_account_members_access_loss_any">いずれかのメンバーがウォレットへのアクセスを失うと、資金は永久に失われます</string>
+  <string name="joint_account_members_access_loss_some">%2$s人中%1$s人のメンバーがウォレットへのアクセスを失うと、資金は永久に失われます</string>
   <plurals name="joint_account_members_count">
     <item quantity="other">%d人</item>
   </plurals>
@@ -1078,9 +1156,14 @@
   <string name="joint_account_members_role_you">あなた</string>
   <string name="joint_account_members_signers_subtitle">処理の承認に必要</string>
   <string name="joint_account_members_signers_title">署名に必要</string>
+  <string name="joint_account_members_status_confirmed">確認済み</string>
+  <string name="joint_account_members_status_not_confirmed">未確認</string>
+  <plurals name="joint_account_members_still_need_to_confirm">
+    <item quantity="other">あと%d人のメンバーの確認が必要です</item>
+  </plurals>
   <string name="joint_account_members_subtitle">アカウントを共有する人数を設定します。送金、スワップ、アカウントの閉鎖など、すべての取引には%2$s人中%1$s人の署名が必要です。一度設定すると変更できません</string>
-  <string name="joint_account_members_subtitle_helper_part">%1$s / %2$s人の署名が必要</string>
-  <string name="joint_account_members_subtitle_main_part">アカウントを共有する人数を設定します。送金、スワップ、アカウントの閉鎖など、すべての取引には%1$sの承認が必要です。一度設定すると変更できません</string>
+  <string name="joint_account_members_subtitle_helper_part">%2$s人中%1$s人のメンバー</string>
+  <string name="joint_account_members_subtitle_main_part">アカウントを共有する人数を設定します。すべての取引には%1$sの承認が必要です。この設定は後から変更できません。</string>
   <string name="joint_account_members_title">メンバー</string>
   <string name="joint_account_members_total_subtitle">あなたを含め、最大%1$s人まで</string>
   <string name="joint_account_members_total_title">メンバー総数</string>
@@ -1112,6 +1195,7 @@
   <string name="joint_account_send_pending_network_title">%1$sネットワークで保留中の取引</string>
   <string name="joint_account_send_sends_automatically">必要な署名が集まると自動的に送信されます</string>
   <string name="joint_account_send_sends_automatically_setup_fee">必要な署名が集まると自動的に送信されます。初回の送信には1回限りの設定手数料が含まれます</string>
+  <string name="joint_account_send_setup_fee_included">共同アカウントの設定手数料%sが含まれます。この手数料のお支払いは1回のみです。</string>
   <string name="joint_account_send_setup_fee_note">%1$sでの初回取引です。手数料には、共同アカウントをオンチェーンで設定するための1回限りの%2$sが含まれます</string>
   <string name="joint_account_send_signatures_required">%2$s人中%1$s人の署名が必要です</string>
   <plurals name="joint_account_send_signatures_required_banner">
@@ -1121,10 +1205,22 @@
   <string name="joint_account_send_slot_busy_title">処理がすでに進行中です</string>
   <string name="joint_account_settings_networks_info">このアカウントは対応ネットワークでのみ利用できます。</string>
   <string name="joint_account_waiting_activation">有効化待ち</string>
+  <string name="joint_blockaid_create_anyway">このまま作成</string>
+  <string name="joint_blockaid_decline_transaction">取引を拒否</string>
+  <string name="joint_blockaid_malicious_body">このアドレスは悪意のあるアドレスとして報告されています。送金すると、資金を失う可能性が非常に高くなります。</string>
+  <string name="joint_blockaid_malicious_title">悪意のある取引</string>
+  <string name="joint_blockaid_risky_body">この受取人のアドレスは安全でない可能性があります。受取人を信頼できる場合のみ続行してください。</string>
+  <string name="joint_blockaid_risky_title">リスクの可能性があるアドレス</string>
+  <string name="joint_blockaid_sign_anyway">このまま署名</string>
   <string name="joint_operation_auto_sends_footer">%2$s人中%1$s人が署名すると自動的に送信されます</string>
   <string name="joint_operation_banner_subtitle">%1$s→%2$s</string>
-  <string name="joint_operation_banner_title">%1$sが%2$sを送信しようとしています</string>
-  <string name="joint_operation_banner_title_own">%1$sを送信しようとしています</string>
+  <string name="joint_operation_banner_title">%1$sが%2$sの送信をリクエストしました</string>
+  <string name="joint_operation_banner_title_own">%1$sの送信をリクエストしました</string>
+  <string name="joint_operation_cancel_alert_title">この取引をキャンセルしますか？</string>
+  <string name="joint_operation_canceled_at">%sにキャンセル済み</string>
+  <string name="joint_operation_canceled_by_creator">作成者がキャンセル</string>
+  <string name="joint_operation_canceled_by_members">メンバーがキャンセル</string>
+  <string name="joint_operation_cancelled_snackbar">取引をキャンセルしました</string>
   <string name="joint_operation_completed_subtitle">すでに実行またはキャンセルされています</string>
   <string name="joint_operation_completed_title">処理が完了しました</string>
   <string name="joint_operation_created_at">%sに作成</string>
@@ -1138,12 +1234,13 @@
   <string name="joint_operation_deleted_snackbar">取引を削除しました</string>
   <string name="joint_operation_malicious_subtitle">この取引は悪意のあるものとして検出されました。署名はブロックされています</string>
   <string name="joint_operation_malicious_title">危険な取引</string>
+  <string name="joint_operation_no_response">応答なし</string>
   <string name="joint_operation_sending_to_network">ネットワークに送信中</string>
   <string name="joint_operation_sent_footer">%2$s人中%1$s人が署名し、ネットワークに送信済み</string>
   <string name="joint_operation_signatures_progress">署名：%2$s人中%1$s人</string>
   <string name="joint_operation_signed">署名済み</string>
   <string name="joint_operation_signed_at">%sに署名済み</string>
-  <string name="joint_operation_signed_footer">%2$s人中%1$s人が署名すると自動的に送信されます</string>
+  <string name="joint_operation_signed_footer">%2$s人中%1$s人のメンバーが承認すると、取引は自動的に送信されます</string>
   <string name="joint_operation_signers_title">署名者</string>
   <string name="joint_operation_signing_blocked_subtitle">セキュリティ上の理由により署名がブロックされています。サポートにお問い合わせください</string>
   <string name="joint_operation_signing_blocked_title">署名がブロックされています</string>
@@ -1379,6 +1476,7 @@
   <string name="money_account_balance_unavailable_description">残高の読み込みに問題が発生しています。しばらくしてから再試行してください。</string>
   <string name="money_account_balance_unavailable_title">残高を取得できません</string>
   <string name="money_account_close_account">口座を解約</string>
+  <string name="money_account_main_details_button">詳細</string>
   <string name="money_account_main_name">USD口座</string>
   <string name="money_account_main_status_action_required">対応が必要です</string>
   <string name="money_account_main_status_activating">有効化中…</string>
@@ -1394,6 +1492,9 @@
   <string name="money_account_main_status_dialog_failed_title">口座を有効化できませんでした</string>
   <string name="money_account_main_status_dialog_hide_account">ホーム画面から口座を非表示にする</string>
   <string name="money_account_main_status_dialog_join_waitlist">ウェイトリストに参加</string>
+  <string name="money_account_main_status_dialog_not_started_description">米国の専用口座情報でACH送金を受け取れます。残高は別管理で、カードに変更はありません。口座は通常2日以内に利用可能になります。</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Payバーチャル口座利用規約</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">「有効化」をタップすることで、\n%sに同意します</string>
   <string name="money_account_main_status_dialog_verification_declined_description">申し訳ございませんが、ご提供いただいた情報では本人確認ができませんでした</string>
   <string name="money_account_main_status_dialog_verification_declined_title">本人確認ができませんでした</string>
   <string name="money_account_main_status_dialog_verification_description">通常、数分で完了します。ステータスは下記からご確認いただけます</string>
@@ -1410,6 +1511,7 @@
   <string name="money_account_onboarding_fees_provider">プロバイダー</string>
   <string name="money_account_onboarding_fees_title">手数料</string>
   <string name="money_account_onboarding_secondary_button">利用規約と手数料</string>
+  <string name="money_account_onboarding_success_title">USD口座を開設しています</string>
   <string name="money_account_onboarding_terms_link">利用規約</string>
   <string name="money_account_onboarding_terms_notice">サービスを利用することで、プロバイダーの%1$sに同意したものとみなされます</string>
   <string name="money_account_onboarding_title">USD口座を開設</string>
@@ -2797,6 +2899,10 @@
   <string name="tangempay_issuing_new_digital_card_title">新しいデジタルカードを発行中</string>
   <string name="tangempay_issuing_your_card">カードを発行しています</string>
   <string name="tangempay_issuing_your_card_description">カードは通常、5分以内に自動で発行されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
+  <string name="tangempay_kyc_additional_info_banner_description">お客様から追加の情報をいただく必要があります。引き続きアカウントをご利用いただくため、14日以内にご提出ください</string>
+  <string name="tangempay_kyc_additional_info_button">情報を提出する</string>
+  <string name="tangempay_kyc_additional_info_popup_description">引き続きアカウントをご利用いただくため、当社の依頼日から14日以内にご提出ください</string>
+  <string name="tangempay_kyc_additional_info_title">追加の情報が必要です</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">中止を確定する</string>
   <string name="tangempay_kyc_confirm_cancellation_description">本人確認を中止しますか？いつでも再開できます。</string>
@@ -2811,6 +2917,10 @@
   <string name="tangempay_kyc_rejected_button_text">ステータスを非表示</string>
   <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
   <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="other">%d口座</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">プランを選択</string>
   <string name="tangempay_maximum_cards_issued_description">新しいカードを追加するには、いずれかのカードを解約してください</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">プランをアップグレードすると、より多くのカードを保有できます</string>
@@ -2971,6 +3081,7 @@
   <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>
   <string name="tangempay_topup_swap_body">ウォレットの暗号資産を使って、決済アカウントにチャージできます</string>
   <string name="tangempay_topup_swap_title">Tangem Walletから</string>
+  <string name="tangempay_transaction_history_empty">まだ取引はありません</string>
   <string name="tangempay_unified_onboarding_cashback_caption">キャッシュバック</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">USDCで支払い</string>
   <string name="tangempay_unified_onboarding_cashback_title">最大2%%\n%1$s</string>

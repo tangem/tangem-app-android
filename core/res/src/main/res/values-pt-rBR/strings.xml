@@ -97,10 +97,11 @@
   <string name="add_and_manage_sheet_manage_title">Adicionar tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Classificação e agrupamento</string>
   <string name="add_and_manage_sheet_organize_title">Organizar tokens</string>
-  <string name="add_crypto_account_subtitle">Um conjunto separado de endereços para seus fundos</string>
+  <string name="add_crypto_account_subtitle">Tenha endereços separados para organizar seus fundos por finalidade</string>
   <string name="add_custom_token_choose_network">Escolha a rede</string>
   <string name="add_custom_token_title">Adicionar token personalizado</string>
-  <string name="add_joint_account_subtitle">Uma conta compartilhada para gerenciar fundos em conjunto</string>
+  <string name="add_joint_account_subtitle">Compartilhe fundos ou proteja os seus com várias aprovações por transação</string>
+  <string name="add_joint_account_title">Conta conjunta de criptomoedas</string>
   <string name="add_tokens_title">Gerenciar tokens</string>
   <string name="addfunds_buy_row_description">Cartão de crédito ou conta bancária</string>
   <string name="addfunds_fund_token">Adicionar token</string>
@@ -466,6 +467,7 @@
   <string name="common_contact_visa_support">Entre em contato com o Suporte Visa</string>
   <string name="common_continue">Continuar</string>
   <string name="common_convert">Converter</string>
+  <string name="common_copied">Copiado</string>
   <string name="common_copy">Copiar</string>
   <string name="common_copy_address">Copiar endereço</string>
   <string name="common_create">Criar</string>
@@ -887,6 +889,8 @@
   <string name="earn_yield_picker_pooled_staking_description">Obtenha rendimentos variáveis em ETH com staking na P2P, uma empresa especializada em validação que ajuda a proteger a rede Ethereum. Os saques podem levar até 5 dias, e há um pequeno risco de perda caso o validador seja penalizado pela rede.</string>
   <string name="earn_yield_picker_subtitle">Escolha o tipo de produto para aumentar seu saldo</string>
   <string name="earn_yield_picker_title">Obtenha rendimentos com seu Ethereum</string>
+  <string name="email_fallback_alert_description">O suporte está disponível 24 horas por dia, 7 dias por semana. A resposta pode demorar até 24 horas. Podemos solicitar dados de diagnóstico.</string>
+  <string name="email_fallback_alert_share_logs_button">Compartilhar registros</string>
   <string name="email_preface_wc_error">Olá equipe de suporte, encontrei um erro com o seguinte código: %s</string>
   <string name="email_subject_wc_error">Erro no WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Você usou um cartão ou anel de outra carteira. Toque no cartão ou anel associado a esta carteira.</string>
@@ -1436,8 +1440,8 @@
     <item quantity="other">%d membros ainda precisam confirmar</item>
   </plurals>
   <string name="joint_account_members_subtitle">Defina quantas pessoas compartilharão a conta. Todas as transações dependerão da assinatura de %1$s de %2$s pessoas. Isso não poderá ser alterado posteriormente</string>
-  <string name="joint_account_members_subtitle_helper_part">%1$s de %2$s para assinar</string>
-  <string name="joint_account_members_subtitle_main_part">Defina quantas pessoas compartilharão a conta. Todas as transações dependerão de %1$s. Isso não poderá ser alterado posteriormente</string>
+  <string name="joint_account_members_subtitle_helper_part">%1$s de %2$s membros</string>
+  <string name="joint_account_members_subtitle_main_part">Defina quantas pessoas compartilharão a conta. Cada transação precisa da aprovação de %1$s. Essas configurações não poderão ser alteradas depois.</string>
   <string name="joint_account_members_title">Membros</string>
   <string name="joint_account_members_total_subtitle">No máximo %1$s pessoas, incluindo você</string>
   <string name="joint_account_members_total_title">Total de membros</string>
@@ -1469,6 +1473,7 @@
   <string name="joint_account_send_pending_network_title">Transação pendente na rede %1$s</string>
   <string name="joint_account_send_sends_automatically">Envia automaticamente assim que as assinaturas necessárias forem coletadas</string>
   <string name="joint_account_send_sends_automatically_setup_fee">Envia automaticamente assim que todas forem coletadas. O primeiro envio inclui uma taxa de configuração única</string>
+  <string name="joint_account_send_setup_fee_included">Inclui uma taxa de %s para configurar sua conta conjunta, cobrada apenas uma vez.</string>
   <string name="joint_account_send_setup_fee_note">Primeira transação na rede %1$s. A taxa inclui uma cobrança única de %2$s para configurar a conta conjunta na blockchain.</string>
   <string name="joint_account_send_signatures_required">São necessárias %1$s de %2$s assinaturas</string>
   <plurals name="joint_account_send_signatures_required_banner">
@@ -1488,9 +1493,10 @@
   <string name="joint_blockaid_sign_anyway">Assinar mesmo assim</string>
   <string name="joint_operation_auto_sends_footer">Envia automaticamente assim que %1$s de %2$s membros assinarem</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
-  <string name="joint_operation_banner_title">%1$s quer enviar %2$s</string>
-  <string name="joint_operation_banner_title_own">Você quer enviar %1$s</string>
+  <string name="joint_operation_banner_title">%1$s solicitou o envio de %2$s</string>
+  <string name="joint_operation_banner_title_own">Você solicitou o envio de %1$s</string>
   <string name="joint_operation_cancel_alert_title">Cancelar esta transação?</string>
+  <string name="joint_operation_canceled_at">Cancelada em %s</string>
   <string name="joint_operation_canceled_by_creator">Cancelada pelo criador</string>
   <string name="joint_operation_canceled_by_members">Cancelada pelos membros</string>
   <string name="joint_operation_cancelled_snackbar">Transação cancelada</string>
@@ -1513,7 +1519,7 @@
   <string name="joint_operation_signatures_progress">Assinaturas %1$s de %2$s</string>
   <string name="joint_operation_signed">Assinado</string>
   <string name="joint_operation_signed_at">Assinado às %s</string>
-  <string name="joint_operation_signed_footer">Envia automaticamente após %1$s de %2$s membros assinarem</string>
+  <string name="joint_operation_signed_footer">A transação será enviada automaticamente assim que %1$s de %2$s membros a aprovarem</string>
   <string name="joint_operation_signers_title">Signatários</string>
   <string name="joint_operation_signing_blocked_subtitle">A assinatura está bloqueada por motivos de segurança. Por favor, entre em contato com o suporte</string>
   <string name="joint_operation_signing_blocked_title">A assinatura está bloqueada</string>
@@ -1818,9 +1824,9 @@
   <string name="money_account_main_status_dialog_failed_title">Não foi possível ativar sua conta</string>
   <string name="money_account_main_status_dialog_hide_account">Ocultar conta da tela inicial</string>
   <string name="money_account_main_status_dialog_join_waitlist">Entrar na lista de espera</string>
-  <string name="money_account_main_status_dialog_not_started_description">Receba transferências via ACH usando seus próprios dados bancários dos EUA. Tenha um saldo separado, sem alterar seu cartão. A conta ficará pronta em até 2 dias.</string>
+  <string name="money_account_main_status_dialog_not_started_description">Receba transferências ACH com seus próprios dados de conta nos EUA. Saldo separado, seu cartão continua como está. A conta costuma ficar pronta em até 2 dias.</string>
   <string name="money_account_main_status_dialog_not_started_terms_link">Termos da Conta Virtual do Tangem Pay</string>
-  <string name="money_account_main_status_dialog_not_started_terms_notice">Ao tocar em Ativar, você concorda com os \n%s</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">Ao tocar em Ativar, você concorda com os\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Desculpe, não foi possível verificar sua identidade com base nas informações fornecidas</string>
   <string name="money_account_main_status_dialog_verification_declined_title">Não foi possível verificar sua identidade</string>
   <string name="money_account_main_status_dialog_verification_description">Isso normalmente leva alguns minutos. Você pode verificar o status abaixo</string>
@@ -1837,7 +1843,7 @@
   <string name="money_account_onboarding_fees_provider">Provedor</string>
   <string name="money_account_onboarding_fees_title">Taxas</string>
   <string name="money_account_onboarding_secondary_button">Termos e taxas</string>
-  <string name="money_account_onboarding_success_title">A conta em USD está sendo ativada</string>
+  <string name="money_account_onboarding_success_title">Criando sua conta em USD</string>
   <string name="money_account_onboarding_terms_link">Termos de Serviço</string>
   <string name="money_account_onboarding_terms_notice">Ao usar o serviço, você aceita os %1$s do provedor</string>
   <string name="money_account_onboarding_title">Obtenha uma conta em USD</string>
@@ -2138,6 +2144,7 @@
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
   <string name="prediction_account_open_detailed_view">Abrir visão detalhada</string>
+  <string name="prediction_account_reconnect_required">É necessário reconectar</string>
   <string name="prediction_account_subtitle">Adicione fundos e comece a fazer previsões</string>
   <string name="prediction_account_title">Conta de previsões</string>
   <string name="prediction_account_unavailable">Não foi possível conectar à sua conta de previsões. Atualize ou reabra esta tela.</string>
@@ -2193,6 +2200,8 @@
   <string name="prediction_fee_sheet_polymarket_fee">Taxa da Polymarket</string>
   <string name="prediction_fee_sheet_sell_description">Vendendo %1$s ações a %2$s¢ cada. A quantidade final de ações (e o valor correspondente em %3$s executado) pode variar dentro do seu limite de %4$s de slippage, dependendo do que este mercado conseguir corresponder.</string>
   <string name="prediction_fee_sheet_total">Total</string>
+  <string name="prediction_feed_banner_caption">Explore os mercados</string>
+  <string name="prediction_feed_banner_message">Faça previsões sobre os acontecimentos de última hora de hoje</string>
   <string name="prediction_filter_games">Jogos</string>
   <string name="prediction_filter_questions">Perguntas</string>
   <string name="prediction_history_bought">Comprado</string>
@@ -2299,12 +2308,15 @@
   <string name="prediction_onboarding_title">Abra sua conta da Polymarket</string>
   <string name="prediction_place_at_least">Pelo menos %s</string>
   <string name="prediction_place_button">Fazer previsão</string>
+  <string name="prediction_place_decrease_amount">Diminuir</string>
   <string name="prediction_place_delayed_timeout_description">Não foi possível confirmar a ordem a tempo. Verifique suas posições antes de tentar colocá-la novamente.</string>
   <string name="prediction_place_delayed_timeout_title">A ordem ainda está sendo processada</string>
   <string name="prediction_place_error_description">Não é possível enviar a ordem. Tente novamente mais tarde.</string>
   <string name="prediction_place_fee">Taxa</string>
+  <string name="prediction_place_increase_amount">Aumentar</string>
   <string name="prediction_place_insufficient_balance_bet">Saldo insuficiente – adicione fundos para apostar</string>
   <string name="prediction_place_insufficient_balance_fees">Saldo insuficiente  – para cobrir as taxas</string>
+  <string name="prediction_place_market_unavailable_message">No momento, não é possível enviar ordens para este mercado. Por favor, tente novamente mais tarde.</string>
   <string name="prediction_place_min_amount_error">O valor mínimo deve ser superior a: %s</string>
   <string name="prediction_place_notification_awaiting_funds_description">Seus fundos estão a caminho. Seu saldo é atualizado automaticamente a cada poucos segundos, então você pode permanecer nesta tela.</string>
   <string name="prediction_place_notification_awaiting_funds_title">Aguardando os fundos</string>
@@ -2319,6 +2331,7 @@
   <string name="prediction_place_notification_quote_error_description">Não foi possível obter o preço atual. Verifique sua conexão e tente novamente</string>
   <string name="prediction_place_notification_quote_error_title">Preço indisponível</string>
   <string name="prediction_place_price_changed_description">O preço mudou enquanto você decidia. Verifique o valor e confirme novamente</string>
+  <string name="prediction_place_quote_unavailable_message">O preço atual está fora do alcance no momento. Nenhuma ordem foi enviada e nenhum valor saiu da sua conta.</string>
   <string name="prediction_place_result_no_fill_banner_description">Não há ações disponíveis na corretora Polymarket — sua ordem pode não ser executada se for enviada</string>
   <string name="prediction_place_result_no_fill_banner_title">Não executada</string>
   <string name="prediction_place_result_no_fill_title">Não há liquidez suficiente para realizar a ordem</string>
@@ -3362,10 +3375,10 @@
   <string name="tangempay_issuing_new_digital_card_title">Emissão de um novo cartão digital</string>
   <string name="tangempay_issuing_your_card">Emissão do seu cartão</string>
   <string name="tangempay_issuing_your_card_description">O cartão geralmente é emitido automaticamente em até 5 minutos. Em casos raros, se for necessária uma análise manual, o processo pode levar até 48 horas.</string>
-  <string name="tangempay_kyc_additional_info_banner_description">Precisamos de mais algumas informações suas. Envie-as em até 14 dias para continuar usando sua conta</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Precisamos de mais algumas informações suas. Envie-as em até 14 dias para continuar usando sua conta</string>
   <string name="tangempay_kyc_additional_info_button">Fornecer informações</string>
-  <string name="tangempay_kyc_additional_info_popup_description">Envie as informações solicitadas em até 14 dias após nossa solicitação para continuar usando sua conta</string>
-  <string name="tangempay_kyc_additional_info_title">Precisamos de mais algumas informações</string>
+  <string name="tangempay_kyc_additional_info_popup_description">Envie as informações solicitadas em até 14 dias após nossa solicitação para continuar usando sua conta</string>
+  <string name="tangempay_kyc_additional_info_title">Precisamos de mais informações</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirmar cancelamento</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Tem certeza de que deseja interromper a verificação? Você pode retomá-la a qualquer momento.</string>
@@ -3384,7 +3397,8 @@
     <item quantity="one">%d conta</item>
     <item quantity="other">%d contas</item>
   </plurals>
-  <string name="tangempay_main_group_title">Pagamentos</string>
+  <string name="tangempay_main_group_title">Pay</string>
+  <string name="tangempay_main_name">Cartões</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
   <string name="tangempay_maximum_cards_issued_description">Encerre um cartão para adicionar um novo</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões</string>
@@ -3550,6 +3564,7 @@
   <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
   <string name="tangempay_topup_swap_body">Recarregue sua conta com qualquer token da carteira</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
+  <string name="tangempay_transaction_history_empty">Nenhuma transação ainda</string>
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Pago em USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">Até 2%%\n%1$s</string>

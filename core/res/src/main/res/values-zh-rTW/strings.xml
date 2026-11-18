@@ -38,6 +38,7 @@
   <string name="account_details_joint_members_joined">%1$s / %2$s 人已加入</string>
   <string name="account_details_joint_members_progress">%1$s/%2$s 人</string>
   <string name="account_details_joint_networks_info">支援的網路。</string>
+  <string name="account_details_joint_pending_description">等待成員加入</string>
   <string name="account_details_title">帳戶</string>
   <string name="account_edit_success_message">帳戶已儲存</string>
   <string name="account_for_rewards">獎勵帳戶</string>
@@ -73,10 +74,11 @@
   <string name="add_and_manage_sheet_manage_subtitle">新增至您的投資組合</string>
   <string name="add_and_manage_sheet_manage_title">新增代幣</string>
   <string name="add_and_manage_sheet_organize_subtitle">排序與分組</string>
-  <string name="add_crypto_account_subtitle">專屬於您資金的一組獨立地址</string>
+  <string name="add_crypto_account_subtitle">取得獨立地址，依用途管理您的資金</string>
   <string name="add_custom_token_choose_network">選擇網路</string>
   <string name="add_custom_token_title">添加自定義代幣</string>
-  <string name="add_joint_account_subtitle">用於共同管理資金的共享帳戶</string>
+  <string name="add_joint_account_subtitle">每筆交易需多方核准，可用於共享資金或保護您自己的資金</string>
+  <string name="add_joint_account_title">聯名加密貨幣帳戶</string>
   <string name="add_tokens_title">管理代幣</string>
   <string name="addfunds_buy_row_description">信用卡或銀行帳戶</string>
   <string name="addfunds_receive_row_description">分享您的地址或 QR 碼</string>
@@ -135,6 +137,7 @@
   <string name="alert_manage_tokens_unsupported_message">此卡不支持%1$s網路上的代幣因為韌體限制</string>
   <string name="alert_troubleshooting_scan_card_title">有困難在掃描卡上嗎？</string>
   <string name="alert_unsupported_card">此卡不適用於此app</string>
+  <string name="all_services_joint_account_subtitle">透過群組核准共享資金</string>
   <string name="app_settings_access_code_warning">設定存取碼以啟用生物辨識</string>
   <string name="app_settings_biometrics_footer">使用 %1$s 解鎖錢包並確認敏感操作（例如簽署交易）。對於硬體錢包，簽署時仍需使用卡片或戒指。</string>
   <string name="app_settings_enable_biometrics_description">轉到設置以在 Tangem App 中啟用生物識別身份驗證</string>
@@ -380,6 +383,7 @@
   <string name="common_contact_visa_support">聯絡 Visa 客服</string>
   <string name="common_continue">繼續</string>
   <string name="common_convert">轉換</string>
+  <string name="common_copied">已複製</string>
   <string name="common_copy">複製</string>
   <string name="common_copy_address">複製地址</string>
   <string name="common_create">創造</string>
@@ -671,6 +675,8 @@
   <string name="earn_filter_yield_type_text">借貸至 DeFi 協議</string>
   <string name="earn_no_results">無結果</string>
   <string name="earn_title">質押與收益模式</string>
+  <string name="email_fallback_alert_description">全天候提供支援，每天 24 小時。回覆時間最長可能需要 24 小時。我們可能會要求提供診斷資料。</string>
+  <string name="email_fallback_alert_share_logs_button">分享日誌</string>
   <string name="email_preface_wc_error">您好，支援團隊，我遇到了一個錯誤，代碼為：%s</string>
   <string name="email_subject_wc_error">WalletConnect 錯誤</string>
   <string name="error_wrong_wallet_tapped">您使用了另一個錢包中的卡。點按與此錢包關聯的卡片</string>
@@ -1026,7 +1032,9 @@
   <string name="joint_account_coming_soon_description">此操作目前尚不支援聯名帳戶，我們正在努力開發中</string>
   <string name="joint_account_coming_soon_title">即將支援聯名帳戶</string>
   <string name="joint_account_compromised_message">您裝置上的帳戶地址與我們伺服器上的地址不符。</string>
+  <string name="joint_account_compromised_message_v2">我們無法確認此帳戶的資訊是否正確，為保護您的資金安全，已暫停此帳戶。</string>
   <string name="joint_account_compromised_title">無法驗證此帳戶</string>
+  <string name="joint_account_compromised_title_v2">為安全起見，帳戶已暫停</string>
   <string name="joint_account_confirm_account_subtitle">使用聯名帳戶前，請確認每位成員看到的地址完全相同。</string>
   <string name="joint_account_confirm_account_title">確認帳戶</string>
   <string name="joint_account_confirm_address_compare_subtitle">請在 Tangem 之外，透過電話、通訊軟體或當面與所有成員聯繫，確認每位成員看到的地址完全相同。</string>
@@ -1036,6 +1044,7 @@
   <string name="joint_account_confirm_address_everyone_title">所有人必須確認</string>
   <string name="joint_account_confirm_address_label">共用地址</string>
   <string name="joint_account_confirm_address_mismatch_button">地址不符</string>
+  <string name="joint_account_confirm_address_share_message">請確認共用地址：%s</string>
   <string name="joint_account_confirm_shared_address">確認共用地址</string>
   <string name="joint_account_invite_invalid_subtitle">請確認您開啟的連結是否正確，或請帳戶建立者重新傳送邀請</string>
   <string name="joint_account_invite_invalid_title">邀請連結無效</string>
@@ -1070,6 +1079,7 @@
   <string name="joint_account_invite_members_member">成員</string>
   <string name="joint_account_invite_members_member_info">成員資訊</string>
   <string name="joint_account_invite_members_member_number">成員 %1$d</string>
+  <string name="joint_account_invite_members_new_member">新成員</string>
   <string name="joint_account_invite_members_not_invited">未受邀</string>
   <string name="joint_account_invite_members_other_members">其他成員</string>
   <string name="joint_account_invite_members_re_invite">重新邀請</string>
@@ -1120,6 +1130,9 @@
   <plurals name="joint_account_main_waiting_members">
     <item quantity="other">等待 %d 位成員</item>
   </plurals>
+  <string name="joint_account_members_access_loss_all">如果所有成員都無法存取錢包，資金將永久遺失</string>
+  <string name="joint_account_members_access_loss_any">只要有一位成員無法存取錢包，資金就會永久遺失</string>
+  <string name="joint_account_members_access_loss_some">如果 %2$s 位成員中有 %1$s 位無法存取錢包，資金將永久遺失</string>
   <plurals name="joint_account_members_count">
     <item quantity="other">%d 位成員</item>
   </plurals>
@@ -1134,8 +1147,8 @@
     <item quantity="other">還有 %d 位成員需要確認</item>
   </plurals>
   <string name="joint_account_members_subtitle">設定共享帳戶的人數。每筆交易須等待 %1$s / %2$s 人簽署後才能執行。此設定之後無法更改</string>
-  <string name="joint_account_members_subtitle_helper_part">%2$s 位成員中的 %1$s 位簽署</string>
-  <string name="joint_account_members_subtitle_main_part">設定共享帳戶的人數。每筆交易都需等待 %1$s 確認。此設定之後無法更改</string>
+  <string name="joint_account_members_subtitle_helper_part">%2$s 位成員中的 %1$s 位</string>
+  <string name="joint_account_members_subtitle_main_part">設定共享此帳戶的人數。每筆交易都需要 %1$s 核准。這些設定之後無法變更。</string>
   <string name="joint_account_members_title">成員</string>
   <string name="joint_account_members_total_subtitle">最多 %1$s 人，包含您</string>
   <string name="joint_account_members_total_title">成員總數</string>
@@ -1167,6 +1180,7 @@
   <string name="joint_account_send_pending_network_title">%1$s 網路上有待處理的交易</string>
   <string name="joint_account_send_sends_automatically">收集完成後自動傳送</string>
   <string name="joint_account_send_sends_automatically_setup_fee">收集完成後自動傳送。首次傳送包含一次性設定費用</string>
+  <string name="joint_account_send_setup_fee_included">包含 %s 的聯名帳戶設定費，只需支付一次。</string>
   <string name="joint_account_send_setup_fee_note">%1$s 的首筆交易，手續費包含一次性 %2$s 的鏈上聯合帳戶設定費用</string>
   <string name="joint_account_send_signatures_required">需要 %1$s 個（共 %2$s）簽名</string>
   <plurals name="joint_account_send_signatures_required_banner">
@@ -1176,10 +1190,22 @@
   <string name="joint_account_send_slot_busy_title">操作已在進行中</string>
   <string name="joint_account_settings_networks_info">此帳戶僅在支援的網路中運作。</string>
   <string name="joint_account_waiting_activation">等待啟用</string>
+  <string name="joint_blockaid_create_anyway">仍要建立</string>
+  <string name="joint_blockaid_decline_transaction">拒絕交易</string>
+  <string name="joint_blockaid_malicious_body">此地址已被標記為惡意地址。若向其傳送資金，您很可能會失去這些資金。</string>
+  <string name="joint_blockaid_malicious_title">惡意交易</string>
+  <string name="joint_blockaid_risky_body">此收款地址可能不安全。請僅在信任收款人時繼續。</string>
+  <string name="joint_blockaid_risky_title">潛在風險地址</string>
+  <string name="joint_blockaid_sign_anyway">仍要簽署</string>
   <string name="joint_operation_auto_sends_footer">當 %1$s / %2$s 位成員簽署後自動傳送</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
-  <string name="joint_operation_banner_title">%1$s 想要傳送 %2$s</string>
-  <string name="joint_operation_banner_title_own">您想要傳送 %1$s</string>
+  <string name="joint_operation_banner_title">%1$s 已請求傳送 %2$s</string>
+  <string name="joint_operation_banner_title_own">您已請求傳送 %1$s</string>
+  <string name="joint_operation_cancel_alert_title">取消此交易？</string>
+  <string name="joint_operation_canceled_at">於 %s 取消</string>
+  <string name="joint_operation_canceled_by_creator">已由建立者取消</string>
+  <string name="joint_operation_canceled_by_members">已由成員取消</string>
+  <string name="joint_operation_cancelled_snackbar">交易已取消</string>
   <string name="joint_operation_completed_subtitle">該操作已執行或已取消</string>
   <string name="joint_operation_completed_title">操作已完成</string>
   <string name="joint_operation_created_at">建立於 %s</string>
@@ -1199,7 +1225,7 @@
   <string name="joint_operation_signatures_progress">簽名 %1$s / %2$s</string>
   <string name="joint_operation_signed">已簽署</string>
   <string name="joint_operation_signed_at">已於 %s 簽署</string>
-  <string name="joint_operation_signed_footer">達到 %1$s ／ %2$s 人簽署後自動傳送</string>
+  <string name="joint_operation_signed_footer">%2$s 位成員中有 %1$s 位核准後，交易將自動傳送</string>
   <string name="joint_operation_signers_title">簽署者</string>
   <string name="joint_operation_signing_blocked_subtitle">基於安全原因，簽名功能已被封鎖。請聯絡客服支援</string>
   <string name="joint_operation_signing_blocked_title">簽名已被封鎖</string>
@@ -1400,6 +1426,7 @@
   <string name="money_account_balance_unavailable_description">載入餘額時發生問題，請稍後再試</string>
   <string name="money_account_balance_unavailable_title">餘額無法使用</string>
   <string name="money_account_close_account">關閉帳戶</string>
+  <string name="money_account_main_details_button">詳情</string>
   <string name="money_account_main_name">美元帳戶</string>
   <string name="money_account_main_status_action_required">需要操作</string>
   <string name="money_account_main_status_activating">正在啟用…</string>
@@ -1415,6 +1442,9 @@
   <string name="money_account_main_status_dialog_failed_title">無法啟用您的帳戶</string>
   <string name="money_account_main_status_dialog_hide_account">從首頁隱藏帳戶</string>
   <string name="money_account_main_status_dialog_join_waitlist">加入候補名單</string>
+  <string name="money_account_main_status_dialog_not_started_description">使用您專屬的美國帳戶資訊接收 ACH 轉帳。餘額獨立，您的卡片維持不變。通常 2 天內即可開通。</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Tangem Pay 虛擬帳戶條款</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">點擊「啟用」即表示您同意\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">很抱歉，根據您提供的資訊，我們無法驗證您的身分</string>
   <string name="money_account_main_status_dialog_verification_declined_title">我們無法驗證您的身分</string>
   <string name="money_account_main_status_dialog_verification_description">通常需要幾分鐘。您可以在下方查看狀態</string>
@@ -1431,6 +1461,7 @@
   <string name="money_account_onboarding_fees_provider">服務提供方</string>
   <string name="money_account_onboarding_fees_title">費用</string>
   <string name="money_account_onboarding_secondary_button">條款與費用</string>
+  <string name="money_account_onboarding_success_title">正在開設您的美元帳戶</string>
   <string name="money_account_onboarding_terms_link">服務條款</string>
   <string name="money_account_onboarding_terms_notice">使用本服務即表示您同意服務提供方的%1$s</string>
   <string name="money_account_onboarding_title">開通美元帳戶</string>
@@ -2688,6 +2719,10 @@
   <string name="tangempay_issuing_new_digital_card_title">正在發行新的數位卡</string>
   <string name="tangempay_issuing_your_card">正在發行您的卡片</string>
   <string name="tangempay_issuing_your_card_description">卡片通常會在 5 分鐘內自動發行。如需人工審核的特殊情況，可能需要最長 48 小時。</string>
+  <string name="tangempay_kyc_additional_info_banner_description">我們還需要您提供一些資訊。請在 14 天內提交，以便繼續使用您的帳戶</string>
+  <string name="tangempay_kyc_additional_info_button">提供資訊</string>
+  <string name="tangempay_kyc_additional_info_popup_description">請在我們提出請求後 14 天內提供，以便繼續使用您的帳戶</string>
+  <string name="tangempay_kyc_additional_info_title">我們還需要一些資訊</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">確認取消</string>
   <string name="tangempay_kyc_confirm_cancellation_description">您確定要停止 身分驗證 流程嗎？您可以隨時返回繼續。</string>
@@ -2702,6 +2737,10 @@
   <string name="tangempay_kyc_rejected_button_text">隱藏狀態</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我們無法驗證</string>
   <string name="tangempay_kyc_rejected_description_span">您的個人資料</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="other">%d 個帳戶</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">選擇方案</string>
   <string name="tangempay_maximum_cards_issued_description">註銷一張卡片即可新增卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升級方案以取得更多卡片</string>
@@ -2864,6 +2903,7 @@
   <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
   <string name="tangempay_topup_swap_body">使用您錢包中的任意代幣為支付帳戶充值</string>
   <string name="tangempay_topup_swap_title">從您的 Tangem Wallet</string>
+  <string name="tangempay_transaction_history_empty">尚無交易</string>
   <string name="tangempay_unified_onboarding_cashback_caption">現金回饋</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">以 USDC 支付</string>
   <string name="tangempay_unified_onboarding_cashback_title">最高 2%%\n%1$s</string>

@@ -20,7 +20,7 @@ class AddAccountTypeBottomSheetPageObject(semanticsProvider: SemanticsNodeIntera
 
     val jointAccountButton: KNode = child {
         hasClickAction()
-        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_joint_account)))
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.add_joint_account_title)))
         useUnmergedTree = true
     }
 }
