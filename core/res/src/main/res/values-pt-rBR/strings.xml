@@ -407,6 +407,9 @@
   <string name="collectibles_welcome_legal_privacy_notice">Aviso de Privacidade</string>
   <string name="collectibles_welcome_legal_tangem_terms">Tangem - Termos e condições</string>
   <string name="collectibles_welcome_title">Crie sua conta do Tangem Packs</string>
+  <string name="collectibles_withdraw_transfer_error_expired">A transação expirou antes de ser enviada. Por favor, tente novamente.</string>
+  <string name="collectibles_withdraw_transfer_error_maybe_sent">Sua transação pode já estar na rede. Verifique o status dela antes de enviar outra.</string>
+  <string name="collectibles_withdraw_transfer_error_rate_limited">Muitas transações com taxas patrocinadas. Por favor, tente novamente daqui a uma hora.</string>
   <string name="common_accept">Aceitar</string>
   <string name="common_access_denied">Acesso negado</string>
   <string name="common_account">Conta</string>
