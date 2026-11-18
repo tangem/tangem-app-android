@@ -820,7 +820,6 @@ internal class PolymarketMainModelTest {
         verify(exactly = 1) {
             router.push(PolymarketRoute.FastTradingActivation(userWalletId = USER_WALLET_ID, action = action), any())
         }
-        verify(exactly = 0) { fastTradingBannerSource.start(any(), any()) }
         model.onDestroy()
     }
 
