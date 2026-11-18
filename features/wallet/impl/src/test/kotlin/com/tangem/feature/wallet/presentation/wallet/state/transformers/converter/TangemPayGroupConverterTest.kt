@@ -85,7 +85,6 @@ internal class TangemPayGroupConverterTest {
         // Assert
         assertThat(result).isEqualTo(
             expectedContent(
-                accountsCount = 2,
                 balance = usd(BigDecimal("1885.35")),
                 isBalanceFlickering = false,
                 isExpanded = false,
@@ -127,7 +126,6 @@ internal class TangemPayGroupConverterTest {
         // Assert
         assertThat(result).isEqualTo(
             expectedContent(
-                accountsCount = 1,
                 balance = usd(BigDecimal("340.00")),
                 isBalanceFlickering = true,
                 isExpanded = false,
@@ -165,7 +163,6 @@ internal class TangemPayGroupConverterTest {
         // Assert
         assertThat(result).isEqualTo(
             expectedContent(
-                accountsCount = 1,
                 balance = usd(BigDecimal("1545.35")),
                 isBalanceFlickering = false,
                 isExpanded = false,
@@ -180,7 +177,6 @@ internal class TangemPayGroupConverterTest {
     )
 
     private fun expectedContent(
-        accountsCount: Int,
         balance: TextReference,
         isBalanceFlickering: Boolean,
         isExpanded: Boolean,
@@ -190,8 +186,8 @@ internal class TangemPayGroupConverterTest {
         title = resourceReference(R.string.tangempay_main_group_title),
         label = pluralReference(
             id = R.plurals.tangempay_main_group_subtitle,
-            count = accountsCount,
-            formatArgs = wrappedList(accountsCount),
+            count = 2,
+            formatArgs = wrappedList(2),
         ),
         balance = balance,
         isBalanceFlickering = isBalanceFlickering,
