@@ -110,7 +110,7 @@ internal class ReceiveScreenStateFactoryTest {
                     asset = Asset.NFT,
                     tokenName = "NFT",
                     expected = ScreenTexts(
-                        title = stringReference("NFT"),
+                        title = resourceReference(R.string.nft_receive_title),
                         subtitle = subtitle(solana, label = null),
                         networkNotice = notice("NFT", solana, label = null),
                         extrasHint = ReceiveExtrasHint.None,

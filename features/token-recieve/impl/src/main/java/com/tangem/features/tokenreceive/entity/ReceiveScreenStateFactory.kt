@@ -74,9 +74,10 @@ internal class ReceiveScreenStateFactory(
         }
     }
 
-    private fun title(): TextReference {
-        val isCurrency = type is TokenReceiveType.Default && asset == Asset.Currency
-        return stringReference(if (isCurrency) "${cryptoCurrency.name} • ${cryptoCurrency.symbol}" else tokenName)
+    private fun title(): TextReference = when {
+        asset == Asset.NFT -> resourceReference(R.string.nft_receive_title)
+        type is TokenReceiveType.Default -> stringReference("${cryptoCurrency.name} • ${cryptoCurrency.symbol}")
+        else -> stringReference(tokenName)
     }
 
     private fun subtitle(): TextReference = if (networkLabel != null) {
