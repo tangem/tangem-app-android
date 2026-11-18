@@ -43,7 +43,6 @@ dependencies {
     api(projects.domain.balanceHiding)
     api(projects.domain.demo)
     implementation(projects.domain.jointAccount)
-    implementation(projects.domain.moneyAccount)
     api(projects.domain.legacy)
     api(projects.domain.models)
     api(projects.domain.offramp)

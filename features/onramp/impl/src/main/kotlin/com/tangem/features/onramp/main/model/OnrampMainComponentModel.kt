@@ -16,7 +16,6 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.marketing.ObserveDemandSurveyCompletedUseCase
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
@@ -31,7 +30,6 @@ import com.tangem.features.marketing.api.CtaBannerRequest
 import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
-import com.tangem.features.marketing.api.MoneyAccountBannerAction
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.ConciergeWaitlistListener
 import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
@@ -77,7 +75,6 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val conciergeWaitlistListener: ConciergeWaitlistListener,
     private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase,
-    private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     onrampFeatureToggles: OnrampFeatureToggles,
     private val appCoroutineScope: AppCoroutineScope,
     paramsContainer: ParamsContainer,
@@ -150,19 +147,10 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
     }
 
-    private val moneyAccountBannerAction: Flow<MoneyAccountBannerAction?> =
-        moneyAccountStatusSupplier(params.userWalletId)
-            .map { it.value.toBannerAction() }
-            .catch { emit(null) }
-            .onStart { emit(null) }
-            .distinctUntilChanged()
-            .shareIn(scope = modelScope, started = SharingStarted.Lazily, replay = 1)
-
     /**
      * Request flow for the PSEUDO_PROVIDER / STANDALONE_CTA banners above the payment methods. The demand survey
      * status is requested once per Buy session, not per amount change. Until it arrives the Waitlist strip stays
-     * hidden, so a wallet that has answered never sees it flash; a failed request reports `false` and shows it. The Money account state
-     * is `null` until known, which keeps the campaign's own button text.
+     * hidden, so a wallet that has answered never sees it flash; a failed request reports `false` and shows it.
      * Shared because the banner collects the request flow more than once and each collection requests the status.
      */
     val ctaMarketingRequest: Flow<CtaBannerRequest?> = combine(
@@ -170,14 +158,12 @@ internal class OnrampMainComponentModel @Inject constructor(
         observeDemandSurveyCompletedUseCase(params.userWalletId)
             .onStart { emit(true) }
             .shareIn(scope = modelScope, started = SharingStarted.Lazily, replay = 1),
-        moneyAccountBannerAction,
-    ) { request, isDemandSurveyCompleted, moneyAccountAction ->
+    ) { request, isDemandSurveyCompleted ->
         val screen = request?.screen as? MarketingScreen.Onramp ?: return@combine null
         CtaBannerRequest(
             screen = screen,
             amount = request.amount,
             isDemandSurveyCompleted = isDemandSurveyCompleted,
-            moneyAccountAction = moneyAccountAction,
         )
     }
 
