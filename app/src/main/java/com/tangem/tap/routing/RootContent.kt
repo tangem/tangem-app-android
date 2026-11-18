@@ -37,6 +37,7 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
+import com.tangem.core.ui.ds2.toast.TangemToastStack
 import com.tangem.core.ui.ds2.modal.LocalTangemModalHost
 import com.tangem.core.ui.ds2.modal.TangemModalHost
 import com.tangem.core.ui.ds2.modal.rememberTangemModalHostState
@@ -47,6 +48,7 @@ import com.tangem.core.ui.utils.ZoomTransitionChild
 import com.tangem.core.ui.utils.zoomTransitionDestination
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 
 @Suppress("LongParameterList", "ReusedModifierInstance")
@@ -130,17 +132,29 @@ internal fun RootContent(
                         modifier = Modifier.matchParentSize(),
                     )
 
-                    TangemTopSnackbarHost(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .statusBarsPadding()
-                            .padding(all = 16.dp),
-                        hostState = LocalTopSnackbarHostState.current,
-                    )
+                    MessageHosts(modalHazeState = modalHazeState)
                 }
             }
         }
         EventMessageEffect()
+    }
+}
+
+@Composable
+private fun BoxScope.MessageHosts(modalHazeState: HazeState) {
+    TangemTopSnackbarHost(
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .statusBarsPadding()
+            .padding(all = 16.dp),
+        hostState = LocalTopSnackbarHostState.current,
+    )
+
+    CompositionLocalProvider(LocalHazeState provides modalHazeState) {
+        TangemToastStack(
+            state = LocalToastStackState.current,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
     }
 }
 

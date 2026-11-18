@@ -47,6 +47,7 @@ import com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.res.TangemTheme
@@ -69,6 +70,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemG
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.pagination.tangemPaginationStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.toast.tangemToastStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.menu.tangemMenuStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.tangemMessageBubbleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.actionmessage.tangemActionMessageStoryFactory
@@ -123,6 +125,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("🚥 TangemStatusScreen", TangemStatusScreen.version, tangemStatusScreenStoryFactory),
     DsStoryItem("📢 TangemMessageBanner", TangemMessageBanner.version, tangemMessageBannerStoryFactory),
     DsStoryItem("💬 TangemMessageBubble", TangemMessageBubble.version, tangemMessageBubbleStoryFactory),
+    DsStoryItem("🍞 TangemToast", TangemToast.version, tangemToastStoryFactory),
     DsStoryItem("☰ TangemMenu", TangemMenu.version, tangemMenuStoryFactory),
     DsStoryItem("👉 TangemActionMessage", TangemActionMessage.version, tangemActionMessageStoryFactory),
     DsStoryItem("🎛️ TangemFilterGroup", TangemFilterGroup.version, tangemFilterGroupStoryFactory),
