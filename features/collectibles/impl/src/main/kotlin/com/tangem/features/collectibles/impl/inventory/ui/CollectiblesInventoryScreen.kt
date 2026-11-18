@@ -155,18 +155,19 @@ private fun InventoryTabsHeader(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        AnimatedVisibility(
-            visible = areTabsShown,
-            modifier = Modifier.padding(top = topPadding),
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
-        ) {
-            CollectiblesTabBand(
-                tabs = tabs,
-                scrollState = tabScrollState,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                modifier = Modifier.offset(y = pullOffset),
-            )
+        Box(modifier = Modifier.padding(top = topPadding)) {
+            AnimatedVisibility(
+                visible = areTabsShown,
+                enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+            ) {
+                CollectiblesTabBand(
+                    tabs = tabs,
+                    scrollState = tabScrollState,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.offset(y = pullOffset),
+                )
+            }
         }
     }
 }
