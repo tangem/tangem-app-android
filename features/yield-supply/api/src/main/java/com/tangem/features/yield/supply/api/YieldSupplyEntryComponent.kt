@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.api
 
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -11,6 +12,7 @@ interface YieldSupplyEntryComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
+        val account: AccountKind = AccountKind.Portfolio,
     )
 
     interface Factory : ComponentFactory<Params, YieldSupplyEntryComponent>

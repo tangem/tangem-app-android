@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning
 
 import androidx.compose.foundation.background
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencySelector
 import androidx.compose.foundation.layout.Box
@@ -54,6 +55,7 @@ internal class YieldSupplyStopEarningComponent(
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
             feeCryptoCurrencyStatusFlow = model.feeCryptoCurrencyStatusFlow,
+            account = params.account,
             callback = model,
         ),
     )
@@ -144,6 +146,7 @@ internal class YieldSupplyStopEarningComponent(
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val account: AccountKind,
         val callback: ModelCallback,
         val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
     )

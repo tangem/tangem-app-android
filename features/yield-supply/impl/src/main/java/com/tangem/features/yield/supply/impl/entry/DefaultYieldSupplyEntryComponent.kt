@@ -86,6 +86,7 @@ internal class DefaultYieldSupplyEntryComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 currency = configuration.cryptoCurrency,
                 apy = configuration.apy,
+                account = params.account,
                 isPromoEnabled = configuration.isPromoEnabled,
             ),
         )
@@ -94,6 +95,7 @@ internal class DefaultYieldSupplyEntryComponent @AssistedInject constructor(
             params = YieldSupplyActiveComponent.Params(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = configuration.cryptoCurrency,
+                account = params.account,
             ),
         )
     }
