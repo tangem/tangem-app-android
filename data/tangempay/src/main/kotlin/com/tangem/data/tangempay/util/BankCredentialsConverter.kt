@@ -24,8 +24,11 @@ internal class BankCredentialsConverter(
             routingNumber = value.routingNumber.orEmpty(),
             rail = value.rail?.takeIf(String::isNotBlank),
             transferMessage = value.transferMessage?.takeIf(String::isNotBlank),
-            depositFee = value.depositFee?.takeIf { isDepositFeeRead }?.let(::convertDepositFee)
-                ?: value.legacyFee()?.let(::convertLegacyFee),
+            depositFee = if (isDepositFeeRead) {
+                value.depositFee?.let(::convertDepositFee)
+            } else {
+                value.legacyFee()?.let(::convertLegacyFee)
+            },
             depositLimit = convertDepositLimit(value.depositLimit),
             exchangeRate = convertExchangeRate(value.exchangeRate),
             amountLimits = value.amountLimits?.let(AmountLimitsConverter::convert),

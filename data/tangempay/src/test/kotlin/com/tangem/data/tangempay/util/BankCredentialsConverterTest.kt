@@ -22,7 +22,9 @@ internal class BankCredentialsConverterTest {
     @Test
     fun `GIVEN full response WHEN convert THEN all fields mapped`() {
         // Arrange
-        val response = result()
+        val response = result(
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "1.00", currency = "USD"),
+        )
 
         // Act
         val actual = converter.convert(response)
@@ -41,6 +43,7 @@ internal class BankCredentialsConverterTest {
             depositFee = BankCredentials.DepositFee(
                 calculationType = FeeCalculationType.FIXED,
                 amount = BigDecimal("1.00"),
+                currency = "USD",
             ),
             depositLimit = BankCredentials.DepositLimit(
                 amount = BigDecimal("10000"),
@@ -118,7 +121,9 @@ internal class BankCredentialsConverterTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN deposit fee or legacy fee WHEN convert THEN the deposit fee is read only with MXN`(model: FeeModel) {
+    fun `GIVEN deposit fee or legacy fee WHEN convert THEN MXN reads only the deposit fee and off reads the legacy one`(
+        model: FeeModel,
+    ) {
         // Act
         val actual = BankCredentialsConverter(isDepositFeeRead = model.isMxnEnabled)
             .convert(result(fee = model.fee, depositFee = model.depositFee))
@@ -190,40 +195,22 @@ internal class BankCredentialsConverterTest {
     }
 
     private fun provideTestModels() = listOf(
-        FeeModel(fee = legacyFee(type = "flat", amount = "1.00"), expected = fixedFee("1.00")),
-        FeeModel(fee = legacyFee(type = "PERCENTAGE", amount = "1"), expected = percentageFee("1")),
-        FeeModel(fee = legacyFee(type = "variable", amount = "1.00"), expected = percentageFee("1.00")),
-        FeeModel(fee = legacyFee(type = "tiered", amount = "1.00"), expected = null),
-        FeeModel(fee = legacyFee(type = null, amount = "1.00"), expected = null),
-        FeeModel(fee = legacyFee(type = "flat", amount = null), expected = null),
-        FeeModel(fee = legacyFee(type = "flat", amount = "n/a"), expected = null),
-        FeeModel(fee = legacyFee(type = "ACH_ONRAMP", amount = "0.00"), expected = null),
+        FeeModel(fee = legacyFee(type = "flat", amount = "1.00"), expected = fixedFee("1.00"), isMxnEnabled = false),
+        FeeModel(
+            fee = legacyFee(type = "PERCENTAGE", amount = "1"),
+            expected = percentageFee("1"),
+            isMxnEnabled = false,
+        ),
         FeeModel(
             fee = legacyFee(type = "variable", amount = "1.00"),
-            depositFee = sharedFee(
-                type = "SPEI_ONRAMP",
-                calculationType = "PERCENTAGE",
-                amount = "1.00",
-                fixedAmount = "10",
-                currency = "MXN",
-            ),
-            expected = percentageFee("1.00", fixedAmount = "10", currency = "MXN"),
+            expected = percentageFee("1.00"),
+            isMxnEnabled = false,
         ),
-        FeeModel(
-            fee = legacyFee(type = "flat", amount = "1.00"),
-            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "TIERED", amount = "1.00", currency = "USD"),
-            expected = fixedFee("1.00"),
-        ),
-        FeeModel(
-            fee = null,
-            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
-            expected = fixedFee("0", currency = "USD"),
-        ),
-        FeeModel(
-            fee = legacyFee(type = "flat", amount = "n/a"),
-            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
-            expected = fixedFee("0", currency = "USD"),
-        ),
+        FeeModel(fee = legacyFee(type = "tiered", amount = "1.00"), expected = null, isMxnEnabled = false),
+        FeeModel(fee = legacyFee(type = null, amount = "1.00"), expected = null, isMxnEnabled = false),
+        FeeModel(fee = legacyFee(type = "flat", amount = null), expected = null, isMxnEnabled = false),
+        FeeModel(fee = legacyFee(type = "flat", amount = "n/a"), expected = null, isMxnEnabled = false),
+        FeeModel(fee = legacyFee(type = "ACH_ONRAMP", amount = "0.00"), expected = null, isMxnEnabled = false),
         FeeModel(
             fee = legacyFee(type = "variable", amount = "1.00"),
             depositFee = sharedFee(
@@ -241,6 +228,48 @@ internal class BankCredentialsConverterTest {
             depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
             expected = null,
             isMxnEnabled = false,
+        ),
+        FeeModel(
+            fee = legacyFee(type = "variable", amount = "1.00"),
+            depositFee = sharedFee(
+                type = "SPEI_ONRAMP",
+                calculationType = "PERCENTAGE",
+                amount = "1.00",
+                fixedAmount = "10",
+                currency = "MXN",
+            ),
+            expected = percentageFee("1.00", fixedAmount = "10", currency = "MXN"),
+        ),
+        FeeModel(
+            fee = null,
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
+            expected = fixedFee("0", currency = "USD"),
+        ),
+        FeeModel(
+            fee = legacyFee(type = "flat", amount = "n/a"),
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = "FIXED", amount = "0", currency = "USD"),
+            expected = fixedFee("0", currency = "USD"),
+        ),
+        FeeModel(fee = legacyFee(type = "variable", amount = "1.00"), depositFee = null, expected = null),
+        FeeModel(
+            fee = legacyFee(type = "variable", amount = "1.00"),
+            depositFee = sharedFee(
+                type = "SPEI_ONRAMP",
+                calculationType = "PERCENTAGE",
+                amount = null,
+                currency = "MXN",
+            ),
+            expected = null,
+        ),
+        FeeModel(
+            fee = legacyFee(type = "variable", amount = "1.00"),
+            depositFee = sharedFee(type = "SPEI_ONRAMP", calculationType = "TIERED", amount = "1.00", currency = "MXN"),
+            expected = null,
+        ),
+        FeeModel(
+            fee = legacyFee(type = "flat", amount = "1.00"),
+            depositFee = sharedFee(type = "ACH_ONRAMP", calculationType = null, amount = "1.00", currency = "USD"),
+            expected = null,
         ),
     )
 
