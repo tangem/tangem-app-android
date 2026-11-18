@@ -66,6 +66,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -703,6 +704,30 @@ internal class FeeSelectorLogicTest {
     }
 
     @Nested
+    inner class CoinContractCall {
+
+        @ParameterizedTest
+        @ValueSource(booleans = [false, true])
+        fun `GIVEN a coin transaction WHEN load fee THEN gasless only for a contract call with no value`(
+            isGaslessForCoinAllowed: Boolean,
+        ) = runTest(UnconfinedTestDispatcher()) {
+            // Act — init triggers loadFee()
+            val sut = buildModel(
+                gaslessEnabled = true,
+                nativeFeeCurrency = true,
+                currencyStatus = coinStatus,
+                isGaslessForCoinAllowed = isGaslessForCoinAllowed,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sut.isGaslessEnabled).isEqualTo(isGaslessForCoinAllowed)
+            coVerify(exactly = if (isGaslessForCoinAllowed) 0 else 1) { onLoadFee() }
+            coVerify(exactly = if (isGaslessForCoinAllowed) 1 else 0) { onLoadFeeExtended(null) }
+        }
+    }
+
+    @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class SponsoredFee {
 
@@ -875,8 +900,9 @@ internal class FeeSelectorLogicTest {
     private fun TestScope.buildModel(
         gaslessEnabled: Boolean,
         nativeFeeCurrency: Boolean = false,
+        currencyStatus: CryptoCurrencyStatus = if (gaslessEnabled) tokenStatus else coinStatus,
+        isGaslessForCoinAllowed: Boolean = false,
     ): FeeSelectorLogic {
-        val currencyStatus = if (gaslessEnabled) tokenStatus else coinStatus
         every { isEvmGaslessFeeSupportedForNetwork(any()) } returns gaslessEnabled
         val params = FeeSelectorParams.FeeSelectorBlockParams(
             state = FeeSelectorUM.Loading,
@@ -889,6 +915,7 @@ internal class FeeSelectorLogicTest {
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
             analyticsCategoryName = "test_fee",
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send,
+            isGaslessForCoinAllowed = isGaslessForCoinAllowed,
         )
         return createLogic(params)
     }

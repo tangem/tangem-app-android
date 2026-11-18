@@ -122,6 +122,7 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
             userWalletId = params.product.userWalletId,
             onLoadFee = model::loadFee,
             onLoadFeeExtended = if (model.action.isGaslessAllowed) model::loadFeeExtended else null,
+            isGaslessForCoinAllowed = model.action.isGaslessAllowed,
             cryptoCurrencyStatus = status,
             feeCryptoCurrencyStatus = feeStatus,
             feeStateConfiguration = FeeSelectorParams.FeeStateConfiguration.None,

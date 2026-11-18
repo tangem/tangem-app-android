@@ -8,8 +8,12 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.earn.lending.impl.provider.LendingTransactions
 import com.tangem.features.earn.lending.impl.provider.LendingTxError
@@ -26,6 +30,7 @@ internal class LendingPlanFactory @Inject constructor(
     private val transactions: LendingTransactions,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val depositRows: LendingDepositRows,
+    private val gaslessFees: LendingGaslessFees,
 ) {
 
     suspend fun feeLevels(
@@ -33,11 +38,33 @@ internal class LendingPlanFactory @Inject constructor(
         state: LendingAssetState,
         operation: LendingOperation,
         amount: BigDecimal,
-    ): Either<GetFeeError, TransactionFee> = either {
-        val userWallet = getUserWalletUseCase(userWalletId).getOrElse { raise(GetFeeError.UnknownError) }
-        val txs = build(userWalletId = userWalletId, state = state, operation = operation, amount = amount)
-            .getOrElse { raise(GetFeeError.UnknownError) }
-        transactions.feeLevels(userWallet, state.asset, txs).bind()
+    ): Either<GetFeeError, TransactionFee> = priced(
+        userWalletId = userWalletId,
+        state = state,
+        operation = operation,
+        amount = amount,
+    ).map(PricedTxs::levels)
+
+    @Suppress("LongParameterList")
+    suspend fun feeExtended(
+        userWalletId: UserWalletId,
+        state: LendingAssetState,
+        operation: LendingOperation,
+        amount: BigDecimal,
+        isGaslessAllowed: Boolean,
+        feeToken: CryptoCurrencyStatus?,
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
+        val priced = priced(userWalletId = userWalletId, state = state, operation = operation, amount = amount).bind()
+        if (!isGaslessAllowed) return@either priced.levels.paidIn(state.asset.currency)
+
+        val call = ensureNotNull(priced.txs.singleOrNull()) { GetFeeError.UnknownError }
+        gaslessFees.quote(
+            userWallet = priced.userWallet,
+            currency = state.asset.currency,
+            withdrawal = call,
+            nativeFee = priced.levels,
+            feeToken = feeToken,
+        ).bind()
     }
 
     suspend fun plan(
@@ -73,6 +100,7 @@ internal class LendingPlanFactory @Inject constructor(
             txs = estimated,
             planKey = providerState.planKey,
             isWithUpgrade = providerState.isUpgradeRequired,
+            gaslessFee = fee.extended?.takeIf { it.isGasless && action.isGaslessAllowed },
         )
     }
 
@@ -133,7 +161,29 @@ internal class LendingPlanFactory @Inject constructor(
         }
     }
 
+    private suspend fun priced(
+        userWalletId: UserWalletId,
+        state: LendingAssetState,
+        operation: LendingOperation,
+        amount: BigDecimal,
+    ): Either<GetFeeError, PricedTxs> = either {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrElse { raise(GetFeeError.UnknownError) }
+        val txs = build(userWalletId = userWalletId, state = state, operation = operation, amount = amount)
+            .getOrElse { raise(GetFeeError.UnknownError) }
+        PricedTxs(
+            userWallet = userWallet,
+            txs = txs,
+            levels = transactions.feeLevels(userWallet, state.asset, txs).bind(),
+        )
+    }
+
     private fun isEntireWithdrawal(amount: BigDecimal, position: BigDecimal): Boolean = amount >= position
+
+    private class PricedTxs(
+        val userWallet: UserWallet,
+        val txs: List<TransactionData.Uncompiled>,
+        val levels: TransactionFee,
+    )
 
     private fun toSessionError(error: LendingTxError): EarnSessionError = when (error) {
         LendingTxError.UpdateRequired -> EarnSessionError.Rejected(

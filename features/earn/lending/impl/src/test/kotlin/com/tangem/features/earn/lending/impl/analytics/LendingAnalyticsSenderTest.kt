@@ -1,6 +1,9 @@
 package com.tangem.features.earn.lending.impl.analytics
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -10,6 +13,8 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.earn.lending.impl.provider.LendingTestTransactions.ethFee
 import com.tangem.features.earn.lending.impl.session.LendingOperation
 import com.tangem.features.earn.lending.impl.session.LendingPlan
@@ -30,6 +35,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -103,6 +109,50 @@ internal class LendingAnalyticsSenderTest {
             val transactionSent = sent.filterIsInstance<Basic.TransactionSent>().single()
             assertThat(transactionSent.params["Fee Type"]).isEqualTo(model.expected)
         }
+
+        @ParameterizedTest
+        @MethodSource("provideFeeCurrencies")
+        fun `GIVEN withdrawal fee paid in the coin or through Smart Gas WHEN onSent THEN transaction sent names it`(
+            model: FeeCurrencyModel,
+        ) = runTest {
+            // Arrange
+            coEvery { getCurrencyUSDQuoteUseCase(eth.id.rawCurrencyId!!) } returns null
+
+            // Act
+            sender.onSent(plan = model.plan, operation = LendingOperation.Withdraw, currency = eth)
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(model.expected) }
+        }
+
+        private fun provideFeeCurrencies() = listOf(
+            FeeCurrencyModel(name = "coin", plan = withdrawPlan(), expected = expectedTransactionSent()),
+            FeeCurrencyModel(
+                name = "Smart Gas",
+                plan = withdrawPlan().copy(
+                    fee = Fee.Common(Amount(currencySymbol = "USDC", value = BigDecimal("1.5"), decimals = 6)),
+                    gaslessFee = TransactionFeeExtended(
+                        transactionFee = TransactionFee.Single(
+                            normal = Fee.Common(Amount(currencySymbol = "USDC", value = BigDecimal("1.5"), decimals = 6)),
+                        ),
+                        feeTokenId = MockCryptoCurrencyFactory().createToken(Blockchain.Ethereum).id,
+                        gaslessProtocolData = GaslessProtocolData.Evm,
+                    ),
+                ),
+                expected = Basic.TransactionSent(
+                    sentFrom = AnalyticsParam.TxSentFrom.Earning(
+                        blockchain = "Ethereum",
+                        token = "ETH",
+                        feeType = AnalyticsParam.FeeType.Normal,
+                        feeToken = "USDC",
+                        feeAssetType = AnalyticsParam.FeeAssetType.Token,
+                    ),
+                    memoType = Basic.TransactionSent.MemoType.Null,
+                    isCustomToken = false,
+                    isCustomFeeToken = false,
+                ),
+            ),
+        )
 
         private fun provideTestModels() = listOf(
             FeeTypeModel(feeType = AnalyticsParam.FeeType.Fixed, expected = "Fixed"),
@@ -200,6 +250,10 @@ internal class LendingAnalyticsSenderTest {
     }
 
     data class FeeTypeModel(val feeType: AnalyticsParam.FeeType, val expected: String)
+
+    data class FeeCurrencyModel(val name: String, val plan: LendingPlan, val expected: Basic.TransactionSent) {
+        override fun toString(): String = name
+    }
 
     private fun expectedTransactionSent() = Basic.TransactionSent(
         sentFrom = AnalyticsParam.TxSentFrom.Earning(

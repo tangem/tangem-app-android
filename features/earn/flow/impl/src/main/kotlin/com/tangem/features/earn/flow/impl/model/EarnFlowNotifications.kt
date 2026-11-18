@@ -5,6 +5,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -55,8 +56,13 @@ internal object EarnFlowNotifications {
         state: EarnFlowState,
         isNothingLeftEnough: Boolean,
     ): Boolean {
-        val feeAmount = state.feeSelection?.fee?.amount?.value ?: return false
-        val feeStatus = state.feeStatus ?: return false
+        val selection = state.feeSelection ?: return false
+        val feeAmount = selection.fee.amount.value ?: return false
+        val tokenFeeStatus = (state.fee as? FeeSelectorUM.Content)
+            ?.feeExtraInfo
+            ?.takeIf { selection.extended?.isGasless == true }
+            ?.feeCryptoCurrencyStatus
+        val feeStatus = tokenFeeStatus ?: state.feeStatus ?: return false
         val balance = feeStatus.value.amount ?: return false
         val isCovered = if (isNothingLeftEnough) feeAmount <= balance else feeAmount < balance
         if (isCovered) return false

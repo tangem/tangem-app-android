@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.earn.lending.impl.provider.isSameTransactionAs
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.session.Deposit
@@ -21,6 +22,7 @@ import kotlin.time.Duration
  * @property operation what [txs] were built to do; they are verified against it, not against a fresher state
  * @property txs       estimated transactions, the preparation (if any) first
  * @property planKey   the provider state the transactions were built for
+ * @property gaslessFee the Smart Gas quote [fee] comes from; null when the coin pays it
  */
 internal data class LendingPlan(
     override val fee: Fee,
@@ -34,6 +36,7 @@ internal data class LendingPlan(
     val txs: List<TransactionData.Uncompiled>,
     val planKey: String,
     val isWithUpgrade: Boolean,
+    val gaslessFee: TransactionFeeExtended? = null,
 ) : EarnPlan {
 
     override val quoteTtl: Duration? = null
@@ -46,15 +49,16 @@ internal data class LendingPlan(
 
     /** The selected fee was set below the estimate of [txs], which only a custom gas limit does */
     val isFeeBelowEstimate: Boolean
-        get() = (fee as? Fee.Ethereum)?.let { it.gasLimit < totalGasLimit } == true
+        get() = gaslessFee == null && (fee as? Fee.Ethereum)?.let { it.gasLimit < totalGasLimit } == true
 
     /**
      * The gas limit each of [txs] is sent with: the selector priced their sum, so each preparation keeps its estimate
      * and the last transaction gets the rest, which also gives it a raised custom limit
      *
-     * @return null when a fee is not an Ethereum one
+     * @return the limits the Smart Gas quote signs for a gasless plan; null when a fee is not an Ethereum one
      */
     fun sentGasLimits(): List<BigInteger>? {
+        if (gaslessFee != null) return gaslessFee.callGasLimits
         val selected = fee as? Fee.Ethereum ?: return null
         if (txs.isEmpty()) return null
         val preparationLimits = txs.dropLast(1).map { tx -> tx.gasLimit ?: return null }

@@ -11,6 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
@@ -20,6 +21,7 @@ import javax.inject.Inject
 internal class LendingTxSender @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
     private val pendingTracker: YieldSupplyPendingTracker,
 ) {
 
@@ -27,7 +29,7 @@ internal class LendingTxSender @Inject constructor(
      * Nothing else refreshes the network once the transactions confirm, so the tracker does: until then the network
      * status keeps them pending and the product stays blocked
      *
-     * @return the hashes in the order of [LendingPlan.txs]
+     * @return the hashes in the order of [LendingPlan.txs]; one for a Smart Gas plan, which the relayer sends at once
      */
     suspend fun send(
         userWalletId: UserWalletId,
@@ -35,13 +37,23 @@ internal class LendingTxSender @Inject constructor(
         plan: LendingPlan,
     ): Either<SendTransactionError, List<String>> = either {
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse { raise(SendTransactionError.UnknownError()) }
-        val txs = ensureNotNull(withSelectedFee(plan, currency)) { SendTransactionError.UnknownError() }
-        val hashes = sendTransactionUseCase(
-            txsData = txs,
-            userWallet = userWallet,
-            network = currency.network,
-            sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
-        ).bind()
+        val gaslessFee = plan.gaslessFee
+        val hashes = if (gaslessFee != null) {
+            val hash = createAndSendEvmGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionDataList = plan.txs,
+                fee = gaslessFee,
+            ).bind()
+            listOf(hash)
+        } else {
+            val txs = ensureNotNull(withSelectedFee(plan, currency)) { SendTransactionError.UnknownError() }
+            sendTransactionUseCase(
+                txsData = txs,
+                userWallet = userWallet,
+                network = currency.network,
+                sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
+            ).bind()
+        }
         pendingTracker.addPending(userWalletId = userWalletId, cryptoCurrency = currency, txIds = hashes)
         hashes
     }
