@@ -2,9 +2,12 @@ package com.tangem.domain.transaction.usecase
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
@@ -15,14 +18,14 @@ private val HUNDRED_PERCENT = 100.toBigInteger() // base 100%
 private val INCREASE_GAS_LIMIT_FOR_SUPPLY = 140.toBigInteger() // 40% increase [there is also in Yield FeeExtensions.kt]
 
 /**
- * A send out of the yield module withdraws from the lending protocol, and `eth_estimateGas` for it is too tight
- * to land: sent with the bare estimate, it runs out of gas on chain.
+ * A send out of the yield module or a Lending withdrawal withdraws from the lending protocol, and `eth_estimateGas` for
+ * it is too tight to land: sent with the bare estimate, it runs out of gas on chain.
  */
 internal fun TransactionFee.fixYieldSupplyGasLimit(transactionData: TransactionData): TransactionFee {
     val uncompiledTransactionData = transactionData as? TransactionData.Uncompiled ?: return this
     val ethereumExtras = uncompiledTransactionData.extras as? EthereumTransactionExtras ?: return this
 
-    return if (ethereumExtras.callData?.unwrapYieldModuleUpgrade() is EthereumYieldSupplySendCallData) {
+    return if (ethereumExtras.callData?.unwrapYieldModuleUpgrade()?.isProtocolWithdrawal() == true) {
         val patchedFee = when (this) {
             is TransactionFee.Choosable -> {
                 copy(
@@ -63,3 +66,7 @@ private fun Fee.increaseGasLimitBy(percent: BigInteger): Fee {
         is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
     }
 }
+
+private fun SmartContractCallData.isProtocolWithdrawal(): Boolean = this is EthereumYieldSupplySendCallData ||
+    this is EthereumYieldSupplyWithdrawNativeCallData ||
+    this is EthereumYieldSupplyExitNativeCallData

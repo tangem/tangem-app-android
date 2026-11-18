@@ -10,12 +10,14 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySwapCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
@@ -194,6 +196,11 @@ internal class CreateAndSendEvmGaslessDestinationAddressTest {
                 ),
                 destination = module,
             ),
+            YieldModeCallModel(
+                callData = EthereumYieldSupplyWithdrawNativeCallData(amount = mockk(relaxed = true)),
+                destination = module,
+            ),
+            YieldModeCallModel(callData = EthereumYieldSupplyExitNativeCallData, destination = module),
             YieldModeCallModel(callData = MerklClaimCallData(data = byteArrayOf(0x01)), destination = module),
             YieldModeCallModel(
                 callData = EthereumYieldSupplySwapCallData(

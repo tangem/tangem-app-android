@@ -18,12 +18,14 @@ import com.tangem.blockchain.extensions.normalizeByteArray
 import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySwapCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.common.CompletionResult
@@ -511,8 +513,8 @@ class CreateAndSendEvmGaslessTransactionUseCase(
          *
          * - Yield-mode calls ([isCalledOnDestination]): the call runs against
          *   [TransactionData.Uncompiled.destinationAddress] — the user's yield module (send, swap, init, enter,
-         *   exit, withdraw, Merkl claim, module upgrade), the yield factory (deploy) or the token contract
-         *   (approve), or the DEX router for a compiled swap call ([CompiledSmartContractCallData]).
+         *   exit, withdraw, Lending withdrawal, Merkl claim, module upgrade), the yield factory (deploy) or the
+         *   token contract (approve), or the DEX router for a compiled swap call ([CompiledSmartContractCallData]).
          *   For a yield-supply send, `send(token, dest, amount)` is a method ON the module and the
          *   recipient is encoded inside the call data; `destinationAddress` is patched to the module in
          *   `DefaultTransactionRepository.createTransaction`. Targeting the recipient instead reverts the whole
@@ -546,6 +548,8 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 is EthereumYieldSupplyEnterCallData,
                 is EthereumYieldSupplyExitCallData,
                 is EthereumYieldSupplyWithdrawCallData,
+                is EthereumYieldSupplyWithdrawNativeCallData,
+                is EthereumYieldSupplyExitNativeCallData,
                 is MerklClaimCallData,
                 -> true
                 else -> false
