@@ -62,7 +62,10 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
         return change(state, if (field.isFiatValue) field.fiatValue else field.value)
     }
 
-    /** 100% is the Max: cut to the currency decimals it would fall short of a position and leave dust behind. */
+    /**
+     * 100% is the Max: cut to the currency decimals it would fall short of a position and leave dust behind. A share
+     * that rounds to zero clears the field, as the shared transformer skips a zero and would keep the previous amount.
+     */
     fun percent(state: EarnFlowState, percent: Int): AmountState? {
         if (percent == FULL_SHARE_PERCENT) return max(state)
         val status = state.status ?: return null
@@ -71,6 +74,7 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
             ?.divide(ONE_HUNDRED)
             ?.setScale(status.currency.decimals, RoundingMode.DOWN)
             ?: return null
+        if (share.signum() == 0) return change(state, "")
         return set(state, EnterAmountBoundary(amount = share, fiatRate = status.value.fiatRate))
     }
 

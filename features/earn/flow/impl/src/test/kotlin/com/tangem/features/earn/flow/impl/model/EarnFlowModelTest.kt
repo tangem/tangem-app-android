@@ -906,6 +906,26 @@ internal class EarnFlowModelTest {
             }
 
         @Test
+        fun `GIVEN share rounding to zero WHEN 25 percent after 100 percent THEN amount cleared and not submittable`() =
+            runTest {
+                // Arrange
+                coEvery { session.maxAmount(action = any()) } returns BigDecimal("0.000000000000000003").right()
+                val model = createModel(action = Withdraw())
+                advanceUntilIdle()
+                model.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+                model.onPercentClick(100)
+
+                // Act
+                model.onPercentClick(25)
+
+                // Assert
+                assertThat(model.state.value.enteredAmount).isNull()
+                assertThat(model.amount.value?.primary?.isEnabled).isFalse()
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN amount from position WHEN fee arrives THEN subtraction use case is not asked`() = runTest {
             // Arrange
             val model = createModel(action = Withdraw())
