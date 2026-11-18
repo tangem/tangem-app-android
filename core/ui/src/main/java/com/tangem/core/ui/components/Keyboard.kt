@@ -63,16 +63,17 @@ fun rememberIsKeyboardVisible(): State<Boolean> {
 }
 
 @Composable
-fun ClearFocusOnKeyboardHidden() {
+fun ClearFocusOnKeyboardHidden(isEnabled: Boolean = true) {
     val focusManager = LocalFocusManager.current
     val isKeyboardVisible by rememberIsKeyboardVisible()
+    val isClearingEnabled by rememberUpdatedState(isEnabled)
     var wasKeyboardVisible by remember { mutableStateOf(false) }
     LaunchedEffect(isKeyboardVisible) {
         if (isKeyboardVisible) {
             wasKeyboardVisible = true
         } else if (wasKeyboardVisible) {
             wasKeyboardVisible = false
-            focusManager.clearFocus()
+            if (isClearingEnabled) focusManager.clearFocus()
         }
     }
 }
