@@ -15,11 +15,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Handles the Money account campaign link `tangem://onboard-virtual-account` by the account state of the selected
- * wallet: an open account opens its screen, an activation in progress returns to the wallet, whose Money account row
- * resumes it, and a wallet without an account, or one whose state is unknown, goes through the Tangem Pay onboarding.
- */
 internal class MoneyAccountDeepLinkHandler @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
