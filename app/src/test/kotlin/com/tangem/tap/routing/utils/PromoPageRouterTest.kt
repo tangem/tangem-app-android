@@ -3,8 +3,8 @@ package com.tangem.tap.routing.utils
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.uri.PromoPageUrlValidator
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.marketing.PromoPageRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -40,14 +40,13 @@ internal class PromoPageRouterTest {
     private val selectedWallet = MutableStateFlow<UserWallet?>(null)
     private val promoPageRepository: PromoPageRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val rootRouter: Router = mockk(relaxed = true)
     private val unlockedWallet: UserWallet.Hot = mockk { every { isLocked } returns false }
     private val lockedWallet: UserWallet.Hot = mockk { every { isLocked } returns true }
 
     private val router = PromoPageRouter(
         promoPageRepository = promoPageRepository,
         userWalletsListRepository = userWalletsListRepository,
-        appRouter = appRouter,
         appCoroutineScope = TestAppCoroutineScope(),
     )
 
@@ -66,7 +65,7 @@ internal class PromoPageRouterTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(promoPageRepository, userWalletsListRepository, appRouter)
+        clearMocks(promoPageRepository, userWalletsListRepository, rootRouter)
         keptPage.value = null
         selectedWallet.value = unlockedWallet
         every { promoPageRepository.observePage() } returns keptPage
@@ -114,7 +113,7 @@ internal class PromoPageRouterTest {
                 // Arrange
                 keptPage.value = PAGE
                 val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.AppSettings)
-                router.observe(backgroundScope, currentRoute)
+                router.observe(backgroundScope, currentRoute, rootRouter)
 
                 // Act
                 currentRoute.value = AppRoute.Wallet
@@ -122,20 +121,20 @@ internal class PromoPageRouterTest {
                 currentRoute.value = AppRoute.Wallet
 
                 // Assert
-                verify(exactly = 1) { appRouter.push(AppRoute.PromoPage(PAGE), any()) }
+                verify(exactly = 1) { rootRouter.push(AppRoute.PromoPage(PAGE), any()) }
                 assertThat(keptPage.value).isNull()
             }
 
         @Test
         fun `GIVEN main screen shown WHEN page kept THEN the page opens`() = runTest(UnconfinedTestDispatcher()) {
             // Arrange
-            router.observe(backgroundScope, MutableStateFlow(AppRoute.Wallet))
+            router.observe(backgroundScope, MutableStateFlow(AppRoute.Wallet), rootRouter)
 
             // Act
             keptPage.value = PAGE
 
             // Assert
-            verify(exactly = 1) { appRouter.push(AppRoute.PromoPage(PAGE), any()) }
+            verify(exactly = 1) { rootRouter.push(AppRoute.PromoPage(PAGE), any()) }
         }
 
         @Test
@@ -144,13 +143,13 @@ internal class PromoPageRouterTest {
                 // Arrange
                 keptPage.value = PAGE
                 selectedWallet.value = lockedWallet
-                router.observe(backgroundScope, MutableStateFlow(AppRoute.Wallet))
+                router.observe(backgroundScope, MutableStateFlow(AppRoute.Wallet), rootRouter)
 
                 // Act
                 selectedWallet.value = unlockedWallet
 
                 // Assert
-                verify(exactly = 1) { appRouter.push(AppRoute.PromoPage(PAGE), any()) }
+                verify(exactly = 1) { rootRouter.push(AppRoute.PromoPage(PAGE), any()) }
             }
 
         @ParameterizedTest
@@ -162,10 +161,10 @@ internal class PromoPageRouterTest {
                 selectedWallet.value = model.selectedWallet
 
                 // Act
-                router.observe(backgroundScope, MutableStateFlow(model.route))
+                router.observe(backgroundScope, MutableStateFlow(model.route), rootRouter)
 
                 // Assert
-                verify(exactly = 0) { appRouter.push(any(), any()) }
+                verify(exactly = 0) { rootRouter.push(any(), any()) }
                 assertThat(keptPage.value).isEqualTo(PAGE)
             }
 
@@ -177,10 +176,10 @@ internal class PromoPageRouterTest {
                 every { PromoPageUrlValidator.isAllowed(any()) } returns false
 
                 // Act
-                router.observe(backgroundScope, MutableStateFlow(AppRoute.Wallet))
+                router.observe(backgroundScope, MutableStateFlow(AppRoute.Wallet), rootRouter)
 
                 // Assert
-                verify(exactly = 0) { appRouter.push(any(), any()) }
+                verify(exactly = 0) { rootRouter.push(any(), any()) }
                 assertThat(keptPage.value).isNull()
             }
 

@@ -1,8 +1,6 @@
 package com.tangem.features.hotwallet.hardwareupgrade.di
 
-import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.hotwallet.HardwareUpgradeStoriesComponent
-import com.tangem.features.hotwallet.hardwareupgrade.DefaultHardwareUpgradeLauncher
 import com.tangem.features.hotwallet.hardwareupgrade.component.DefaultHardwareUpgradeStoriesComponent
 import dagger.Binds
 import dagger.Module
@@ -19,7 +17,4 @@ internal interface HardwareUpgradeModule {
     fun bindHardwareUpgradeStoriesComponentFactory(
         impl: DefaultHardwareUpgradeStoriesComponent.Factory,
     ): HardwareUpgradeStoriesComponent.Factory
-
-    @Binds
-    fun bindHardwareUpgradeLauncher(impl: DefaultHardwareUpgradeLauncher): HardwareUpgradeLauncher
 }
