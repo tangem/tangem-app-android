@@ -39,6 +39,11 @@ internal interface TangemPayDeeplinkModule {
 
     @Binds
     @IntoMap
+    @DeepLinkKey(TangemPayOnboardDeepLinkHandler.MONEY_ACCOUNT_DEEPLINK_KEY)
+    fun bindTangemPayOnboardMoneyAccountDeepLinkHandler(impl: DefaultTangemPayOnboardDeepLinkHandler): DeepLinkHandler
+
+    @Binds
+    @IntoMap
     @DeepLinkKey(TangemPayMainDeepLinkHandler.TANGEM_DEEPLINK_KEY)
     fun bindTangemPayMainDeepLinkHandler(impl: DefaultTangemPayMainDeepLinkHandler): DeepLinkHandler
 
