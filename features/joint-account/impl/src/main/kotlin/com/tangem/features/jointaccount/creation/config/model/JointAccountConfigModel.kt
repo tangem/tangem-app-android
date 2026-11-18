@@ -84,8 +84,8 @@ internal class JointAccountConfigModel @Inject constructor(
         pickedWallet,
         unlockedWallets,
     ) { picked, wallets ->
-        val draftConfig = params.draftHolder.draft.value.config
-        val defaultWalletId = draftConfig?.walletId ?: params.userWalletId
+        val draft = params.draftHolder.draft.value
+        val defaultWalletId = draft.config?.walletId ?: draft.walletId
 
         picked
             ?: wallets.firstOrNull { it.walletId == defaultWalletId }
@@ -165,13 +165,14 @@ internal class JointAccountConfigModel @Inject constructor(
 
     private fun onContinueClick() {
         val state = uiState.value
+        val walletId = selectedWallet.value?.walletId ?: params.draftHolder.draft.value.walletId ?: return
 
         params.draftHolder.setConfig(
             JointAccountCreationDraft.Config(
                 name = state.name,
                 icon = state.icon.value,
                 color = state.icon.color,
-                walletId = selectedWallet.value?.walletId ?: params.userWalletId,
+                walletId = walletId,
             ),
         )
 
