@@ -1,6 +1,7 @@
 package com.tangem.grow.datasource.di
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.ApiSerialization
@@ -112,13 +113,13 @@ internal object GrowDatasourceModule {
     @Provides
     @Singleton
     fun provideGaslessTxServiceApi(factory: RetrofitFactory): GaslessTxServiceApi {
-        return factory.build(gaslessApiSpec())
+        return factory.build(evmGaslessApiSpec())
     }
 
     @Provides
     @Singleton
     fun provideGaslessTxServiceApiV2(factory: RetrofitFactory): GaslessTxServiceApiV2 {
-        return factory.build(gaslessApiSpec())
+        return factory.build(evmGaslessApiSpec())
     }
 
     @Provides
@@ -127,10 +128,15 @@ internal object GrowDatasourceModule {
         return factory.build(tronGaslessApiSpec())
     }
 
-    private fun gaslessApiSpec() = RetrofitApiSpec(
-        apiConfigId = GaslessTxService.ID,
+    @Provides
+    @Singleton
+    fun provideSolanaGaslessApi(factory: RetrofitFactory): SolanaGaslessApi {
+        return factory.build(solanaGaslessApiSpec())
+    }
+
+    @VisibleForTesting
+    internal fun evmGaslessApiSpec() = gaslessApiSpec(
         shouldApplyTimeoutAnnotations = false,
-        shouldUseSessionAuth = false,
         timeouts = Timeouts(
             callTimeoutSeconds = TIMEOUT_60_SECONDS,
             connectTimeoutSeconds = TIMEOUT_60_SECONDS,
@@ -139,28 +145,30 @@ internal object GrowDatasourceModule {
         ),
     )
 
-    @Provides
-    @Singleton
-    fun provideSolanaGaslessApi(factory: RetrofitFactory): SolanaGaslessApi {
-        return factory.build(
-            RetrofitApiSpec(
-                apiConfigId = GaslessTxService.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    private fun tronGaslessApiSpec() = RetrofitApiSpec(
-        apiConfigId = GaslessTxService.ID,
+    @VisibleForTesting
+    internal fun tronGaslessApiSpec() = gaslessApiSpec(
         shouldApplyTimeoutAnnotations = true,
-        shouldUseSessionAuth = false,
         timeouts = Timeouts(
             callTimeoutSeconds = TIMEOUT_120_SECONDS,
             connectTimeoutSeconds = TIMEOUT_60_SECONDS,
             readTimeoutSeconds = TIMEOUT_60_SECONDS,
             writeTimeoutSeconds = TIMEOUT_60_SECONDS,
         ),
+    )
+
+    @VisibleForTesting
+    internal fun solanaGaslessApiSpec() = gaslessApiSpec(shouldApplyTimeoutAnnotations = true)
+
+    /**
+     * Session auth is on for every gasless client, but it only acts on methods annotated with
+     * [com.tangem.lib.auth.api.RequiresSessionAuth]; the rest keep the static Bearer from [GaslessTxService].
+     * Moving a network to DPoP is therefore just annotating its API methods.
+     */
+    private fun gaslessApiSpec(shouldApplyTimeoutAnnotations: Boolean, timeouts: Timeouts? = null) = RetrofitApiSpec(
+        apiConfigId = GaslessTxService.ID,
+        shouldApplyTimeoutAnnotations = shouldApplyTimeoutAnnotations,
+        shouldUseSessionAuth = true,
+        timeouts = timeouts,
     )
 
     @Provides
