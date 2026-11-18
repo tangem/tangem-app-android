@@ -35,6 +35,7 @@ fun fakeEarnOverviews(): EarnOverviews = EarnOverviews(
                 bestProductId = FakeEarnProductPreset.Lending.spec.id,
                 activeCount = 0,
                 totalPosition = null,
+                productCount = 1,
             ),
         ),
     ),

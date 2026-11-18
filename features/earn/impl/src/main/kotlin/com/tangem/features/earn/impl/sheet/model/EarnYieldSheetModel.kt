@@ -1,6 +1,7 @@
 package com.tangem.features.earn.impl.sheet.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,6 +13,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.impl.HostEarnNavigator
+import com.tangem.features.earn.impl.analytics.EarnBannerAnalyticsEvent
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetComponent
@@ -46,6 +48,7 @@ internal class EarnYieldSheetModel @Inject constructor(
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val converter: EarnYieldSheetConverter,
     router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), EarnYieldSheetClickIntents {
 
     private val params: EarnYieldSheetComponent.Params = paramsContainer.require()
@@ -71,6 +74,8 @@ internal class EarnYieldSheetModel @Inject constructor(
     val uiState: StateFlow<EarnYieldSheetUM>
         field = MutableStateFlow(converter.empty(intents = this))
 
+    private var isOpenedSent = false
+
     init {
         combine(
             flow = summarySupplier(params.userWalletId).map { it[params.cryptoCurrency.id] },
@@ -80,13 +85,17 @@ internal class EarnYieldSheetModel @Inject constructor(
             transform = ::createUiState,
         )
             .flowOn(dispatchers.default)
-            .onEach { uiState.value = it }
+            .onEach { state ->
+                uiState.value = state
+                sendOpened(state)
+            }
             .launchIn(modelScope)
     }
 
     override fun onActionClick(productId: EarnProductId, action: EarnAction) {
         val product = registry.find(productId) ?: return
 
+        sendRowClicked(product, productId)
         handlers
             .getOrPut(productId) { product.actionHandler(productParams, navigator) }
             .onActionClick(action)
@@ -95,6 +104,34 @@ internal class EarnYieldSheetModel @Inject constructor(
 
     override fun onDismissClick() {
         params.callback.onDismiss()
+    }
+
+    private fun sendOpened(state: EarnYieldSheetUM) {
+        val hasRows = state.active.isNotEmpty() || state.inactive.isNotEmpty()
+        if (isOpenedSent || !hasRows) return
+
+        isOpenedSent = true
+        analyticsEventHandler.send(
+            EarnBannerAnalyticsEvent.YieldSheetOpened(
+                token = params.cryptoCurrency.symbol,
+                activeCount = state.active.size,
+                inactiveCount = state.inactive.size,
+            ),
+        )
+    }
+
+    private fun sendRowClicked(product: EarnProduct, productId: EarnProductId) {
+        val rows = uiState.value.active + uiState.value.inactive
+        val index = rows.indexOfFirst { it.id == productId }
+        if (index < 0) return
+
+        analyticsEventHandler.send(
+            EarnBannerAnalyticsEvent.YieldSheetRow(
+                product = product.analytics.product,
+                isActive = rows[index].isActive,
+                position = index + 1,
+            ),
+        )
     }
 
     private fun createUiState(

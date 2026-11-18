@@ -205,6 +205,7 @@ internal class EarnBannerConverterTest {
             bestProductId = bestProductId,
             activeCount = activeCount,
             totalPosition = totalPosition,
+            productCount = 1,
         ),
     )
 
