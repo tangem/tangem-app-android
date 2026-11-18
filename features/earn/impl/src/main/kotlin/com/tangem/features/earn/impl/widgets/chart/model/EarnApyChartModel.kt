@@ -47,7 +47,10 @@ internal class EarnApyChartModel @Inject constructor(
     }
 
     private fun onPeriodClick(period: EarnPeriod) {
-        selectedPeriod = period
+        if (period != selectedPeriod) {
+            selectedPeriod = period
+            params.callback?.onPeriodChange(period)
+        }
         uiState.value = loadingState(period)
         requestHistory(period)
     }

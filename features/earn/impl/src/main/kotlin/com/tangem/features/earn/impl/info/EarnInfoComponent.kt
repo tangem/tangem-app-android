@@ -16,12 +16,12 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.api.ui.EarnHowItWorksModal
 import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.info.ui.EarnInfoContent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
-import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import dagger.assisted.Assisted
@@ -43,14 +43,7 @@ internal class EarnInfoComponent @AssistedInject constructor(
         params = EarnCalculatorComponent.Params(
             projection = model.projection,
             incentiveRate = model.incentiveRate,
-            // The Info screen does not open the incentive sheet yet.
-            callback = object : EarnCalculatorComponent.ModelCallback {
-                override fun onIncentiveClick() = Unit
-
-                override fun onHorizonChange(horizon: EarnHorizon) = Unit
-
-                override fun onInputChange(input: EarnCalculatorComponent.Input) = Unit
-            },
+            callback = model,
         ),
     )
 
@@ -113,6 +106,7 @@ internal class EarnInfoComponent @AssistedInject constructor(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val productId: EarnProductId,
+        val source: EarnEntrySource,
     )
 
     @AssistedFactory

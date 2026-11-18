@@ -46,6 +46,8 @@ internal class EarnApyChartComponent @AssistedInject constructor(
 
     interface ModelCallback {
         fun onCalculatorClick()
+
+        fun onPeriodChange(period: EarnPeriod)
     }
 
     @AssistedFactory

@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,25 +23,38 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.InnerEarnNavigator
+import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
+import com.tangem.features.earn.impl.analytics.EarnAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnInfoAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnUsdValuation
+import com.tangem.features.earn.impl.analytics.InfoAction
+import com.tangem.features.earn.impl.analytics.toAnalyticsApy
+import com.tangem.features.earn.impl.analytics.toAnalyticsValue
+import com.tangem.features.earn.impl.analytics.toInfoAction
 import com.tangem.features.earn.impl.info.EarnInfoChartConfig
 import com.tangem.features.earn.impl.info.EarnInfoComponent
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
+import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.toUM
+import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -83,7 +97,12 @@ internal class EarnInfoModel @Inject constructor(
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
     private val appScope: AppCoroutineScope,
     private val blogUrlBuilder: TangemBlogUrlBuilder,
-) : Model(), EarnApyChartComponent.ModelCallback, EarnCalculatorSheetComponent.ModelCallback {
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val usdValuation: EarnUsdValuation,
+) : Model(),
+    EarnApyChartComponent.ModelCallback,
+    EarnCalculatorComponent.ModelCallback,
+    EarnCalculatorSheetComponent.ModelCallback {
 
     private val params: EarnInfoComponent.Params = paramsContainer.require()
 
@@ -96,6 +115,8 @@ internal class EarnInfoModel @Inject constructor(
     private val isRedirected = AtomicBoolean(false)
 
     private val chartActivated = AtomicBoolean(false)
+
+    private val isOpenedSent = AtomicBoolean(false)
 
     /** Kept to re-render the amounts under a changed hiding setting when a frame brings no data to render. */
     private var shown: ShownPosition? = null
@@ -148,7 +169,7 @@ internal class EarnInfoModel @Inject constructor(
         .distinctUntilChanged()
 
     private val callbacks = EarnInfoConverter.Callbacks(
-        onActionClick = { actions?.onActionClick(it) },
+        onActionClick = ::onActionClick,
         onBlocked = uiMessageSender::showReason,
         onInfoClick = ::onInfoClick,
         onLinkClick = urlOpener::openUrl,
@@ -181,6 +202,22 @@ internal class EarnInfoModel @Inject constructor(
 
     override fun onCalculatorClick() {
         calculatorSheetNavigation.activate(EarnCalculatorSheetConfig)
+    }
+
+    override fun onPeriodChange(period: EarnPeriod) {
+        val value = period.toAnalyticsValue() ?: return
+        sendInfoEvent { category -> EarnInfoAnalyticsEvent.ChartPeriod(category = category, period = value) }
+    }
+
+    // The Info screen does not open the incentive sheet yet.
+    override fun onIncentiveClick() = Unit
+
+    override fun onHorizonChange(horizon: EarnHorizon) {
+        sendProductEvent { name -> EarnPickerAnalyticsEvent.CalculatorHorizon(product = name, horizon = horizon) }
+    }
+
+    override fun onInputChange(input: EarnCalculatorComponent.Input) {
+        sendProductEvent { name -> EarnPickerAnalyticsEvent.CalculatorInput(product = name, input = input) }
     }
 
     override fun onDismiss() {
@@ -298,6 +335,51 @@ internal class EarnInfoModel @Inject constructor(
         readyState.value = position.ready
         uiState.value = info
         activateChartOnce(position.ready)
+        sendOpenedOnce(position.product, position.ready)
+    }
+
+    private fun sendOpenedOnce(product: EarnProduct, ready: EarnProductState.Ready) {
+        val position = (ready.position as? EarnPositionState.Known)?.position ?: return
+        if (!isOpenedSent.compareAndSet(false, true)) return
+
+        modelScope.launch {
+            analyticsEventHandler.send(
+                EarnInfoAnalyticsEvent.InfoScreenOpened(
+                    category = product.analytics.category,
+                    source = params.source,
+                    positionBucket = usdValuation.bucket(params.cryptoCurrency, position.cryptoAmount),
+                    earnedBucket = position.earned?.let { usdValuation.bucket(params.cryptoCurrency, it) },
+                    currentApy = ready.rate.toAnalyticsApy(),
+                ),
+            )
+        }
+    }
+
+    private fun onActionClick(action: EarnAction) {
+        action.toInfoAction()?.let(::sendActionEvents)
+        actions?.onActionClick(action)
+    }
+
+    private fun sendActionEvents(infoAction: InfoAction) {
+        sendInfoEvent { category -> EarnInfoAnalyticsEvent.InfoScreenAction(category, infoAction) }
+        if (infoAction == InfoAction.AddFunds) {
+            analyticsEventHandler.send(
+                EarnPickerAnalyticsEvent.AddFunds(
+                    token = params.cryptoCurrency.symbol,
+                    source = EarnAddFundsSource.InfoScreen,
+                ),
+            )
+        }
+    }
+
+    private fun sendInfoEvent(event: (category: String) -> EarnAnalyticsEvent) {
+        val category = product?.analytics?.category ?: return
+        analyticsEventHandler.send(event(category))
+    }
+
+    private fun sendProductEvent(event: (product: String) -> EarnAnalyticsEvent) {
+        val name = product?.analytics?.product ?: return
+        analyticsEventHandler.send(event(name))
     }
 
     private fun activateChartOnce(ready: EarnProductState.Ready) {

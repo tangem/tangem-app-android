@@ -77,6 +77,7 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
                 logo = R.drawable.ic_aave_36,
             ),
             product = "Lending",
+            category = "ETH Lending",
         )
         FakeEarnProductPreset.Staking -> fakeSpec(
             id = "staking",
@@ -208,15 +209,21 @@ private fun fakeProvider(title: TextReference, logo: Int) = EarnProvider(
     icon = ImageReference.Res(logo),
 )
 
-private fun fakeSpec(id: String, rank: Int, title: TextReference, provider: EarnProvider, product: String) =
-    FakeEarnProductSpec(
-        id = EarnProductId(id),
-        rank = rank,
-        badgeAccent = EarnBadgeAccent.Success,
-        title = title,
-        provider = provider,
-        analytics = EarnProductAnalytics(category = "Earn", product = product),
-    )
+private fun fakeSpec(
+    id: String,
+    rank: Int,
+    title: TextReference,
+    provider: EarnProvider,
+    product: String,
+    category: String = "Earn",
+) = FakeEarnProductSpec(
+    id = EarnProductId(id),
+    rank = rank,
+    badgeAccent = EarnBadgeAccent.Success,
+    title = title,
+    provider = provider,
+    analytics = EarnProductAnalytics(category = category, product = product),
+)
 
 internal fun fakeHowItWorks(preset: FakeEarnProductPreset): EarnHowItWorks? = EarnHowItWorks(
     title = stringReference("How it works"),
