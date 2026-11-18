@@ -51,6 +51,9 @@ class PolymarketPriceSubscriptions internal constructor(
         return subscriptions.observe(keys, PolymarketPriceSocket::state) { keys }.distinctUntilChanged()
     }
 
+    /** Asks for the snapshot of an observed [key] again: the server sends one only in answer to a subscription. */
+    fun resubscribe(key: PolymarketPriceFeedKey) = subscriptions.resubscribe(setOf(key))
+
     internal companion object {
 
         /** The server serves at most this many subscriptions over one connection. */
