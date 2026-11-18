@@ -7,7 +7,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -27,6 +26,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -43,11 +43,14 @@ internal abstract class YieldSupplyActiveModelTestBase {
     protected val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk(relaxed = true)
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
     protected val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
-    protected val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
+    protected val currencyStatusResolver: YieldSupplyCurrencyStatusResolver = mockk(relaxed = true)
     protected val router: Router = mockk(relaxed = true)
     protected val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
     protected val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk(relaxed = true)
     protected val claimTracker: YieldSupplyClaimTracker = mockk()
+    protected val minAmountUseCase: YieldSupplyMinAmountUseCase = mockk(relaxed = true)
+    protected val getCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase = mockk(relaxed = true)
+    protected val getMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase = mockk(relaxed = true)
     protected val claimOutcomes = MutableSharedFlow<YieldSupplyClaimOutcome>(extraBufferCapacity = 1)
 
     protected val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
@@ -67,7 +70,8 @@ internal abstract class YieldSupplyActiveModelTestBase {
     @BeforeEach
     fun setUpActiveModel() {
         every { getUserWalletUseCase.invoke(userWalletId) } returns userWallet.right()
-        every { singleAccountStatusListSupplier.invoke(userWalletId) } returns emptyFlow()
+        every { currencyStatusResolver.observe(userWalletId, token) } returns emptyFlow()
+        coEvery { currencyStatusResolver.isInPortfolio(userWalletId, token) } returns true
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         coEvery { yieldSupplyGetProtocolBalanceUseCase(any(), any()) } returns BigDecimal.ONE.right()
         every { claimTracker.outcomes } returns claimOutcomes
@@ -87,12 +91,12 @@ internal abstract class YieldSupplyActiveModelTestBase {
             getFreshYieldClaimCalldataUseCase = mockk(relaxed = true),
             validateYieldClaimCalldataUseCase = mockk(relaxed = true),
         ),
-        yieldSupplyMinAmountUseCase = mockk<YieldSupplyMinAmountUseCase>(relaxed = true),
-        yieldSupplyGetCurrentFeeUseCase = mockk<YieldSupplyGetCurrentFeeUseCase>(relaxed = true),
-        yieldSupplyGetMaxFeeUseCase = mockk<YieldSupplyGetMaxFeeUseCase>(relaxed = true),
+        yieldSupplyMinAmountUseCase = minAmountUseCase,
+        yieldSupplyGetCurrentFeeUseCase = getCurrentFeeUseCase,
+        yieldSupplyGetMaxFeeUseCase = getMaxFeeUseCase,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
-        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        currencyStatusResolver = currencyStatusResolver,
         urlOpener = mockk<UrlOpener>(relaxed = true),
         router = router,
         yieldSupplyGetDustMinAmountUseCase = mockk<YieldSupplyGetDustMinAmountUseCase>(relaxed = true),

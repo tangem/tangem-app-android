@@ -31,6 +31,7 @@ import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.features.yield.supply.impl.common.formatter.formatUsd
@@ -74,6 +75,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
     private val buildYieldClaimTransactionUseCase: BuildYieldClaimTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -395,6 +397,10 @@ internal class YieldSupplyClaimModel @Inject constructor(
         val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = currencyStatusResolver.isHeldOutsidePortfolio(
+                userWalletId = params.userWallet.walletId,
+                currency = cryptoCurrency,
+            ),
         ).getOrElse { error ->
             TangemLogger.e("Yield claim fee currency status could not be read: $error")
             return null

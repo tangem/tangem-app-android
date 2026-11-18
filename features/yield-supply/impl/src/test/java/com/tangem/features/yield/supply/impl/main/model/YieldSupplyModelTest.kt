@@ -42,6 +42,8 @@ import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
+import com.tangem.features.yield.supply.impl.common.portfolioCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -351,6 +353,26 @@ internal class YieldSupplyModelTest {
             EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Info),
         )
     }
+
+    @Test
+    fun `GIVEN token held outside the portfolio with not supplied amount WHEN status emitted THEN info icon shown`() =
+        runTest {
+            // Arrange
+            val status = status(isActive = true, effectiveProtocolBalance = BigDecimal.ONE)
+            val statusResolver: YieldSupplyCurrencyStatusResolver = mockk {
+                every { observe(userWalletId, token) } returns flowOf(status.some())
+                coEvery { isHeldOutsidePortfolio(userWalletId, token) } returns true
+            }
+            coEvery { minAmountUseCase(any(), any(), true) } returns BigDecimal("5").right()
+
+            // Act
+            val model = createModel(statusResolver = statusResolver)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiStateLegacy.value as YieldSupplyUM.Content).shouldShowInfoIcon).isTrue()
+            coVerify { minAmountUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+        }
 
     @Test
     fun `GIVEN not supplied amount below dust WHEN status emitted THEN info icon hidden`() = runTest {
@@ -711,7 +733,10 @@ internal class YieldSupplyModelTest {
         } returns option
     }
 
-    private fun TestScope.createModel(currency: CryptoCurrency = token): YieldSupplyModel = YieldSupplyModel(
+    private fun TestScope.createModel(
+        currency: CryptoCurrency = token,
+        statusResolver: YieldSupplyCurrencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
+    ): YieldSupplyModel = YieldSupplyModel(
         paramsContainer = MutableParamsContainer(
             YieldSupplyComponent.Params(userWalletId = userWalletId, cryptoCurrency = currency),
         ),
@@ -720,8 +745,9 @@ internal class YieldSupplyModelTest {
         router = router,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
-        singleAccountStatusListSupplier = accountStatusListSupplier,
+        currencyStatusResolver = statusResolver,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+        nonPortfolioCurrenciesFetcher = mockk(relaxed = true),
         yieldModuleStatusFetcher = yieldModuleStatusFetcher,
         tokensFeatureToggles = tokensFeatureToggles,
         yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,

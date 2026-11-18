@@ -149,6 +149,7 @@ internal class YieldSupplyNotificationsModelTest : YieldSupplyActionModelTestBas
             router = router,
             getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
             yieldSupplyNotificationsUpdateListener = updateListener,
+            currencyStatusResolver = mockk(relaxed = true),
         )
         advanceUntilIdle()
         return model

@@ -451,6 +451,24 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         }
 
     @Test
+    fun `GIVEN currency held outside the portfolio WHEN sheet opens THEN fee status read from its holder`() = runTest {
+        // Arrange
+        coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns true
+        coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
+            cryptoCurrencyStatus.right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify { getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+        assertThat(model.uiState.value.isClaimEnabled).isTrue()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the transaction cannot be built on a reload WHEN reloaded THEN the fee offers a reload`() =
         runTest {
             // Arrange
@@ -745,6 +763,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         buildYieldClaimTransactionUseCase = buildClaimTransactionUseCase,
         getFeeUseCase = getFeeUseCase,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
+        currencyStatusResolver = currencyStatusResolver,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         sendTransactionUseCase = sendTransactionUseCase,

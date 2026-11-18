@@ -32,6 +32,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCa
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -63,6 +64,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val yieldSupplyGetContractAddressUseCase: YieldSupplyGetContractAddressUseCase,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
@@ -176,11 +178,19 @@ internal class YieldSupplyApproveModel @Inject constructor(
         params.callback.onTransactionProgress(false)
     }
 
+    private suspend fun isHeldOutsidePortfolio(): Boolean {
+        return currencyStatusResolver.isHeldOutsidePortfolio(
+            userWalletId = userWallet.walletId,
+            currency = cryptoCurrency,
+        )
+    }
+
     private suspend fun onTransactionSuccess(txHash: String) {
         yieldSupplyPendingTracker.addPending(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
             txIds = listOf(txHash),
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
         )
         val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
             AnalyticsParam.FeeAssetType.Coin
@@ -218,6 +228,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 getFeePaidCryptoCurrencyStatusSyncUseCase(
                     userWalletId = userWallet.walletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
                 ).getOrNull() ?: cryptoCurrencyStatus
             }
             onLoadFee()
