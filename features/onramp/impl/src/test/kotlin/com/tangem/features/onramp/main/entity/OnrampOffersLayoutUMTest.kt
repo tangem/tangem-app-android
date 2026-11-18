@@ -17,7 +17,7 @@ internal class OnrampOffersLayoutUMTest {
     private val best = offer(providerId = "best", OnrampOfferAdvantagesUM.GreatRate, RecommendedSlot.BEST)
     private val fastest = offer(providerId = "fastest", OnrampOfferAdvantagesUM.Fastest, RecommendedSlot.FASTEST)
     private val restricted = offer(providerId = "restricted", OnrampOfferAdvantagesUM.Restricted, slot = null)
-    private val single = offer(providerId = "single", OnrampOfferAdvantagesUM.Default, RecommendedSlot.BEST)
+    private val single = offer(providerId = "single", OnrampOfferAdvantagesUM.Default, slot = null)
     private val unslotted = offer(providerId = "unslotted", OnrampOfferAdvantagesUM.GreatRate, slot = null)
     private val button = OnrampAllOffersButtonConfig(title = TextReference.EMPTY, onClick = {})
     private val content = OnrampOffersBlockUM.Content(
@@ -130,8 +130,8 @@ internal class OnrampOffersLayoutUMTest {
             LayoutModel(
                 state = content.copy(recommended = persistentListOf(single)),
                 slots = setOf(RecommendedSlot.BEST),
-                expectedRows = listOf(bestBanner),
-                expectedButton = button,
+                expectedRows = listOf(bestBanner, OnrampRecommendedRowUM.Offer(single)),
+                expectedButton = null,
             ),
             LayoutModel(
                 state = content.copy(recommended = persistentListOf(single)),
@@ -142,7 +142,7 @@ internal class OnrampOffersLayoutUMTest {
             LayoutModel(
                 state = content.copy(recommended = persistentListOf(unslotted)),
                 slots = RecommendedSlot.entries.toSet(),
-                expectedRows = listOf(bestBanner, fastestBanner, OnrampRecommendedRowUM.Offer(unslotted)),
+                expectedRows = listOf(bestBanner, OnrampRecommendedRowUM.Offer(unslotted), fastestBanner),
                 expectedButton = null,
             ),
             LayoutModel(OnrampOffersBlockUM.Empty, setOf(RecommendedSlot.BEST), emptyList(), null),
