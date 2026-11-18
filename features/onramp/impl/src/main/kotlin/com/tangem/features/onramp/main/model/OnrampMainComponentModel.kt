@@ -215,6 +215,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private var availabilityCheckJob: Job? = null
     private var isCountryBlocked = false
     private var ipRestrictedRegionName: String? = null
+    private var ipRestrictedCountryId: String? = null
     private var isIpCheckPending = isCountryByIpEnabled
     private var ipCheckError: OnrampError? = null
     private var hasStarted = false
@@ -324,6 +325,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onRefresh() {
+        isCountryBlocked = false
         state.update {
             stateFactory.getInitialState(
                 currency = params.cryptoCurrency.name,
@@ -382,7 +384,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun startLoadingQuotes() {
         quotesTaskScheduler.cancelTask()
-        if (ipCheckError != null) return
+        if (ipCheckError != null || isCountryBlocked) return
         quotesTaskScheduler.scheduleTask(scope = modelScope, task = loadQuotesTask())
     }
 
@@ -444,6 +446,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         currentCoroutineContext().ensureActive()
         result.onRight { ipCountry ->
             ipRestrictedRegionName = ipCountry.name.takeIf { !ipCountry.isOnrampAvailable }
+            ipRestrictedCountryId = ipCountry.id.takeIf { !ipCountry.isOnrampAvailable }
         }
         // An earlier "allowed" answer is stale once a re-check fails, so Buy stays off until one succeeds.
         ipCheckError = result.leftOrNull()
@@ -490,6 +493,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offers ->
+                        if (isCountryBlocked) return@fold
                         val currentState = state.value
                         if (currentState is OnrampMainComponentUM.Content) {
                             if (currentState.amountBlockState.amountFieldModel.fiatValue.isEmpty()) {
@@ -525,8 +529,17 @@ internal class OnrampMainComponentModel @Inject constructor(
                         if (isCountryByIpEnabled) {
                             state.update { stateFactory.getCountryFlagState(it, country.image, country.name) }
                         }
-                        isCountryBlocked = isCountryByIpEnabled && !country.isOnrampAvailable
-                        isBuyEnabled.value = !isBuyRestricted
+                        // The IP region banner already covers the restricted IP country, so only another
+                        // unsupported country picked by hand blocks the screen.
+                        if (isCountryByIpEnabled && isIpCheckPending) awaitLatestAvailabilityCheck()
+                        if (isCountryByIpEnabled && !country.isOnrampAvailable && country.id != ipRestrictedCountryId) {
+                            showCountryNotSupported(country)
+                            return@onEach
+                        }
+                        if (isCountryBlocked) {
+                            onRefresh()
+                            return@onEach
+                        }
                         // Resolve token-level buy support BEFORE emitting any Content state, so an
                         // unsupported token never briefly shows an enabled amount field — otherwise it
                         // would grab focus and flash the keyboard before being disabled.
@@ -584,6 +597,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
+        if (isCountryBlocked) return
         sendOnrampQuotesErrorAnalytic(quotes)
         val hasAvailableOffer = quotes.any { it is OnrampQuote.Data && !it.isRestricted }
         val isRegionRestricted = !hasAvailableOffer && quotes.any(OnrampQuote::isRestricted)
@@ -663,6 +677,15 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun handleOnrampError(onrampError: OnrampError) {
         TangemLogger.e(onrampError.toString())
         state.update { stateFactory.getOnrampErrorState(onrampError) }
+    }
+
+    private fun showCountryNotSupported(country: OnrampCountry) {
+        isCountryBlocked = true
+        isBuyEnabled.value = false
+        quotesTaskScheduler.cancelTask()
+        state.update { prevState ->
+            withRegionRestriction(stateFactory.getCountryNotSupportedState(getCountryUpdatedState(prevState, country)))
+        }
     }
 
     private fun showBuyNotSupported(country: OnrampCountry) {

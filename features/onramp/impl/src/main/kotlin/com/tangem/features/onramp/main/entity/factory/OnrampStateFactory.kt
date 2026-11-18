@@ -174,6 +174,10 @@ internal class OnrampStateFactory(
         return getBlockedState(state, buildBuyNotSupportedMessage())
     }
 
+    fun getCountryNotSupportedState(state: OnrampMainComponentUM = currentStateProvider()): OnrampMainComponentUM {
+        return getBlockedState(state, buildCountryNotSupportedMessage())
+    }
+
     fun getRegionRestrictionState(
         state: OnrampMainComponentUM,
         regionName: String?,
@@ -182,8 +186,8 @@ internal class OnrampStateFactory(
     ): OnrampMainComponentUM {
         val message = regionName?.let(::buildRegionRestrictionMessage)
         val buyNotSupportedMessage = state.buyNotSupportedMessage
-            ?.takeUnless { it.id == COUNTRY_NOT_SUPPORTED_MESSAGE_ID }
-            ?: buildCountryNotSupportedMessage().takeIf { isCountryBlocked && regionName == null }
+            ?.takeUnless { it.id == COUNTRY_NOT_SUPPORTED_MESSAGE_ID && !isCountryBlocked }
+            ?: buildCountryNotSupportedMessage().takeIf { isCountryBlocked }
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
                 regionRestrictionMessage = message,

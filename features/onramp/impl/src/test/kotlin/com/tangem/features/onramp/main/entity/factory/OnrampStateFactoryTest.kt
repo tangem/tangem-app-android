@@ -112,7 +112,7 @@ internal class OnrampStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN unsupported country WHEN getRegionRestrictionState THEN warning shown and amount stays editable`() {
+    fun `GIVEN ready state WHEN getCountryNotSupportedState THEN country warning shown and input locked`() {
         // Arrange
         currentState = factory.getInitialState(
             currency = "BTC",
@@ -123,14 +123,14 @@ internal class OnrampStateFactoryTest {
         currentState = factory.getReadyState(currency = USD_CURRENCY)
 
         // Act
-        val result = factory.getRegionRestrictionState(currentState, regionName = null, isCountryBlocked = true)
-            as OnrampMainComponentUM.Content
+        val result = factory.getCountryNotSupportedState() as OnrampMainComponentUM.Content
 
         // Assert
         assertThat(result.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
         assertThat(result.buyNotSupportedMessage?.title)
             .isEqualTo(resourceReference(R.string.onramp_residency_bottomsheet_country_not_supported))
-        assertThat(result.amountBlockState.amountFieldModel.isError).isFalse()
+        assertThat(result.onrampAmountButtonUMState).isEqualTo(OnrampAmountButtonUMState.None)
+        assertThat(result.amountBlockState.amountFieldModel.isError).isTrue()
         assertThat(result.topBarConfig.countryButtonUM?.isEnabled).isTrue()
     }
 

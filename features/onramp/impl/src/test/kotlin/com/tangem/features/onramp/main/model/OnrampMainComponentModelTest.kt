@@ -498,7 +498,7 @@ internal class OnrampMainComponentModelTest {
 
         // Assert
         assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
-        coVerify(exactly = 1) { fetchPairsUseCase.invoke(any(), any()) }
+        coVerify(exactly = 0) { fetchPairsUseCase.invoke(any(), any()) }
         model.onDestroy()
     }
 
@@ -542,6 +542,31 @@ internal class OnrampMainComponentModelTest {
         // Assert
         assertThat(model.state.value.regionRestrictionMessage).isNotNull()
         assertThat(model.state.value.buyNotSupportedMessage).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restricted IP WHEN another unsupported country picked THEN both warnings shown and quotes ignored`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        coEvery { getOnrampCountryByIpUseCase.invoke(any()) } returns
+            onrampCountry("USD").copy(isOnrampAvailable = false).right()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("EUR").copy(id = "picked", isOnrampAvailable = false).right())
+        val quotes = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotes)
+        scheduler.runCurrent()
+
+        // Act
+        quotes.tryEmit(listOf(createQuote(isRestricted = false, providerName = "Mercuryo")).right())
+        scheduler.runCurrent()
+
+        // Assert
+        val state = model.state.value as OnrampMainComponentUM.Content
+        assertThat(state.regionRestrictionMessage).isNotNull()
+        assertThat(state.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+        assertThat(state.offersBlockState).isEqualTo(OnrampOffersBlockUM.Empty)
+        coVerify(exactly = 0) { fetchPairsUseCase.invoke(any(), any()) }
         model.onDestroy()
     }
 
@@ -947,9 +972,9 @@ internal class OnrampMainComponentModelTest {
             coEvery { getOnrampCountryByIpUseCase(userWallet) } coAnswers { lookup.await() }
             val model = createModel(scheduler, quotesFlow = emptyFlow(), rampStateManager = rampStateManager)
             scheduler.runCurrent()
-            lookup.complete(onrampCountry("USD").right())
+            lookup.complete(onrampCountry("USD").copy(isOnrampAvailable = false).right())
             scheduler.runCurrent()
-            assertThat(model.state.value.buyNotSupportedMessage?.id).isEqualTo("country_not_supported")
+            assertThat(model.state.value.regionRestrictionMessage).isNotNull()
 
             // Act
             tokenSupport.complete(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.name))
@@ -1041,8 +1066,9 @@ internal class OnrampMainComponentModelTest {
         fun `GIVEN restricted country WHEN quotes arrive THEN displayed provider analytics are sent`() {
             // Arrange
             val scheduler = TestCoroutineScheduler()
-            every { getOnrampCountryUseCase() } returns
-                flowOf(onrampCountry("USD").copy(isOnrampAvailable = false).right())
+            val restricted = onrampCountry("USD").copy(isOnrampAvailable = false)
+            every { getOnrampCountryUseCase() } returns flowOf(restricted.right())
+            coEvery { getOnrampCountryByIpUseCase(userWallet) } returns restricted.right()
             val quotes = quotesFlow()
             val model = createModel(scheduler, quotesFlow = quotes)
             scheduler.runCurrent()
@@ -1090,7 +1116,7 @@ internal class OnrampMainComponentModelTest {
             assertThat(model.state.value.topBarConfig.countryButtonUM?.countryName).isEqualTo("Selected")
             assertThat(model.state.value.buyNotSupportedMessage).isNull()
             assertThat(model.isBuyRestricted).isFalse()
-            coVerify(exactly = 2) { fetchPairsUseCase(userWallet, cryptoCurrency) }
+            coVerify(exactly = 1) { fetchPairsUseCase(userWallet, cryptoCurrency) }
             model.onDestroy()
         }
 
