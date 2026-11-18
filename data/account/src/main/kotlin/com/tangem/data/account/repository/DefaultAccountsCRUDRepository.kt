@@ -207,6 +207,10 @@ internal class DefaultAccountsCRUDRepository(
         walletAccountsSaver.syncTokens(userWalletId)
     }
 
+    override suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean {
+        return walletAccountsSaver.syncTokensOrRefresh(userWalletId)
+    }
+
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
 

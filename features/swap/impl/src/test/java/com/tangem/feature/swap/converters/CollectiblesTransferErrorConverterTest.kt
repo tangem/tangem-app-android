@@ -14,10 +14,10 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class CollectiblesWithdrawalErrorConverterTest {
+internal class CollectiblesTransferErrorConverterTest {
 
     private var dismissCount = 0
-    private val converter = CollectiblesWithdrawalErrorConverter(onDismiss = { dismissCount++ })
+    private val converter = CollectiblesTransferErrorConverter(onDismiss = { dismissCount++ })
 
     @BeforeEach
     fun resetDismissCount() {

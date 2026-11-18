@@ -126,7 +126,8 @@ import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
-import com.tangem.feature.swap.converters.CollectiblesWithdrawalErrorConverter
+import com.tangem.feature.swap.converters.CollectiblesSwapErrorConverter
+import com.tangem.feature.swap.converters.CollectiblesTransferErrorConverter
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
@@ -287,10 +288,6 @@ internal class SwapModel @Inject constructor(
         listOfNotNull(polymarketCollateralCurrencyFactory.createDepositTarget().toPredefinedToken()),
     )
 
-    private val collectiblesWithdrawTargets: StateFlow<List<PredefinedTokenToAdd>> = MutableStateFlow(
-        listOfNotNull((initialCryptoCurrency as? CryptoCurrency.Token)?.toPredefinedToken()),
-    )
-
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     val chooseFromTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
@@ -330,7 +327,6 @@ internal class SwapModel @Inject constructor(
                 )
             isCollectiblesWithdrawFlow ->
                 ChooseTokenBridge.Settings.SwapTo.copy(
-                    chooserBlock = ChooserBlock.Predefined(collectiblesWithdrawTargets),
                     paymentAccountTokens = PaymentAccountTokens.Hidden,
                     isJointAccountsShown = false,
                 )
@@ -990,7 +986,11 @@ internal class SwapModel @Inject constructor(
                             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                             toSwapCurrencyStatus = toSwapCurrencyStatus,
                         )
-                        .filterCollectiblesProviders()
+                        .filterCollectiblesTopUpProviders()
+                        .filterCollectiblesWithdrawalProviders(
+                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                            toSwapCurrencyStatus = toSwapCurrencyStatus,
+                        )
                     val providerList = swapInteractor.findProvidersForPairWithCheck(
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -1079,7 +1079,6 @@ internal class SwapModel @Inject constructor(
 
     private fun shouldTransfer(fromSwapCurrency: CryptoCurrency?, toSwapCurrency: CryptoCurrency?): Boolean {
         return isPredictionWithdrawFlow ||
-            isCollectiblesWithdrawFlow ||
             swapTransferInteractor.shouldTransferInsteadOfSwap(fromSwapCurrency, toSwapCurrency)
     }
 
@@ -1782,7 +1781,7 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun performSwap() {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createSwapInProgressState(uiState)
@@ -1801,7 +1800,7 @@ internal class SwapModel @Inject constructor(
         val swapFee = getSelectedSwapFee()
         val isTangemPayWithdrawal = isTangemPayWithdrawal()
 
-        if (swapFee == null && !isTangemPayWithdrawal) {
+        if (swapFee == null && !isTangemPayWithdrawal && !isCollectiblesWithdrawal(fromSwapCurrencyStatus)) {
             TangemLogger.e("onSwapClick: fee is null and isTangemPayWithdrawal is $isTangemPayWithdrawal")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
@@ -1915,6 +1914,14 @@ internal class SwapModel @Inject constructor(
                             swapTransactionState = swapTransactionState,
                         )
                     }
+                    is SwapTransactionState.CollectiblesWithdrawalData -> {
+                        swapFromCollectiblesVault(
+                            provider = provider,
+                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                            toSwapCurrencyStatus = toSwapCurrencyStatus,
+                            swapTransactionState = swapTransactionState,
+                        )
+                    }
                 }
             }.onFailure { error ->
                 TangemLogger.e("Error", error)
@@ -1947,7 +1954,7 @@ internal class SwapModel @Inject constructor(
                     amount = transferState.sendingAmount,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                 )
-                isCollectiblesWithdrawFlow -> withdrawFromCollectiblesVault(
+                isCollectiblesWithdrawFlow -> transferFromCollectiblesVault(
                     amount = transferState.sendingAmount,
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -1971,7 +1978,7 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private suspend fun withdrawFromCollectiblesVault(
+    private suspend fun transferFromCollectiblesVault(
         amount: BigDecimal,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -1997,15 +2004,107 @@ internal class SwapModel @Inject constructor(
                 TangemLogger.e("onTransferClick: collectibles withdrawal failed: $error")
                 if (error is CollectiblesAccountError.MaybeSent) updateWalletBalance()
                 startLoadingQuotesFromLastState()
-                CollectiblesWithdrawalErrorConverter(onDismiss = {})
+                CollectiblesTransferErrorConverter(onDismiss = {})
                     .convert(error)
                     ?.let(messageSender::send)
             },
-            ifRight = { txHash -> showCollectiblesWithdrawalSent(txHash, fromSwapCurrencyStatus) },
+            ifRight = { txHash -> showCollectiblesTransferSent(txHash, fromSwapCurrencyStatus) },
         )
     }
 
-    private fun showCollectiblesWithdrawalSent(txHash: String, fromSwapCurrencyStatus: SwapCurrencyStatus) {
+    private fun isCollectiblesWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean {
+        return fromSwapCurrencyStatus.account is Account.Collectibles
+    }
+
+    private suspend fun swapFromCollectiblesVault(
+        provider: SwapProvider,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        swapTransactionState: SwapTransactionState.CollectiblesWithdrawalData,
+    ) {
+        val vaultToken = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
+
+        if (vaultToken == null) {
+            TangemLogger.e("onSwapClick: collectibles withdrawal vault token is unavailable")
+            startLoadingQuotesFromLastState()
+            showAlert()
+            return
+        }
+
+        withdrawFromCollectiblesVaultUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            token = vaultToken,
+            recipientAddress = swapTransactionState.cexTransaction.txTo,
+            amount = swapTransactionState.amount.value,
+        ).fold(
+            ifLeft = { error ->
+                TangemLogger.e("onSwapClick: collectibles withdrawal swap failed: $error")
+                if (error is CollectiblesAccountError.MaybeSent) updateWalletBalance()
+                startLoadingQuotesFromLastState()
+                CollectiblesSwapErrorConverter.convert(error)?.let { swapError ->
+                    showTransactionErrorAlert(
+                        error = swapError,
+                        isSwapAttemptAlert = true,
+                        providerName = provider.name,
+                        amountCurrency = fromSwapCurrencyStatus.currency,
+                    )
+                }
+            },
+            ifRight = { txHash ->
+                onCollectiblesSwapSent(
+                    provider = provider,
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    swapTransactionState = swapTransactionState,
+                    txHash = txHash,
+                )
+            },
+        )
+    }
+
+    private suspend fun onCollectiblesSwapSent(
+        provider: SwapProvider,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        swapTransactionState: SwapTransactionState.CollectiblesWithdrawalData,
+        txHash: String,
+    ) {
+        val cexTransaction = swapTransactionState.cexTransaction
+        val txUrl = cexTransaction.externalTxUrl
+
+        swapInteractor.notifyExchangeSent(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            cexTransaction = cexTransaction,
+            txHash = txHash,
+        ).onLeft { error -> TangemLogger.e("onSwapClick: exchangeSent failed: $error") }
+
+        swapInteractor.storeSwapTransaction(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            toSwapCurrencyStatus = toSwapCurrencyStatus,
+            amount = swapTransactionState.amount,
+            swapProvider = provider,
+            swapDataModel = swapTransactionState.swapData,
+            txExternalUrl = txUrl,
+            timestamp = System.currentTimeMillis(),
+            txExternalId = cexTransaction.externalTxId,
+            averageDuration = null,
+        )
+
+        updateWalletBalance()
+
+        uiState = stateBuilder.createCollectiblesWithdrawalSuccessState(
+            uiState = uiState,
+            swapTransactionState = swapTransactionState,
+            dataState = dataState,
+            txUrl = txUrl,
+            onExploreClick = { urlOpener.openUrl(txUrl) },
+        )
+
+        notifySwapExecuted(fromSwapCurrencyStatus.userWalletId)
+        router.replaceAll(SwapRoute.Success)
+    }
+
+    private fun showCollectiblesTransferSent(txHash: String, fromSwapCurrencyStatus: SwapCurrencyStatus) {
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txHash,
             currency = fromSwapCurrencyStatus.currency,
@@ -3037,7 +3136,7 @@ internal class SwapModel @Inject constructor(
 
         chooseFromTokenBridge.tokenFilter.value = fromFilter
 
-        if (!isPredictionWithdrawFlow && !isCollectiblesWithdrawFlow) {
+        if (!isPredictionWithdrawFlow) {
             chooseToTokenBridge.tokenFilter.value = baseFilter
         }
     }
@@ -3330,14 +3429,36 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun List<SwapPairLeast>.filterCollectiblesProviders(): List<SwapPairLeast> {
+    private fun List<SwapPairLeast>.filterCollectiblesTopUpProviders(): List<SwapPairLeast> {
         if (!isCollectiblesTopUpFlow) return this
 
         return map { pair ->
             pair.copy(
                 providers = pair.providers.filter { provider ->
                     provider.type != ExchangeProviderType.CEX ||
-                        SwapProviderCollectiblesPolicy.isCexAllowed(provider.providerId)
+                        SwapProviderCollectiblesPolicy.isTopUpCexAllowed(provider.providerId)
+                },
+            )
+        }
+    }
+
+    private fun List<SwapPairLeast>.filterCollectiblesWithdrawalProviders(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): List<SwapPairLeast> {
+        if (!isCollectiblesWithdrawFlow) return this
+
+        return map { pair ->
+            val isWithdrawal = swapInteractor.extractFromSwapCurrencyFromPair(
+                pair = pair,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+            )?.account is Account.Collectibles
+
+            pair.copy(
+                providers = pair.providers.filterIf(isWithdrawal) { provider ->
+                    provider.type == ExchangeProviderType.CEX &&
+                        SwapProviderCollectiblesPolicy.isWithdrawalCexAllowed(provider.providerId)
                 },
             )
         }

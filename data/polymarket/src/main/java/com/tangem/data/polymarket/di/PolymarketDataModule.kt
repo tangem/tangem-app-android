@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.di
 
 import com.tangem.data.polymarket.DefaultPolymarketBridgeRepository
 import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
+import com.tangem.data.polymarket.DefaultPolymarketCryptoPriceRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveScoresRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveQuotesRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
@@ -17,6 +18,7 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
+import com.tangem.data.polymarket.price.DefaultPolymarketPriceCredentialsSource
 import com.tangem.data.polymarket.quote.PolymarketQuoteStore
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
@@ -26,6 +28,7 @@ import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
+import com.tangem.domain.polymarket.PolymarketCryptoPriceRepository
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -52,6 +55,7 @@ import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawalTrackingConfig
 import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
+import com.tangem.grow.datasource.polymarket.socket.PolymarketPriceCredentialsSource
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -91,6 +95,12 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindLiveQuotesRepository(impl: DefaultPolymarketLiveQuotesRepository): PolymarketLiveQuotesRepository
+
+    @Binds
+    fun bindCryptoPriceRepository(impl: DefaultPolymarketCryptoPriceRepository): PolymarketCryptoPriceRepository
+
+    @Binds
+    fun bindPriceCredentialsSource(impl: DefaultPolymarketPriceCredentialsSource): PolymarketPriceCredentialsSource
 
     @Binds
     @Singleton
