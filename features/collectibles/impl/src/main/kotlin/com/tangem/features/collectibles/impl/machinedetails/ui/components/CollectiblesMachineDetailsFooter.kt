@@ -37,6 +37,7 @@ internal fun CollectiblesPackDetailsFooter(
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = state.buyButtonText,
+                isLoading = state.isBuyLoading,
                 onClick = state.onBuyClick,
             )
         }

@@ -39,6 +39,7 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
                     formatArgs = wrappedList(machine.price.formatUsdc(minDecimals = 0)),
                 ),
                 onBuyClick = onBuyClick,
+                isBuyLoading = previousContent?.footer?.isBuyLoading == true,
             ),
         )
     }

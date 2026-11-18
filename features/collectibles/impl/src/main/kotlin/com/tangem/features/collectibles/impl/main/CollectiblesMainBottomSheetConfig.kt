@@ -16,6 +16,9 @@ internal sealed interface CollectiblesMainBottomSheetConfig {
     data object PaymentInProgress : CollectiblesMainBottomSheetConfig
 
     @Serializable
+    data object RegionRestricted : CollectiblesMainBottomSheetConfig
+
+    @Serializable
     data class PackUnopened(
         val txId: String,
         val machineId: String,

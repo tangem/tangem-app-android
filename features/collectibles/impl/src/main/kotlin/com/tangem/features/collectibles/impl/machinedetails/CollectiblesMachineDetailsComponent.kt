@@ -14,7 +14,9 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.impl.machinedetails.model.CollectiblesMachineDetailsModel
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesRegionRestrictionsSheetComponent
 import com.tangem.features.collectibles.impl.machinedetails.turboinfo.CollectiblesTurboInfoComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.machinedetails.ui.CollectiblesMachineDetailsScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -55,11 +57,19 @@ internal class CollectiblesMachineDetailsComponent @AssistedInject constructor(
     ): ComposableBottomSheetComponent = when (config) {
         CollectiblesMachineDetailsBottomSheetConfig.TurboInfo -> CollectiblesTurboInfoComponent(
             appComponentContext = childByContext(componentContext),
-            params = CollectiblesTurboInfoComponent.Params(onDismiss = model::onDismissBottomSheet),
+            params = CollectiblesTurboInfoComponent.Params(onDismiss = { dismissBottomSheet(config) }),
+        )
+        CollectiblesMachineDetailsBottomSheetConfig.RegionRestricted -> CollectiblesRegionRestrictionsSheetComponent(
+            appComponentContext = childByContext(componentContext),
+            onDismiss = { dismissBottomSheet(config) },
         )
     }
 
-    data class Params(val externalId: String)
+    private fun dismissBottomSheet(config: CollectiblesMachineDetailsBottomSheetConfig) {
+        if (bottomSheetSlot.value.child?.configuration == config) model.onDismissBottomSheet()
+    }
+
+    data class Params(val userWalletId: UserWalletId, val externalId: String)
 
     @AssistedFactory
     interface Factory {
