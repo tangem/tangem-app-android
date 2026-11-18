@@ -14,6 +14,7 @@ dependencies {
     /** Api */
     api(projects.features.commonFeatures.api)
     implementation(projects.features.jointAccount.api)
+    implementation(projects.features.onramp.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
 
@@ -33,6 +34,8 @@ dependencies {
     api(projects.domain.manageTokens)
     api(projects.domain.markets)
     implementation(projects.domain.jointAccount)
+    implementation(projects.domain.onramp)
+    implementation(projects.domain.onramp.models)
     api(projects.domain.markets.models)
     api(projects.domain.models)
     api(projects.domain.transaction)
