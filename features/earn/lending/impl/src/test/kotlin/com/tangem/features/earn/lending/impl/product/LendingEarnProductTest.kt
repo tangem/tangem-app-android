@@ -240,7 +240,7 @@ internal class LendingEarnProductTest {
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState(position = model.position)))
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual).containsExactly(
@@ -255,7 +255,7 @@ internal class LendingEarnProductTest {
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState(position = null)))
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual).containsExactly(
@@ -270,7 +270,7 @@ internal class LendingEarnProductTest {
             every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState(rate = null)))
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual).isEmpty()
@@ -514,7 +514,7 @@ internal class LendingEarnProductTest {
             val product = createProduct(provider)
 
             // Act
-            val summaries = product.summaries(userWalletId).first()
+            val summaries = product.summaries(userWalletId).first().byCurrency
             val state = product.state(params).first()
             val apyHistory = product.apyHistory(params, period = mockk())
             val refresh = product.refresh(params)

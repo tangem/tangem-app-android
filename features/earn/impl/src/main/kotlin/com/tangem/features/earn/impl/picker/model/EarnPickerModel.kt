@@ -12,7 +12,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
@@ -95,6 +94,8 @@ internal class EarnPickerModel @Inject constructor(
     private val handlers = mutableMapOf<EarnProductId, EarnActionHandler>()
 
     private val isRedirected = AtomicBoolean(false)
+
+    private val hasSettled = AtomicBoolean(false)
 
     private val selectedId = MutableStateFlow(params.preselected)
 
@@ -195,16 +196,18 @@ internal class EarnPickerModel @Inject constructor(
 
     private fun onSummariesFrame(frame: EarnProductSummaries) {
         val currencySummaries = frame[params.cryptoCurrency.id]
-        resolveSelection(currencySummaries, frame.source)
+        val isPending = frame.isPending(params.cryptoCurrency.id)
+        if (!isPending) hasSettled.set(true)
+        resolveSelection(currencySummaries, isPending)
         redirectToActive(currencySummaries)
     }
 
     /**
-     * A frame is usually partial at first (`CACHE`: the fastest product only), so nothing is chosen from it. A selection
+     * A frame is usually partial at first (pending: the fastest product only), so nothing is chosen from it. A selection
      * that is still on a card stays; otherwise the first settled frame decides.
      */
-    private fun resolveSelection(currencySummaries: List<EarnProductSummary>, source: StatusSource) {
-        if (currencySummaries.isEmpty() || source == StatusSource.CACHE) return
+    private fun resolveSelection(currencySummaries: List<EarnProductSummary>, isPending: Boolean) {
+        if (currencySummaries.isEmpty() || isPending) return
 
         val isChosenPresent = currencySummaries.any { it.productId == selectedId.value }
         if (!isChosenPresent) selectedId.value = currencySummaries.first().productId
@@ -230,11 +233,12 @@ internal class EarnPickerModel @Inject constructor(
         selectedId: EarnProductId?,
     ): EarnPickerUM {
         val currencySummaries = frame[params.cryptoCurrency.id]
+        val isPending = frame.isPending(params.cryptoCurrency.id)
         val chosen = selectedId?.let(registry::find)
 
         return when {
-            isRedirecting(currencySummaries, frame.source) -> converter.initial(intents = this)
-            currencySummaries.isEmpty() && frame.source != StatusSource.CACHE -> converter.unavailable(intents = this)
+            isRedirecting(currencySummaries, isPending) -> converter.initial(intents = this)
+            currencySummaries.isEmpty() && !isPending -> converter.unavailable(intents = this)
             chosen == null || isAwaitingSelection(chosen, currencySummaries) -> converter.initial(intents = this)
             else -> converter.convert(
                 product = chosen,
@@ -249,12 +253,13 @@ internal class EarnPickerModel @Inject constructor(
 
     /**
      * `Auto` never shows the picker: it waits while it is not known whether the currency has an active product, and
-     * once there is one the redirect is on its way (or done), whichever thread gets here first.
+     * once there is one the redirect is on its way (or done), whichever thread gets here first. A refresh after the
+     * first settled frame does not take the shown picker back.
      */
-    private fun isRedirecting(currencySummaries: List<EarnProductSummary>, source: StatusSource): Boolean =
+    private fun isRedirecting(currencySummaries: List<EarnProductSummary>, isPending: Boolean): Boolean =
         isRedirected.get() ||
             params.shouldRedirectToActive &&
-            (source == StatusSource.CACHE || currencySummaries.any { it.position != null })
+            (isPending && !hasSettled.get() || currencySummaries.any { it.position != null })
 
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
         currencySummaries.none { it.productId == chosen.id }

@@ -34,8 +34,8 @@ import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
-import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProvider
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -75,7 +75,7 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
     override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "ETH Staking", product = "Staking")
 
-    override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> {
+    override fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries> {
         val poolStatuses = accountStatusListSupplier(userWalletId)
             .map { statuses -> statuses.flattenCurrencies().filter { it.isPoolCurrency() } }
 
@@ -93,7 +93,7 @@ internal class PooledStakingEarnProduct @Inject constructor(
                     availability = availability,
                     isBalanceFailed = isBalanceFailed,
                 )?.let { summary -> status.currency.id to summary }
-            }.toMap()
+            }.toMap().let { EarnSummaries(byCurrency = it) }
         }
     }
 

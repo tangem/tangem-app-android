@@ -58,6 +58,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -136,7 +137,7 @@ internal class PooledStakingEarnProductTest {
             every { stakingRepository.getStakingAvailability(userWalletId, secondEthereum) } returns flowOf(available)
 
             // Act
-            val actual = product.summaries(userWalletId).first()
+            val actual = product.summaries(userWalletId).first().byCurrency
 
             // Assert
             assertThat(actual.keys).containsExactly(ethereum.id, secondEthereum.id)
@@ -154,7 +155,7 @@ internal class PooledStakingEarnProductTest {
             flowOf(accountList(currencyStatus(currency = coin(Blockchain.Solana))))
 
         // Act
-        val actual = product.summaries(userWalletId).first()
+        val actual = product.summaries(userWalletId).first().byCurrency
 
         // Assert
         assertThat(actual).isEmpty()
@@ -170,7 +171,7 @@ internal class PooledStakingEarnProductTest {
             every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns availability
 
             // Act & Assert
-            product.summaries(userWalletId).test {
+            product.summaries(userWalletId).map { it.byCurrency }.test {
                 assertThat(awaitItem().keys).containsExactly(ethereum.id)
                 availability.emit(StakingAvailability.TemporaryUnavailable)
                 assertThat(awaitItem()).isEmpty()
@@ -189,7 +190,7 @@ internal class PooledStakingEarnProductTest {
             val staked = status(ethereum, MockStaking.p2pBalance(accounts = listOf(MockStaking.p2pAccount())))
 
             // Act & Assert
-            product.summaries(userWalletId).test {
+            product.summaries(userWalletId).map { it.byCurrency }.test {
                 assertThat(awaitItem().getValue(ethereum.id).position).isNull()
                 ticks.emit(accountList(staked))
                 assertThat(awaitItem().getValue(ethereum.id).position).isEqualTo(EarnPositionSummary(BigDecimal.ONE))
@@ -258,7 +259,7 @@ internal class PooledStakingEarnProductTest {
         val params = EarnProduct.Params(userWalletId, ethereum)
         every { accountStatusListSupplier(userWalletId) } returns flowOf(accountList(status(ethereum)))
         every { stakingRepository.getStakingAvailability(userWalletId, ethereum) } returns flowOf(available)
-        val summary = product.summaries(userWalletId).first().getValue(ethereum.id)
+        val summary = product.summaries(userWalletId).first().byCurrency.getValue(ethereum.id)
         val ready = product.state(params).first { it is EarnProductState.Ready } as EarnProductState.Ready
         val navigator: EarnNavigator = mockk(relaxed = true)
         val expectedRoute = stakingRoute(userWalletId, ethereum)
@@ -465,7 +466,7 @@ internal class PooledStakingEarnProductTest {
             arrangeBalances(flowOf(setOf(failure)))
 
             // Act
-            val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
+            val actual = product.summaries(userWalletId).first().byCurrency.getValue(ethereum.id)
 
             // Assert
             assertThat(actual.position).isNull()
@@ -494,7 +495,7 @@ internal class PooledStakingEarnProductTest {
             arrangeBalances(flowOf(setOf(StakingBalance.Empty(poolStakingId, StatusSource.ONLY_CACHE))))
 
             // Act
-            val actual = product.summaries(userWalletId).first().getValue(ethereum.id)
+            val actual = product.summaries(userWalletId).first().byCurrency.getValue(ethereum.id)
 
             // Assert
             assertThat(actual.position).isNull()
