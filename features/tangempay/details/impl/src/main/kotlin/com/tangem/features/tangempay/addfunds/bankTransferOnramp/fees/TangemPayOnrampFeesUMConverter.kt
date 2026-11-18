@@ -15,6 +15,8 @@ import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
+private const val PERCENT_SIGN = "%"
+
 internal class TangemPayOnrampFeesUMConverter(
     private val onRetryClick: () -> Unit,
 ) : Converter<Either<TangemPayApiError, List<AccountFee>>, TangemPayOnrampFeesUM> {
@@ -43,7 +45,8 @@ internal fun BigDecimal.formatFiatAmount(currencyCode: String): String {
     return format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
 }
 
-internal fun BigDecimal.formatPercentageFee(): String = movePointLeft(2).format { percent(minFractionDigits = 0) }
+internal fun BigDecimal.formatPercentageFee(): String =
+    movePointLeft(2).format { percent(withPercentSign = false, minFractionDigits = 0) } + PERCENT_SIGN
 
 internal fun formatPercentageFee(percentage: BigDecimal, fixedAmount: BigDecimal?, currencyCode: String): String {
     val percentageText = percentage.formatPercentageFee()

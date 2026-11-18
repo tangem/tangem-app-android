@@ -53,6 +53,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
                 tabs = persistentListOf(),
                 requisites = persistentListOf(),
                 fees = TangemPayOnrampFeesUM.Loading,
+                isSwiftWarningShown = false,
                 minimumDeposit = null,
                 dailyDepositLimit = null,
                 onShareClick = ::onShareClick,
@@ -94,6 +95,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         val selected = copy(
             tabs = createTabs(selectedIndex = index),
             requisites = requisitesConverter.convert(credentials),
+            isSwiftWarningShown = !credentials.isSpei,
         )
         return when (params.feeSource) {
             is FeeSource.Catalogue -> selected.copy(
