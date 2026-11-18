@@ -12,16 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -29,10 +30,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.tokenreceive.entity.ReceiveExtrasHint
 import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.ReceiveAddressUM
 import com.tangem.features.tokenreceive.ui.state.ReceiveScreenUM
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -65,22 +68,9 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
                 SpacerH(16.dp)
                 ReceiveAddressPager(state = state, reveal = reveal)
             }
-            if (state.warnings.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, top = 24.dp, end = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    state.warnings.forEach { warning ->
-                        key(warning) {
-                            TangemMessage(config = warning.config, contentColor = Color.Transparent)
-                        }
-                    }
-                }
-            }
             SpacerH(32.dp)
         }
+        Warnings(warnings = state.warnings)
         TangemButton(
             text = resourceReference(R.string.common_copy_address),
             iconEnd = TangemIconUM.Icon(Icons.ic_copy_24),
@@ -90,6 +80,35 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         )
+    }
+}
+
+@Composable
+private fun Warnings(warnings: ImmutableList<NotificationUM>) {
+    if (warnings.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        warnings.forEach { warning ->
+            key(warning) {
+                val config = warning.config
+                TangemMessageBanner(
+                    title = config.title ?: config.subtitle,
+                    description = config.subtitle.takeIf { config.title != null },
+                    slotEnd = {
+                        TangemIcon(
+                            TangemIconUM.Icon(
+                                imageVector = Icons.ic_info_20,
+                                tintReference = { TangemTheme.colors3.icon.primary },
+                            ),
+                        )
+                    },
+                )
+            }
+        }
     }
 }
 

@@ -29,7 +29,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
 ) : TokenReceiveComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenReceiveModel = getOrCreateModel(params)
-    private val isModalPresentation = featureToggles.isNewReceiveScreenEnabled
+    private val isModalPresentation = featureToggles.isNewReceiveScreenEnabled && params.isNewScreenAllowed
     private val innerRouter = InnerRouter<TokenReceiveRoutes>(
         stackNavigation = model.stackNavigation,
         popCallback = { onChildBack() },
