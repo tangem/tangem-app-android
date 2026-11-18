@@ -149,8 +149,6 @@ fun TangemAccountRow(
  *
  * @param avatar Leading account avatar, morphing from 40dp to 16dp as the row expands. See [TangemAvatar.UiState].
  * @param title Account name. Single line, ellipsized.
- * @param balanceBottom Content under the collapsed balance, e.g. the currency caption (`"USD"`). Fades out with the
- * balance as the row expands; hidden while a badge is shown.
  * @param modifier Modifier applied to the card. The card always fills the available width.
  * @param label Leading subtitle text, e.g. the account count (`"2 accounts"`). `null` hides it.
  * @param description Subtitle text after [label]. `null` hides it and the dot separating it from [label].
@@ -168,13 +166,14 @@ fun TangemAccountRow(
  * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
  * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
  * items continue the card below.
+ * @param balanceBottom Content under the collapsed balance, e.g. the currency caption (`"USD"`). Fades out with the
+ * balance as the row expands; hidden while a badge is shown.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow(
     avatar: TangemAvatar.UiState,
     title: TextReference,
-    balanceBottom: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     label: TextReference? = null,
     description: TextReference? = null,
@@ -189,6 +188,7 @@ fun TangemAccountRow(
     onLongClick: (() -> Unit)? = null,
     isExpandable: Boolean = false,
     shape: Shape = ExpandableCardShape,
+    balanceBottom: @Composable () -> Unit,
 ) {
     AccountRowScaffold(
         avatar = avatar,
