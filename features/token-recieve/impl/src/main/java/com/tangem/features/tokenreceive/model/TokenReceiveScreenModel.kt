@@ -44,6 +44,8 @@ internal class TokenReceiveScreenModel @Inject constructor(
         warnings = params.warnings,
     )
 
+    private var selectedAddressIndex = 0
+
     val state: StateFlow<ReceiveScreenUM> = params.receiveState
         .map(::createState)
         .stateIn(
@@ -57,7 +59,7 @@ internal class TokenReceiveScreenModel @Inject constructor(
             TokenReceiveNewAnalyticsEvent.ReceiveScreenOpened(
                 token = params.tokenName,
                 blockchainName = config.cryptoCurrency.network.name,
-                ensStatus = if (state.value.ensName != null) {
+                ensStatus = if (state.value.addresses.any { it.ensName != null }) {
                     AnalyticsParam.EmptyFull.Full
                 } else {
                     AnalyticsParam.EmptyFull.Empty
@@ -67,14 +69,20 @@ internal class TokenReceiveScreenModel @Inject constructor(
     }
 
     fun onShareClick() {
-        params.callback.onShareClick(state.value.address)
+        selectedAddress()?.let { params.callback.onShareClick(it.value) }
     }
 
     private fun createState(receiveState: TokenReceiveUM): ReceiveScreenUM = stateFactory.create(
         addresses = receiveState.addresses,
         onCopyAddressClick = ::copy,
+        onCopySelectedAddressClick = { selectedAddress()?.let(::copy) },
         onCopyEnsClick = ::copy,
+        onAddressPageChange = { selectedAddressIndex = it },
     )
+
+    private fun selectedAddress(): ReceiveAddress? = params.receiveState.value.addresses
+        .filter { it.type is ReceiveAddress.Type.Primary }
+        .getOrNull(selectedAddressIndex)
 
     private fun copy(address: ReceiveAddress) {
         params.callback.onCopyClick(address = address, source = TokenReceiveCopyActionSource.Receive)

@@ -58,26 +58,18 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_split_top_16
 import com.tangem.core.ui.res.generated.icons.ic_copy_16
 import com.tangem.features.tokenreceive.entity.ReceiveExtrasHint
+import com.tangem.features.tokenreceive.entity.receiveAddressDimmedRange
 import com.tangem.features.tokenreceive.impl.R
+import com.tangem.features.tokenreceive.ui.state.ReceiveAddressUM
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val ADDRESS_EDGE_LENGTH = 5
-
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("MagicNumber")
 @Composable
-internal fun ReceiveAddressCard(
-    address: String,
-    iconState: CurrencyIconState,
-    extrasHint: ReceiveExtrasHint,
-    ensName: String?,
-    networkNotice: TextReference,
-    onCopyAddressClick: () -> Unit,
-    onCopyEnsClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun rememberNoticeReveal(): () -> Float {
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         val revealDelayMillis = 350L
@@ -89,10 +81,25 @@ internal fun ReceiveAddressCard(
             animationSpec = tween(durationMillis = revealDurationMillis, easing = revealEasing),
         )
     }
+    return remember(reveal) { { reveal.value } }
+}
+
+@Suppress("LongParameterList")
+@Composable
+internal fun ReceiveAddressCard(
+    address: ReceiveAddressUM,
+    iconState: CurrencyIconState,
+    extrasHint: ReceiveExtrasHint,
+    networkNotice: TextReference,
+    reveal: () -> Float,
+    onCopyEnsClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    pressDelayMillis: Long = 0L,
+) {
     val squeeze = rememberSqueezeState()
 
     CardWithNotice(
-        reveal = { reveal.value },
+        reveal = reveal,
         modifier = modifier.graphicsLayer {
             scaleX = squeeze.scale
             scaleY = squeeze.scale
@@ -106,7 +113,7 @@ internal fun ReceiveAddressCard(
                 TangemGlowRing(
                     modifier = Modifier
                         .matchParentSize()
-                        .graphicsLayer { alpha = reveal.value },
+                        .graphicsLayer { alpha = reveal() },
                     variant = TangemGlowRing.Variant.Info,
                     cornerRadius = 28.dp,
                 )
@@ -128,9 +135,8 @@ internal fun ReceiveAddressCard(
                 address = address,
                 iconState = iconState,
                 extrasHint = extrasHint,
-                ensName = ensName,
                 squeeze = squeeze,
-                onCopyAddressClick = onCopyAddressClick,
+                pressDelayMillis = pressDelayMillis,
                 onCopyEnsClick = onCopyEnsClick,
             )
         },
@@ -140,14 +146,14 @@ internal fun ReceiveAddressCard(
 @Suppress("LongParameterList")
 @Composable
 private fun CardFace(
-    address: String,
+    address: ReceiveAddressUM,
     iconState: CurrencyIconState,
     extrasHint: ReceiveExtrasHint,
-    ensName: String?,
     squeeze: SqueezeState,
-    onCopyAddressClick: () -> Unit,
+    pressDelayMillis: Long,
     onCopyEnsClick: () -> Unit,
 ) {
+    val ensName = address.ensName
     Column(
         modifier = Modifier
             .width(274.dp)
@@ -158,7 +164,7 @@ private fun CardFace(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(32.dp))
-                .squeezeClick(squeeze, onCopyAddressClick)
+                .squeezeClick(state = squeeze, pressDelayMillis = pressDelayMillis, onClick = address.onCopyClick)
                 .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = if (ensName != null) 8.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -170,7 +176,7 @@ private fun CardFace(
                 contentAlignment = Alignment.Center,
             ) {
                 ReceiveQrCode(
-                    content = address,
+                    content = address.value,
                     color = TangemTheme.colors3.icon.staticLight,
                     modifier = Modifier.matchParentSize(),
                 )
@@ -189,12 +195,13 @@ private fun CardFace(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = styledAddress(address),
+                    text = styledAddress(address.value),
                     modifier = Modifier.fillMaxWidth(),
                     style = TangemTheme.typography3.subheading.medium,
                     textAlign = TextAlign.Center,
                 )
                 ExtrasHintBadge(extrasHint)
+                AddressLabelBadge(address)
             }
         }
         if (ensName != null) {
@@ -229,6 +236,19 @@ private fun ExtrasHintBadge(extrasHint: ReceiveExtrasHint) {
 }
 
 @Composable
+private fun AddressLabelBadge(address: ReceiveAddressUM) {
+    val label = address.label ?: return
+    LightPalette {
+        TangemBadge(
+            text = label,
+            size = TangemBadge.Size.X6,
+            status = if (address.isDynamic) TangemBadge.Status.Info else TangemBadge.Status.Neutral,
+            iconStart = if (address.isDynamic) TangemIconUM.Icon(Icons.ic_arrow_split_top_16) else null,
+        )
+    }
+}
+
+@Composable
 private fun LightPalette(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalIsInDarkTheme provides false) {
         TangemThemeRedesign(content = content)
@@ -240,15 +260,14 @@ private fun styledAddress(address: String): AnnotatedString {
     val primary = TangemTheme.colors3.text.staticLight.primary
     val secondary = TangemTheme.colors3.text.staticLight.secondary
     return remember(address, primary, secondary) {
-        if (address.length <= ADDRESS_EDGE_LENGTH * 2) {
+        val dimmed = receiveAddressDimmedRange(address)
+        if (dimmed == null) {
             AnnotatedString(text = address, spanStyle = SpanStyle(color = primary))
         } else {
             buildAnnotatedString {
-                withStyle(SpanStyle(color = primary)) { append(address.take(ADDRESS_EDGE_LENGTH)) }
-                withStyle(SpanStyle(color = secondary)) {
-                    append(address.substring(ADDRESS_EDGE_LENGTH, address.length - ADDRESS_EDGE_LENGTH))
-                }
-                withStyle(SpanStyle(color = primary)) { append(address.takeLast(ADDRESS_EDGE_LENGTH)) }
+                withStyle(SpanStyle(color = primary)) { append(address.substring(0, dimmed.first)) }
+                withStyle(SpanStyle(color = secondary)) { append(address.substring(dimmed)) }
+                withStyle(SpanStyle(color = primary)) { append(address.substring(dimmed.last + 1)) }
             }
         }
     }
@@ -315,7 +334,7 @@ private fun rememberSqueezeState(): SqueezeState = remember { SqueezeState(Anima
 
 @Suppress("MagicNumber")
 @Composable
-private fun Modifier.squeezeClick(state: SqueezeState, onClick: () -> Unit): Modifier {
+private fun Modifier.squeezeClick(state: SqueezeState, pressDelayMillis: Long, onClick: () -> Unit): Modifier {
     val scope = rememberCoroutineScope()
     val hapticManager = LocalHapticManager.current
     val currentOnClick by rememberUpdatedState(onClick)
@@ -324,7 +343,10 @@ private fun Modifier.squeezeClick(state: SqueezeState, onClick: () -> Unit): Mod
             detectTapGestures(
                 onPress = {
                     val pressedAt = SystemClock.uptimeMillis()
-                    val squeeze = scope.launch { state.press() }
+                    val squeeze = scope.launch {
+                        delay(pressDelayMillis)
+                        state.press()
+                    }
                     val isReleased = tryAwaitRelease()
                     scope.launch {
                         if (isReleased) {
