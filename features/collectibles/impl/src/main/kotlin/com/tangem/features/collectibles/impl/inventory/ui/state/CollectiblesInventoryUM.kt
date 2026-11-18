@@ -17,6 +17,7 @@ internal data class CollectiblesInventoryUM(
     val content: ContentUM,
     val isRefreshing: Boolean,
     val search: TangemSearch.State,
+    val isSearchMode: Boolean,
 ) {
 
     @Immutable

@@ -1,7 +1,13 @@
 package com.tangem.features.collectibles.impl.inventory.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -86,6 +94,7 @@ internal fun CollectiblesInventoryScreen(
                 topPadding = contentPadding.calculateTopPadding(),
                 pullOffset = pullOffset,
                 isContentUnderTabs = isContentUnderTabs,
+                areTabsShown = !state.isSearchMode,
             )
 
             CollectiblesSearchFooter(
@@ -98,29 +107,24 @@ internal fun CollectiblesInventoryScreen(
             )
         },
     ) { contentPadding ->
-        val bottomInset = with(LocalDensity.current) { footerHeight.toDp() } + 12.dp
-
-        TangemPullToRefreshSlidingContainer(
-            config = pullToRefresh,
-            state = pullToRefreshState,
-            indicatorOffset = contentPadding.calculateTopPadding(),
-        ) {
-            CollectiblesInventoryContent(
-                content = state.content,
-                gridState = gridState,
-                contentPadding = PaddingValues(
-                    top = contentPadding.calculateTopPadding() + 52.dp,
-                    bottom = bottomInset,
-                ),
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        InventoryContent(
+            state = state,
+            pullToRefresh = pullToRefresh,
+            pullToRefreshState = pullToRefreshState,
+            gridState = gridState,
+            topPadding = contentPadding.calculateTopPadding(),
+            bottomPadding = with(LocalDensity.current) { footerHeight.toDp() } + 12.dp,
+        )
     }
 }
 
 /**
+ * The frost under the top bar and the tabs. In search the tabs fade out and collapse, while the frost stays and
+ * shrinks to the top bar, so the results still blur under it.
+ *
  * @param pullOffset how far a pull-to-refresh has slid the content down; the tabs follow it
  */
+@Suppress("LongParameterList")
 @Composable
 private fun InventoryTabsHeader(
     tabs: ImmutableList<TangemTabItemUM>,
@@ -128,6 +132,7 @@ private fun InventoryTabsHeader(
     topPadding: Dp,
     pullOffset: Dp,
     isContentUnderTabs: Boolean,
+    areTabsShown: Boolean,
 ) {
     val frostAlpha by animateFloatAsState(
         targetValue = if (isContentUnderTabs) 1f else 0f,
@@ -150,14 +155,59 @@ private fun InventoryTabsHeader(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        CollectiblesTabBand(
-            tabs = tabs,
-            scrollState = tabScrollState,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            modifier = Modifier
-                .padding(top = topPadding)
-                .offset(y = pullOffset),
+        Box(modifier = Modifier.padding(top = topPadding)) {
+            AnimatedVisibility(
+                visible = areTabsShown,
+                enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+            ) {
+                CollectiblesTabBand(
+                    tabs = tabs,
+                    scrollState = tabScrollState,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.offset(y = pullOffset),
+                )
+            }
+        }
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun InventoryContent(
+    state: CollectiblesInventoryUM,
+    pullToRefresh: PullToRefreshConfig,
+    pullToRefreshState: PullToRefreshState,
+    gridState: LazyGridState,
+    topPadding: Dp,
+    bottomPadding: Dp,
+) {
+    val tabsInset by animateDpAsState(
+        targetValue = if (state.isSearchMode) 0.dp else 52.dp,
+        label = "tabsInset",
+    )
+    val gridPadding = PaddingValues(top = topPadding + tabsInset, bottom = bottomPadding)
+
+    if (state.isSearchMode) {
+        CollectiblesInventoryContent(
+            content = state.content,
+            gridState = gridState,
+            contentPadding = gridPadding,
+            modifier = Modifier.fillMaxSize(),
         )
+    } else {
+        TangemPullToRefreshSlidingContainer(
+            config = pullToRefresh,
+            state = pullToRefreshState,
+            indicatorOffset = topPadding,
+        ) {
+            CollectiblesInventoryContent(
+                content = state.content,
+                gridState = gridState,
+                contentPadding = gridPadding,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -186,5 +236,8 @@ private class CollectiblesInventoryScreenPreviewProvider : PreviewParameterProvi
         CollectiblesInventoryPreviewData.buybackEmpty,
         CollectiblesInventoryPreviewData.collectionEmpty,
         CollectiblesInventoryPreviewData.error,
+        CollectiblesInventoryPreviewData.searchDefault,
+        CollectiblesInventoryPreviewData.searchResults,
+        CollectiblesInventoryPreviewData.searchNoResults,
     )
 }
