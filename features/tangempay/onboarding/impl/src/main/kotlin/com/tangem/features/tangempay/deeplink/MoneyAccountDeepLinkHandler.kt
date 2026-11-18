@@ -23,6 +23,10 @@ internal class MoneyAccountDeepLinkHandler @Inject constructor(
 ) : DeepLinkHandler {
 
     override fun handle(request: DeepLinkRequest) {
+        if (REQUIRED_PARAMS.any { request.queryParams[it].isNullOrBlank() }) {
+            TangemLogger.i("$TAG: ignored, entry or id is missing")
+            return
+        }
         request.scope.launch {
             val userWallet = userWalletsListRepository.selectedUserWalletSync()
             if (userWallet == null || userWallet.isLocked) {
@@ -64,5 +68,6 @@ internal class MoneyAccountDeepLinkHandler @Inject constructor(
         const val DEEPLINK_KEY = "tangem://onboard-virtual-account"
 
         private const val TAG = "MoneyAccountDeepLink"
+        private val REQUIRED_PARAMS = listOf("entry", "id")
     }
 }

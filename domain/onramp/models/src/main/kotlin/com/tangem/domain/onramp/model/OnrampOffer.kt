@@ -16,8 +16,8 @@ data class OnrampOffer(
 )
 
 /**
- * The Recommended row an offer was picked for. Set where the row is chosen rather than read from
- * [OnrampOffer.advantages], because a sole or restricted-only offer takes the best row with no advantage badge.
+ * The Recommended row an offer was picked for, which a slot banner replaces. A sole offer, restricted ones included,
+ * takes no row: it was not picked over anything, so a banner is shown next to it instead.
  */
 enum class OnrampRecommendedSlot {
     BEST, FASTEST,

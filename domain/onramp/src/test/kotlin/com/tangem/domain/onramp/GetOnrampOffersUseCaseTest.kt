@@ -279,7 +279,7 @@ class GetOnrampOffersUseCaseTest {
                         val offer = recommendedBlock.offers.single()
                         Truth.assertThat(offer.quote.provider.id).isEqualTo("valid")
                         Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
-                        Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
+                        Truth.assertThat(offer.recommendedSlot).isNull()
                         Truth.assertThat(offer.rateDif).isNull()
                     },
                 )
@@ -312,7 +312,7 @@ class GetOnrampOffersUseCaseTest {
                     val offer = block.offers.single()
                     Truth.assertThat(offer.quote.provider.id).isEqualTo("provider1")
                     Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
-                    Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
+                    Truth.assertThat(offer.recommendedSlot).isNull()
                     Truth.assertThat(offer.rateDif).isNull()
                 },
             )
@@ -386,7 +386,7 @@ class GetOnrampOffersUseCaseTest {
                         val offer = recommendedBlock.offers.single()
                         Truth.assertThat(offer.quote.provider.id).isEqualTo("valid")
                         Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
-                        Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
+                        Truth.assertThat(offer.recommendedSlot).isNull()
                         Truth.assertThat(offer.rateDif).isNull()
                     },
                 )
@@ -422,7 +422,7 @@ class GetOnrampOffersUseCaseTest {
                     val offer = block.offers.single()
                     Truth.assertThat(offer.quote.provider.id).isEqualTo("provider1")
                     Truth.assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantages.Default)
-                    Truth.assertThat(offer.recommendedSlot).isEqualTo(OnrampRecommendedSlot.BEST)
+                    Truth.assertThat(offer.recommendedSlot).isNull()
                     Truth.assertThat(block.hasMoreOffers).isTrue()
                 },
             )

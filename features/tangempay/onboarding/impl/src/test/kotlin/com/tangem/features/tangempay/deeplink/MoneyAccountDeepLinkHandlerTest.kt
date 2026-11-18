@@ -17,6 +17,7 @@ import com.tangem.utils.logging.TangemLogger
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MoneyAccountDeepLinkHandlerTest {
@@ -134,7 +136,28 @@ internal class MoneyAccountDeepLinkHandlerTest {
         every { moneyAccountStatusSupplier(any<UserWalletId>()) } returns emptyFlow()
     }
 
-    private fun handle(scope: TestScope) = MoneyAccountDeepLinkHandler(
+    @ParameterizedTest
+    @MethodSource("incompleteLinks")
+    fun `GIVEN link without entry or id WHEN link handled THEN nothing opens`(queryParams: Map<String, String>) =
+        runTest {
+            // Act
+            handle(scope = this, queryParams = queryParams)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(any(), any()) }
+            verify(exactly = 0) { router.popTo(any<AppRoute>(), any()) }
+            coVerify(exactly = 0) { moneyAccountStatusFetcher(any<UserWalletId>()) }
+        }
+
+    private fun incompleteLinks() = listOf(
+        mapOf("entry" to "ff1"),
+        mapOf("id" to "VRTACC01"),
+        mapOf("entry" to "", "id" to "VRTACC01"),
+        emptyMap(),
+    )
+
+    private fun handle(scope: TestScope, queryParams: Map<String, String> = FULL_PARAMS) = MoneyAccountDeepLinkHandler(
         userWalletsListRepository = userWalletsListRepository,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         moneyAccountStatusSupplier = moneyAccountStatusSupplier,
@@ -142,7 +165,7 @@ internal class MoneyAccountDeepLinkHandlerTest {
     ).handle(
         DeepLinkRequest(
             uri = mockk<Uri> { every { this@mockk.toString() } returns LINK },
-            queryParams = emptyMap(),
+            queryParams = queryParams,
             scope = scope,
             isFromOnNewIntent = false,
             router = router,
@@ -157,5 +180,6 @@ internal class MoneyAccountDeepLinkHandlerTest {
     private companion object {
         const val LINK = "tangem://onboard-virtual-account?entry=ff1&id=VRTACC01"
         val USER_WALLET_ID = UserWalletId("011")
+        val FULL_PARAMS = mapOf("entry" to "ff1", "id" to "VRTACC01")
     }
 }

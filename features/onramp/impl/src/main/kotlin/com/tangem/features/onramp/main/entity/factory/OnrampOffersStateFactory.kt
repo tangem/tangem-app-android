@@ -39,7 +39,7 @@ internal class OnrampOffersStateFactory(
                     -> Unit
                     is OnrampQuote.Data -> if (currentQuote.isRestricted) {
                         allOffersUM.add(
-                            createRestrictedOfferUM(offer = offer, quote = currentQuote, category = block.category),
+                            createRestrictedOfferUM(quote = currentQuote, category = block.category),
                         )
                     } else {
                         val advantages = mapOfferAdvantagesDTOtoUM(offer.advantages)
@@ -93,11 +93,8 @@ internal class OnrampOffersStateFactory(
         )
     }
 
-    private fun createRestrictedOfferUM(
-        offer: OnrampOffer,
-        quote: OnrampQuote.Data,
-        category: OnrampOfferCategory,
-    ): OnrampOfferUM {
+    /** No Recommended slot: a banner replaces only a purchasable best or fastest offer, never a restricted one. */
+    private fun createRestrictedOfferUM(quote: OnrampQuote.Data, category: OnrampOfferCategory): OnrampOfferUM {
         return OnrampOfferUM(
             category = mapOfferCategoryDTOtoUM(category),
             advantages = OnrampOfferAdvantagesUM.Restricted,
@@ -112,7 +109,6 @@ internal class OnrampOffersStateFactory(
             },
             diff = null,
             onBuyClicked = {},
-            recommendedSlot = offer.recommendedSlot?.toUM(),
         )
     }
 
