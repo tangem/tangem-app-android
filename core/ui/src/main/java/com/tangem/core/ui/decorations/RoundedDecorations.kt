@@ -21,11 +21,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
+import kotlin.math.roundToInt
 
 @Composable
 fun ProvideRoundedItemGroups(content: @Composable () -> Unit) {
@@ -98,6 +102,33 @@ fun Modifier.roundedShapeItemDecoration(
         }
         else -> modifier.applyShape(null)
     }
+}
+
+@Composable
+fun RoundedItemGroupGlowRing(
+    groupKey: Any,
+    currentIndex: Int,
+    lastIndex: Int,
+    variant: TangemGlowRing.Variant,
+    cornerRadius: Dp,
+    modifier: Modifier = Modifier,
+) {
+    val group = LocalRoundedItemGroups.current?.get(groupKey)
+    TangemGlowRing(
+        modifier = modifier.layout { measurable, constraints ->
+            val above = group?.extentAbove(currentIndex)?.roundToInt() ?: 0
+            val below = group?.extentBelow(currentIndex, lastIndex)?.roundToInt() ?: 0
+            val placeable = measurable.measure(
+                Constraints.fixed(width = constraints.maxWidth, height = constraints.maxHeight + above + below),
+            )
+            layout(width = constraints.maxWidth, height = constraints.maxHeight) {
+                placeable.place(x = 0, y = -above)
+            }
+        },
+        variant = variant,
+        cornerRadius = cornerRadius,
+        isSyncedAcrossInstances = true,
+    )
 }
 
 @Composable

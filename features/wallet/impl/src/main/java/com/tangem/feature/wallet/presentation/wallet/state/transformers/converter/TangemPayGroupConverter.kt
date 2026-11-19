@@ -45,15 +45,20 @@ internal class TangemPayGroupConverter(
         val moneyBalance = moneyStatus.value.availableBalance()
         val balances = listOfNotNull(paymentBalance, moneyBalance)
         val issuedAccountsCount = listOf(paymentStatus.value.isIssued(), moneyStatus.value.isIssued()).count { it }
+        val isActionRequired = tangemPayMainUM.isActionRequired() || moneyAccountMainUM.isActionRequired()
 
         return TangemPayGroupUM.Content(
             id = "TangemPayGroup",
             title = resourceReference(R.string.tangempay_main_group_title),
-            label = pluralReference(
-                id = R.plurals.tangempay_main_group_subtitle,
-                count = issuedAccountsCount,
-                formatArgs = wrappedList(issuedAccountsCount),
-            ),
+            label = if (isActionRequired) {
+                resourceReference(R.string.tangempay_action_required_title)
+            } else {
+                pluralReference(
+                    id = R.plurals.tangempay_main_group_subtitle,
+                    count = issuedAccountsCount,
+                    formatArgs = wrappedList(issuedAccountsCount),
+                )
+            },
             balance = if (balances.isEmpty()) {
                 stringReference(DASH_SIGN)
             } else {
@@ -62,6 +67,7 @@ internal class TangemPayGroupConverter(
             balanceCaption = stringReference(USD_CURRENCY_CODE),
             isBalanceFlickering = paymentStatus.value.isRefreshing() || moneyStatus.value.isRefreshing(),
             isExpanded = isExpanded,
+            isActionRequired = isActionRequired,
             onClick = { clickIntents.onTangemPayGroupClick(accountId = groupAccountId, isExpanded = isExpanded) },
         )
     }
@@ -93,6 +99,12 @@ internal class TangemPayGroupConverter(
         this is PaymentAccountStatusValue.Loaded || this is PaymentAccountStatusValue.Deactivated
 
     private fun MoneyAccountStatusValue.isIssued(): Boolean = this is MoneyAccountStatusValue.Account
+
+    private fun TangemPayMainUM.isActionRequired(): Boolean =
+        this is TangemPayMainUM.Content && isActionRequired
+
+    private fun MoneyAccountMainUM.isActionRequired(): Boolean =
+        this is MoneyAccountMainUM.Content && isActionRequired
 
     private fun PaymentAccountStatusValue.isRefreshing(): Boolean =
         this is PaymentAccountStatusValue.Loading || source == StatusSource.CACHE

@@ -2,25 +2,30 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components
 
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.snap
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.decorations.RoundedItemGroupGlowRing
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.expandable.EXPANDABLE_ROW_REVEAL_DURATION_MILLIS
 import com.tangem.core.ui.ds2.expandable.ExpandableRowRevealItem
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -42,6 +47,7 @@ import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 
 internal const val ORGANIZE_TOKENS_BUTTON_ITEM_KEY = "OrganizeTokensButton"
 private const val TANGEM_PAY_GROUP_CHILDREN_COUNT = 2
+private val TANGEM_PAY_GROUP_RADIUS = 24.dp
 
 internal fun LazyListScope.nftCollections2(state: WalletUM, itemModifier: Modifier) {
     (state as? WalletUM.Content)?.let { content ->
@@ -152,42 +158,55 @@ internal fun LazyListScope.tangemPayGroup(
             },
             label = "tangemPayGroupLastIndex",
         )
-        TangemAccountRow(
-            avatar = TangemAvatar.UiState.Icon(
-                imageVector = Icons.ic_sign_usd_20,
-                appearance = TangemAvatar.Appearance.Neutral,
-                shape = TangemAvatar.Shape.RoundedSquare,
-            ),
-            title = groupUM.title,
-            label = groupUM.label,
-            balance = groupUM.balance,
-            balanceBottom = {
-                Text(
-                    text = groupUM.balanceCaption.resolveReference(),
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.secondary,
-                    maxLines = 1,
-                )
-            },
-            isBalanceHidden = isBalanceHidden,
-            isBalanceFlickering = groupUM.isBalanceFlickering,
-            showCompactBalance = false,
-            isExpanded = groupUM.isExpanded,
-            collapseContentDescription = stringResourceSafe(id = R.string.common_hide),
-            onClick = groupUM.onClick,
-            isExpandable = true,
-            shape = RectangleShape,
+        val backgroundColor = tangemPayGroupBackgroundColor(groupUM.isActionRequired)
+        TangemPayGroupSlice(
+            groupUM = groupUM,
+            currentIndex = 0,
+            lastIndex = effectiveLastIndex,
             modifier = modifier
                 .padding(top = 12.dp)
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
-                    radius = 24.dp,
+                    radius = TANGEM_PAY_GROUP_RADIUS,
                     addDefaultPadding = false,
                     lastIndex = effectiveLastIndex,
-                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    backgroundColor = backgroundColor,
                     groupKey = groupUM.id,
                 ),
-        )
+        ) {
+            TangemAccountRow(
+                avatar = TangemAvatar.UiState.Icon(
+                    imageVector = Icons.ic_sign_usd_20,
+                    appearance = TangemAvatar.Appearance.Neutral,
+                    shape = TangemAvatar.Shape.RoundedSquare,
+                ),
+                title = groupUM.title,
+                label = groupUM.label,
+                balance = groupUM.balance,
+                balanceBottom = {
+                    Text(
+                        text = groupUM.balanceCaption.resolveReference(),
+                        style = TangemTheme.typography3.caption.medium,
+                        color = TangemTheme.colors3.text.secondary,
+                        maxLines = 1,
+                    )
+                },
+                isBalanceHidden = isBalanceHidden,
+                isBalanceFlickering = groupUM.isBalanceFlickering,
+                showCompactBalance = false,
+                isExpanded = groupUM.isExpanded,
+                collapseContentDescription = stringResourceSafe(id = R.string.common_hide),
+                onClick = groupUM.onClick,
+                isExpandable = true,
+                shape = RectangleShape,
+                labelColor = if (groupUM.isActionRequired) {
+                    TangemTheme.colors3.text.status.warning
+                } else {
+                    TangemTheme.colors3.text.secondary
+                },
+                backgroundColor = backgroundColor,
+            )
+        }
     }
     item(key = "${groupUM.id}_tangem_pay", contentType = TangemPayMainUM::class.java) {
         ExpandableRowRevealItem(
@@ -197,15 +216,21 @@ internal fun LazyListScope.tangemPayGroup(
             modifier = modifier
                 .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                 .roundedShapeItemDecoration(
-                    radius = 24.dp,
+                    radius = TANGEM_PAY_GROUP_RADIUS,
                     currentIndex = 1,
                     addDefaultPadding = false,
                     lastIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
-                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    backgroundColor = tangemPayGroupBackgroundColor(groupUM.isActionRequired),
                     groupKey = groupUM.id,
                 ),
         ) {
-            tangemPayComponent.GroupedRow(state = tangemPayUM, isBalanceHidden = isBalanceHidden, modifier = Modifier)
+            TangemPayGroupSlice(groupUM = groupUM, currentIndex = 1, lastIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT) {
+                tangemPayComponent.GroupedRow(
+                    state = tangemPayUM,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = Modifier,
+                )
+            }
         }
     }
     item(key = "${groupUM.id}_money_account", contentType = MoneyAccountMainUM::class.java) {
@@ -216,19 +241,55 @@ internal fun LazyListScope.tangemPayGroup(
             modifier = modifier
                 .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                 .roundedShapeItemDecoration(
-                    radius = 24.dp,
+                    radius = TANGEM_PAY_GROUP_RADIUS,
                     currentIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
                     addDefaultPadding = false,
                     lastIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
-                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    backgroundColor = tangemPayGroupBackgroundColor(groupUM.isActionRequired),
                     groupKey = groupUM.id,
                 ),
         ) {
-            moneyAccountComponent.GroupedRow(
-                state = moneyAccountUM,
-                isBalanceHidden = isBalanceHidden,
-                modifier = Modifier,
+            TangemPayGroupSlice(
+                groupUM = groupUM,
+                currentIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+                lastIndex = TANGEM_PAY_GROUP_CHILDREN_COUNT,
+            ) {
+                moneyAccountComponent.GroupedRow(
+                    state = moneyAccountUM,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = Modifier,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TangemPayGroupSlice(
+    groupUM: TangemPayGroupUM.Content,
+    currentIndex: Int,
+    lastIndex: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier = modifier) {
+        content()
+        if (groupUM.isActionRequired) {
+            RoundedItemGroupGlowRing(
+                groupKey = groupUM.id,
+                currentIndex = currentIndex,
+                lastIndex = lastIndex,
+                variant = TangemGlowRing.Variant.Warning,
+                cornerRadius = TANGEM_PAY_GROUP_RADIUS,
+                modifier = Modifier.matchParentSize(),
             )
         }
     }
+}
+
+@Composable
+private fun tangemPayGroupBackgroundColor(isActionRequired: Boolean): Color = if (isActionRequired) {
+    TangemTheme.colors3.bg.status.warningSubtle
+} else {
+    TangemTheme.colors3.bg.secondary
 }

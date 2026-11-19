@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -61,7 +62,7 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * shrinks that line into a compact heading. The account's [TangemTokenRow]s are emitted by the
  * host next to the row, not nested inside it.
  *
- * Version: 1.1.1
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
@@ -98,6 +99,8 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
  * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
  * items continue the card below.
+ * @param labelColor Color of [label].
+ * @param backgroundColor Card background color.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -119,12 +122,16 @@ fun TangemAccountRow(
     onLongClick: (() -> Unit)? = null,
     isExpandable: Boolean = false,
     shape: Shape = ExpandableCardShape,
+    labelColor: Color = TangemTheme.colors3.text.secondary,
+    backgroundColor: Color = TangemTheme.colors3.bg.secondary,
 ) {
     AccountRowScaffold(
         avatar = avatar,
         title = title,
         modifier = modifier,
         label = label,
+        labelColor = labelColor,
+        backgroundColor = backgroundColor,
         description = description,
         balance = balance,
         balanceBottom = priceChange?.let { state -> { TangemPriceChange(state = state) } },
@@ -166,6 +173,8 @@ fun TangemAccountRow(
  * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
  * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
  * items continue the card below.
+ * @param labelColor Color of [label].
+ * @param backgroundColor Card background color.
  * @param balanceBottom Content under the collapsed balance, e.g. the currency caption (`"USD"`). Fades out with the
  * balance as the row expands; hidden while a badge is shown.
  */
@@ -188,6 +197,8 @@ fun TangemAccountRow(
     onLongClick: (() -> Unit)? = null,
     isExpandable: Boolean = false,
     shape: Shape = ExpandableCardShape,
+    labelColor: Color = TangemTheme.colors3.text.secondary,
+    backgroundColor: Color = TangemTheme.colors3.bg.secondary,
     balanceBottom: @Composable () -> Unit,
 ) {
     AccountRowScaffold(
@@ -195,6 +206,8 @@ fun TangemAccountRow(
         title = title,
         modifier = modifier,
         label = label,
+        labelColor = labelColor,
+        backgroundColor = backgroundColor,
         description = description,
         balance = balance,
         balanceBottom = balanceBottom,
@@ -214,7 +227,7 @@ fun TangemAccountRow(
 /** Public API surface of [TangemAccountRow]. */
 object TangemAccountRow {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 1)
+    val version = DsVersion(major = 1, minor = 2, patch = 0)
 
     /**
      * Action message under a [NotActive] row's heading, leading the user to activate the account.
@@ -757,6 +770,8 @@ private fun AccountRowScaffold(
     isBalanceFlickering: Boolean = false,
     isExpandable: Boolean = false,
     shape: Shape = ExpandableCardShape,
+    labelColor: Color = TangemTheme.colors3.text.secondary,
+    backgroundColor: Color = TangemTheme.colors3.bg.secondary,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressAlpha by rememberRowPressAlpha(interactionSource)
@@ -769,6 +784,7 @@ private fun AccountRowScaffold(
         modifier = modifier,
         avatarGap = 12.dp,
         shape = shape,
+        backgroundColor = backgroundColor,
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
@@ -793,6 +809,7 @@ private fun AccountRowScaffold(
             AccountRowSubtitle(
                 label = label,
                 description = description,
+                labelColor = labelColor,
                 modifier = Modifier
                     .layoutId(ExpandableCardLayoutId.SUBTITLE)
                     .graphicsLayer { alpha = pressAlpha * motion.subtitleAlpha },
