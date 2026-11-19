@@ -201,7 +201,7 @@ internal class TokenReceiveScreenModelTest {
     }
 
     private fun copiedToast() = CopiedToast(
-        label = resourceReference(R.string.address_book_address_copied),
+        label = resourceReference(R.string.wallet_notification_address_copied),
         appearance = TangemToast.Appearance.Success,
         isClosable = false,
     )

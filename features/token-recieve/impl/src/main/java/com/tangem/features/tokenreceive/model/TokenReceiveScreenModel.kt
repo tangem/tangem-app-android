@@ -99,7 +99,7 @@ internal class TokenReceiveScreenModel @Inject constructor(
         params.callback.onCopyClick(address = address, source = source)
         messageSender.send(
             TangemToastMessage(
-                label = resourceReference(R.string.address_book_address_copied),
+                label = resourceReference(R.string.wallet_notification_address_copied),
                 appearance = TangemToast.Appearance.Success,
                 isClosable = false,
             ),
