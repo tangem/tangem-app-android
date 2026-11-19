@@ -274,7 +274,12 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     }
 
     override fun onBankDetailsLoaded(bankCredentials: List<BankCredentials>) {
-        analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown())
+        analytics.send(
+            MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown(
+                currency = MoneyAccountAnalyticsEvents.DepositCurrency.singleOf(bankCredentials)
+                    .takeIf { moneyAccountFeatureToggles.isMxnEnabled },
+            ),
+        )
         bottomSheetNavigation.dismiss()
         router.push(MoneyAccountDetailsRoute.BankDetails(bankCredentials))
     }

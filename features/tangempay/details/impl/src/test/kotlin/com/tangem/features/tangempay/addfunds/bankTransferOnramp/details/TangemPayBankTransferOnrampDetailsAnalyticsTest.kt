@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
@@ -27,7 +28,7 @@ internal class TangemPayBankTransferOnrampDetailsAnalyticsTest {
     @Test
     fun `GIVEN details screen WHEN shown THEN banking details showed event sent`() {
         // Act
-        analytics.onDetailsShown()
+        analytics.onDetailsShown(CREDENTIALS)
 
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(ofType<TangemPayAnalyticsEvents.VaBankingDetailsShowed>()) }
@@ -36,7 +37,7 @@ internal class TangemPayBankTransferOnrampDetailsAnalyticsTest {
     @Test
     fun `GIVEN details screen WHEN share clicked THEN share details event sent`() {
         // Act
-        analytics.onShareClicked()
+        analytics.onShareClicked(CREDENTIALS)
 
         // Assert
         verify(exactly = 1) {
@@ -48,7 +49,7 @@ internal class TangemPayBankTransferOnrampDetailsAnalyticsTest {
     @ProvideTestModels
     fun `GIVEN requisite WHEN copied THEN copy field event sent with its name`(model: FieldModel) {
         // Act
-        analytics.onFieldCopied(model.field)
+        analytics.onFieldCopied(field = model.field, credentials = CREDENTIALS)
 
         // Assert
         verify(exactly = 1) {
@@ -67,4 +68,8 @@ internal class TangemPayBankTransferOnrampDetailsAnalyticsTest {
     )
 
     data class FieldModel(val field: RequisiteField, val fieldName: String)
+
+    private companion object {
+        val CREDENTIALS = MockBankCredentials.bankCredentials()
+    }
 }

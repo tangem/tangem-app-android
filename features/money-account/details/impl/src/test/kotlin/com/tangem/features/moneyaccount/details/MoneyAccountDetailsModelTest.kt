@@ -37,6 +37,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.BalanceBand
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.DepositCurrency
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
@@ -57,6 +58,7 @@ import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.tangempay.repository.KycAdditionalInfoPopupStore
@@ -335,9 +337,31 @@ internal class MoneyAccountDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.last()).isNull()
                 verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(listOf(CREDENTIALS)), any()) }
-                verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown()) }
+                verify(exactly = 1) {
+                    analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown(currency = null))
+                }
                 model.onDestroy()
             }
+
+        @ParameterizedTest
+        @MethodSource("provideBankDetailsCurrencyModels")
+        fun `GIVEN loaded routes WHEN bank details shown THEN currency sent only when the routes have one`(
+            model: BankDetailsCurrencyModel,
+        ) = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+            val detailsModel = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            detailsModel.onBankDetailsLoaded(model.credentials)
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown(currency = model.expectedCurrency))
+            }
+            detailsModel.onDestroy()
+        }
 
         @Test
         fun `GIVEN error sheet WHEN support clicked THEN sheet dismissed and support email sent with customer id`() =
@@ -363,6 +387,18 @@ internal class MoneyAccountDetailsModelTest {
         private fun provideTestModels() = listOf(
             AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
             AddFundsModel(balance = null, expectedDepositAddress = null),
+        )
+
+        private fun provideBankDetailsCurrencyModels() = listOf(
+            BankDetailsCurrencyModel(credentials = listOf(CREDENTIALS), expectedCurrency = DepositCurrency.USD),
+            BankDetailsCurrencyModel(
+                credentials = listOf(MockBankCredentials.speiBankCredentials()),
+                expectedCurrency = DepositCurrency.MXN,
+            ),
+            BankDetailsCurrencyModel(
+                credentials = listOf(MockBankCredentials.speiBankCredentials(), CREDENTIALS),
+                expectedCurrency = null,
+            ),
         )
 
         private fun provideSheetsOpenedFromOptions() = listOf(
@@ -1501,6 +1537,11 @@ internal class MoneyAccountDetailsModelTest {
     )
 
     data class AddFundsModel(val balance: MoneyAccountStatusValue.Balance?, val expectedDepositAddress: String?)
+
+    data class BankDetailsCurrencyModel(
+        val credentials: List<BankCredentials>,
+        val expectedCurrency: DepositCurrency?,
+    )
 
     data class SheetFromOptionsModel(
         val openSheet: (MoneyAccountDetailsModel) -> Unit,

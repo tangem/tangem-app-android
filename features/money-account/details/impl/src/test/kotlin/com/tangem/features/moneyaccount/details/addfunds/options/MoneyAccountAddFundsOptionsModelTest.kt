@@ -74,7 +74,96 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsMethodSelected(model.expectedMethod)) }
+        verify(exactly = 1) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
+                    method = model.expectedMethod,
+                    currency = model.expectedCurrency,
+                ),
+            )
+        }
+        optionsModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN MXN toggle and prefetch in flight WHEN bank option clicked THEN method sent with currency once loaded`() =
+        runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+            val pending = CompletableDeferred<Either<TangemPayApiError, List<BankCredentials>>>()
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } coAnswers { pending.await() }
+            val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+            model.bankOption().onClick?.invoke()
+            verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents.AddFundsMethodSelected>()) }
+
+            // Act
+            pending.complete(listOf(CREDENTIALS).right())
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
+                        method = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                        currency = MoneyAccountAnalyticsEvents.DepositCurrency.USD,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN MXN toggle and failed prefetch WHEN bank option clicked and reload succeeds THEN method has currency`() =
+        runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returnsMany listOf(
+                TangemPayApiError.ServerUnavailable.left(),
+                listOf(MockBankCredentials.speiBankCredentials()).right(),
+            )
+            val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+            advanceUntilIdle()
+
+            // Act
+            model.bankOption().onClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
+                        method = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                        currency = MoneyAccountAnalyticsEvents.DepositCurrency.MXN,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideBankCurrencyModels")
+    fun `GIVEN MXN toggle WHEN bank option clicked THEN currency reported only when the routes have one`(
+        model: BankCurrencyModel,
+    ) = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns model.credentials
+        val optionsModel = createModel(depositAddress = DEPOSIT_ADDRESS)
+        advanceUntilIdle()
+
+        // Act
+        optionsModel.bankOption().onClick?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
+                    method = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                    currency = model.expectedCurrency,
+                ),
+            )
+        }
         optionsModel.onDestroy()
     }
 
@@ -291,7 +380,8 @@ internal class MoneyAccountAddFundsOptionsModelTest {
             verify(exactly = 1) {
                 analytics.send(
                     MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
-                        MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                        method = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                        currency = null,
                     ),
                 )
             }
@@ -349,18 +439,43 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         MethodModel(
             title = resourceReference(R.string.tangempay_topup_swap_title),
             expectedMethod = MoneyAccountAnalyticsEvents.AddFundsMethod.WALLET,
+            expectedCurrency = null,
         ),
         MethodModel(
             title = resourceReference(R.string.tangempay_topup_receive_title),
             expectedMethod = MoneyAccountAnalyticsEvents.AddFundsMethod.EXTERNAL_WALLET,
+            expectedCurrency = null,
         ),
         MethodModel(
             title = resourceReference(R.string.tangempay_topup_bank_transfer_title),
             expectedMethod = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+            expectedCurrency = null,
         ),
     )
 
-    data class MethodModel(val title: TextReference, val expectedMethod: MoneyAccountAnalyticsEvents.AddFundsMethod)
+    data class MethodModel(
+        val title: TextReference,
+        val expectedMethod: MoneyAccountAnalyticsEvents.AddFundsMethod,
+        val expectedCurrency: MoneyAccountAnalyticsEvents.DepositCurrency?,
+    )
+
+    private fun provideBankCurrencyModels() = listOf(
+        BankCurrencyModel(
+            credentials = listOf(CREDENTIALS).right(),
+            expectedCurrency = MoneyAccountAnalyticsEvents.DepositCurrency.USD,
+        ),
+        BankCurrencyModel(
+            credentials = listOf(MockBankCredentials.speiBankCredentials()).right(),
+            expectedCurrency = MoneyAccountAnalyticsEvents.DepositCurrency.MXN,
+        ),
+        BankCurrencyModel(credentials = ROUTES.right(), expectedCurrency = null),
+        BankCurrencyModel(credentials = TangemPayApiError.ServerUnavailable.left(), expectedCurrency = null),
+    )
+
+    data class BankCurrencyModel(
+        val credentials: Either<TangemPayApiError, List<BankCredentials>>,
+        val expectedCurrency: MoneyAccountAnalyticsEvents.DepositCurrency?,
+    )
 
     private fun MoneyAccountAddFundsOptionsModel.option(title: TextReference) = uiState.value.items.first {
         it.title == title
