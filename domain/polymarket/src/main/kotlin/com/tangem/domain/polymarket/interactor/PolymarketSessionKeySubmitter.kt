@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyProgress
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyRevocation
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyRelay
@@ -115,6 +116,33 @@ internal class PolymarketSessionKeySubmitter(
 
     fun nowWithMarginMillis(): Long = clock.millis() + PolymarketRelayerDeadline.SEND_MARGIN_MILLIS
 
+    suspend fun SessionKeyOperationScope.ensureUnlisted(
+        userWalletId: UserWalletId,
+        revocation: PolymarketSessionKeyRevocation,
+    ): PolymarketSessionKey {
+        val dropped = droppedRecordOf(revocation)
+        emit(PolymarketSessionKeyProgress.Revoking(dropped))
+        val credentials = getApiCredentials(userWalletId) ?: run {
+            TangemLogger.e("Polymarket session key ${dropped.address} record dropped, no owner to check it is unlisted")
+            raise(PolymarketSessionKeyLifecycleError.Unsettled(dropped))
+        }
+        val owner = PolymarketClobIdentity.Owner(address = revocation.ownerAddress, credentials = credentials)
+        when (val unlisting = relay.awaitUnlisted(owner, dropped.address)) {
+            PolymarketSessionKeyRelay.Unlisting.Gone -> {
+                TangemLogger.i("Polymarket session key ${dropped.address} record dropped and unlisted, revoked")
+            }
+            PolymarketSessionKeyRelay.Unlisting.StillListed -> {
+                TangemLogger.i("Polymarket session key ${dropped.address} record dropped but still listed")
+                raise(PolymarketSessionKeyLifecycleError.Unsettled(dropped))
+            }
+            is PolymarketSessionKeyRelay.Unlisting.Unread -> {
+                TangemLogger.e("Polymarket session signers not read for a dropped key record: ${unlisting.error}")
+                raise(PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network))
+            }
+        }
+        return dropped.copy(status = PolymarketSessionKeyStatus.REVOKED)
+    }
+
     private suspend fun SessionKeyOperationScope.confirmUnlisted(
         userWalletId: UserWalletId,
         ownerAddress: String,
@@ -125,7 +153,7 @@ internal class PolymarketSessionKeySubmitter(
             raise(PolymarketSessionKeyLifecycleError.Unsettled(dropped))
         }
         val owner = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials)
-        val unlisting = relay.awaitUnlisted(owner, dropped)
+        val unlisting = relay.awaitUnlisted(owner, dropped.address)
         ensure(unlisting == PolymarketSessionKeyRelay.Unlisting.Gone) {
             TangemLogger.e("Polymarket session key ${dropped.address} dropped while revoking, unconfirmed: $unlisting")
             PolymarketSessionKeyLifecycleError.Unsettled(dropped)
@@ -156,6 +184,19 @@ internal class PolymarketSessionKeySubmitter(
         }
         tradingStore.markReadyOnExchange(userWalletId, active.address, validUntil)
     }
+
+    private fun droppedRecordOf(revocation: PolymarketSessionKeyRevocation) = PolymarketSessionKey(
+        address = revocation.sessionKeyAddress.lowercase(),
+        deviceId = null,
+        deviceName = null,
+        isEnabled = false,
+        status = PolymarketSessionKeyStatus.REVOKING,
+        scopes = emptyList(),
+        validUntil = null,
+        renewAfter = null,
+        authorizedAt = null,
+        createdAt = clock.instant(),
+    )
 
     private companion object {
         val RELAYER_REJECTION_RETRY_DELAY = 3.seconds

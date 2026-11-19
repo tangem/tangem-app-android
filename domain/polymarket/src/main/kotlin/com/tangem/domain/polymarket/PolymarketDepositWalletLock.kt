@@ -4,11 +4,16 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorizationStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 
-class PolymarketDepositWalletLock {
+class PolymarketDepositWalletLock(
+    private val pendingAuthorizations: PolymarketPendingAuthorizationStore,
+    private val clock: Clock = Clock.systemUTC(),
+) {
 
     private val holders = ConcurrentHashMap<UserWalletId, MutableStateFlow<Holder?>>()
 
@@ -30,8 +35,16 @@ class PolymarketDepositWalletLock {
                 null -> Unit
             }
         }
-        return holder.releasedAfter(action).right()
+        return holder.releasedAfter {
+            if (isAuthorizationPending(userWalletId)) Busy.left() else action().right()
+        }
     }
+
+    private suspend fun isAuthorizationPending(userWalletId: UserWalletId): Boolean =
+        pendingAuthorizations.get(userWalletId).fold(
+            ifLeft = { true },
+            ifRight = { pending -> pending?.isInFlight(clock.millis()) == true },
+        )
 
     private fun holderOf(userWalletId: UserWalletId): MutableStateFlow<Holder?> =
         holders.getOrPut(userWalletId) { MutableStateFlow(null) }

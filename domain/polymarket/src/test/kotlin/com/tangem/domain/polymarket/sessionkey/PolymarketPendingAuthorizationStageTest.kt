@@ -177,6 +177,12 @@ internal class PolymarketPendingAuthorizationStageTest {
                     expected = PolymarketPendingAuthorizationStage.RevocationUnsent,
                 ),
                 StageModel(
+                    walletNonce = AUTHORIZATION_NONCE,
+                    revokedRecord = record(REVOKED_KEY, PolymarketSessionKeyStatus.REVOKED),
+                    nowMillis = (AUTHORIZATION_DEADLINE - MARGIN_SECONDS) * MILLIS_IN_SECOND,
+                    expected = PolymarketPendingAuthorizationStage.Expired,
+                ),
+                StageModel(
                     walletNonce = AUTHORIZATION_NONCE + BigInteger.ONE,
                     revokedRecord = revoked,
                     expected = PolymarketPendingAuthorizationStage.NonceMoved,

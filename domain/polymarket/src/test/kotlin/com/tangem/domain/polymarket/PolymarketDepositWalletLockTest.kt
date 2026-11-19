@@ -1,9 +1,14 @@
 package com.tangem.domain.polymarket
 
+import com.tangem.domain.polymarket.sessionkey.EXPIRED_DEADLINE
+import com.tangem.domain.polymarket.sessionkey.FUTURE_DEADLINE
+import com.tangem.domain.polymarket.sessionkey.FakePolymarketPendingAuthorizationStore
+import com.tangem.domain.polymarket.sessionkey.createPendingAuthorization
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -12,11 +17,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketDepositWalletLockTest {
 
-    private val lock = PolymarketDepositWalletLock()
+    private val pendingAuthorizations = FakePolymarketPendingAuthorizationStore()
+    private val lock = PolymarketDepositWalletLock(pendingAuthorizations)
 
     @Test
     fun `GIVEN a session key operation holds the wallet WHEN a batch starts THEN it is busy at once`() = runTest {
@@ -150,7 +159,139 @@ internal class PolymarketDepositWalletLockTest {
         assertThat(actual).isEqualTo(BATCH_RESULT)
     }
 
+    @Test
+    fun `GIVEN an executable pending authorization WHEN a batch starts THEN it is busy and not run`() = runTest {
+        // Arrange
+        pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = FUTURE_DEADLINE))
+        var isBatchRun = false
+
+        // Act
+        val actual = lock.withBatchOrBusy(WALLET) { isBatchRun = true }
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+        assertThat(isBatchRun).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a batch waits for the wallet WHEN an authorization is kept before it gets the lock THEN it is busy`() =
+        runTest {
+            // Arrange
+            val submitting = CompletableDeferred<Unit>()
+            launch { lock.withBatchOrBusy(WALLET) { submitting.await() } }
+            runCurrent()
+            var isBatchRun = false
+            val waiting = async { lock.withBatchOrBusy(WALLET) { isBatchRun = true } }
+            runCurrent()
+
+            // Act
+            pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = FUTURE_DEADLINE))
+            submitting.complete(Unit)
+
+            // Assert
+            assertThat(waiting.await()).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+            assertThat(isBatchRun).isFalse()
+        }
+
+    @Test
+    fun `GIVEN a batch was refused for a pending authorization WHEN a session key operation starts THEN it runs`() =
+        runTest {
+            // Arrange
+            pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = FUTURE_DEADLINE))
+            lock.withBatchOrBusy(WALLET) { BATCH_RESULT }
+
+            // Act
+            val actual = lock.withSessionKeyOperation(WALLET) { BATCH_RESULT }
+
+            // Assert
+            assertThat(actual).isEqualTo(BATCH_RESULT)
+        }
+
+    @Test
+    fun `GIVEN an expired pending authorization WHEN a batch starts THEN it runs`() = runTest {
+        // Arrange
+        pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = EXPIRED_DEADLINE))
+
+        // Act
+        val actual = lock.withBatchOrBusy(WALLET) { BATCH_RESULT }
+
+        // Assert
+        assertThat(actual).isEqualTo(BATCH_RESULT.right())
+    }
+
+    @Test
+    fun `GIVEN a pending authorization 20 s before its deadline WHEN a batch starts THEN it is busy`() = runTest {
+        // Arrange
+        pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = deadlineIn(seconds = 20)))
+
+        // Act
+        val actual = fixedClockLock().withBatchOrBusy(WALLET) { BATCH_RESULT }
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+    }
+
+    @Test
+    fun `GIVEN a pending authorization past its deadline WHEN a batch starts THEN it runs`() = runTest {
+        // Arrange
+        pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = deadlineIn(seconds = 0)))
+
+        // Act
+        val actual = fixedClockLock().withBatchOrBusy(WALLET) { BATCH_RESULT }
+
+        // Assert
+        assertThat(actual).isEqualTo(BATCH_RESULT.right())
+    }
+
+    @Test
+    fun `GIVEN the pending authorization cannot be read WHEN a batch starts THEN it is busy and not run`() = runTest {
+        // Arrange
+        pendingAuthorizations.readFailure = PolymarketSessionKeyError.Failure(IllegalStateException("Keystore locked"))
+        var isBatchRun = false
+
+        // Act
+        val actual = lock.withBatchOrBusy(WALLET) { isBatchRun = true }
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+        assertThat(isBatchRun).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a pending authorization 40 s before its deadline WHEN a batch starts THEN it is busy`() = runTest {
+        // Arrange
+        pendingAuthorizations.store(WALLET, createPendingAuthorization(deadline = deadlineIn(seconds = 40)))
+
+        // Act
+        val actual = fixedClockLock().withBatchOrBusy(WALLET) { BATCH_RESULT }
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+    }
+
+    @Test
+    fun `GIVEN a revocation that may still execute past the authorization WHEN a batch starts THEN it is busy`() =
+        runTest {
+            // Arrange
+            val pending = createPendingAuthorization(deadline = deadlineIn(seconds = 0))
+            pendingAuthorizations.store(
+                WALLET,
+                pending.copy(revocation = pending.revocation.copy(deadline = deadlineIn(seconds = 20))),
+            )
+
+            // Act
+            val actual = fixedClockLock().withBatchOrBusy(WALLET) { BATCH_RESULT }
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+        }
+
+    private fun fixedClockLock() = PolymarketDepositWalletLock(pendingAuthorizations, Clock.fixed(NOW, ZoneOffset.UTC))
+
+    private fun deadlineIn(seconds: Long) = NOW.plusSeconds(seconds).epochSecond.toString()
+
     private companion object {
+        val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val WALLET = UserWalletId("011")
         val OTHER_WALLET = UserWalletId("022")
         const val BATCH_RESULT = "submitted"

@@ -81,7 +81,7 @@ internal class PolymarketSessionKeyRelay(
         return false
     }
 
-    suspend fun awaitUnlisted(owner: PolymarketClobIdentity.Owner, sessionKey: PolymarketSessionKey): Unlisting {
+    suspend fun awaitUnlisted(owner: PolymarketClobIdentity.Owner, sessionKeyAddress: String): Unlisting {
         var unlisting: Unlisting = Unlisting.StillListed
         repeat(UNLISTING_ATTEMPTS) { attempt ->
             if (attempt > 0) delay(POLL_INTERVAL)
@@ -92,7 +92,7 @@ internal class PolymarketSessionKeyRelay(
                     unlisting = Unlisting.Unread(error)
                 },
                 ifRight = { signers ->
-                    if (signers.none { it.maySignFor(sessionKey, now = clock.instant()) }) return Unlisting.Gone
+                    if (signers.none { it.maySignFor(sessionKeyAddress, now = clock.instant()) }) return Unlisting.Gone
                     unlisting = Unlisting.StillListed
                 },
             )
@@ -132,7 +132,7 @@ internal class PolymarketSessionKeyRelay(
 
     companion object {
         val POLL_INTERVAL: Duration = 3.seconds
-        private val SETTLE_TIMEOUT: Duration = 35.minutes
+        private val SETTLE_TIMEOUT: Duration = 30.minutes
         private val SETTLE_ATTEMPTS = (SETTLE_TIMEOUT / POLL_INTERVAL).toInt()
         private const val DROPPED_READS = 2
         private const val LISTING_ATTEMPTS = 10
@@ -155,8 +155,8 @@ internal fun PolymarketSessionSigner.carriesTermsOf(record: PolymarketSessionKey
         listedUntil.epochSecond == recordedUntil.epochSecond
 }
 
-private fun PolymarketSessionSigner.maySignFor(sessionKey: PolymarketSessionKey, now: Instant): Boolean =
-    address.equals(sessionKey.address, ignoreCase = true) && validUntil?.isAfter(now) != false
+private fun PolymarketSessionSigner.maySignFor(sessionKeyAddress: String, now: Instant): Boolean =
+    address.equals(sessionKeyAddress, ignoreCase = true) && validUntil?.isAfter(now) != false
 
 private val TRADING_SCOPES = setOf("CLOB")
 private val LISTING_EXPIRY_MARGIN: Duration = 10.minutes

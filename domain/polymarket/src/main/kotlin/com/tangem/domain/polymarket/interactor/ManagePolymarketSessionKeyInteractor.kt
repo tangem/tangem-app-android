@@ -17,6 +17,8 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyLifecycleError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedSessionKeyBatches
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorization
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorizationStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyRelay
@@ -36,7 +38,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class ManagePolymarketSessionKeyInteractor(
     private val signBatches: SignPolymarketSessionKeyBatchesInteractor,
     private val sessionKeyRepository: PolymarketSessionKeyRepository,
-    polymarketRepository: PolymarketRepository,
+    private val polymarketRepository: PolymarketRepository,
     private val sessionKeyStore: PolymarketSessionKeyStore,
     private val deviceIdProvider: PolymarketDeviceIdProvider,
     private val sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
@@ -44,6 +46,7 @@ class ManagePolymarketSessionKeyInteractor(
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
     private val deriveApiCredentials: DeriveApiCredentialsUseCase,
     private val depositWalletLock: PolymarketDepositWalletLock,
+    private val pendingAuthorizations: PolymarketPendingAuthorizationStore,
     private val clock: Clock = Clock.systemUTC(),
 ) {
 
@@ -55,7 +58,13 @@ class ManagePolymarketSessionKeyInteractor(
         getApiCredentials = getApiCredentials,
         clock = clock,
     )
-    private val renewal = PolymarketSessionKeyRenewal(submitter = submitter, relay = relay, clock = clock)
+    private val renewal = PolymarketSessionKeyRenewal(
+        submitter = submitter,
+        relay = relay,
+        polymarketRepository = polymarketRepository,
+        pendingAuthorizations = pendingAuthorizations,
+        clock = clock,
+    )
     private val walletsInOperation: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
 
     /**
@@ -78,6 +87,7 @@ class ManagePolymarketSessionKeyInteractor(
             userWalletId = userWalletId,
             revokedAddress = sessionKeyAddress,
             authorize = authorizeBatch(sessionKeyAddress = sessionKeyAddress),
+            purpose = PolymarketPendingAuthorization.Purpose.EXTEND,
         )
     }
 
@@ -104,6 +114,7 @@ class ManagePolymarketSessionKeyInteractor(
                 userWalletId = userWalletId,
                 revokedAddress = previous.address,
                 authorize = authorizeBatch(sessionKeyAddress),
+                purpose = PolymarketPendingAuthorization.Purpose.REPLACE,
             )
         }
     }
@@ -117,6 +128,15 @@ class ManagePolymarketSessionKeyInteractor(
                 signed to with(submitter) { send { relay.revoke(userWalletId, revocationOf(signed)) } }
             }
             with(submitter) { awaitRevoked(userWalletId, signed.ownerAddress(), revoking) }
+        }
+
+    fun resume(userWalletId: UserWalletId): Flow<PolymarketSessionKeyProgress> =
+        operation(userWalletId, isResume = true) {
+            val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
+                with(renewal) { resume(userWalletId) }
+            }
+            emit(PolymarketSessionKeyProgress.Authorizing(pending))
+            with(submitter) { awaitActive(userWalletId, sent.ownerAddress, pending) }
         }
 
     suspend fun setEnabled(
@@ -153,12 +173,18 @@ class ManagePolymarketSessionKeyInteractor(
         userWalletId: UserWalletId,
         revokedAddress: String,
         authorize: PolymarketSessionKeyBatch.Authorize,
+        purpose: PolymarketPendingAuthorization.Purpose,
     ): PolymarketSessionKey {
         val batches = nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(sessionKeyAddress = revokedAddress), authorize)
         emit(PolymarketSessionKeyProgress.Signing)
         val (sent, pending) = depositWalletLock.withSessionKeyOperation(userWalletId) {
             val signed = sign(userWalletId, batches)
-            with(renewal) { revokeThenAuthorize(userWalletId, revocationOf(signed), authorizationOf(signed)) }
+            val interrupted = PolymarketPendingAuthorization(
+                revocation = revocationOf(signed),
+                authorization = authorizationOf(signed),
+                purpose = purpose,
+            )
+            with(renewal) { revokeThenAuthorize(userWalletId, interrupted) }
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
         return with(submitter) { awaitActive(userWalletId, sent.ownerAddress, pending) }
@@ -190,10 +216,14 @@ class ManagePolymarketSessionKeyInteractor(
 
     private fun operation(
         userWalletId: UserWalletId,
+        isResume: Boolean = false,
         block: suspend SessionKeyOperationScope.() -> PolymarketSessionKey,
     ): Flow<PolymarketSessionKeyProgress> = flow {
         val result = exclusively(userWalletId) {
-            either { SessionKeyOperationScope(raise = this, collector = this@flow).block() }
+            either {
+                if (!isResume) with(renewal) { ensureNothingPending(userWalletId) }
+                SessionKeyOperationScope(raise = this, collector = this@flow).block()
+            }
         }
         emit(PolymarketSessionKeyProgress.Finished(result))
     }

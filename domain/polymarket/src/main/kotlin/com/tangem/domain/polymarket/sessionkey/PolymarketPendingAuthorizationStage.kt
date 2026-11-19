@@ -28,7 +28,7 @@ internal fun PolymarketPendingAuthorization.stageAt(
     walletNonce: BigInteger,
     nowMillis: Long,
 ): PolymarketPendingAuthorizationStage {
-    if (!isExecutable(nowMillis)) return PolymarketPendingAuthorizationStage.Expired
+    if (!isResumable(nowMillis)) return PolymarketPendingAuthorizationStage.Expired
     val authorizationNonce = authorization.nonce.toBigIntegerOrNull()
         ?: return PolymarketPendingAuthorizationStage.NonceMoved
     if (revocation.nonce.toBigIntegerOrNull() != authorizationNonce - BigInteger.ONE) {
