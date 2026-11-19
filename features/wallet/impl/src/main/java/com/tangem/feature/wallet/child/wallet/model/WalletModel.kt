@@ -1081,7 +1081,7 @@ private fun AccountList.listedJointAccountIds(): Set<String> = accounts
     .filterIsInstance<Account.Joint>()
     .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
 
-//Joint accounts are reported by their own counters
+// Joint accounts are reported by their own counters
 internal fun AccountList.accountsCountWithoutJoint(): Int = accounts.count { it !is Account.Joint }
 
 /** Archived joint accounts are not in [accountList], so only the statuses of the accounts it holds are counted */
