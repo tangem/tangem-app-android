@@ -32,6 +32,7 @@ import com.tangem.hot.sdk.android.PassphraseValidator
 import com.tangem.hot.sdk.model.SeedPhrasePrivateInfo
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -85,11 +86,20 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
             require(mode is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet)
 
             val userWallet = getUserWalletUseCase(mode.userWalletId)
-                .getOrElse { error("User wallet with id ${mode.userWalletId} not found") }
+                .getOrElse {
+                    TangemLogger.e("User wallet with id ${mode.userWalletId} not found")
+                    return@launch
+                }
             if (userWallet is UserWallet.Hot) {
                 val privateInfo = exportSeedPhraseUseCase
                     .invoke(userWallet.hotWalletId)
-                    .getOrElse { error("Unable to export seed phrase for wallet with id ${mode.userWalletId}") }
+                    .getOrElse { throwable ->
+                        TangemLogger.e(
+                            "Unable to export seed phrase for wallet with id ${mode.userWalletId}",
+                            throwable,
+                        )
+                        return@launch
+                    }
 
                 if (!cardDerivesSameKeys(privateInfo)) {
                     showPassphraseNotSupportedDialog()

@@ -49,7 +49,6 @@ import com.tangem.features.earn.product.api.session.EarnStatusDetail
 import com.tangem.features.earn.product.api.session.EarnTxStatus
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -140,7 +139,7 @@ internal class EarnFlowConverter @Inject constructor() {
             tokenName = if (action.isFromPosition) product.title else status?.currency?.symbol?.let(::stringReference),
         ),
         clickIntents = clickIntents,
-        percents = if (action.isFromPosition) persistentListOf() else percents(callbacks),
+        percents = percents(callbacks),
         notice = action.notice,
         notifications = notifications,
         primary = TangemButtonUM(

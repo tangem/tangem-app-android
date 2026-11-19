@@ -20,7 +20,7 @@ import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
-import com.tangem.features.earn.product.api.product.EarnProductSummary
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.EarnFlowAction
@@ -48,9 +48,10 @@ internal class FakeEarnProduct(
 
     override val howItWorks: EarnHowItWorks? = fakeHowItWorks(preset)
 
-    override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> = flowOf(
-        mapOf(CryptoCurrency.ID.fromValue(FAKE_ETH_CURRENCY_ID) to fakeSummary(preset, behavior.position)),
-    )
+    override fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries> {
+        val ethId = CryptoCurrency.ID.fromValue(FAKE_ETH_CURRENCY_ID)
+        return flowOf(EarnSummaries(byCurrency = mapOf(ethId to fakeSummary(preset, behavior.position))))
+    }
 
     override fun state(params: EarnProduct.Params): Flow<EarnProductState> =
         flowOf(fakeReadyState(preset, behavior.position))

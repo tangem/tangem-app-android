@@ -162,7 +162,7 @@ internal class FakeEarnProductTest {
             val product = createProduct(preset)
 
             // Act
-            val actual = product.summaries(params.userWalletId).first().keys
+            val actual = product.summaries(params.userWalletId).first().byCurrency.keys
 
             // Assert
             assertThat(actual).containsExactly(ethId)
@@ -679,7 +679,7 @@ internal class FakeEarnProductTest {
     }
 
     private suspend fun EarnProduct.summary(): EarnProductSummary =
-        summaries(params.userWalletId).first().getValue(ethId)
+        summaries(params.userWalletId).first().byCurrency.getValue(ethId)
 
     internal data class IdentityModel(
         val preset: FakeEarnProductPreset,

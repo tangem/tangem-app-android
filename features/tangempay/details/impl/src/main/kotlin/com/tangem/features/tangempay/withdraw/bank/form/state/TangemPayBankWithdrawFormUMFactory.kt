@@ -36,7 +36,6 @@ internal class TangemPayBankWithdrawFormUMFactory(
         val isFilled = fields.all { field -> !values[field].isNullOrBlank() }
         // A saved account's address may have changed, so Continue next to its suggestion opens the fields to fill.
         val isRevealingFields = !isFilled && suggestions.isNotEmpty()
-        val lastEditableField = fields.lastOrNull { field -> field !in state.locked }
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(
                 draft = draft,
@@ -44,18 +43,14 @@ internal class TangemPayBankWithdrawFormUMFactory(
                 onCloseClick = callbacks.onCloseClick,
             ),
             fields = fields
-                .map { field ->
-                    if (field in state.locked) {
-                        FieldUM.Locked(field = field, value = values[field].orEmpty(), placeholder = field.placeholder)
-                    } else {
-                        createField(
-                            field = field,
-                            values = values,
-                            displayNames = displayNames,
-                            error = state.errors[field]?.toText(),
-                            isLast = field == lastEditableField,
-                        )
-                    }
+                .mapIndexed { index, field ->
+                    createField(
+                        field = field,
+                        values = values,
+                        displayNames = displayNames,
+                        error = state.errors[field]?.toText(),
+                        isLast = index == fields.lastIndex,
+                    )
                 }
                 .toImmutableList(),
             suggestions = suggestions,

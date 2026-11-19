@@ -9,6 +9,8 @@ object PolymarketRelayerDeadline {
 
     const val FOLLOW_UP_WINDOW_SECONDS = 1_200L
 
+    const val SEND_MARGIN_MILLIS = 30_000L
+
     private const val MILLIS_IN_SECOND = 1_000L
 
     /**

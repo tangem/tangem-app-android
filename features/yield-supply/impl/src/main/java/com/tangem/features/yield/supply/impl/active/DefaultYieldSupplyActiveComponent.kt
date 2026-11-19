@@ -161,6 +161,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyStopEarningComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                account = params.account,
                 callback = model,
                 feeSelectorComponentFactory = feeSelectorComponentFactory,
             ),
@@ -178,6 +179,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyClaimComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                account = params.account,
                 chainId = route.chainId,
                 userAddress = route.userAddress,
                 onSubmitted = model::onClaimSubmitted,
@@ -189,6 +191,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyApproveComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                account = params.account,
                 callback = model,
             ),
         )

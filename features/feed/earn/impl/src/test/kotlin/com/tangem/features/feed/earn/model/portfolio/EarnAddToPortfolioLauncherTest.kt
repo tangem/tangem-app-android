@@ -158,6 +158,7 @@ internal class EarnAddToPortfolioLauncherTest {
             every { integrationId } returns StakingIntegrationID.StakeKit.Coin.Solana
         }
         private val usdt = currencyFactory.createToken(Blockchain.Ethereum, id = "tether", symbol = "USDT")
+        private val ethereum = currencyFactory.createCoin(Blockchain.Ethereum)
 
         @ParameterizedTest
         @ProvideTestModels
@@ -166,6 +167,7 @@ internal class EarnAddToPortfolioLauncherTest {
         ) = runTest {
             // Arrange
             every { earnFeatureToggles.isUserPortfolioEnabled } returns model.isUserPortfolioEnabled
+            every { earnFeatureToggles.isEarnEnabled } returns model.isEarnEnabled
             coEvery { getStakingAvailabilityUseCase.invokeSync(userWalletId, model.addedCurrency) } returns
                 (model.stakingAvailability?.right() ?: StakingError.DomainError(message = null).left())
             coEvery { yieldSupplyGetAvailabilityUseCase(model.addedCurrency) } returns
@@ -246,6 +248,31 @@ internal class EarnAddToPortfolioLauncherTest {
                 ),
                 RouteModel(
                     trigger = trigger,
+                    earnType = EarnType.VAULT,
+                    addedCurrency = ethereum,
+                    expected = AppRoute.EarnEntry(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = ethereum,
+                        source = AppRoute.EarnEntry.Source.Markets,
+                        start = AppRoute.EarnEntry.Start.Auto,
+                    ),
+                ),
+                RouteModel(
+                    trigger = trigger,
+                    earnType = EarnType.VAULT,
+                    addedCurrency = ethereum,
+                    isEarnEnabled = false,
+                    expected = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = ethereum),
+                ),
+                RouteModel(
+                    trigger = trigger,
+                    earnType = EarnType.VAULT,
+                    addedCurrency = ethereum,
+                    isUserPortfolioEnabled = false,
+                    expected = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = ethereum),
+                ),
+                RouteModel(
+                    trigger = trigger,
                     earnType = EarnType.STAKING,
                     addedCurrency = solana,
                     isUserPortfolioEnabled = false,
@@ -277,6 +304,7 @@ internal class EarnAddToPortfolioLauncherTest {
         val addedCurrency: CryptoCurrency,
         val expected: AppRoute,
         val isUserPortfolioEnabled: Boolean = true,
+        val isEarnEnabled: Boolean = true,
         /** `null` makes the use case fail. */
         val stakingAvailability: StakingAvailability? = null,
         /** `null` makes the use case fail. */

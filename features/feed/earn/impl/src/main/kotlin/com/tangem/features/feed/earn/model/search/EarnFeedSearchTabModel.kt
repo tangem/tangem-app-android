@@ -85,7 +85,7 @@ internal class EarnFeedSearchTabModel @Inject constructor(
     private val router: Router,
     addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
-    earnFeatureToggles: EarnFeatureToggles,
+    private val earnFeatureToggles: EarnFeatureToggles,
     getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
 ) : Model() {
@@ -132,7 +132,7 @@ internal class EarnFeedSearchTabModel @Inject constructor(
     private val portfolioResultsCount = MutableStateFlow(0)
     private val earnResultsCount = MutableStateFlow<Int?>(null)
 
-    private val catalog = getEarnTokensCatalogUseCase()
+    private val catalog = getEarnTokensCatalogUseCase(isVaultsIncluded = earnFeatureToggles.isEarnEnabled)
         .stateIn(
             scope = modelScope,
             started = SharingStarted.Eagerly,
@@ -231,7 +231,8 @@ internal class EarnFeedSearchTabModel @Inject constructor(
     private suspend fun fetchCatalog() {
         fetchEarnTokensCatalogUseCase()
 
-        val error = getEarnTokensCatalogUseCase().first()?.leftOrNull() ?: return
+        val error = getEarnTokensCatalogUseCase(isVaultsIncluded = earnFeatureToggles.isEarnEnabled)
+            .first()?.leftOrNull() ?: return
         val (code, message) = when (error) {
             is EarnError.HttpError -> error.code to error.message
             is EarnError.NotHttpError -> null to ""

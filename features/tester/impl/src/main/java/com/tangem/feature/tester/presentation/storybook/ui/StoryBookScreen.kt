@@ -9,6 +9,7 @@ import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.Po
 import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.PolymarketEventChartStory
 import androidx.compose.ui.Modifier
 import com.tangem.feature.tester.presentation.storybook.entity.ButtonsStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemToastStory
 import com.tangem.feature.tester.presentation.storybook.entity.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
@@ -69,6 +70,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.pagination.Tange
 import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.TangemSwitchStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.toast.TangemToastStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.menu.TangemMenuStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.TangemMessageBubbleStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.actionmessage.TangemActionMessageStory
@@ -164,6 +166,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemFadeStory -> TangemFadeStory(state = storyState)
                 is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
+                is TangemToastStory -> TangemToastStory(state = storyState)
                 is TangemMessageBubbleStory -> TangemMessageBubbleStory(state = storyState)
                 is TangemMenuStory -> TangemMenuStory(state = storyState)
                 is TangemActionMessageStory -> TangemActionMessageStory(state = storyState)

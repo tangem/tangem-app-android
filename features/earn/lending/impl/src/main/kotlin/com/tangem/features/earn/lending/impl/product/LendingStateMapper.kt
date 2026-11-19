@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.domain.models.StatusSource
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingProvider
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
@@ -66,7 +67,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         val market = state?.market ?: return EarnProductState.Unavailable
         val rate = market.rate
         if (rate == null) {
-            val isWaiting = market.deposit == LendingDepositGate.Loading
+            val isWaiting = market.deposit == LendingDepositGate.Loading || market.rateSource == StatusSource.CACHE
             return if (isWaiting) EarnProductState.Loading else EarnProductState.Unavailable
         }
 

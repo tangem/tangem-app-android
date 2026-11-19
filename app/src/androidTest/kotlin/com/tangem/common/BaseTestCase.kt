@@ -118,6 +118,7 @@ abstract class BaseTestCase : TestCase(
         useWireMock: Boolean = true,
         additionalBeforeAppLaunchSection: () -> Unit = {},
         additionalPreferencesSection: ((MutablePreferences) -> Unit)? = null,
+        additionalStorageSection: () -> Unit = {},
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
@@ -166,6 +167,8 @@ abstract class BaseTestCase : TestCase(
             }
             additionalPreferencesSection?.let { section -> appPreferencesStore.editData { section(it) } }
         }
+        // Repositories edit their DataStores themselves, which would hang inside the preferences transaction above
+        additionalStorageSection()
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
         Intents.init()

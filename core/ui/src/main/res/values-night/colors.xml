@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="icon_primary1">#FFFFFFFF</color>
+    <color name="icon_warning">#FF5B5B</color>
 </resources>

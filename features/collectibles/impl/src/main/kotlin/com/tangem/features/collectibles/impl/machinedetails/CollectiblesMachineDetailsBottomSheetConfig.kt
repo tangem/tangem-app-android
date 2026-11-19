@@ -7,4 +7,7 @@ internal sealed interface CollectiblesMachineDetailsBottomSheetConfig {
 
     @Serializable
     data object TurboInfo : CollectiblesMachineDetailsBottomSheetConfig
+
+    @Serializable
+    data object RegionRestricted : CollectiblesMachineDetailsBottomSheetConfig
 }

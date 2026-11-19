@@ -63,9 +63,22 @@ internal class MarketCategorySelectorTransformerTest {
     }
 
     @Test
-    fun `GIVEN a search WHEN transformed THEN the rail is dropped and only matches remain`() {
-        // Act — an unfiltered shortcut strip and "no filter" are not search results
-        val actual = transform(featured = listOf(meme), categories = listOf(ai), isSearching = true)
+    fun `GIVEN a search WHEN transformed THEN the rail keeps only featured categories matching by name`() {
+        // Arrange — the featured request takes no search text, so the rail is narrowed client-side
+        val gaming = createCategory(id = "gaming", name = "Gaming", isFeatured = true)
+
+        // Act
+        val actual = transform(featured = listOf(meme, gaming), categories = listOf(meme), query = "MEM")
+
+        // Assert
+        assertThat(actual.featured?.items?.map(FeaturedCategoryUM::id)).containsExactly("meme")
+        assertThat(actual.categories.items.map(MarketCategoryItemUM::id)).containsExactly("meme")
+    }
+
+    @Test
+    fun `GIVEN a search matching no featured category WHEN transformed THEN the rail is dropped`() {
+        // Act
+        val actual = transform(featured = listOf(meme), categories = listOf(ai), query = "ai")
 
         // Assert
         assertThat(actual.featured).isNull()
@@ -131,7 +144,7 @@ internal class MarketCategorySelectorTransformerTest {
         categories: List<MarketCategory> = emptyList(),
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
-        isSearching: Boolean = false,
+        query: String? = null,
         isLoadingMore: Boolean = false,
         prevState: MarketCategorySelectorUM = createSelectorState(),
     ): MarketCategorySelectorUM = MarketCategorySelectorTransformer(
@@ -139,7 +152,7 @@ internal class MarketCategorySelectorTransformerTest {
         categories = categories,
         selection = selection,
         appCurrency = appCurrency,
-        isSearching = isSearching,
+        query = query,
         isLoadingMore = isLoadingMore,
         onLoadMore = onLoadMore,
         onSelectionChange = {},
@@ -151,7 +164,7 @@ internal class MarketCategorySelectorTransformerTest {
         categories: List<MarketCategory> = emptyList(),
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
-        isSearching: Boolean = false,
+        query: String? = null,
         isLoadingMore: Boolean = false,
         prevState: MarketCategorySelectorUM = createSelectorState(),
     ): MarketCategorySelectorUM.ContentUM.Content = transformState(
@@ -159,7 +172,7 @@ internal class MarketCategorySelectorTransformerTest {
         categories = categories,
         selection = selection,
         appCurrency = appCurrency,
-        isSearching = isSearching,
+        query = query,
         isLoadingMore = isLoadingMore,
         prevState = prevState,
     ).body()
@@ -186,7 +199,7 @@ internal class MarketCategorySelectorTransformerTest {
                 categories = emptyList(),
                 selection = MarketCategorySelection(),
                 appCurrency = AppCurrency.Default,
-                isSearching = false,
+                query = null,
                 isLoadingMore = false,
                 onLoadMore = {},
                 onSelectionChange = {},

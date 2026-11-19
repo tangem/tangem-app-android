@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.alloffers.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,7 +24,6 @@ import coil.request.ImageRequest
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
@@ -59,7 +59,7 @@ internal fun PaymentMethodsContentDs(methods: ImmutableList<AllOffersPaymentMeth
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (notification != null) {
-            TangemMessage(config = notification.config)
+            RegionRestrictionBannerDs(notification = notification)
             SpacerH(4.dp)
         }
         methods.fastForEach { method ->
@@ -300,7 +300,8 @@ private fun TimingBlockInfoDs(speed: PaymentMethodType.PaymentSpeed) {
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
 @Composable
 private fun PaymentMethodsContentPreviewDs() {

@@ -14,6 +14,7 @@ import com.tangem.core.ui.message.modal.MessageModalUM
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_24
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.AccountType
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.CloseMethod
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.ContactSupportClicked
@@ -193,6 +194,90 @@ internal class KycAdditionalInfoNoticeTest {
             verify(exactly = 0) { analytics.send(any()) }
             verify(exactly = 0) { uiMessageSender.send(any()) }
         }
+
+        @Test
+        fun `GIVEN opened from push AND popup already shown in session WHEN flag appears THEN popup shown with push entry point`() =
+            runTest {
+                // Arrange
+                coEvery { popupStore.tryMarkShown(any()) } returns false
+                val notice = createNotice(isOpenedFromPush = true)
+
+                // Act
+                notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+                // Assert
+                verify(exactly = 1) {
+                    analytics.send(NoticeShown(accountType = AccountType.PAYMENT, placement = Placement.ACCOUNT_BLOCK))
+                }
+                verify(exactly = 1) {
+                    analytics.send(PopupShown(accountType = AccountType.PAYMENT, entryPoint = EntryPoint.PUSH))
+                }
+                verify(exactly = 1) { uiMessageSender.send(any()) }
+                coVerify(exactly = 1) {
+                    popupStore.tryMarkShown(KycAdditionalInfoAccount(userWalletId, AccountType.PAYMENT))
+                }
+            }
+
+        @Test
+        fun `GIVEN popup from push shown AND flag dropped WHEN flag returns THEN popup uses account entry point`() =
+            runTest {
+                // Arrange
+                val notice = createNotice(isOpenedFromPush = true)
+                notice.onStatus(isRequired = true, isPopupAllowed = true)
+                notice.onStatus(isRequired = false, isPopupAllowed = true)
+
+                // Act
+                notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+                // Assert
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.PUSH)) }
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.ACCOUNT_ENTRY)) }
+            }
+
+        @Test
+        fun `GIVEN opened from push AND first status without flag WHEN flag appears later THEN popup uses push entry point`() =
+            runTest {
+                // Arrange
+                coEvery { popupStore.tryMarkShown(any()) } returns false
+                val notice = createNotice(isOpenedFromPush = true)
+                notice.onStatus(isRequired = false, isPopupAllowed = true)
+
+                // Act
+                notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+                // Assert
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.PUSH)) }
+                verify(exactly = 1) { uiMessageSender.send(any()) }
+            }
+
+        @Test
+        fun `GIVEN popup from push shown WHEN flag reported again THEN nothing sent again`() = runTest {
+            // Arrange
+            val notice = createNotice(isOpenedFromPush = true)
+            notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+            // Act
+            notice.onStatus(isRequired = true, isPopupAllowed = true)
+
+            // Assert
+            verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.PUSH)) }
+            verify(exactly = 2) { analytics.send(any()) }
+            verify(exactly = 1) { uiMessageSender.send(any()) }
+        }
+
+        @Test
+        fun `GIVEN opened from push AND popup not allowed WHEN flag appears THEN popup not shown`() = runTest {
+            // Arrange
+            val notice = createNotice(isOpenedFromPush = true)
+
+            // Act
+            notice.onStatus(isRequired = true, isPopupAllowed = false)
+
+            // Assert
+            verify(exactly = 0) { analytics.send(ofType<PopupShown>()) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            coVerify(exactly = 0) { popupStore.tryMarkShown(any()) }
+        }
     }
 
     @Nested
@@ -352,6 +437,42 @@ internal class KycAdditionalInfoNoticeTest {
             ResolvedModel(resolvedBy = PopupAction.DISMISS, followedBy = PopupAction.PROVIDE_INFORMATION),
             ResolvedModel(resolvedBy = PopupAction.DISMISS, followedBy = PopupAction.CONTACT_SUPPORT),
         )
+
+        @Nested
+        @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+        inner class OpenedFromPush {
+
+            @ParameterizedTest
+            @ProvideTestModels
+            fun `GIVEN modal opened from push WHEN user acts THEN event carries push entry point`(model: PushActionModel) =
+                runTest {
+                    // Arrange
+                    val popup = showPopup(createNotice(isOpenedFromPush = true))
+                    clearMocks(analytics)
+
+                    // Act
+                    popup.perform(action = model.action, host = FakeModalHost(popup))
+
+                    // Assert
+                    verify(exactly = 1) { analytics.send(model.expectedEvent) }
+                    verify(exactly = 1) { analytics.send(any()) }
+                }
+
+            private fun provideTestModels() = listOf(
+                PushActionModel(
+                    action = PopupAction.PROVIDE_INFORMATION,
+                    expectedEvent = ProvideInformationClicked(AccountType.PAYMENT, Source.POPUP, EntryPoint.PUSH),
+                ),
+                PushActionModel(
+                    action = PopupAction.CONTACT_SUPPORT,
+                    expectedEvent = ContactSupportClicked(AccountType.PAYMENT, EntryPoint.PUSH),
+                ),
+                PushActionModel(
+                    action = PopupAction.DISMISS,
+                    expectedEvent = PopupClosed(AccountType.PAYMENT, EntryPoint.PUSH, CloseMethod.UNKNOWN),
+                ),
+            )
+        }
     }
 
     @Nested
@@ -379,11 +500,15 @@ internal class KycAdditionalInfoNoticeTest {
             }
     }
 
-    private fun createNotice(accountType: AccountType = AccountType.PAYMENT) = KycAdditionalInfoNotice(
+    private fun createNotice(
+        accountType: AccountType = AccountType.PAYMENT,
+        isOpenedFromPush: Boolean = false,
+    ) = KycAdditionalInfoNotice(
         account = KycAdditionalInfoAccount(userWalletId = userWalletId, accountType = accountType),
         popupStore = popupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
+        isOpenedFromPush = isOpenedFromPush,
         onProvideInformation = onProvideInformation,
         onContactSupport = onContactSupport,
     )
@@ -421,6 +546,8 @@ internal class KycAdditionalInfoNoticeTest {
     }
 
     data class ResolvedModel(val resolvedBy: PopupAction, val followedBy: PopupAction)
+
+    data class PushActionModel(val action: PopupAction, val expectedEvent: TangemPayKycAdditionalInfoAnalyticsEvents)
 
     enum class PopupAction {
         PROVIDE_INFORMATION,

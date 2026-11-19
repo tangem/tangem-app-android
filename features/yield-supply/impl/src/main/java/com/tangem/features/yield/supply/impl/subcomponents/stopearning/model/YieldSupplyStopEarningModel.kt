@@ -47,7 +47,6 @@ import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelec
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencyChoice
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
@@ -87,7 +86,6 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
-    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val yieldSupplyStopEarningUseCase: YieldSupplyStopEarningUseCase,
     private val urlOpener: UrlOpener,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
@@ -329,11 +327,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun isHeldOutsidePortfolio(): Boolean {
-        return currencyStatusResolver.isHeldOutsidePortfolio(
-            userWalletId = userWallet.walletId,
-            currency = cryptoCurrency,
-        )
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
     }
 
     private suspend fun onLoadFee(load: Int) = coroutineScope {
@@ -513,10 +508,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 feeTokenId = fee.feeTokenId,
                 network = cryptoCurrency.network,
+                account = params.account,
             )
         }
         if (feeTokenStatus == null) {
-            TangemLogger.e("Yield Mode exit Smart Gas fee token ${fee.feeTokenId} is not in the portfolio")
+            TangemLogger.e(
+                "Yield Mode exit Smart Gas fee token ${fee.feeTokenId} is not in the ${params.account} account",
+            )
             return null
         }
         return YieldSupplySmartGasFee(

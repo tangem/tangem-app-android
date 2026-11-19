@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.creation.config.state.transformers
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
@@ -23,6 +24,7 @@ internal class UpdateWalletsTransformerTest {
         val transformer = UpdateWalletsTransformer(
             wallets = model.wallets,
             selectedWallet = model.selectedWallet,
+            selectedWalletIcon = model.selectedWalletIcon,
             onWalletRowClick = onWalletRowClick,
         )
 
@@ -30,10 +32,7 @@ internal class UpdateWalletsTransformerTest {
         val actual = transformer.transform(prevState = createState(wallet = model.prevWallet))
 
         // Assert
-        val expectedWallet = model.expectedWalletName?.let {
-            JointAccountConfigUM.WalletUM(name = it, onClick = onWalletRowClick)
-        }
-        assertThat(actual).isEqualTo(createState(wallet = expectedWallet))
+        assertThat(actual).isEqualTo(createState(wallet = model.expectedWallet))
     }
 
     private fun provideTestModels() = listOf(
@@ -41,51 +40,72 @@ internal class UpdateWalletsTransformerTest {
         TransformModel(
             wallets = listOf(firstWallet),
             selectedWallet = firstWallet,
+            selectedWalletIcon = cardIcon,
             prevWallet = null,
-            expectedWalletName = null,
+            expectedWallet = null,
         ),
         // several wallets show the row with the selected wallet name
         TransformModel(
             wallets = listOf(firstWallet, secondWallet),
             selectedWallet = secondWallet,
+            selectedWalletIcon = cardIcon,
             prevWallet = null,
-            expectedWalletName = secondWallet.name,
+            expectedWallet = walletRow(secondWallet),
         ),
         // selecting another wallet updates the name shown in the row
         TransformModel(
             wallets = listOf(firstWallet, secondWallet, thirdWallet),
             selectedWallet = thirdWallet,
-            prevWallet = JointAccountConfigUM.WalletUM(name = firstWallet.name, onClick = onWalletRowClick),
-            expectedWalletName = thirdWallet.name,
+            selectedWalletIcon = cardIcon,
+            prevWallet = walletRow(firstWallet),
+            expectedWallet = walletRow(thirdWallet),
+        ),
+        // the row shows the icon resolved for the selected wallet as is
+        TransformModel(
+            wallets = listOf(firstWallet, secondWallet),
+            selectedWallet = secondWallet,
+            selectedWalletIcon = DeviceIconUM.Mobile,
+            prevWallet = null,
+            expectedWallet = walletRow(secondWallet, deviceIcon = DeviceIconUM.Mobile),
         ),
         // no selected wallet yet: the row cannot be rendered
         TransformModel(
             wallets = listOf(firstWallet, secondWallet),
             selectedWallet = null,
+            selectedWalletIcon = null,
             prevWallet = null,
-            expectedWalletName = null,
+            expectedWallet = null,
         ),
         // the wallets list shrank to one: the previously shown row is hidden again
         TransformModel(
             wallets = listOf(firstWallet),
             selectedWallet = firstWallet,
-            prevWallet = JointAccountConfigUM.WalletUM(name = secondWallet.name, onClick = onWalletRowClick),
-            expectedWalletName = null,
+            selectedWalletIcon = cardIcon,
+            prevWallet = walletRow(secondWallet),
+            expectedWallet = null,
         ),
         // no wallets at all
         TransformModel(
             wallets = emptyList(),
             selectedWallet = null,
+            selectedWalletIcon = null,
             prevWallet = null,
-            expectedWalletName = null,
+            expectedWallet = null,
         ),
     )
 
     internal data class TransformModel(
         val wallets: List<UserWallet>,
         val selectedWallet: UserWallet?,
+        val selectedWalletIcon: DeviceIconUM?,
         val prevWallet: JointAccountConfigUM.WalletUM?,
-        val expectedWalletName: String?,
+        val expectedWallet: JointAccountConfigUM.WalletUM?,
+    )
+
+    private fun walletRow(wallet: UserWallet, deviceIcon: DeviceIconUM = cardIcon) = JointAccountConfigUM.WalletUM(
+        name = wallet.name,
+        deviceIcon = deviceIcon,
+        onClick = onWalletRowClick,
     )
 
     private fun createState(wallet: JointAccountConfigUM.WalletUM?): JointAccountConfigUM {
@@ -124,6 +144,7 @@ internal class UpdateWalletsTransformerTest {
             walletId = UserWalletId(stringValue = "013"),
             name = "My wallet 3",
         )
+        val cardIcon = DeviceIconUM.Stub(cardsCount = 1)
 
         // Shared instances so states built before and after a transform compare equal
         val namePlaceholder = stringReference(value = "Joint account")

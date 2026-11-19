@@ -30,7 +30,6 @@ import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
-import com.tangem.features.tangempay.withdraw.bank.model.CustomerNameState
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
@@ -64,7 +63,6 @@ import java.util.Locale
 internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
 
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
-    private val onRetryCustomerName: () -> Unit = mockk(relaxed = true)
     private val networkFeeLoader: BankWithdrawNetworkFeeLoader = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -83,11 +81,10 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
     private val confirmed = mutableListOf<BankWithdrawAmountResult>()
     private lateinit var draftFlow: MutableStateFlow<BankWithdrawDraft>
     private lateinit var optionsFlow: MutableStateFlow<BankWithdrawOptions>
-    private lateinit var customerNameFlow: MutableStateFlow<CustomerNameState>
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(analytics, router, uiMessageSender, onCloseFlow, networkFeeLoader, onRetryCustomerName)
+        clearMocks(analytics, router, uiMessageSender, onCloseFlow, networkFeeLoader)
         confirmed.clear()
         coEvery { networkFeeLoader.load(any(), any()) } returns BigDecimal.ZERO.right()
     }
@@ -462,46 +459,19 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
         }
 
         @Test
-        fun `GIVEN SPEI picked and name loading WHEN it loads THEN the form replaces the loading screen`() {
+        fun `GIVEN SPEI picked WHEN network fee loaded THEN the form shown`() {
             // Arrange
             coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+
+            // Act
             val model = createModel(
                 draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, destination = SPEI_DESTINATION),
                 options = SPEI_OPTIONS,
                 sourceAccount = moneyAccount,
-                customerName = CustomerNameState.Loading,
             )
-            val beforeName = model.uiState.value
-
-            // Act
-            customerNameFlow.value = CustomerNameState.Loaded(firstName = "José", lastName = "Hernández")
 
             // Assert
-            assertThat(beforeName).isInstanceOf(TangemPayBankWithdrawAmountUM.Loading::class.java)
             assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN SPEI picked and name unreachable WHEN retried THEN the name is asked again and the fee kept`() {
-            // Arrange
-            coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
-            val model = createModel(
-                draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, destination = SPEI_DESTINATION),
-                options = SPEI_OPTIONS,
-                sourceAccount = moneyAccount,
-                customerName = CustomerNameState.Unreachable,
-            )
-            val unreachable = model.uiState.value as TangemPayBankWithdrawAmountUM.Unreachable
-
-            // Act
-            unreachable.onRetryClick()
-
-            // Assert
-            assertThat(unreachable.message)
-                .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_data_unreachable))
-            verify(exactly = 1) { onRetryCustomerName() }
-            coVerify(exactly = 1) { networkFeeLoader.load(moneyAccount, any()) }
             model.onDestroy()
         }
 
@@ -1224,22 +1194,18 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
         options: BankWithdrawOptions = twoSourceOptions,
         isBalanceHidden: Boolean = false,
         sourceAccount: BankWithdrawSourceAccount = paymentAccount,
-        customerName: CustomerNameState = CustomerNameState.NotNeeded,
     ): TangemPayBankWithdrawAmountModel {
         draftFlow = MutableStateFlow(draft)
         optionsFlow = MutableStateFlow(options)
-        customerNameFlow = MutableStateFlow(customerName)
         return TangemPayBankWithdrawAmountModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawAmountComponent.Params(
                     sourceAccount = sourceAccount,
                     draft = draftFlow,
                     options = optionsFlow,
-                    customerName = customerNameFlow,
                     step = step,
                     onContinue = confirmed::add,
                     onCloseFlow = onCloseFlow,
-                    onRetryCustomerName = onRetryCustomerName,
                 ),
             ),
             dispatchers = dispatchers,

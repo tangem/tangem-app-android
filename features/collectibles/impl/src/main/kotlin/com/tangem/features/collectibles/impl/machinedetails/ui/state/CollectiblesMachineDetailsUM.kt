@@ -102,5 +102,6 @@ internal sealed interface CollectiblesMachineDetailsUM {
         val expectedValue: TextReference,
         val buyButtonText: TextReference,
         val onBuyClick: () -> Unit,
+        val isBuyLoading: Boolean = false,
     )
 }

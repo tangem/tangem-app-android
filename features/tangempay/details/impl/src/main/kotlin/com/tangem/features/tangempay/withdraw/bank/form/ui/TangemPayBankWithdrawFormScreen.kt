@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.components.ClearFocusOnKeyboardHidden
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
@@ -42,6 +43,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM, modifier: Modifier = Modifier) {
+    ClearFocusOnKeyboardHidden(isEnabled = state.suggestions.isEmpty())
     TangemTopBarScaffold(
         modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_FORM_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
@@ -121,13 +123,6 @@ private fun FormField(state: FieldUM) {
     when (state) {
         is FieldUM.Text -> TextField(state = state, modifier = modifier)
         is FieldUM.Selector -> SelectorField(state = state, modifier = modifier)
-        is FieldUM.Locked -> TextInput(
-            label = state.field.label,
-            value = state.value,
-            onValueChange = {},
-            modifier = modifier,
-            state = TextInputState.Disabled,
-        )
     }
 }
 
@@ -202,7 +197,7 @@ private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdr
         TangemPayBankWithdrawFormPreviewData.personalWithError,
         TangemPayBankWithdrawFormPreviewData.personalFreeTextRegion,
         TangemPayBankWithdrawFormPreviewData.personalUsRegion,
-        TangemPayBankWithdrawFormPreviewData.speiWithProfileNames,
+        TangemPayBankWithdrawFormPreviewData.speiPersonal,
         TangemPayBankWithdrawFormPreviewData.businessBank,
     )
 }

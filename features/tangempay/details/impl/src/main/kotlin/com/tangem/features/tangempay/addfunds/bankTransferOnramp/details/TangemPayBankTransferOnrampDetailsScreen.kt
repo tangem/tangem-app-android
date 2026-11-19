@@ -78,7 +78,7 @@ internal fun TangemPayBankTransferOnrampDetailsScreen(
         ) {
             RequisitesCard(requisites = state.requisites)
             if (!state.fees.isEmpty) {
-                FeesSection(fees = state.fees)
+                FeesSection(fees = state.fees, isSwiftWarningShown = state.isSwiftWarningShown)
             }
             if (state.minimumDeposit != null || state.dailyDepositLimit != null) {
                 LimitationsBlock(
@@ -102,13 +102,13 @@ internal fun TangemPayBankTransferOnrampDetailsScreen(
 }
 
 @Composable
-private fun FeesSection(fees: TangemPayOnrampFeesUM) {
+private fun FeesSection(fees: TangemPayOnrampFeesUM, isSwiftWarningShown: Boolean) {
     SectionCaption(
         text = resourceReference(R.string.tangempay_bank_transfer_details_fee_header),
         modifier = Modifier.padding(top = 24.dp),
     )
     TangemPayOnrampFees(fees = fees)
-    if (fees !is TangemPayOnrampFeesUM.Error) {
+    if (isSwiftWarningShown && fees !is TangemPayOnrampFeesUM.Error) {
         SectionCaption(text = resourceReference(R.string.tangempay_bank_transfer_swift_warning))
     }
 }
@@ -290,6 +290,7 @@ private fun previewState(
         previewRequisite(key = "Bank address", value = "8700 Perry Highway, Pittsburgh, PA 15237, US"),
     ),
     fees = fees,
+    isSwiftWarningShown = true,
     minimumDeposit = minimumDeposit,
     dailyDepositLimit = dailyDepositLimit,
     tabs = tabs,
@@ -314,6 +315,7 @@ private fun previewSpeiState() = TangemPayBankTransferOnrampDetailsScreenUM(
             stringReference("Indicative rate. A deposit is credited at the rate on the day it arrives"),
         ),
     ),
+    isSwiftWarningShown = false,
     minimumDeposit = stringReference("MX$38"),
     dailyDepositLimit = null,
     onShareClick = {},

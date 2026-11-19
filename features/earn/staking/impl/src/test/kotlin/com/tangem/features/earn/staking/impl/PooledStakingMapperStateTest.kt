@@ -3,6 +3,7 @@ package com.tangem.features.earn.staking.impl
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import com.tangem.core.ui.R as CoreUiR
 
 internal class PooledStakingMapperStateTest {
 
@@ -76,9 +78,10 @@ internal class PooledStakingMapperStateTest {
             description = resourceReference(R.string.earn_yield_picker_pooled_staking_description),
             projection = null,
             benefits = listOf(
-                textBlock(
+                EarnTextBlock(
                     title = resourceReference(R.string.earn_product_details_staking_benefit_title),
                     description = resourceReference(R.string.earn_product_details_staking_benefit_subtitle),
+                    icon = TangemIconUM.Icon(CoreUiR.drawable.ic_staking_24),
                 ),
             ),
             details = listOf(

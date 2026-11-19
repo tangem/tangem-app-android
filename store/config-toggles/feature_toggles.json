@@ -29,11 +29,11 @@
     },
     {
         "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
@@ -48,11 +48,19 @@
         "version": "6.9"
     },
     {
+        "name": "AND_19514_CATEGORY_FILTERS_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1958_ADD_FUNDS_RECEIVE_STAGE_1_ENABLED",
         "version": "undefined"
     },
     {
         "name": "TWI_1898_NPS_SURVEY_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1821_PERMANENT_UPGRADE_BANNER_ENABLED",
         "version": "undefined"
     }
 ]

@@ -21,9 +21,9 @@ internal class TangemPayApiErrorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideBankOfframpCodeModels")
-    fun `GIVEN bank off-ramp backend code WHEN fromBackendError THEN its own error with the universal code`(
-        model: BankOfframpCodeModel,
+    @MethodSource("provideBackendCodeModels")
+    fun `GIVEN mapped backend code WHEN fromBackendError THEN its own error with the universal code`(
+        model: BackendCodeModel,
     ) {
         // Act
         val error = TangemPayApiError.fromBackendError(backendErrorCode = model.backendCode)
@@ -103,6 +103,7 @@ internal class TangemPayApiErrorTest {
         Case(TangemPayApiError.CardIssueInsufficientBalance, isOutcomeUnknown = false),
         Case(TangemPayApiError.CardIssueInvalidShippingAddress, isOutcomeUnknown = false),
         Case(TangemPayApiError.CardIssueInvalidEmbossName, isOutcomeUnknown = false),
+        Case(TangemPayApiError.CardCloseLastCard, isOutcomeUnknown = false),
         Case(TangemPayApiError.CardActivationInvalidCardData, isOutcomeUnknown = false),
         Case(TangemPayApiError.CardActivationCardNotPhysical, isOutcomeUnknown = false),
         Case(TangemPayApiError.CardActivationCardAlreadyActive, isOutcomeUnknown = false),
@@ -128,14 +129,15 @@ internal class TangemPayApiErrorTest {
         Case(TangemPayApiError.AccountIssueActiveOrderExists, isOutcomeUnknown = false),
     )
 
-    private fun provideBankOfframpCodeModels() = listOf(
-        BankOfframpCodeModel(140164, 104140164, TangemPayApiError.BankOfframpQuoteExpired),
-        BankOfframpCodeModel(140165, 104140165, TangemPayApiError.BankOfframpRegionUnsupported),
-        BankOfframpCodeModel(140166, 104140166, TangemPayApiError.BankOfframpVerificationIncomplete),
-        BankOfframpCodeModel(140167, 104140167, TangemPayApiError.BankOfframpConflict),
-        BankOfframpCodeModel(140168, 104140168, TangemPayApiError.BankOfframpAmountOutOfLimits),
-        BankOfframpCodeModel(140169, 104140169, TangemPayApiError.BankOfframpRejected),
+    private fun provideBackendCodeModels() = listOf(
+        BackendCodeModel(140120, 104140120, TangemPayApiError.CardCloseLastCard),
+        BackendCodeModel(140164, 104140164, TangemPayApiError.BankOfframpQuoteExpired),
+        BackendCodeModel(140165, 104140165, TangemPayApiError.BankOfframpRegionUnsupported),
+        BackendCodeModel(140166, 104140166, TangemPayApiError.BankOfframpVerificationIncomplete),
+        BackendCodeModel(140167, 104140167, TangemPayApiError.BankOfframpConflict),
+        BackendCodeModel(140168, 104140168, TangemPayApiError.BankOfframpAmountOutOfLimits),
+        BackendCodeModel(140169, 104140169, TangemPayApiError.BankOfframpRejected),
     )
 
-    data class BankOfframpCodeModel(val backendCode: Int, val universalCode: Int, val expected: TangemPayApiError)
+    data class BackendCodeModel(val backendCode: Int, val universalCode: Int, val expected: TangemPayApiError)
 }

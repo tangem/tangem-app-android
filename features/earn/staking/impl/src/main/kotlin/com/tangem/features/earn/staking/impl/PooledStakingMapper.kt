@@ -1,6 +1,7 @@
 package com.tangem.features.earn.staking.impl
 
 import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -34,6 +35,7 @@ import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
 import java.math.BigDecimal
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
 internal class PooledStakingMapper @Inject constructor() {
 
@@ -82,9 +84,10 @@ internal class PooledStakingMapper @Inject constructor() {
             description = resourceReference(R.string.earn_yield_picker_pooled_staking_description),
             projection = DefaultEarnProjection(netRate = bestVault.netRate()),
             benefits = listOf(
-                textBlock(
+                EarnTextBlock(
                     title = resourceReference(R.string.earn_product_details_staking_benefit_title),
                     description = resourceReference(R.string.earn_product_details_staking_benefit_subtitle),
+                    icon = TangemIconUM.Icon(CoreUiR.drawable.ic_staking_24),
                 ),
             ),
             details = details(feePercent = bestVault.feePercent.stripTrailingZeros().toPlainString()),

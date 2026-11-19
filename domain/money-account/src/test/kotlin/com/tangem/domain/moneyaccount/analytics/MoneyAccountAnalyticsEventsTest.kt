@@ -34,7 +34,7 @@ internal class MoneyAccountAnalyticsEventsTest {
                     accountState = AccountState.ACTIVE,
                     balanceBand = BalanceBand.FROM_100_TO_1K,
                     currency = "USD",
-                    additionalVerificationNotice = null,
+                    additionalVerificationNotice = NoticeState.NOT_SHOWN,
                 ),
                 expectedId = "[Cash Account] Account Screen Opened",
                 expectedParams = mapOf(
@@ -42,6 +42,7 @@ internal class MoneyAccountAnalyticsEventsTest {
                     "balance_band" to "100-1k",
                     "yield_enabled" to "no",
                     "currency" to "USD",
+                    "additional_verification_notice" to "not_shown",
                 ),
             ),
             EventModel(
@@ -49,10 +50,14 @@ internal class MoneyAccountAnalyticsEventsTest {
                     accountState = AccountState.CLOSED,
                     balanceBand = null,
                     currency = null,
-                    additionalVerificationNotice = null,
+                    additionalVerificationNotice = NoticeState.NOT_SHOWN,
                 ),
                 expectedId = "[Cash Account] Account Screen Opened",
-                expectedParams = mapOf("account_state" to "closed", "yield_enabled" to "no"),
+                expectedParams = mapOf(
+                    "account_state" to "closed",
+                    "yield_enabled" to "no",
+                    "additional_verification_notice" to "not_shown",
+                ),
             ),
             EventModel(
                 event = MoneyAccountAnalyticsEvents.AccountScreenOpened(

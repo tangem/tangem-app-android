@@ -384,7 +384,12 @@ internal class ForYouModel @Inject constructor(
 
         actionsFlow.tryEmit(
             BatchAction.Reload(
-                requestParams = EarnTokensListConfig(type = null, networks = null, isForEarn = false),
+                requestParams = EarnTokensListConfig(
+                    type = null,
+                    networks = null,
+                    isForEarn = false,
+                    isVaultsIncluded = false,
+                ),
             ),
         )
 

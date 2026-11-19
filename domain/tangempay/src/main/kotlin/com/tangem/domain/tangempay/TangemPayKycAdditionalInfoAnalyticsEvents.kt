@@ -65,6 +65,7 @@ sealed class TangemPayKycAdditionalInfoAnalyticsEvents(
     enum class EntryPoint(val value: String) {
         ACCOUNT_ENTRY("account_entry"),
         ACCOUNT_BLOCK("account_block"),
+        PUSH("push"),
     }
 
     enum class Source(val value: String) {
@@ -85,11 +86,7 @@ sealed class TangemPayKycAdditionalInfoAnalyticsEvents(
         ;
 
         companion object {
-            fun of(isEnabled: Boolean, isRequired: Boolean): NoticeState? = when {
-                !isEnabled -> null
-                isRequired -> SHOWN
-                else -> NOT_SHOWN
-            }
+            fun of(isRequired: Boolean): NoticeState = if (isRequired) SHOWN else NOT_SHOWN
         }
     }
 

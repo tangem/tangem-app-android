@@ -23,6 +23,7 @@ import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams.Companion.CategoryEarn
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
@@ -64,6 +65,7 @@ internal class EarnModel @Inject constructor(
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val earnFeatureToggles: EarnFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultEarnComponent.Params>()
@@ -73,6 +75,7 @@ internal class EarnModel @Inject constructor(
             selectedTypeFilter = stateController.value.earnFilterUM.selectedTypeFilter,
             selectedNetworkFilter = stateController.value.earnFilterUM.selectedNetworkFilter,
             earnNetworks = earnNetworks.value,
+            isVaultsIncluded = earnFeatureToggles.isEarnEnabled,
         )
     }
 
@@ -180,7 +183,7 @@ internal class EarnModel @Inject constructor(
 
     private fun subscribeToMostlyUsed() {
         modelScope.launch(dispatchers.default) {
-            getTopEarnTokensUseCase().collect { earnResult ->
+            getTopEarnTokensUseCase(isVaultsIncluded = earnFeatureToggles.isEarnEnabled).collect { earnResult ->
                 stateController.update(
                     UpdateMostlyUsedStateTransformer(
                         earnResult = earnResult,

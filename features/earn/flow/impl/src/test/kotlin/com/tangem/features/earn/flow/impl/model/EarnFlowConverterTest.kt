@@ -279,12 +279,12 @@ internal class EarnFlowConverterTest {
         }
 
         @Test
-        fun `GIVEN withdrawal WHEN amount THEN no percent buttons and screen leads with back`() {
+        fun `GIVEN withdrawal WHEN amount THEN percent buttons shown and screen leads with back`() {
             // Act
             val actual = amount(action = Withdraw())
 
             // Assert
-            assertThat(actual.percents).isEmpty()
+            assertThat(actual.percents.map { it.id }).containsExactly("25", "50", "75", "100").inOrder()
             assertThat(actual.isFromPosition).isTrue()
         }
 

@@ -74,6 +74,7 @@ private fun BoxScope.Content(state: JointAccountPromoUM, contentPadding: Padding
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .padding(bottom = contentPadding.calculateBottomPadding()),
+        isContinueLoading = state.isContinueLoading,
         onContinueClick = state.onContinueClick,
     )
 }
@@ -164,7 +165,7 @@ private fun pointText(point: JointAccountPromoUM.PointUM): AnnotatedString {
 }
 
 @Composable
-private fun Footer(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun Footer(isContinueLoading: Boolean, onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth()) {
         TangemFade(
             position = TangemFade.Position.Bottom,
@@ -179,6 +180,7 @@ private fun Footer(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
+            isLoading = isContinueLoading,
             text = resourceReference(R.string.common_continue),
             onClick = onContinueClick,
         )

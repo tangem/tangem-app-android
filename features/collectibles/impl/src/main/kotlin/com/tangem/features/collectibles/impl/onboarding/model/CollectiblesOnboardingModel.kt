@@ -1,5 +1,8 @@
 package com.tangem.features.collectibles.impl.onboarding.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,21 +14,26 @@ import arrow.core.Either
 import arrow.core.left
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.R
+import com.tangem.features.collectibles.impl.common.ui.handleRegionStatus
+import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingBottomSheetConfig
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
 import com.tangem.features.collectibles.impl.onboarding.model.converter.CollectiblesOnboardingUMConverter
 import com.tangem.features.collectibles.impl.onboarding.ui.state.CollectiblesOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @ModelScoped
 @Suppress("LongParameterList")
@@ -36,6 +44,7 @@ internal class CollectiblesOnboardingModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val createOrReactivateCollectiblesAccountUseCase: CreateOrReactivateCollectiblesAccountUseCase,
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -53,6 +62,8 @@ internal class CollectiblesOnboardingModel @Inject constructor(
                 ),
             ),
         )
+
+    val bottomSheetNavigation = SlotNavigation<CollectiblesOnboardingBottomSheetConfig>()
 
     init {
         preloadStory()
@@ -89,12 +100,28 @@ internal class CollectiblesOnboardingModel @Inject constructor(
         uiState.update { it.copy(isCreatingAccount = true) }
 
         modelScope.launch {
-            prepareAccount().fold(
-                ifLeft = ::onPrepareFailed,
-                ifRight = { onPrepared() },
-            )
+            if (isRegionAllowed()) {
+                prepareAccount().fold(
+                    ifLeft = ::onPrepareFailed,
+                    ifRight = { onPrepared() },
+                )
+            }
 
             uiState.update { it.copy(isCreatingAccount = false) }
+        }
+    }
+
+    fun onDismissBottomSheet() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    private suspend fun isRegionAllowed(): Boolean {
+        val status = getRegionStatusUseCase(params.userWalletId, skipCache = true)
+
+        return handleRegionStatus(status, messageSender) {
+            bottomSheetNavigation.activate(CollectiblesOnboardingBottomSheetConfig.RegionRestricted)
+            // Keeps the loader while the sheet rises, or the button's label flashes back first
+            delay(300.milliseconds)
         }
     }
 
@@ -105,7 +132,6 @@ internal class CollectiblesOnboardingModel @Inject constructor(
                 return CollectiblesAccountError.Unsupported.left()
             }
 
-        // TODO([REDACTED_TASK_KEY]): also check the geo block and whether the user is allowed to create a gacha account
         return createOrReactivateCollectiblesAccountUseCase(userWallet)
     }
 

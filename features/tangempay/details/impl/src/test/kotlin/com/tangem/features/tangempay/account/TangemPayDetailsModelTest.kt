@@ -66,8 +66,8 @@ import com.tangem.domain.tangempay.usecase.bankofframp.FindActiveBankOfframpOrde
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.TangemPayModelTestBase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -972,14 +972,13 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
 
         @ParameterizedTest
         @MethodSource("provideMainScreenOpenedModels")
-        fun `GIVEN toggle and flag WHEN model created THEN main screen opened with matching notice param`(
+        fun `GIVEN required flag WHEN model created THEN main screen opened with matching notice param`(
             model: MainScreenOpenedModel,
         ) = runTest {
             // Act
             val detailsModel = createModel(
                 testScope = this,
                 statusValue = loadedStatus(isKycAdditionalInfoRequired = model.isKycAdditionalInfoRequired),
-                tangemPayFeatureToggles = featureToggles(isKycAdditionalInfoEnabled = model.isToggleEnabled),
             )
             advanceUntilIdle()
 
@@ -1091,6 +1090,43 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN opened from kyc push AND popup already shown in session WHEN cdd required THEN popup shown with push entry point`() =
+            runTest {
+                // Arrange
+                coEvery { kycAdditionalInfoPopupStore.tryMarkShown(any()) } returns false
+
+                // Act
+                val model = createModel(
+                    testScope = this,
+                    statusValue = loadedStatus(isKycAdditionalInfoRequired = true, isPaymentAccountIssuing = false),
+                    initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+                    isOpenedFromKycPush = true,
+                )
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analytics.send(PopupShown(AccountType.PAYMENT, EntryPoint.PUSH)) }
+                verify(exactly = 1) { uiMessageSender.send(ofType<ModalMessage>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN opened from kyc push WHEN cdd not required THEN no popup`() = runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                statusValue = loadedStatus(isKycAdditionalInfoRequired = false),
+                isOpenedFromKycPush = true,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analytics.send(ofType<PopupShown>()) }
+            verify(exactly = 0) { uiMessageSender.send(ofType<ModalMessage>()) }
+            model.onDestroy()
+        }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN flag shown WHEN intermediate status and flag again THEN popup reshown only after content status`(
@@ -1192,21 +1228,8 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         }
 
         private fun provideMainScreenOpenedModels() = listOf(
-            MainScreenOpenedModel(
-                isToggleEnabled = true,
-                isKycAdditionalInfoRequired = true,
-                expectedNotice = NoticeState.SHOWN,
-            ),
-            MainScreenOpenedModel(
-                isToggleEnabled = true,
-                isKycAdditionalInfoRequired = false,
-                expectedNotice = NoticeState.NOT_SHOWN,
-            ),
-            MainScreenOpenedModel(
-                isToggleEnabled = false,
-                isKycAdditionalInfoRequired = false,
-                expectedNotice = null,
-            ),
+            MainScreenOpenedModel(isKycAdditionalInfoRequired = true, expectedNotice = NoticeState.SHOWN),
+            MainScreenOpenedModel(isKycAdditionalInfoRequired = false, expectedNotice = NoticeState.NOT_SHOWN),
         )
 
         private fun provideTestModels() = listOf(
@@ -1244,9 +1267,8 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
     }
 
     internal data class MainScreenOpenedModel(
-        val isToggleEnabled: Boolean,
         val isKycAdditionalInfoRequired: Boolean,
-        val expectedNotice: NoticeState?,
+        val expectedNotice: NoticeState,
     )
 
     internal data class IntermediateStatusModel(
@@ -1285,7 +1307,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         statusEmissions: Int = 1,
         statusFlow: Flow<AccountStatus.Payment>? = null,
         isBalanceHidden: Boolean = false,
-        tangemPayFeatureToggles: TangemPayFeatureToggles = featureToggles(isKycAdditionalInfoEnabled = true),
+        isOpenedFromKycPush: Boolean = false,
     ): TangemPayDetailsModel {
         val initialStatus = paymentStatus(
             value = statusValue ?: loadedStatus(
@@ -1300,6 +1322,7 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
         val params = TangemPayDetailsContainerComponent.Params(
             initialStatus = initialStatus,
             initialRoute = initialRoute,
+            isOpenedFromKycPush = isOpenedFromKycPush,
         )
 
         val statuses = statusFlow ?: List(statusEmissions) { initialStatus }.asFlow()
@@ -1328,13 +1351,13 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
                 every { this@mockk(any()) } returns GetUserWalletError.UserWalletNotFound.left()
             },
             tangemPayCurrencyFactory = mockk(relaxed = true),
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
+            tangemPayFeatureToggles = featureToggles(),
             kycAdditionalInfoPopupStore = kycAdditionalInfoPopupStore,
         ).destroyAfterTest()
     }
 
-    private fun featureToggles(isKycAdditionalInfoEnabled: Boolean): TangemPayFeatureToggles = mockk {
-        every { this@mockk.isKycAdditionalInfoEnabled } returns isKycAdditionalInfoEnabled
+    private fun featureToggles(): TangemPayFeatureToggles = mockk {
+        every { isCardActionsEnabled } returns false
     }
 
     private fun bankOfframpOrder(id: String = "order-1"): Order = Order(

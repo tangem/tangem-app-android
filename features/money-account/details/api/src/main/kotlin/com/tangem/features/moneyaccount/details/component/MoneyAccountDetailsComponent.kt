@@ -6,7 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 interface MoneyAccountDetailsComponent : ComposableContentComponent {
 
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(val userWalletId: UserWalletId, val isOpenedFromKycPush: Boolean = false)
 
     interface Factory : ComponentFactory<Params, MoneyAccountDetailsComponent>
 }

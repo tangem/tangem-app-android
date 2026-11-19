@@ -116,6 +116,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         onOpenMenu = ::onOpenMenu,
         intents = this,
         isColdWallet = getUserWalletUseCase(userWalletId).getOrNull()?.isColdWallet == true,
+        isCardRemovalAnimated = tangemPayFeatureToggles.isCardActionsEnabled,
+        isDsMenuEnabled = tangemPayFeatureToggles.isCardActionsEnabled,
     )
 
     private val baseState = MutableStateFlow(
@@ -154,6 +156,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         popupStore = kycAdditionalInfoPopupStore,
         analytics = analytics,
         uiMessageSender = uiMessageSender,
+        isOpenedFromPush = params.isOpenedFromKycPush,
         onProvideInformation = ::openKyc,
         onContactSupport = ::sendFeatureIsBetaSupportEmail,
     )
@@ -161,10 +164,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     init {
         analytics.send(
             TangemPayAnalyticsEvents.MainScreenOpened(
-                additionalVerificationNotice = NoticeState.of(
-                    isEnabled = tangemPayFeatureToggles.isKycAdditionalInfoEnabled,
-                    isRequired = isInitialKycAdditionalInfoRequired(),
-                ),
+                additionalVerificationNotice = NoticeState.of(isRequired = isInitialKycAdditionalInfoRequired()),
             ),
         )
 

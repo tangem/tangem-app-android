@@ -97,6 +97,7 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
             params = YieldSupplyStartEarningEntryComponent.Params(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
+                account = params.account,
                 feeSelectorComponentFactory = feeSelectorComponentFactory,
                 onDismiss = { isProcessing ->
                     if (isProcessing) {

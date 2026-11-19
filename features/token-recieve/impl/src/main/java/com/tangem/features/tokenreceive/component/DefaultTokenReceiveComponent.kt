@@ -12,7 +12,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggles
 import com.tangem.features.tokenreceive.model.TokenReceiveModel
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.TokenReceiveContentModal
@@ -25,11 +24,10 @@ import dagger.assisted.AssistedInject
 internal class DefaultTokenReceiveComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: TokenReceiveComponent.Params,
-    featureToggles: TokenReceiveFeatureToggles,
 ) : TokenReceiveComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenReceiveModel = getOrCreateModel(params)
-    private val isModalPresentation = featureToggles.isNewReceiveScreenEnabled && params.isNewScreenAllowed
+    private val isModalPresentation = model.isNewScreenShown
     private val innerRouter = InnerRouter<TokenReceiveRoutes>(
         stackNavigation = model.stackNavigation,
         popCallback = { onChildBack() },

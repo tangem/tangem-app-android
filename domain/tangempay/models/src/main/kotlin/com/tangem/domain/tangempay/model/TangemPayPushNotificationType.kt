@@ -29,6 +29,7 @@ enum class TangemPayPushNotificationType {
     COLLATERAL_DEPOSIT,
     CASHBACK_TOPUP,
     THRESHOLD1_TOP_UP,
+    KYC_ADDITIONAL_INFO,
     ;
 
     enum class Action {
@@ -36,6 +37,7 @@ enum class TangemPayPushNotificationType {
         SPEND_DETAILS,
         COLLATERAL_DETAILS,
         TOP_UP,
+        KYC_ADDITIONAL_INFO,
     }
 
     companion object {
@@ -72,6 +74,7 @@ enum class TangemPayPushNotificationType {
             COLLATERAL_DEPOSIT -> "collateral_deposit"
             CASHBACK_TOPUP -> "cashback_topup"
             THRESHOLD1_TOP_UP -> "threshold1_top_up"
+            KYC_ADDITIONAL_INFO -> "kyc_additional_info"
         }
     }
 }
@@ -101,4 +104,5 @@ fun TangemPayPushNotificationType.action(): Action = when (this) {
     -> Action.SPEND_DETAILS
     COLLATERAL_WITHDRAW, COLLATERAL_DEPOSIT, CASHBACK_TOPUP -> Action.COLLATERAL_DETAILS
     THRESHOLD1_TOP_UP -> Action.TOP_UP
+    KYC_ADDITIONAL_INFO -> Action.KYC_ADDITIONAL_INFO
 }

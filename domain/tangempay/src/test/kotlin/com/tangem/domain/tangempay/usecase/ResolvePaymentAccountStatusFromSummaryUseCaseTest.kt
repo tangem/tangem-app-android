@@ -22,7 +22,6 @@ import com.tangem.domain.tangempay.model.CustomerSummary.CustomerStatus
 import com.tangem.domain.tangempay.model.CustomerSummary.PaymentAccount
 import com.tangem.domain.tangempay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -46,7 +45,6 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase = mockk()
     private val paymentAccountStatusCache: PaymentAccountStatusCache = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val useCase = ResolvePaymentAccountStatusFromSummaryUseCase(
         onboardingRepository = onboardingRepository,
@@ -54,7 +52,6 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
         tangemPayCurrencyFactory = tangemPayCurrencyFactory,
         getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
         paymentAccountStatusCache = paymentAccountStatusCache,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -68,9 +65,7 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
             tangemPayCurrencyFactory,
             getTangemPayFiatRateUseCase,
             paymentAccountStatusCache,
-            tangemPayFeatureToggles,
         )
-        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns true
         coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns residency
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns TangemPayApiError.Unspecified.left()
         coEvery { paymentAccountStatusCache.getSyncOrNull(userWalletId) } returns null
@@ -84,25 +79,6 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
-    }
-
-    @Test
-    fun `GIVEN toggle off AND active customer with kyc in progress WHEN invoke THEN under review`() = runTest {
-        // Arrange
-        every { tangemPayFeatureToggles.isKycAdditionalInfoEnabled } returns false
-        val summary = summary(customerStatus = CustomerStatus.ACTIVE, kycStatus = SummaryKycStatus.IN_PROGRESS)
-
-        // Act
-        val actual = useCase(userWalletId = userWalletId, summary = summary)
-
-        // Assert
-        assertThat(actual).isEqualTo(
-            PaymentAccountStatusValue.UnderReview(
-                source = StatusSource.ACTUAL,
-                kycStatus = KycStatus.PENDING,
-                customerId = CUSTOMER_ID,
-            ),
-        )
     }
 
     @Suppress("LongMethod")

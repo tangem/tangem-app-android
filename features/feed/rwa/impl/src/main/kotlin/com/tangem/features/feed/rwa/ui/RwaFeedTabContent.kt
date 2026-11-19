@@ -26,7 +26,6 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
@@ -351,9 +350,6 @@ private fun IntervalFilter(interval: RwaIntervalUM, modifier: Modifier = Modifie
             um = interval,
             expanded = isMenuExpanded,
             onDismiss = { isMenuExpanded = false },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .hazeEffectTangem { blurRadius = 10.dp },
         )
     }
 }

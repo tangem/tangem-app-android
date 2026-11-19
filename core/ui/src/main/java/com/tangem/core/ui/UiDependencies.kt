@@ -2,6 +2,7 @@ package com.tangem.core.ui
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
+import com.tangem.core.ui.ds2.toast.TangemToastStackState
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.EventMessageHandler
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -14,6 +15,8 @@ interface UiDependencies {
     val appThemeModeHolder: AppThemeModeHolder
 
     val globalTopSnackbarHostState: TangemTopSnackbarHostState
+
+    val globalToastStackState: TangemToastStackState
 
     val eventMessageHandler: EventMessageHandler
 }

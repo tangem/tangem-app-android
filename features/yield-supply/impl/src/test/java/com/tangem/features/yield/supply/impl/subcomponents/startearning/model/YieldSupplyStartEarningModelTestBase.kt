@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.Option
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import arrow.core.right
 import arrow.core.some
@@ -115,6 +116,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
     )
 
     protected fun TestScope.createModel(
+        account: AccountKind = AccountKind.Portfolio,
         statusResolver: YieldSupplyCurrencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
     ): YieldSupplyStartEarningModel = YieldSupplyStartEarningModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -122,6 +124,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
             YieldSupplyStartEarningComponent.Params(
                 userWalletId = userWalletId,
                 cryptoCurrency = token,
+                account = account,
                 yieldSupplyActionUM = actionUM(),
                 callback = callback,
                 feeSelectorComponentFactory = mockk(),

@@ -3,6 +3,10 @@ package com.tangem.features.onramp.main.entity.factory
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.features.onramp.main.entity.OnrampOfferUM
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -128,6 +132,69 @@ internal class OnrampStateFactoryTest {
         assertThat(result.onrampAmountButtonUMState).isEqualTo(OnrampAmountButtonUMState.None)
         assertThat(result.amountBlockState.amountFieldModel.isError).isTrue()
         assertThat(result.topBarConfig.countryButtonUM?.isEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN restricted region name WHEN getRegionRestrictionState THEN banner names region and offers stay`() {
+        // Arrange
+        currentState = factory.getInitialState(
+            currency = "BTC",
+            onClose = {},
+            openSettings = {},
+            isCountryByIpEnabled = true,
+        )
+        val offer = OnrampOfferUM(
+            category = OnrampOfferCategoryUM.Recommended,
+            advantages = OnrampOfferAdvantagesUM.Default,
+            paymentMethod = mockk(),
+            providerId = "provider",
+            providerName = "Provider",
+            rate = "1 BTC",
+            diff = null,
+            onBuyClicked = {},
+        )
+        val offers = OnrampOffersBlockUM.Content(
+            recentOffer = offer,
+            recommended = persistentListOf(offer),
+            onrampAllOffersButtonConfig = null,
+        )
+        val readyState = factory.getReadyState(currency = USD_CURRENCY).copy(offersBlockState = offers)
+
+        // Act
+        val result = factory.getRegionRestrictionState(readyState, "United Kingdom")
+            as OnrampMainComponentUM.Content
+
+        // Assert
+        assertThat(result.regionRestrictionMessage?.variant).isEqualTo(TangemMessageBanner.Variant.Warning)
+        assertThat(result.regionRestrictionMessage?.title)
+            .isEqualTo(resourceReference(R.string.onramp_region_restriction_title))
+        assertThat(result.regionRestrictionMessage?.description).isEqualTo(
+            resourceReference(
+                id = R.string.onramp_region_restriction_description_v2,
+                formatArgs = wrappedList("United Kingdom"),
+            ),
+        )
+        val disabledOffers = offers.copy(
+            recentOffer = offer.copy(isBuyEnabled = false),
+            recommended = persistentListOf(offer.copy(isBuyEnabled = false)),
+        )
+        assertThat(result.copy(regionRestrictionMessage = null))
+            .isEqualTo(readyState.copy(offersBlockState = disabledOffers))
+        assertThat(factory.getRegionRestrictionState(result, null)).isEqualTo(readyState)
+    }
+
+    @Test
+    fun `GIVEN null region name WHEN getRegionRestrictionState THEN banner is cleared`() {
+        // Arrange
+        currentState = factory.getInitialState(currency = "BTC", onClose = {}, openSettings = {})
+        val readyState = factory.getReadyState(currency = USD_CURRENCY)
+        val restricted = factory.getRegionRestrictionState(readyState, "United Kingdom")
+
+        // Act
+        val result = factory.getRegionRestrictionState(restricted, null)
+
+        // Assert
+        assertThat(result.regionRestrictionMessage).isNull()
     }
 
     @Test

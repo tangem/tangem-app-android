@@ -24,15 +24,15 @@ val Icons.il_account_clock: ImageVector
         if (_il_account_clock != null) return _il_account_clock!!
         _il_account_clock = ImageVector.Builder(
             name = "il_account_clock",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f,
+            defaultWidth = 48.dp,
+            defaultHeight = 48.dp,
+            viewportWidth = 48f,
+            viewportHeight = 48f,
         ).apply {
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM13.5 7C13.5 6.44772 13.0523 6 12.5 6C11.9477 6 11.5 6.44772 11.5 7V11.5H8.5C7.94772 11.5 7.5 11.9477 7.5 12.5C7.5 13.0523 7.94772 13.5 8.5 13.5H12.5C13.0523 13.5 13.5 13.0523 13.5 12.5V7Z"),
+                pathData = addPathNodes("M24 14C29.5228 14 34 18.4772 34 24C34 29.5228 29.5228 34 24 34C18.4772 34 14 29.5228 14 24C14 18.4772 18.4772 14 24 14ZM25.5 19C25.5 18.4477 25.0523 18 24.5 18C23.9477 18 23.5 18.4477 23.5 19V23.5H20.5C19.9477 23.5 19.5 23.9477 19.5 24.5C19.5 25.0523 19.9477 25.5 20.5 25.5H24.5C25.0523 25.5 25.5 25.0523 25.5 24.5V19Z"),
             )
         }.build()
         return _il_account_clock!!

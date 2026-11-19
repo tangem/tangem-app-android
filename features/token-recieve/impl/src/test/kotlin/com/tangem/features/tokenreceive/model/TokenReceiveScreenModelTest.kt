@@ -5,19 +5,22 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.EventMessage
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.TangemToastMessage
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.features.tokenreceive.component.TokenReceiveScreenComponent
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.impl.R
@@ -48,6 +51,7 @@ internal class TokenReceiveScreenModelTest {
         type = ReceiveAddress.Type.Primary.Default(displayName = stringReference("Default")),
     )
     private val ensAddress = ReceiveAddress(value = "cryptomonster.eth", type = ReceiveAddress.Type.Ens)
+    private val currency = createEthereum()
     private val legacyAddress = ReceiveAddress(
         value = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
         type = ReceiveAddress.Type.Primary.Legacy(displayName = stringReference("Legacy")),
@@ -82,7 +86,32 @@ internal class TokenReceiveScreenModelTest {
     )
 
     @Test
-    fun `GIVEN address WHEN copy address THEN copies it from receive and shows copied snackbar`() {
+    fun `GIVEN ens still loading WHEN ens resolved THEN sends receive screen opened once with full ens`() {
+        // Arrange
+        val receiveState = MutableStateFlow(createReceiveState(listOf(defaultAddress), isEnsResultLoading = true))
+        val screenModel = createModel(receiveState = receiveState)
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+
+        // Act
+        receiveState.value = createReceiveState(listOf(defaultAddress, ensAddress), isEnsResultLoading = false)
+        receiveState.value = createReceiveState(listOf(defaultAddress), isEnsResultLoading = false)
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                TokenReceiveNewAnalyticsEvent.ReceiveScreenOpened(
+                    token = "ETH",
+                    blockchainName = "Ethereum",
+                    ensStatus = AnalyticsParam.EmptyFull.Full,
+                ),
+            )
+        }
+        verify(exactly = 1) { analyticsEventHandler.send(any()) }
+        screenModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN address WHEN copy address button THEN copies it with copy button source and shows copied toast`() {
         // Arrange
         val screenModel = createModel(addresses = listOf(defaultAddress, ensAddress))
 
@@ -90,13 +119,27 @@ internal class TokenReceiveScreenModelTest {
         screenModel.state.value.onCopyAddressClick()
 
         // Assert
-        verify(exactly = 1) { callback.onCopyClick(defaultAddress, TokenReceiveCopyActionSource.Receive) }
-        assertThat(sentSnackbars()).containsExactly(copiedSnackbar())
+        verify(exactly = 1) { callback.onCopyClick(defaultAddress, TokenReceiveCopyActionSource.CopyButton) }
+        assertThat(sentToasts()).containsExactly(copiedToast())
         screenModel.onDestroy()
     }
 
     @Test
-    fun `GIVEN ens name WHEN copy ens THEN copies it from receive and shows copied snackbar`() {
+    fun `GIVEN address card WHEN tap qr or address THEN copies it with qr code source and shows copied toast`() {
+        // Arrange
+        val screenModel = createModel(addresses = listOf(defaultAddress, legacyAddress))
+
+        // Act
+        screenModel.state.value.addresses[1].onCopyClick()
+
+        // Assert
+        verify(exactly = 1) { callback.onCopyClick(legacyAddress, TokenReceiveCopyActionSource.QrCode) }
+        assertThat(sentToasts()).containsExactly(copiedToast())
+        screenModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN ens name WHEN copy ens THEN copies it from receive and shows copied toast`() {
         // Arrange
         val screenModel = createModel(addresses = listOf(defaultAddress, ensAddress))
 
@@ -105,12 +148,12 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onCopyClick(ensAddress, TokenReceiveCopyActionSource.Receive) }
-        assertThat(sentSnackbars()).containsExactly(copiedSnackbar())
+        assertThat(sentToasts()).containsExactly(copiedToast())
         screenModel.onDestroy()
     }
 
     @Test
-    fun `GIVEN address WHEN share THEN shares the shown address`() {
+    fun `GIVEN address WHEN share THEN shares the shown address and sends share event`() {
         // Arrange
         val screenModel = createModel(addresses = listOf(defaultAddress, ensAddress))
 
@@ -119,6 +162,15 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onShareClick(defaultAddress.value) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                TokenReceiveNewAnalyticsEvent.ButtonShareAddress(
+                    token = "ETH",
+                    blockchainName = "Ethereum",
+                    source = TokenReceiveCopyActionSource.Receive,
+                ),
+            )
+        }
         screenModel.onDestroy()
     }
 
@@ -134,23 +186,41 @@ internal class TokenReceiveScreenModelTest {
 
         // Assert
         verify(exactly = 1) { callback.onShareClick(legacyAddress.value) }
-        verify(exactly = 1) { callback.onCopyClick(legacyAddress, TokenReceiveCopyActionSource.Receive) }
+        verify(exactly = 1) { callback.onCopyClick(legacyAddress, TokenReceiveCopyActionSource.CopyButton) }
         screenModel.onDestroy()
     }
 
     data class OpenedModel(val addresses: List<ReceiveAddress>, val expectedEns: String)
 
-    private fun sentSnackbars(): List<Pair<TextReference, Int?>> {
+    private fun sentToasts(): List<CopiedToast> {
         val messages = mutableListOf<EventMessage>()
         verify { messageSender.send(capture(messages)) }
-        return messages.filterIsInstance<SnackbarMessage>().map { it.message to it.startIconId }
+        return messages.filterIsInstance<TangemToastMessage>().map {
+            CopiedToast(label = it.label, appearance = it.appearance, isClosable = it.isClosable)
+        }
     }
 
-    private fun copiedSnackbar(): Pair<TextReference, Int?> =
-        resourceReference(R.string.wallet_notification_address_copied) to R.drawable.ic_check_24
+    private fun copiedToast() = CopiedToast(
+        label = resourceReference(R.string.address_book_address_copied),
+        appearance = TangemToast.Appearance.Success,
+        isClosable = false,
+    )
 
-    private fun createModel(addresses: List<ReceiveAddress>): TokenReceiveScreenModel {
-        val currency = createEthereum()
+    data class CopiedToast(val label: TextReference, val appearance: TangemToast.Appearance, val isClosable: Boolean)
+
+    private fun createReceiveState(addresses: List<ReceiveAddress>, isEnsResultLoading: Boolean = false) =
+        TokenReceiveUM(
+            network = currency.network.name,
+            iconState = CurrencyIconState.Loading,
+            addresses = addresses.toImmutableList(),
+            isEnsResultLoading = isEnsResultLoading,
+            notificationConfigs = persistentListOf(),
+        )
+
+    private fun createModel(addresses: List<ReceiveAddress>): TokenReceiveScreenModel =
+        createModel(receiveState = MutableStateFlow(createReceiveState(addresses)))
+
+    private fun createModel(receiveState: MutableStateFlow<TokenReceiveUM>): TokenReceiveScreenModel {
         return TokenReceiveScreenModel(
             paramsContainer = MutableParamsContainer(
                 TokenReceiveScreenComponent.Params(
@@ -162,15 +232,7 @@ internal class TokenReceiveScreenModelTest {
                         receiveAddress = emptyList(),
                     ),
                     tokenName = currency.symbol,
-                    receiveState = MutableStateFlow(
-                        TokenReceiveUM(
-                            network = currency.network.name,
-                            iconState = CurrencyIconState.Loading,
-                            addresses = addresses.toImmutableList(),
-                            isEnsResultLoading = false,
-                            notificationConfigs = persistentListOf(),
-                        ),
-                    ),
+                    receiveState = receiveState,
                     warnings = persistentListOf(),
                     callback = callback,
                 ),

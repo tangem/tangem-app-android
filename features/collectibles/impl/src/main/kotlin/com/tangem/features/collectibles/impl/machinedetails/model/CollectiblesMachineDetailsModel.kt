@@ -7,6 +7,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
@@ -16,6 +17,8 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachineNftsListConf
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineNftsBatchFlowUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
+import com.tangem.features.collectibles.impl.common.ui.handleRegionStatus
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsBottomSheetConfig
@@ -38,11 +41,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class CollectiblesMachineDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase,
     private val router: Router,
+    private val messageSender: UiMessageSender,
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase,
     paramsContainer: ParamsContainer,
     getPrizePoolBatchFlowUseCase: GetCollectibleGachaMachineNftsBatchFlowUseCase,
 ) : Model() {
@@ -67,6 +73,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     )
 
     private val machineJob = JobHolder()
+    private val buyJob = JobHolder()
     private val expectedValuePolling = SingleTaskScheduler<CollectibleGachaMachine>()
     private val isResumed = MutableStateFlow(false)
 
@@ -206,8 +213,29 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     }
 
     private fun onBuyClick() {
-        val isTurboEnabled = (uiState.value as? CollectiblesMachineDetailsUM.Content)?.footer?.isTurboEnabled == true
-        router.push(CollectiblesRoute.ConfirmOrder(machineId = params.externalId, isTurboEnabled = isTurboEnabled))
+        if (buyJob.isActive) return
+
+        modelScope.launch {
+            setBuyLoading(isLoading = true)
+            val status = getRegionStatusUseCase(params.userWalletId)
+            setBuyLoading(isLoading = false)
+            val isAllowed = handleRegionStatus(status, messageSender) {
+                bottomSheetNavigation.activate(CollectiblesMachineDetailsBottomSheetConfig.RegionRestricted)
+            }
+            if (!isAllowed) return@launch
+
+            val content = uiState.value as? CollectiblesMachineDetailsUM.Content
+            val isTurboEnabled = content?.footer?.isTurboEnabled == true
+            router.push(CollectiblesRoute.ConfirmOrder(machineId = params.externalId, isTurboEnabled = isTurboEnabled))
+        }.saveIn(buyJob)
+    }
+
+    private fun setBuyLoading(isLoading: Boolean) {
+        uiState.update { prev ->
+            if (prev !is CollectiblesMachineDetailsUM.Content) return@update prev
+
+            prev.copy(footer = prev.footer.copy(isBuyLoading = isLoading))
+        }
     }
 
     private fun onCloseClick() {

@@ -1,14 +1,18 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.hotwallet.CheckHotWalletBalanceThresholdUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.CloseHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
 import com.tangem.domain.hotwallet.GetUpgradeBannerClosureTimestampUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.hotwallet.IsAccessCodeSimpleUseCase
+import com.tangem.domain.hotwallet.IsHotWalletBalanceThresholdReachedUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
+import com.tangem.domain.hotwallet.SetHotWalletBalanceThresholdReachedUseCase
 import com.tangem.domain.hotwallet.ShouldShowUpgradeHotWalletBannerUseCase
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
+import com.tangem.domain.quotes.QuotesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -75,5 +79,30 @@ internal object HotWalletDomainModule {
         hotWalletRepository: HotWalletRepository,
     ): GetUpgradeBannerClosureTimestampUseCase {
         return GetUpgradeBannerClosureTimestampUseCase(hotWalletRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCheckHotWalletBalanceThresholdUseCase(
+        hotWalletRepository: HotWalletRepository,
+        quotesRepository: QuotesRepository,
+    ): CheckHotWalletBalanceThresholdUseCase {
+        return CheckHotWalletBalanceThresholdUseCase(hotWalletRepository, quotesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsHotWalletBalanceThresholdReachedUseCase(
+        hotWalletRepository: HotWalletRepository,
+    ): IsHotWalletBalanceThresholdReachedUseCase {
+        return IsHotWalletBalanceThresholdReachedUseCase(hotWalletRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSetHotWalletBalanceThresholdReachedUseCase(
+        hotWalletRepository: HotWalletRepository,
+    ): SetHotWalletBalanceThresholdReachedUseCase {
+        return SetHotWalletBalanceThresholdReachedUseCase(hotWalletRepository)
     }
 }

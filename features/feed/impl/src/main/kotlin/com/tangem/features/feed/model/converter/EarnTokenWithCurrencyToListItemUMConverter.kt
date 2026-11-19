@@ -39,6 +39,7 @@ internal class EarnTokenWithCurrencyToListItemUMConverter(
             earnTypeTitle = when (value.earnToken.type) {
                 EarnType.STAKING -> TextReference.Res(R.string.common_staking)
                 EarnType.YIELD -> TextReference.Res(R.string.common_yield_mode)
+                EarnType.VAULT -> TextReference.Res(R.string.common_vaults)
             },
             earnType = value.earnToken.type,
             onItemClick = { onItemClick(value) },

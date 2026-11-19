@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.abTests)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)

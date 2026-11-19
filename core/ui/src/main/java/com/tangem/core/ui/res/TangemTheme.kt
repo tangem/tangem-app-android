@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.TangemShimmer
 import com.tangem.core.ui.components.powersaving.PowerSavingState
 import com.tangem.core.ui.components.powersaving.rememberPowerSavingState
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
+import com.tangem.core.ui.ds2.toast.TangemToastStackState
 import com.tangem.core.ui.components.text.BladeAnimation
 import com.tangem.core.ui.components.text.rememberBladeAnimation
 import com.tangem.core.ui.ds.message.MessageEffectAnimation
@@ -59,6 +60,7 @@ fun TangemTheme(
         vibratorHapticManager = uiDependencies.vibratorHapticManager,
         eventMessageHandler = uiDependencies.eventMessageHandler,
         topSnackbarHostState = uiDependencies.globalTopSnackbarHostState,
+        toastStackState = uiDependencies.globalToastStackState,
         overrideSystemBarColors = overrideSystemBarColors,
         typography = typography,
         content = {
@@ -75,6 +77,7 @@ fun TangemTheme(
     vibratorHapticManager: VibratorHapticManager? = null,
     eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
     topSnackbarHostState: TangemTopSnackbarHostState = remember { TangemTopSnackbarHostState() },
+    toastStackState: TangemToastStackState = remember { TangemToastStackState() },
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -115,6 +118,7 @@ fun TangemTheme(
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
             LocalTopSnackbarHostState provides topSnackbarHostState,
+            LocalToastStackState provides toastStackState,
             LocalEventMessageHandler provides eventMessageHandler,
             LocalWindowSize provides windowSize,
             LocalBladeAnimation provides rememberBladeAnimation(),
@@ -387,6 +391,10 @@ val LocalHapticManager = staticCompositionLocalOf<HapticManager> {
 
 val LocalTopSnackbarHostState = staticCompositionLocalOf<TangemTopSnackbarHostState> {
     error("No TangemTopSnackbarHostState provided")
+}
+
+val LocalToastStackState = staticCompositionLocalOf<TangemToastStackState> {
+    error("No TangemToastStackState provided")
 }
 
 val LocalEventMessageHandler = staticCompositionLocalOf<EventMessageHandler> {

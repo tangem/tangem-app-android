@@ -80,7 +80,7 @@ private fun AddAccountTypeContent(
 
         AccountTypeItem(
             icon = Icons.ic_users_20,
-            title = resourceReference(R.string.common_joint_account),
+            title = resourceReference(R.string.add_joint_account_title),
             subtitle = resourceReference(R.string.add_joint_account_subtitle),
             onClick = onJointAccountClick,
         )

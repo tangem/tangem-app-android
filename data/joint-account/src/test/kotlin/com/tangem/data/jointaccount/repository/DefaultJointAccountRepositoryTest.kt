@@ -172,6 +172,19 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
+    fun `GIVEN bad request WHEN create THEN result says the request is rejected`() = runTest {
+        // Arrange
+        val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.BAD_REQUEST)
+        coEvery { jointAccountApi.createJointAccount(any(), any()) } returns response
+
+        // Act
+        val actual = repository.create(userWalletId = WALLET_ID, payload = createPayload(), signature = SIGNATURE)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountCreationResult.Rejected(cause = (response as ApiResponse.Error).cause))
+    }
+
+    @Test
     fun `GIVEN server error WHEN create THEN it is thrown`() = runTest {
         // Arrange
         val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)

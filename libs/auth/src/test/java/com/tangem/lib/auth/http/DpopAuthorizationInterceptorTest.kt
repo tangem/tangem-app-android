@@ -2,12 +2,14 @@ package com.tangem.lib.auth.http
 
 import arrow.core.None
 import arrow.core.Some
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.lib.auth.api.RequiresDpopProof
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.lib.auth.api.RequiresSessionRefresh
 import com.tangem.lib.auth.dpop.DpopProofFactory
+import com.tangem.lib.auth.session.SessionRefreshError
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
@@ -163,12 +165,65 @@ class DpopAuthorizationInterceptorTest {
         assertThat(proceeded.captured.header("DPoP")).isNull()
     }
 
+    @Test
+    fun `GIVEN session-auth request with static Bearer already set WHEN session valid THEN Bearer replaced by DPoP`() {
+        // Arrange
+        coEvery { refresher.ensureSession() } returns storedTokens.right()
+        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("proof-jwt")
+
+        val proceeded = slot<Request>()
+        val chain = chain(request(sessionAuth = true, bearerHeader = "Bearer gasless-key"), proceeded)
+
+        // Act
+        interceptor.intercept(chain)
+
+        // Assert
+        assertThat(proceeded.captured.headers("Authorization")).containsExactly("DPoP old-access")
+        assertThat(proceeded.captured.header("DPoP")).isEqualTo("proof-jwt")
+    }
+
+    @Test
+    fun `GIVEN session-auth request with static Bearer WHEN session cannot be resolved THEN Bearer kept and no DPoP sent`() {
+        // Arrange
+        coEvery { refresher.ensureSession() } returns SessionRefreshError.DeviceKeyUnavailable.left()
+
+        val proceeded = slot<Request>()
+        val chain = chain(request(sessionAuth = true, bearerHeader = "Bearer gasless-key"), proceeded)
+
+        // Act
+        interceptor.intercept(chain)
+
+        // Assert
+        assertThat(proceeded.captured.headers("Authorization")).containsExactly("Bearer gasless-key")
+        assertThat(proceeded.captured.header("DPoP")).isNull()
+        coVerify(exactly = 0) { proofFactory.create(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN session-auth request with static Bearer WHEN proof generation fails THEN Bearer kept and no DPoP sent`() {
+        // Arrange
+        coEvery { refresher.ensureSession() } returns storedTokens.right()
+        coEvery { proofFactory.create(any(), any(), any()) } returns None
+
+        val proceeded = slot<Request>()
+        val chain = chain(request(sessionAuth = true, bearerHeader = "Bearer gasless-key"), proceeded)
+
+        // Act
+        interceptor.intercept(chain)
+
+        // Assert
+        assertThat(proceeded.captured.headers("Authorization")).containsExactly("Bearer gasless-key")
+        assertThat(proceeded.captured.header("DPoP")).isNull()
+    }
+
     private fun request(
         dpop: Boolean = false,
         sessionRefresh: Boolean = false,
         sessionAuth: Boolean = false,
+        bearerHeader: String? = null,
     ): Request {
         val builder = Request.Builder().url("https://example.com/api/v1/foo")
+        bearerHeader?.let { builder.header("Authorization", it) }
         builder.tag(Invocation::class.java, invocationWith(dpop, sessionRefresh, sessionAuth))
         return builder.build()
     }

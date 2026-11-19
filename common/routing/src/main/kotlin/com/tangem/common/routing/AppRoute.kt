@@ -527,15 +527,21 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
 
+    /** Crypto account intro for callers that can't tell which wallet: it asks, then opens [CreateAccount]. */
+    @Serializable
+    data object CryptoAccountIntro : AppRoute(path = "/crypto_account_intro")
+
+    /** [userWalletId] is null when the caller can't tell which wallet: the flow asks after its intro. */
     @Serializable
     data class JointAccountCreation(
-        val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId?,
         val source: Source,
-    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}") {
+    ) : AppRoute(path = "/joint_account_creation" + userWalletId?.let { "/${it.stringValue}" }.orEmpty()) {
 
         enum class Source {
             AddAccount,
             MainScreen,
+            AllServices,
         }
     }
 
@@ -573,6 +579,7 @@ sealed class AppRoute(val path: String) : Route {
     data class TangemPayDetails(
         val status: AccountStatus.Payment,
         val initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        val isOpenedFromKycPush: Boolean = false,
     ) : AppRoute(path = "/tangem_pay_details/${status.account}")
 
     @Serializable
@@ -650,6 +657,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class MoneyAccountDetails(
         val userWalletId: UserWalletId,
+        val isOpenedFromKycPush: Boolean = false,
     ) : AppRoute(path = "/money_account_details/${userWalletId.stringValue}")
 
     @Serializable
@@ -680,7 +688,23 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
-    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+        val account: AccountKind = AccountKind.Portfolio,
+    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}") {
+
+        /**
+         * The kind of account the flow was opened from; its currencies are looked up and refreshed there only.
+         * A wallet has a single Money account, so the kind identifies it without an id.
+         */
+        @Serializable
+        enum class AccountKind {
+            Portfolio,
+            Money,
+            ;
+
+            val isHeldOutsidePortfolio: Boolean
+                get() = this == Money
+        }
+    }
 
     @Serializable
     data class EarnEntry(

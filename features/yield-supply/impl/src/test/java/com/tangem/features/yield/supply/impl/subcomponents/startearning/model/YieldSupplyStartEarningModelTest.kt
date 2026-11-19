@@ -8,6 +8,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -124,11 +125,11 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyStartEarningModelTe
     fun `GIVEN currency held outside the portfolio WHEN loaded and onClick THEN fees and pending use its holder`() =
         runTest {
             // Arrange
-            every { currencyStatusResolver.observe(userWalletId, token) } returns flowOf(cryptoCurrencyStatus.some())
-            coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns true
+            every { currencyStatusResolver.observe(userWalletId, token, any()) } returns
+                flowOf(cryptoCurrencyStatus.some())
             coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
                 cryptoCurrencyStatus.right()
-            val model = createModel(statusResolver = currencyStatusResolver)
+            val model = createModel(account = AccountKind.Money, statusResolver = currencyStatusResolver)
             advanceUntilIdle()
 
             // Act

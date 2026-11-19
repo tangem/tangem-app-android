@@ -857,6 +857,74 @@ internal class EarnFlowModelTest {
             PositionAmountModel(entered = "0.5", expected = EarnAmount.Exact(BigDecimal("0.5"))),
         )
 
+        @ParameterizedTest
+        @MethodSource("providePositionPercentModels")
+        fun `GIVEN withdrawal without fee yet WHEN percent THEN share of the position is set right away`(
+            model: PercentModel,
+        ) = runTest {
+            // Arrange
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Act
+            flow.onPercentClick(model.percent)
+
+            // Assert
+            assertThat(flow.state.value.enteredAmount).isEqualToIgnoringScale(BigDecimal(model.expected))
+            flow.onDestroy()
+        }
+
+        private fun providePositionPercentModels() = listOf(
+            PercentModel(percent = 25, expected = "0.5025"),
+            PercentModel(percent = 50, expected = "1.005"),
+            PercentModel(percent = 75, expected = "1.5075"),
+            PercentModel(percent = 100, expected = "2.01"),
+        )
+
+        @Test
+        fun `GIVEN position finer than the currency WHEN 100 percent and submit THEN entire position withdrawn`() =
+            runTest {
+                // Arrange
+                coEvery { session.maxAmount(action = any()) } returns BigDecimal("1.0000000000000000001").right()
+                coEvery { session.loadFee(action = any(), amount = any()) } returns GetFeeError.UnknownError.left()
+                val model = createModel(action = Withdraw())
+                advanceUntilIdle()
+
+                // Act
+                model.onPercentClick(100)
+                model.loadFee()
+                model.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+                model.onSubmit()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    session.prepare(action = Withdraw(), amount = EarnAmount.Entire, fee = testFeeSelection("0.00033"))
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN share rounding to zero WHEN 25 percent after 100 percent THEN amount cleared and not submittable`() =
+            runTest {
+                // Arrange
+                coEvery { session.maxAmount(action = any()) } returns BigDecimal("0.000000000000000003").right()
+                val model = createModel(action = Withdraw())
+                advanceUntilIdle()
+                model.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+                model.onPercentClick(100)
+
+                // Act
+                model.onPercentClick(25)
+
+                // Assert
+                assertThat(model.state.value.enteredAmount).isNull()
+                assertThat(model.amount.value?.primary?.isEnabled).isFalse()
+                model.onDestroy()
+            }
+
         @Test
         fun `GIVEN amount from position WHEN fee arrives THEN subtraction use case is not asked`() = runTest {
             // Arrange

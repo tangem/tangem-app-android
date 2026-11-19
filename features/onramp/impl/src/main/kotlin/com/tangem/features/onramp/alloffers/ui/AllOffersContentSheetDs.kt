@@ -67,6 +67,7 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
+import com.tangem.features.onramp.alloffers.entity.OnrampRegionRestrictionNotification
 import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.utils.annotations.RemoveWithToggle
@@ -350,7 +351,7 @@ private fun OffersBasedOnPaymentMethodContentDs(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (notification != null) {
-            TangemMessage(config = notification.config)
+            RegionRestrictionBannerDs(notification = notification)
             SpacerH(8.dp)
         }
         offers.fastForEach { offer ->
@@ -458,6 +459,7 @@ private fun AllOffersContentSheetPaymentPreviewDs() {
             state = AllOffersStateUM.Content(
                 methods = persistentListOf(),
                 currentMethod = method,
+                restrictedNotification = OnrampRegionRestrictionNotification,
                 onBackClicked = {},
             ),
             marketingBannerComponent = PreviewMarketingBannerComponentDs,
@@ -535,6 +537,7 @@ private fun AllOffersContentSheetOffersPreviewDs() {
             state = AllOffersStateUM.Content(
                 methods = methods.toPersistentList(),
                 currentMethod = null,
+                restrictedNotification = OnrampRegionRestrictionNotification,
                 onBackClicked = {},
             ),
             marketingBannerComponent = PreviewMarketingBannerComponentDs,

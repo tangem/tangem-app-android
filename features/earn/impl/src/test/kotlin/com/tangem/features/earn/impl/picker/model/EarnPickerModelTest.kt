@@ -69,6 +69,7 @@ import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.Called
@@ -82,6 +83,7 @@ import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
 import io.mockk.verifySequence
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -89,6 +91,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -212,6 +215,31 @@ internal class EarnPickerModelTest {
 
                 // Act
                 frames.value = frame(summary(lending), summary(staking), source = StatusSource.ACTUAL)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(whileWaiting).isEqualTo(ContentUM.Loading)
+                assertThat(model.uiState.value.selectedChipIds()).containsExactly("staking")
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN registered preselected still loading and another feed failed WHEN its summary arrives THEN it is kept`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(
+                    frame(summary(lending), source = StatusSource.ONLY_CACHE, isAwaitingProducts = true),
+                )
+                val model = createModel(
+                    frames = frames,
+                    products = listOf(lending, staking, vault),
+                    preselected = staking.id,
+                )
+                advanceUntilIdle()
+                val whileWaiting = model.uiState.value.content
+
+                // Act
+                frames.value = frame(summary(lending), summary(staking), source = StatusSource.ONLY_CACHE)
                 advanceUntilIdle()
 
                 // Assert
@@ -586,6 +614,51 @@ internal class EarnPickerModelTest {
             }
 
         @Test
+        fun `GIVEN Auto, a failed feed and a pending one WHEN the pending feed brings an active product THEN redirect without the picker`() =
+            runTest {
+                // Arrange
+                val published = mutableListOf<EarnPickerUM>()
+                val active = EarnPositionSummary(cryptoAmount = BigDecimal.ONE)
+                val frames = MutableStateFlow(
+                    frame(summary(vault), source = StatusSource.ONLY_CACHE, isAwaitingProducts = true),
+                )
+                val model = createModel(frames = frames, shouldRedirectToActive = true)
+                backgroundScope.launch { model.uiState.collect { published += it } }
+
+                // Act
+                advanceUntilIdle()
+                frames.value = frame(
+                    summary(lending, position = active),
+                    summary(vault),
+                    source = StatusSource.ONLY_CACHE,
+                )
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(published.none { it.content is ContentUM.Ready }).isTrue()
+                verify(exactly = 1) { router.navigate(any(), any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Auto, no active product and only another currency pending WHEN model created THEN the picker shows its content`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(
+                    frame(summary(lending), summary(vault), pendingCurrencies = setOf(OTHER_CURRENCY_ID)),
+                )
+                val model = createModel(frames = frames, shouldRedirectToActive = true)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { router.navigate(any(), any()) }
+                assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN no active product and ACTUAL WHEN Auto THEN the picker stays with its content`() = runTest {
             // Arrange
             val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
@@ -616,6 +689,40 @@ internal class EarnPickerModelTest {
             assertThat(whileWaiting).isEqualTo(ContentUM.Loading)
             assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
             verify(exactly = 0) { router.navigate(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Auto showed the picker WHEN a later frame is pending THEN the content stays`() = runTest {
+            // Arrange
+            val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
+            val model = createModel(frames = frames, shouldRedirectToActive = true)
+            advanceUntilIdle()
+
+            // Act
+            frames.value = frame(summary(lending), summary(vault), source = StatusSource.CACHE)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Ready::class.java)
+            verify(exactly = 0) { router.navigate(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Auto showed the picker WHEN an active product appears later THEN redirect`() = runTest {
+            // Arrange
+            val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
+            val model = createModel(frames = frames, shouldRedirectToActive = true)
+            advanceUntilIdle()
+
+            // Act
+            val active = EarnPositionSummary(cryptoAmount = BigDecimal.ONE)
+            frames.value = frame(summary(lending, position = active), summary(vault), source = StatusSource.CACHE)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.navigate(any(), any()) }
             model.onDestroy()
         }
 
@@ -651,6 +758,52 @@ internal class EarnPickerModelTest {
             assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Unavailable::class.java)
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN empty summaries, a failed feed and a pending one WHEN model created THEN content is Loading`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(source = StatusSource.ONLY_CACHE, isAwaitingProducts = true))
+                val model = createModel(frames = frames)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.content).isEqualTo(ContentUM.Loading)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN empty summaries and the currency pending WHEN model created THEN content is Loading`() = runTest {
+            // Arrange
+            val frames = MutableStateFlow(frame(source = StatusSource.ONLY_CACHE, pendingCurrencies = setOf(currency.id)))
+            val model = createModel(frames = frames)
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.content).isEqualTo(ContentUM.Loading)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN empty summaries and only another currency pending WHEN model created THEN content is Unavailable`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(
+                    frame(source = StatusSource.ONLY_CACHE, pendingCurrencies = setOf(OTHER_CURRENCY_ID)),
+                )
+                val model = createModel(frames = frames)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.content).isInstanceOf(ContentUM.Unavailable::class.java)
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN Unavailable content WHEN Retry THEN the fetcher is called for the currency`() = runTest {
@@ -760,6 +913,53 @@ internal class EarnPickerModelTest {
                 verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN a product refresh in flight WHEN the screen closes THEN the refresh still finishes`() = runTest {
+            // Arrange
+            val unavailable = PickerProduct(
+                delegate = createFakeEarnProduct(FakeEarnProductPreset.Lending),
+                initialState = EarnProductState.Unavailable,
+            )
+            unavailable.refreshGate = CompletableDeferred()
+            val frames = MutableStateFlow(frame(summary(unavailable), summary(vault)))
+            val model = createModel(frames = frames, products = listOf(unavailable, vault), preselected = unavailable.id)
+            advanceUntilIdle()
+            (model.uiState.value.content as ContentUM.Unavailable).onRetryClick()
+            runCurrent()
+
+            // Act
+            model.onDestroy()
+            unavailable.refreshGate?.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(unavailable.refreshesFinished).isEqualTo(1)
+        }
+
+        @Test
+        fun `GIVEN an overview fetch in flight WHEN the screen closes THEN the fetch still finishes`() = runTest {
+            // Arrange
+            val gate = CompletableDeferred<Unit>()
+            var finished = 0
+            coEvery { overviewFetcher(any()) } coAnswers {
+                gate.await()
+                finished++
+                Unit.right()
+            }
+            val model = createModel(frames = MutableStateFlow(frame()))
+            advanceUntilIdle()
+            (model.uiState.value.content as ContentUM.Unavailable).onRetryClick()
+            runCurrent()
+
+            // Act
+            model.onDestroy()
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(finished).isEqualTo(1)
+        }
     }
 
     @Nested
@@ -1155,6 +1355,7 @@ internal class EarnPickerModelTest {
             converter = EarnPickerConverter(registry = registry, cta = EarnPickerCta()),
             singleAccountStatusListSupplier = accountStatusListSupplier,
             overviewFetcher = overviewFetcher,
+            appScope = TestAppCoroutineScope(StandardTestDispatcher(testScheduler)),
             router = router,
             uiMessageSender = uiMessageSender,
             urlOpener = urlOpener,
@@ -1166,10 +1367,14 @@ internal class EarnPickerModelTest {
     private fun frame(
         vararg summaries: EarnProductSummary,
         source: StatusSource = StatusSource.ACTUAL,
+        isAwaitingProducts: Boolean = source == StatusSource.CACHE,
+        pendingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
     ): EarnProductSummaries = EarnProductSummaries(
         products = mapOf(currency.id to summaries.toList()),
         rateSources = emptyMap(),
         source = source,
+        isAwaitingProducts = isAwaitingProducts,
+        pendingCurrencies = pendingCurrencies,
     )
 
     private fun summary(
@@ -1222,12 +1427,18 @@ internal class EarnPickerModelTest {
 
         val refreshParams = mutableListOf<EarnProduct.Params>()
 
+        var refreshGate: CompletableDeferred<Unit>? = null
+
+        var refreshesFinished: Int = 0
+
         fun readyState(): EarnProductState.Ready = stateFlow.value as EarnProductState.Ready
 
         override fun state(params: EarnProduct.Params): Flow<EarnProductState> = stateFactory?.invoke() ?: customState ?: stateFlow
 
         override suspend fun refresh(params: EarnProduct.Params): Either<Throwable, Unit> {
             refreshParams += params
+            refreshGate?.await()
+            refreshesFinished++
             return refreshResult
         }
 
@@ -1247,6 +1458,8 @@ internal class EarnPickerModelTest {
     }
 
     private companion object {
+
+        val OTHER_CURRENCY_ID = CryptoCurrency.ID.fromValue("coin⟨BNB⟩binancecoin")
 
         val LOOPING_STATE = LoopingVideoState(
             surface = VideoSurfaceState(

@@ -109,12 +109,13 @@ internal object TangemPayBankWithdrawFormPreviewData {
         ),
     )
 
-    val speiWithProfileNames: TangemPayBankWithdrawFormUM = create(
+    val speiPersonal: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
         fields = BankWithdrawFormFields.recipientDetails(isBusiness = false, rail = BankRail.SPEI),
         state = FormState(
-            locked = mapOf(
+            edits = mapOf(
+                BankWithdrawFormField.Clabe to "646180157000000004",
                 BankWithdrawFormField.FirstName to "José",
                 BankWithdrawFormField.LastName to "Hernández",
             ),

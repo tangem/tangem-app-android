@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.active.model
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -70,17 +71,19 @@ internal abstract class YieldSupplyActiveModelTestBase {
     @BeforeEach
     fun setUpActiveModel() {
         every { getUserWalletUseCase.invoke(userWalletId) } returns userWallet.right()
-        every { currencyStatusResolver.observe(userWalletId, token) } returns emptyFlow()
-        coEvery { currencyStatusResolver.isInPortfolio(userWalletId, token) } returns true
+        every { currencyStatusResolver.observe(userWalletId, token, any()) } returns emptyFlow()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         coEvery { yieldSupplyGetProtocolBalanceUseCase(any(), any()) } returns BigDecimal.ONE.right()
         every { claimTracker.outcomes } returns claimOutcomes
     }
 
-    protected fun createModel(dispatchers: CoroutineDispatcherProvider): YieldSupplyActiveModel = YieldSupplyActiveModel(
+    protected fun createModel(
+        dispatchers: CoroutineDispatcherProvider,
+        account: AccountKind = AccountKind.Portfolio,
+    ): YieldSupplyActiveModel = YieldSupplyActiveModel(
         tangemBlogUrlBuilder = mockk(),
         paramsContainer = MutableParamsContainer(
-            YieldSupplyActiveComponent.Params(userWalletId = userWalletId, cryptoCurrency = token),
+            YieldSupplyActiveComponent.Params(userWalletId = userWalletId, cryptoCurrency = token, account = account),
         ),
         dispatchers = dispatchers,
         analyticsHandler = mockk<AnalyticsEventHandler>(relaxed = true),

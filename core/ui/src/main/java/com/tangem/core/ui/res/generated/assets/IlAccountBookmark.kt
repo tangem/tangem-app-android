@@ -24,15 +24,15 @@ val Icons.il_account_bookmark: ImageVector
         if (_il_account_bookmark != null) return _il_account_bookmark!!
         _il_account_bookmark = ImageVector.Builder(
             name = "il_account_bookmark",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f,
+            defaultWidth = 48.dp,
+            defaultHeight = 48.dp,
+            viewportWidth = 48f,
+            viewportHeight = 48f,
         ).apply {
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M16.002 3.24707C18.0735 3.24723 19.7528 4.92651 19.7529 6.99805V19.5029L19.7412 19.6768C19.6855 20.0757 19.4387 20.4277 19.0742 20.6152C18.7095 20.8027 18.2799 20.7983 17.9229 20.6113L17.7754 20.5205L11.999 16.3936L6.22461 20.5195C5.84402 20.7917 5.34312 20.8287 4.92676 20.6152C4.51043 20.4015 4.24795 19.9728 4.24707 19.5049V6.99805C4.24722 4.92651 5.92651 3.24723 7.99805 3.24707H16.002Z"),
+                pathData = addPathNodes("M28.1295 15C30.267 15.0002 31.9998 16.7268 32 18.8567V31.714L31.9879 31.8927C31.9304 32.3028 31.6758 32.6648 31.2997 32.8576C30.9233 33.0504 30.48 33.0458 30.1116 32.8536L29.9594 32.7602L23.999 28.517L18.0406 32.7592C17.6478 33.0391 17.131 33.0771 16.7013 32.8576C16.2718 32.6379 16.0009 32.1971 16 31.716V18.8567C16.0002 16.7268 17.733 15.0002 19.8705 15H28.1295Z"),
             )
         }.build()
         return _il_account_bookmark!!

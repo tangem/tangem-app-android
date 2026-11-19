@@ -12,13 +12,14 @@ import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.utils.logging.TangemLogger
 
 /**
- * The navigator of the Yield sheet: it lives outside the Earn stack, so a route of the Earn screens opens
- * [AppRoute.EarnEntry] instead of being pushed onto a stack.
+ * The navigator of the Earn banner and its Yield sheet: they live outside the Earn stack, so a route of the Earn
+ * screens opens [AppRoute.EarnEntry] from [source] instead of being pushed onto a stack.
  */
 internal class HostEarnNavigator(
     private val router: Router,
     private val userWalletId: UserWalletId,
     private val cryptoCurrency: CryptoCurrency,
+    private val source: AppRoute.EarnEntry.Source,
 ) : EarnNavigator {
 
     override fun navigate(route: Route) {
@@ -26,7 +27,7 @@ internal class HostEarnNavigator(
             is EarnInfoRoute -> openEntry(AppRoute.EarnEntry.Start.Info(productId = route.productId))
             is EarnPickerRoute -> openEntry(AppRoute.EarnEntry.Start.Picker(preselected = route.preselected))
             is EarnFlowRoute -> TangemLogger.e(
-                "Earn flow can not be opened from the Yield sheet: ${route.productId.value}",
+                "Earn flow can not be opened outside the Earn stack: ${route.productId.value}",
             )
             else -> router.push(route)
         }
@@ -37,7 +38,7 @@ internal class HostEarnNavigator(
             AppRoute.EarnEntry(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
-                source = AppRoute.EarnEntry.Source.YieldSheet,
+                source = source,
                 start = start,
             ),
         )

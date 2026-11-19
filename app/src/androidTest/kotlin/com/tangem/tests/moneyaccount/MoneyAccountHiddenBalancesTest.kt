@@ -11,6 +11,7 @@ import com.tangem.common.utils.hideBalances
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.common.utils.showBalances
 import com.tangem.core.res.R as CoreResR
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
@@ -23,10 +24,14 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import javax.inject.Inject
 import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountHiddenBalancesTest : BaseTestCase() {
+
+    @Inject
+    lateinit var balanceHidingRepository: BalanceHidingRepository
 
     private val eligibilityState = "PaeraCustomer"
     private val moneyAccountScenario = "tangem_pay_money_account"
@@ -52,7 +57,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     @Test
     fun mainRowAndWalletBalanceMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -77,7 +82,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     @Test
     fun accountHeaderBalanceMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -97,7 +102,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     @Test
     fun historyOperationAmountsMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -130,7 +135,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     @Test
     fun operationDetailsAmountMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -169,7 +174,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     fun addFundsFromTangemWalletBalancesMaskedTest() {
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -203,7 +208,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     fun sendWithinPortfolioBalancesMaskedTest() {
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -246,7 +251,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     @Test
     fun bankTransferSourceBalanceMaskedTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -279,7 +284,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
         val amount = "5"
 
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -314,7 +319,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
     @Test
     fun unhideOnOpenAccountRevealsAmountsTest() {
         setupHooks(
-            additionalPreferencesSection = { appPreferencesStore.hideBalances(it) },
+            additionalStorageSection = { balanceHidingRepository.hideBalances() },
         ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -338,7 +343,7 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
             step("Assert account balance is '$THREE_STARS'") {
                 onMoneyAccountScreen { balance.assertTextEquals(THREE_STARS) }
             }
-            step("Show balances") { appPreferencesStore.showBalances() }
+            step("Show balances") { balanceHidingRepository.showBalances() }
             step("Assert account balance is '$initialBalance'") {
                 flakySafely { onMoneyAccountScreen { balance.assertTextEquals(initialBalance) } }
             }

@@ -98,10 +98,11 @@
   <string name="add_and_manage_sheet_manage_title">Token hinzufügen</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sortieren und Gruppieren</string>
   <string name="add_and_manage_sheet_organize_title">Token verwalten</string>
-  <string name="add_crypto_account_subtitle">Gelder über verschiedene Konten hinweg verwalten</string>
+  <string name="add_crypto_account_subtitle">Erhalten Sie separate Adressen, um Ihre Gelder nach Zweck zu organisieren</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
-  <string name="add_joint_account_subtitle">Gemeinsame Gelder gemeinsam verwalten</string>
+  <string name="add_joint_account_subtitle">Gelder teilen oder eigene schützen – mit mehreren Freigaben pro Transaktion</string>
+  <string name="add_joint_account_title">Gemeinsames Krypto-Konto</string>
   <string name="add_tokens_title">Token verwalten</string>
   <string name="addfunds_buy_row_description">Kreditkarte oder Bankkonto</string>
   <string name="addfunds_fund_token">Token erhalten</string>
@@ -170,6 +171,7 @@
   <string name="alert_manage_tokens_unsupported_message">Token im %1$s-Netzwerk werden von dieser Karte oder diesem Ring aufgrund einer Firmware-Einschränkung nicht unterstützt.</string>
   <string name="alert_troubleshooting_scan_card_title">Hast du Probleme beim Scannen deiner Karte oder Ring?</string>
   <string name="alert_unsupported_card">Diese Karte oder Ring ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
+  <string name="all_services_joint_account_subtitle">Gemeinsame Gelder mit Gruppenfreigabe</string>
   <string name="all_services_title">Dienstleistungen</string>
   <string name="app_settings_access_code_warning">Lege einen Zugangscode fest, um die Biometrie zu aktivieren.</string>
   <string name="app_settings_biometrics_footer">Verwende die %1$s um Deine Wallet zu entsperren und sensible Aktionen wie das Signieren von Transaktionen zu bestätigen. Bei Hardware-Wallets ist zum Signieren weiterhin eine Karte oder ein Ring erforderlich.</string>
@@ -465,6 +467,7 @@
   <string name="common_contact_visa_support">Kontakt zum Visa-Support</string>
   <string name="common_continue">Weiter</string>
   <string name="common_convert">Umwandeln</string>
+  <string name="common_copied">Kopiert</string>
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
   <string name="common_create">Erstellen</string>
@@ -485,7 +488,7 @@
     <item quantity="one">vor %d Tag</item>
     <item quantity="other">vor %d Tagen</item>
   </plurals>
-  <string name="common_decline">Abgelehnt</string>
+  <string name="common_decline">Ablehnen</string>
   <string name="common_default">Standard</string>
   <string name="common_delete">Entfernen</string>
   <string name="common_disable">Deaktivieren</string>
@@ -808,6 +811,8 @@
   <string name="earn_mostly_used">Meist verwendet</string>
   <string name="earn_no_results">Keine Ergebnisse</string>
   <string name="earn_title">Verdiene</string>
+  <string name="email_fallback_alert_description">Der Support ist 24/7 verfügbar. Die Antwort kann bis zu 24 Stunden dauern. Wir können nach Diagnosedaten fragen.</string>
+  <string name="email_fallback_alert_share_logs_button">Protokolle teilen</string>
   <string name="email_preface_wc_error">Hallo Support-Team, ich habe einen Fehler mit dem Code %s festgestellt.</string>
   <string name="email_subject_wc_error">WalletConnect-Fehler</string>
   <string name="error_wrong_wallet_tapped">Du hast eine Karte oder Ring aus einer anderen Wallet verwendet. Tippe auf die Karte oder Ring, die dieser Wallet zugeordnet ist.</string>
@@ -1228,7 +1233,9 @@
   <string name="joint_account_coming_soon_description">Diese Funktion wird für Gemeinschaftskonten noch nicht unterstützt. Wir arbeiten daran</string>
   <string name="joint_account_coming_soon_title">Demnächst für Gemeinschaftskonten verfügbar</string>
   <string name="joint_account_compromised_message">Die Kontoadresse auf Ihrem Gerät stimmt nicht mit der auf unseren Servern überein.</string>
+  <string name="joint_account_compromised_message_v2">Wir konnten nicht bestätigen, dass die Angaben zu diesem Konto korrekt sind. Daher haben wir es pausiert, um Ihre Gelder zu schützen.</string>
   <string name="joint_account_compromised_title">Dieses Konto kann nicht verifiziert werden</string>
+  <string name="joint_account_compromised_title_v2">Konto aus Sicherheitsgründen pausiert</string>
   <string name="joint_account_confirm_account_subtitle">Bevor Sie Ihr Gemeinschaftskonto nutzen, stellen Sie sicher, dass für alle Kontoinhaber genau dieselbe Adresse angezeigt wird.</string>
   <string name="joint_account_confirm_account_title">Bestätigen Sie das Konto.</string>
   <string name="joint_account_confirm_address_compare_subtitle">Kontaktiert alle Mitglieder außerhalb von Tangem per Telefon, über einen Messenger-Dienst oder persönlich. Stellt sicher, dass alle genau dieselbe Adresse sehen.</string>
@@ -1238,6 +1245,7 @@
   <string name="joint_account_confirm_address_everyone_title">Jeder muss dies bestätigen</string>
   <string name="joint_account_confirm_address_label">Gemeinsame Adresse</string>
   <string name="joint_account_confirm_address_mismatch_button">Die Adresse stimmt nicht überein</string>
+  <string name="joint_account_confirm_address_share_message">Bitte bestätige die gemeinsame Adresse: %s</string>
   <string name="joint_account_confirm_shared_address">Gemeinsame Adresse bestätigen</string>
   <string name="joint_account_invite_invalid_subtitle">Prüfen Sie, ob Sie den vollständigen Link geöffnet haben, oder bitten Sie den Kontoinhaber, ihn erneut zu senden.</string>
   <string name="joint_account_invite_invalid_title">Der Einladungslink ist ungültig</string>
@@ -1254,10 +1262,22 @@
   <string name="joint_account_invite_members_about_signatures_description">Jede Transaktion von diesem Konto muss von %1$s der %2$s -Mitglieder genehmigt werden. Jedes Mitglied unterzeichnet mit seiner eigenen Wallet. Die Transaktion wird erst gesendet, wenn genügend Unterschriften vorliegen.</string>
   <string name="joint_account_invite_members_about_signatures_title">Über Signaturen</string>
   <string name="joint_account_invite_members_approvals_value">Jede %1$s von %2$s</string>
+  <plurals name="joint_account_invite_members_awaiting_to_join">
+    <item quantity="one">Warten auf den Beitritt von %d Mitglied</item>
+    <item quantity="other">Warten auf den Beitritt von %d Mitgliedern</item>
+  </plurals>
   <string name="joint_account_invite_members_creator">Urheber</string>
   <string name="joint_account_invite_members_everyone_joined">Alle haben sich angemeldet</string>
   <string name="joint_account_invite_members_invite">Einladen</string>
+  <plurals name="joint_account_invite_members_invite_count">
+    <item quantity="one">%d Mitglied einladen</item>
+    <item quantity="other">%d Mitglieder einladen</item>
+  </plurals>
   <string name="joint_account_invite_members_invite_expired">Einladung abgelaufen</string>
+  <plurals name="joint_account_invite_members_invite_more">
+    <item quantity="one">Noch %d Mitglied einladen</item>
+    <item quantity="other">Noch %d Mitglieder einladen</item>
+  </plurals>
   <string name="joint_account_invite_members_invited">Eingeladen</string>
   <string name="joint_account_invite_members_joined_progress">%1$s %2$s -Mitglieder traten bei</string>
   <string name="joint_account_invite_members_member">Mitglied</string>
@@ -1310,6 +1330,17 @@
   <string name="joint_account_main_cant_verify">Kann nicht überprüft werden</string>
   <string name="joint_account_main_paused_for_safety">Aus Sicherheitsgründen unterbrochen</string>
   <string name="joint_account_main_unavailable">Nicht verfügbar</string>
+  <plurals name="joint_account_main_waiting_confirmations">
+    <item quantity="one">Warten auf %d Bestätigung</item>
+    <item quantity="other">Warten auf %d Bestätigungen</item>
+  </plurals>
+  <plurals name="joint_account_main_waiting_members">
+    <item quantity="one">Warten auf %d Mitglied</item>
+    <item quantity="other">Warten auf %d Mitglieder</item>
+  </plurals>
+  <string name="joint_account_members_access_loss_all">Wenn alle Mitglieder den Zugriff auf ihre Wallet verlieren, gehen die Gelder unwiderruflich verloren</string>
+  <string name="joint_account_members_access_loss_any">Wenn ein Mitglied den Zugriff auf seine Wallet verliert, gehen die Gelder unwiderruflich verloren</string>
+  <string name="joint_account_members_access_loss_some">Wenn %1$s von %2$s Mitgliedern den Zugriff auf ihre Wallet verlieren, gehen die Gelder unwiderruflich verloren</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">Mitglied</item>
     <item quantity="other">Mitglieder</item>
@@ -1321,9 +1352,13 @@
   <string name="joint_account_members_signers_title">Unterschrift erforderlich</string>
   <string name="joint_account_members_status_confirmed">Bestätigt</string>
   <string name="joint_account_members_status_not_confirmed">Nicht bestätigt</string>
+  <plurals name="joint_account_members_still_need_to_confirm">
+    <item quantity="one">%d Mitglied muss noch bestätigen</item>
+    <item quantity="other">%d Mitglieder müssen noch bestätigen</item>
+  </plurals>
   <string name="joint_account_members_subtitle">Legen Sie fest, wie viele Personen das Konto gemeinsam nutzen. Jede Transaktion – wie Senden, Tauschen oder Schließen – wartet auf die Unterschrift von %1$s oder %2$s. Diese Einstellung wird einmalig festgelegt</string>
-  <string name="joint_account_members_subtitle_helper_part">%1$s von %2$s zum Unterschreiben</string>
-  <string name="joint_account_members_subtitle_main_part">Legen Sie fest, wie viele Personen das Konto gemeinsam nutzen. Jede Transaktion wie „Senden“, „Tauschen“ oder „Schließen“ wartet auf „%1$s“. Diese wird einmalig gesperrt</string>
+  <string name="joint_account_members_subtitle_helper_part">%1$s von %2$s Mitgliedern</string>
+  <string name="joint_account_members_subtitle_main_part">Legen Sie fest, wie viele Personen das Konto gemeinsam nutzen. Jede Transaktion muss von %1$s genehmigt werden. Diese Einstellungen können später nicht geändert werden.</string>
   <string name="joint_account_members_title">Mitglieder</string>
   <string name="joint_account_members_total_subtitle">Max %1$s Menschen, einschließlich dir</string>
   <string name="joint_account_members_total_title">Gesamtzahl der Mitglieder</string>
@@ -1355,6 +1390,7 @@
   <string name="joint_account_send_pending_network_title">Ausstehende Transaktion am %1$s Netzwerk</string>
   <string name="joint_account_send_sends_automatically">Wird nach der Erfassung automatisch versendet</string>
   <string name="joint_account_send_sends_automatically_setup_fee">Wird nach der Abholung automatisch versendet. Für den ersten Versand fällt eine einmalige Einrichtungsgebühr an.</string>
+  <string name="joint_account_send_setup_fee_included">Inklusive einer Gebühr von %s für die Einrichtung Ihres Gemeinschaftskontos. Sie zahlen sie nur einmal.</string>
   <string name="joint_account_send_setup_fee_note">Erste Transaktion unter %1$s. Die Gebühr beinhaltet eine einmalige Zahlung von %2$s für die Einrichtung des Gemeinschaftskontos in der Blockchain.</string>
   <string name="joint_account_send_signatures_required">%1$s von %2$s erforderlichen Unterschriften</string>
   <plurals name="joint_account_send_signatures_required_banner">
@@ -1374,8 +1410,13 @@
   <string name="joint_blockaid_sign_anyway">Unterschreiben Sie trotzdem</string>
   <string name="joint_operation_auto_sends_footer">Wird automatisch versendet, sobald sich %1$s der %2$s -Mitglieder angemeldet haben</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
-  <string name="joint_operation_banner_title">%1$s möchte senden %2$s</string>
-  <string name="joint_operation_banner_title_own">Du möchtest etwas verschicken %1$s</string>
+  <string name="joint_operation_banner_title">%1$s hat angefragt, %2$s zu senden</string>
+  <string name="joint_operation_banner_title_own">Sie haben angefragt, %1$s zu senden</string>
+  <string name="joint_operation_cancel_alert_title">Diese Transaktion abbrechen?</string>
+  <string name="joint_operation_canceled_at">Abgebrochen am %s</string>
+  <string name="joint_operation_canceled_by_creator">Vom Ersteller abgebrochen</string>
+  <string name="joint_operation_canceled_by_members">Von den Mitgliedern abgebrochen</string>
+  <string name="joint_operation_cancelled_snackbar">Transaktion abgebrochen</string>
   <string name="joint_operation_completed_subtitle">Sie wurde bereits von einem anderen Teilnehmer ausgeführt oder storniert.</string>
   <string name="joint_operation_completed_title">Vorgang abgeschlossen</string>
   <string name="joint_operation_created_at">Erstellt am %s</string>
@@ -1395,7 +1436,7 @@
   <string name="joint_operation_signatures_progress">Unterschriften %1$s von %2$s</string>
   <string name="joint_operation_signed">Unterzeichnet</string>
   <string name="joint_operation_signed_at">Unterzeichnet am %s</string>
-  <string name="joint_operation_signed_footer">Wird automatisch gesendet nach %1$s von %2$s Zeichen</string>
+  <string name="joint_operation_signed_footer">Die Transaktion wird automatisch gesendet, sobald %1$s von %2$s Mitgliedern sie genehmigt haben</string>
   <string name="joint_operation_signers_title">Unterzeichner</string>
   <string name="joint_operation_signing_blocked_subtitle">Die Signaturfunktion ist aus Sicherheitsgründen gesperrt. Bitte wenden Sie sich an den Support.</string>
   <string name="joint_operation_signing_blocked_title">Die Signierung ist gesperrt</string>
@@ -1653,6 +1694,7 @@
   <string name="money_account_balance_unavailable_title">Guthaben nicht verfügbar</string>
   <string name="money_account_banner_proceed">Weiter</string>
   <string name="money_account_close_account">Konto schließen</string>
+  <string name="money_account_main_details_button">Details</string>
   <string name="money_account_main_name">USD-Konto</string>
   <string name="money_account_main_status_action_required">Aktion erforderlich</string>
   <string name="money_account_main_status_activating">Wird aktiviert…</string>
@@ -1668,6 +1710,9 @@
   <string name="money_account_main_status_dialog_failed_title">Wir konnten Ihr Konto nicht aktivieren</string>
   <string name="money_account_main_status_dialog_hide_account">Konto von der Startseite ausblenden</string>
   <string name="money_account_main_status_dialog_join_waitlist">Tragen Sie sich in die Warteliste ein</string>
+  <string name="money_account_main_status_dialog_not_started_description">Empfangen Sie ACH-Überweisungen mit eigenen US-Kontodaten. Separates Guthaben, Ihre Karte bleibt unverändert. Das Konto ist in der Regel innerhalb von 2 Tagen bereit.</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Bedingungen für virtuelle Tangem Pay-Konten</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">Mit Tippen auf „Aktivieren“ akzeptieren Sie die\n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Leider konnten wir Ihre Identität anhand der angegebenen Informationen nicht überprüfen.</string>
   <string name="money_account_main_status_dialog_verification_declined_title">Wir konnten Ihre Identität nicht überprüfen</string>
   <string name="money_account_main_status_dialog_verification_description">Das dauert in der Regel ein paar Minuten. Den Status können Sie unten einsehen.</string>
@@ -1684,11 +1729,12 @@
   <string name="money_account_onboarding_fees_provider">Anbieter</string>
   <string name="money_account_onboarding_fees_title">Gebühren</string>
   <string name="money_account_onboarding_secondary_button">Bedingungen und Gebühren</string>
+  <string name="money_account_onboarding_success_title">Ihr USD-Konto wird eröffnet</string>
   <string name="money_account_onboarding_terms_link">Nutzungsbedingungen</string>
   <string name="money_account_onboarding_terms_notice">Mit der Nutzung des Dienstes stimmen Sie den %1$s des Anbieters zu</string>
   <string name="money_account_onboarding_title">USD-Konto eröffnen</string>
   <string name="money_account_onboarding_transfers_card_caption">Einnahmen. Ausgaben.</string>
-  <string name="money_account_onboarding_transfers_card_subtitle">mit einem eigens dafür eingerichteten Konto mit Bankverbindung</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">mit eigenen Kontodaten</string>
   <string name="money_account_onboarding_transfers_card_title">Fiat-Zahlungen senden und empfangen</string>
   <string name="money_account_send_bank_transfer_unavailable">Nicht verfügbar</string>
   <string name="money_account_send_conversion">Umrechnung</string>
@@ -2945,7 +2991,7 @@
   <string name="tangempay_action_required_title">Handlungsbedarf erforderlich</string>
   <string name="tangempay_available_balance">Verfügbares Guthaben</string>
   <string name="tangempay_bank_transfer_creating_description">Dauert in der Regel bis zu 5 Minuten. In seltenen Fällen bis zu 48 Stunden</string>
-  <string name="tangempay_bank_transfer_creating_title">Bankverbindung anlegen</string>
+  <string name="tangempay_bank_transfer_creating_title">Ihre Kontodaten werden erstellt</string>
   <string name="tangempay_bank_transfer_details_conversion_notice">Eingegangene Beträge in %s werden in USD umgerechnet.</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">Tägliche Einzahlungen</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Wenn Sie mehr als %s einzahlen möchten, wenden Sie sich bitte an den Support.</string>
@@ -2956,7 +3002,7 @@
   <string name="tangempay_bank_transfer_details_minimum_deposit">Mindestanzahlung</string>
   <string name="tangempay_bank_transfer_details_rate_disclaimer">Richtzinssatz. Eine Einzahlung wird zu dem am Tag des Eingangs geltenden Zinssatz gutgeschrieben.</string>
   <string name="tangempay_bank_transfer_details_reference_warning">Geben Sie die Referenznummer bei der Überweisung an. Ohne diese Nummer wird die Einzahlung möglicherweise nicht gutgeschrieben.</string>
-  <string name="tangempay_bank_transfer_failed_title">Fehler beim Erstellen der Bankdaten</string>
+  <string name="tangempay_bank_transfer_failed_title">Fehler beim Erstellen der Kontodaten</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Zum Neuladen tippen</string>
   <string name="tangempay_bank_transfer_fee_error_title">Fehler beim Laden der Gebühreninformationen</string>
@@ -2967,11 +3013,11 @@
   <string name="tangempay_bank_transfer_legal">Mit der Nutzung des Dienstes stimmen Sie den %1$s des Anbieters zu</string>
   <string name="tangempay_bank_transfer_onboarding_description">Fiat-Überweisungen in USD senden und empfangen. USD werden im Verhältnis 1:1 in USDC umgerechnet.</string>
   <string name="tangempay_bank_transfer_onboarding_fee_header">Informationen zu den Gebühren</string>
-  <string name="tangempay_bank_transfer_onboarding_title">Bankverbindung in den USA abrufen</string>
+  <string name="tangempay_bank_transfer_onboarding_title">US-Kontodaten erhalten</string>
   <string name="tangempay_bank_transfer_request_sent">Anfrage gesendet</string>
   <string name="tangempay_bank_transfer_show_details">Details anzeigen</string>
   <string name="tangempay_bank_transfer_success_subtitle">Dies kann etwas Zeit in Anspruch nehmen.</string>
-  <string name="tangempay_bank_transfer_success_title">Vorbereitung Ihrer Bankdaten</string>
+  <string name="tangempay_bank_transfer_success_title">Ihre Kontodaten werden vorbereitet</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT-Überweisungen werden nicht akzeptiert und zurückgesendet</string>
   <string name="tangempay_bank_transfer_terms_of_use">Nutzungsbedingungen</string>
   <string name="tangempay_campaign_cashback_description">Für alle Einkäufe. Bezahlung in USDC – nicht in Punkten oder kryptischen Token.</string>
@@ -3200,12 +3246,16 @@
   <string name="tangempay_issuing_new_digital_card_title">Ausstellung einer neuen digitalen Karte</string>
   <string name="tangempay_issuing_your_card">Ihre Karte wird ausgestellt</string>
   <string name="tangempay_issuing_your_card_description">Die Karte wird in der Regel innerhalb von 5 Minuten automatisch ausgestellt. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann die Ausstellung bis zu 48 Stunden dauern.</string>
+  <string name="tangempay_kyc_additional_info_banner_description">Bitte senden Sie uns diese binnen 14 Tagen nach unserer Anfrage, um Ihr Konto weiter zu nutzen</string>
+  <string name="tangempay_kyc_additional_info_button">Angaben machen</string>
+  <string name="tangempay_kyc_additional_info_popup_description">Bitte senden Sie uns diese binnen 14 Tagen nach unserer Anfrage, um Ihr Konto weiter zu nutzen</string>
+  <string name="tangempay_kyc_additional_info_title">Wir brauchen noch einige Angaben</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Konvertierung bestätigen</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Möchten Sie die Verifizierung wirklich beenden? Sie können jederzeit fortfahren.</string>
   <string name="tangempay_kyc_failed_description">Wir konnten Ihr Profil nicht verifizieren. Bei Fragen wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_kyc_failed_title">Leider konnten wir Ihre Identität nicht verifizieren</string>
-  <string name="tangempay_kyc_has_failed">Identitätsprüfung ist gescheitert</string>
+  <string name="tangempay_kyc_has_failed">Identitätsprüfung abgelehnt</string>
   <string name="tangempay_kyc_in_progress">Identitätsprüfung in Bearbeitung</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">Identitätsprüfung für Tangem Pay in Arbeit</string>
@@ -3214,6 +3264,11 @@
   <string name="tangempay_kyc_rejected_button_text">Status ausblenden</string>
   <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren</string>
+  <plurals name="tangempay_main_group_subtitle">
+    <item quantity="one">%d Konto</item>
+    <item quantity="other">%d Konten</item>
+  </plurals>
+  <string name="tangempay_main_group_title">Pay</string>
   <string name="tangempay_main_select_plan">Tarif auswählen</string>
   <string name="tangempay_maximum_cards_issued_description">Kündigen Sie eine Karte, um eine neue hinzuzufügen</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Wechseln Sie in einen höheren Tarif für mehr Karten</string>
@@ -3373,12 +3428,13 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">USD per ACH von einem US-Bankkonto empfangen</string>
-  <string name="tangempay_topup_bank_transfer_pending_body">Erstellen Ihrer Bankdaten...</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">Ihre Kontodaten werden erstellt...</string>
   <string name="tangempay_topup_bank_transfer_title">Von einem Bankkonto</string>
   <string name="tangempay_topup_receive_body_multichain">USDC oder USDT an Ihre Kontoadresse senden</string>
   <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>
   <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
+  <string name="tangempay_transaction_history_empty">Noch keine Transaktionen</string>
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Auszahlung in USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">Bis zu 2%%\n%1$s</string>
@@ -3406,12 +3462,12 @@
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus deckt beides ab und bietet noch viel mehr</string>
   <string name="tangempay_unified_onboarding_terms_button">Geschäftsbedingungen und Gebühren</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon-Netzwerk</string>
-  <string name="tangempay_va_account_details">Kontodetails</string>
+  <string name="tangempay_va_account_details">Kontodaten</string>
   <string name="tangempay_va_available_to_deposit_day">Täglich zur Einzahlung verfügbar:</string>
   <string name="tangempay_va_banking_details_error_description">Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht</string>
-  <string name="tangempay_va_banking_details_error_title">Die Bankdaten konnten nicht geladen werden</string>
+  <string name="tangempay_va_banking_details_error_title">Die Kontodaten konnten nicht geladen werden</string>
   <string name="tangempay_va_banner_failed_description">Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, falls das Problem weiterhin besteht.</string>
-  <string name="tangempay_va_banner_failed_title">Fehler beim Erstellen der Bankdaten</string>
+  <string name="tangempay_va_banner_failed_title">Fehler beim Erstellen der Kontodaten</string>
   <string name="tangempay_va_limit_resetting_everyday">Das Limit wird jeden Tag zurückgesetzt</string>
   <string name="tangempay_verified_badge_available">Verfügbar</string>
   <string name="tangempay_verified_choose_plan">Tarif auswählen</string>

@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.common
 import arrow.core.Either
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -66,8 +67,14 @@ internal class YieldSupplySmartGas @Inject constructor(
         userWalletId: UserWalletId,
         feeTokenId: CryptoCurrency.ID,
         network: Network,
+        account: AccountKind,
     ): CryptoCurrencyStatus? {
-        return currencyStatusResolver.getSync(userWalletId = userWalletId, currencyId = feeTokenId, network = network)
+        return currencyStatusResolver.getSync(
+            userWalletId = userWalletId,
+            currencyId = feeTokenId,
+            network = network,
+            account = account,
+        )
     }
 }
 

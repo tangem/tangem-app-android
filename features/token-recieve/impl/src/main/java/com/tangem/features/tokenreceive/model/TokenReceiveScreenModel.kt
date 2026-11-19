@@ -6,8 +6,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.TangemToastMessage
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.features.tokenreceive.component.TokenReceiveScreenComponent
@@ -19,15 +20,17 @@ import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
 internal class TokenReceiveScreenModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    analyticsEventHandler: AnalyticsEventHandler,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val messageSender: UiMessageSender,
 ) : Model() {
 
@@ -55,28 +58,36 @@ internal class TokenReceiveScreenModel @Inject constructor(
         )
 
     init {
+        modelScope.launch {
+            val loaded = params.receiveState.first { !it.isEnsResultLoading }
+            val hasEns = loaded.addresses.any { it.type == ReceiveAddress.Type.Ens }
+            analyticsEventHandler.send(
+                TokenReceiveNewAnalyticsEvent.ReceiveScreenOpened(
+                    token = params.tokenName,
+                    blockchainName = config.cryptoCurrency.network.name,
+                    ensStatus = if (hasEns) AnalyticsParam.EmptyFull.Full else AnalyticsParam.EmptyFull.Empty,
+                ),
+            )
+        }
+    }
+
+    fun onShareClick() {
+        val address = selectedAddress() ?: return
+        params.callback.onShareClick(address.value)
         analyticsEventHandler.send(
-            TokenReceiveNewAnalyticsEvent.ReceiveScreenOpened(
+            TokenReceiveNewAnalyticsEvent.ButtonShareAddress(
                 token = params.tokenName,
                 blockchainName = config.cryptoCurrency.network.name,
-                ensStatus = if (state.value.addresses.any { it.ensName != null }) {
-                    AnalyticsParam.EmptyFull.Full
-                } else {
-                    AnalyticsParam.EmptyFull.Empty
-                },
+                source = TokenReceiveCopyActionSource.Receive,
             ),
         )
     }
 
-    fun onShareClick() {
-        selectedAddress()?.let { params.callback.onShareClick(it.value) }
-    }
-
     private fun createState(receiveState: TokenReceiveUM): ReceiveScreenUM = stateFactory.create(
         addresses = receiveState.addresses,
-        onCopyAddressClick = ::copy,
-        onCopySelectedAddressClick = { selectedAddress()?.let(::copy) },
-        onCopyEnsClick = ::copy,
+        onCopyAddressClick = { copy(it, TokenReceiveCopyActionSource.QrCode) },
+        onCopySelectedAddressClick = { selectedAddress()?.let { copy(it, TokenReceiveCopyActionSource.CopyButton) } },
+        onCopyEnsClick = { copy(it, TokenReceiveCopyActionSource.Receive) },
         onAddressPageChange = { selectedAddressIndex = it },
     )
 
@@ -84,12 +95,13 @@ internal class TokenReceiveScreenModel @Inject constructor(
         .filter { it.type is ReceiveAddress.Type.Primary }
         .getOrNull(selectedAddressIndex)
 
-    private fun copy(address: ReceiveAddress) {
-        params.callback.onCopyClick(address = address, source = TokenReceiveCopyActionSource.Receive)
+    private fun copy(address: ReceiveAddress, source: TokenReceiveCopyActionSource) {
+        params.callback.onCopyClick(address = address, source = source)
         messageSender.send(
-            SnackbarMessage(
-                startIconId = R.drawable.ic_check_24,
-                message = resourceReference(R.string.wallet_notification_address_copied),
+            TangemToastMessage(
+                label = resourceReference(R.string.address_book_address_copied),
+                appearance = TangemToast.Appearance.Success,
+                isClosable = false,
             ),
         )
     }

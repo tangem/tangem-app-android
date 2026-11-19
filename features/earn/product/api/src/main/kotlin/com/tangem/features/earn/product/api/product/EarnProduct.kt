@@ -34,7 +34,7 @@ interface EarnProduct {
     val howItWorks: EarnHowItWorks?
         get() = null
 
-    fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>>
+    fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries>
 
     fun state(params: Params): Flow<EarnProductState>
 
@@ -59,6 +59,12 @@ fun interface EarnActionHandler {
 
     fun onActionClick(action: EarnAction)
 }
+
+/** @property loadingCurrencies still loading: Earn screens wait for them instead of settling without this product */
+data class EarnSummaries(
+    val byCurrency: Map<CryptoCurrency.ID, EarnProductSummary>,
+    val loadingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
+)
 
 data class EarnProvider(val title: TextReference, val icon: ImageReference)
 

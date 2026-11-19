@@ -8,14 +8,20 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.collectibles.models.CollectiblesRegionStatus
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingBottomSheetConfig
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
@@ -42,6 +48,7 @@ internal class CollectiblesOnboardingModelTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val createOrReactivateCollectiblesAccountUseCase: CreateOrReactivateCollectiblesAccountUseCase = mockk()
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase = mockk()
 
     private val coldWallet = MockUserWalletFactory.create()
 
@@ -55,7 +62,9 @@ internal class CollectiblesOnboardingModelTest {
             messageSender,
             userWalletsListRepository,
             createOrReactivateCollectiblesAccountUseCase,
+            getRegionStatusUseCase,
         )
+        coEvery { getRegionStatusUseCase(any(), any()) } returns CollectiblesRegionStatus.ALLOWED
         walletsFlow = MutableStateFlow(listOf(coldWallet))
         every { userWalletsListRepository.userWallets } returns walletsFlow
     }
@@ -172,6 +181,64 @@ internal class CollectiblesOnboardingModelTest {
     }
 
     @Test
+    fun `GIVEN an allowed region WHEN create account clicked THEN the region is asked past the cache`() = runTest {
+        // Arrange
+        coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns Unit.right()
+        val model = createModel(testScope = this)
+
+        // Act
+        model.uiState.value.onCreateAccountClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { getRegionStatusUseCase(coldWallet.walletId, skipCache = true) }
+        coVerify(exactly = 1) { createOrReactivateCollectiblesAccountUseCase(coldWallet) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a restricted region WHEN create account clicked THEN the restriction is shown instead of creation`() =
+        runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(any(), any()) } returns CollectiblesRegionStatus.RESTRICTED
+            val model = createModel(testScope = this)
+            var shownSheet: CollectiblesOnboardingBottomSheetConfig? = null
+            model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+            // Act
+            model.uiState.value.onCreateAccountClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(shownSheet).isEqualTo(CollectiblesOnboardingBottomSheetConfig.RegionRestricted)
+            coVerify(exactly = 0) { createOrReactivateCollectiblesAccountUseCase(any()) }
+            verify { router wasNot Called }
+            assertThat(model.uiState.value.isCreatingAccount).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the region check fails WHEN create account clicked THEN a generic error is shown and nothing created`() =
+        runTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(any(), any()) } returns CollectiblesRegionStatus.UNKNOWN
+            val model = createModel(testScope = this)
+
+            // Act
+            model.uiState.value.onCreateAccountClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+            }
+            coVerify(exactly = 0) { createOrReactivateCollectiblesAccountUseCase(any()) }
+            verify { router wasNot Called }
+            assertThat(model.uiState.value.isCreatingAccount).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN model created WHEN close clicked THEN pops the stack`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -194,6 +261,7 @@ internal class CollectiblesOnboardingModelTest {
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,
             createOrReactivateCollectiblesAccountUseCase = createOrReactivateCollectiblesAccountUseCase,
+            getRegionStatusUseCase = getRegionStatusUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
     }

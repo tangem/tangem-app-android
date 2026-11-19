@@ -90,11 +90,6 @@ internal class TangemPayAnalyticsEventsTest {
             expectedParams = mapOf("additional_verification_notice" to "not_shown"),
         ),
         EventModel(
-            event = TangemPayAnalyticsEvents.MainScreenOpened(additionalVerificationNotice = null),
-            expectedId = "[Visa Screen] Visa Main Screen Opened",
-            expectedParams = emptyMap(),
-        ),
-        EventModel(
             event = TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.CARD),
             expectedId = "[Visa Screen] Button - Terms And Limits",
             expectedParams = mapOf("product" to "card"),
@@ -482,6 +477,94 @@ internal class TangemPayAnalyticsEventsTest {
             ),
             expectedId = "[Visa Onboarding] Onboarding Order Failed",
             expectedParams = mapOf("error_code" to "active_order_exists", "products" to "card+account"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.FreezeCardClicked(),
+            expectedId = "[Visa Screen] Button - Freeze Card",
+            expectedParams = emptyMap(),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.FreezeCardClicked(
+                source = TangemPayAnalyticsEvents.FreezeCardClicked.Source.ClosePopup,
+            ),
+            expectedId = "[Visa Screen] Button - Freeze Card",
+            expectedParams = mapOf("Source" to "close_popup"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardClicked(),
+            expectedId = "[Visa Card Management] Visa Close Card Clicked",
+            expectedParams = emptyMap(),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardClicked(
+                source = TangemPayAnalyticsEvents.CloseCardClicked.Source.ActionsMenu,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Clicked",
+            expectedParams = mapOf("Source" to "actions_menu"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardConfirmationPopupOpened(),
+            expectedId = "[Visa Card Management] Visa Close Card Confirmation Popup Opened",
+            expectedParams = emptyMap(),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardConfirmationPopupOpened(
+                cardState = TangemPayAnalyticsEvents.CloseCardConfirmationPopupOpened.CardState.Active,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Confirmation Popup Opened",
+            expectedParams = mapOf("Card State" to "active"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardConfirmationPopupOpened(
+                cardState = TangemPayAnalyticsEvents.CloseCardConfirmationPopupOpened.CardState.Frozen,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Confirmation Popup Opened",
+            expectedParams = mapOf("Card State" to "frozen"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardPopupDismissed(
+                action = TangemPayAnalyticsEvents.CloseCardPopupDismissed.Action.KeepCard,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Popup Dismissed",
+            expectedParams = mapOf("Action" to "keep_card"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardPopupDismissed(
+                action = TangemPayAnalyticsEvents.CloseCardPopupDismissed.Action.CloseButton,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Popup Dismissed",
+            expectedParams = mapOf("Action" to "close_button"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardResult(
+                result = TangemPayAnalyticsEvents.CloseCardResult.Result.Success,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Result",
+            expectedParams = mapOf("Result" to "success"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardResult(
+                result = TangemPayAnalyticsEvents.CloseCardResult.Result.Error,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Result",
+            expectedParams = mapOf("Result" to "error"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardResult(
+                result = TangemPayAnalyticsEvents.CloseCardResult.Result.LastCard,
+            ),
+            expectedId = "[Visa Card Management] Visa Close Card Result",
+            expectedParams = mapOf("Result" to "last_card"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardUnavailableShown(),
+            expectedId = "[Visa Card Management] Visa Close Card Unavailable Shown",
+            expectedParams = mapOf("Reason" to "last_card"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.CloseCardErrorDismissed(),
+            expectedId = "[Visa Card Management] Visa Close Card Error Dismissed",
+            expectedParams = emptyMap(),
         ),
     )
 

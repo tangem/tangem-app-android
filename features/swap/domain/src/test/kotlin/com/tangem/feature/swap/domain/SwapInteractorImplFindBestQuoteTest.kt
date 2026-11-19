@@ -1902,6 +1902,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
         private val userWalletId = UserWalletId(stringValue = "deadbeef")
         private val paymentAccount = Account.Payment(userWalletId)
+        private val collectiblesAccount = Account.Collectibles(userWalletId)
         private val portfolioAccount = Account.Personal.createMainAccount(userWalletId)
         private val usdcContract = "0xUsdcContract"
         private val usdcDecimals = 6
@@ -1937,6 +1938,30 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
             // Act
             val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "10.000001")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `GIVEN collectibles vault amount over balance WHEN findBestQuote THEN InsufficientAmount`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = collectiblesAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "20")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.InsufficientAmount)
+        }
+
+        @Test
+        fun `GIVEN collectibles vault amount within balance WHEN findBestQuote THEN Pending`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = collectiblesAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "10")
 
             // Assert
             assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)

@@ -3,6 +3,8 @@ package com.tangem.data.polymarket.di
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
+import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
@@ -16,6 +18,8 @@ import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketFastTradingBannerStore
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
+import com.tangem.data.polymarket.store.DefaultPolymarketPendingAuthorizationStore
+import com.tangem.data.polymarket.store.inFlightMarkersAfterCorruption
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
@@ -29,6 +33,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorizationStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
@@ -185,6 +190,38 @@ internal object PolymarketStorageModule {
                 name = "polymarket_session_key_storage",
             ),
             addressFactory = addressFactory,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketPendingAuthorizationStore(
+        @ApplicationContext context: Context,
+        dispatchers: CoroutineDispatcherProvider,
+        scope: AppCoroutineScope,
+    ): PolymarketPendingAuthorizationStore {
+        return DefaultPolymarketPendingAuthorizationStore(
+            secureStorage = AndroidSecureStorageV2(
+                appContext = context,
+                useStrongBox = false,
+                name = "polymarket_pending_authorization_storage",
+            ),
+            inFlightUntil = DataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = String.serializer(),
+                    ),
+                ),
+                corruptionHandler = ReplaceFileCorruptionHandler {
+                    inFlightMarkersAfterCorruption(nowMillis = System.currentTimeMillis())
+                },
+                scope = scope,
+                produceFile = { context.dataStoreFile(fileName = "polymarket_pending_authorization_in_flight") },
+            ),
+            json = Json { ignoreUnknownKeys = true },
             dispatchers = dispatchers,
         )
     }

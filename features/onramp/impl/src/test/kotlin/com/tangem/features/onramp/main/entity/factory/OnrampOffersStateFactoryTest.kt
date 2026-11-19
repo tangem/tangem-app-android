@@ -10,6 +10,7 @@ import com.tangem.domain.onramp.model.OnrampOfferCategory
 import com.tangem.domain.onramp.model.OnrampOffersBlock
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.OnrampQuote
+import com.tangem.domain.onramp.model.OnrampRecommendedSlot
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
@@ -59,12 +60,18 @@ internal class OnrampOffersStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN restricted offer WHEN getOffersState THEN card is restricted and buy click is inert`() {
+    fun `GIVEN restricted offer WHEN getOffersState THEN card is restricted, buy click is inert and no slot is kept`() {
         // Arrange — a restricted offer that the domain still labelled GreatRate
         val blocks = listOf(
             buildBlock(
                 category = OnrampOfferCategory.Recommended,
-                offers = listOf(buildOffer(isRestricted = true, advantages = OnrampOfferAdvantages.GreatRate)),
+                offers = listOf(
+                    buildOffer(
+                        isRestricted = true,
+                        advantages = OnrampOfferAdvantages.GreatRate,
+                        recommendedSlot = OnrampRecommendedSlot.BEST,
+                    ),
+                ),
             ),
         )
 
@@ -73,6 +80,7 @@ internal class OnrampOffersStateFactoryTest {
 
         // Assert
         assertThat(offer.advantages).isEqualTo(OnrampOfferAdvantagesUM.Restricted)
+        assertThat(offer.recommendedSlot).isNull()
         assertThat(offer.diff).isNull()
         offer.onBuyClicked()
         verify(exactly = 0) { onrampIntents.onBuyClick(any(), any(), any()) }
@@ -218,10 +226,12 @@ internal class OnrampOffersStateFactoryTest {
         isRestricted: Boolean = false,
         advantages: OnrampOfferAdvantages = OnrampOfferAdvantages.Default,
         providerId: String = "provider-id",
+        recommendedSlot: OnrampRecommendedSlot? = null,
     ) = OnrampOffer(
         quote = buildQuote(isRestricted = isRestricted, providerId = providerId),
         rateDif = BigDecimal("0.1"),
         advantages = advantages,
+        recommendedSlot = recommendedSlot,
     )
 
     private fun buildQuote(isRestricted: Boolean, providerId: String) = mockk<OnrampQuote.Data> {

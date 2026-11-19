@@ -108,7 +108,7 @@ internal class DefaultLendingProducer @AssistedInject constructor(
                 market = market,
                 hasPendingTx = networkStatus.value.hasOutgoingPendingTransaction(asset.currency.id),
                 isWrappedTokenInWallet = isWrappedTokenInWallet,
-                source = listOf(verified?.source ?: StatusSource.CACHE, market.source).getResultStatusSource(),
+                source = listOf(networkStatus.value.balanceSource(), market.source).getResultStatusSource(),
             )
         }
     }
@@ -123,3 +123,9 @@ internal class DefaultLendingProducer @AssistedInject constructor(
 
 private fun CryptoCurrency.isSameToken(token: CryptoCurrency.Token): Boolean =
     this is CryptoCurrency.Token && network == token.network && contractAddress.equalsEvmAddress(token.contractAddress)
+
+/** Unreachable and MissedDerivation answer ACTUAL with no balance read: it is a failed read, not a loading one */
+private fun NetworkStatus.Value.balanceSource(): StatusSource = when (this) {
+    is NetworkStatus.Verified, is NetworkStatus.NoAccount -> source
+    is NetworkStatus.Unreachable, NetworkStatus.MissedDerivation -> StatusSource.ONLY_CACHE
+}

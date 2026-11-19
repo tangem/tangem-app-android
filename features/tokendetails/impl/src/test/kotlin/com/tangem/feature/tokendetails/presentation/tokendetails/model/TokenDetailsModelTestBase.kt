@@ -66,6 +66,8 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
+import com.tangem.features.earn.api.overview.EarnOverviewSupplier
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -117,7 +119,8 @@ internal abstract class TokenDetailsModelTestBase {
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase = mockk()
-    private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase = mockk()
+    protected val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase = mockk()
+    protected val earnOverviewSupplier: EarnOverviewSupplier = mockk()
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase = mockk()
     private val isXpubSupportedUseCase: IsXpubSupportedUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
@@ -184,6 +187,7 @@ internal abstract class TokenDetailsModelTestBase {
             isAccountsModeEnabledUseCase,
             singleAccountListSupplier,
             dynamicAddressesRepository,
+            earnOverviewSupplier,
         )
         extraWarnings = emptySet()
         statusFlows.clear()
@@ -200,6 +204,7 @@ internal abstract class TokenDetailsModelTestBase {
         every { singleAccountListSupplier(any<UserWalletId>()) } returns emptyFlow()
         coEvery { dismissIncompleteTransactionUseCase(any(), any()) } returns Unit.right()
         every { dynamicAddressesRepository.isDynamicAddressesEnabledForNetwork(any(), any()) } returns flowOf(false)
+        every { earnOverviewSupplier(any()) } returns flowOf(EarnOverviews.Empty)
 
         coEvery {
             getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any<CryptoCurrency>())
@@ -277,6 +282,7 @@ internal abstract class TokenDetailsModelTestBase {
             getFixedTxHistoryItemsUseCase = getFixedTxHistoryItemsUseCase,
             checkOnrampAvailabilityUseCase = checkOnrampAvailabilityUseCase,
             onrampGetDefaultCurrencyUseCase = onrampGetDefaultCurrencyUseCase,
+            earnOverviewSupplier = earnOverviewSupplier,
         )
     }
 

@@ -34,4 +34,5 @@ internal fun EarnToken.earnValueText(): TextReference {
 internal fun EarnType.toTitleText(): TextReference = when (this) {
     EarnType.STAKING -> TextReference.Res(R.string.common_staking)
     EarnType.YIELD -> TextReference.Res(R.string.common_yield_mode)
+    EarnType.VAULT -> TextReference.Res(R.string.common_vaults)
 }

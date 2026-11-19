@@ -2,6 +2,8 @@ package com.tangem.features.yield.supply.impl.subcomponents.notifications.model
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -134,13 +136,59 @@ internal class YieldSupplyNotificationsModelTest : YieldSupplyActionModelTestBas
         model.onDestroy()
     }
 
-    private fun TestScope.createModel(feeStatus: CryptoCurrencyStatus): YieldSupplyNotificationsModel {
+    @Test
+    fun `GIVEN a portfolio flow WHEN the fee banner is tapped THEN the fee token screen opens`() = runTest {
+        // Arrange
+        val model = createModelWithFeeBanner(account = AccountKind.Portfolio)
+
+        // Act
+        model.clickFeeBanner()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = usdc), any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a Money flow WHEN the fee banner is tapped THEN no token screen opens`() = runTest {
+        // Arrange
+        val model = createModelWithFeeBanner(account = AccountKind.Money)
+
+        // Act
+        model.clickFeeBanner()
+
+        // Assert
+        verify(exactly = 0) { router.push(any(), any()) }
+        model.onDestroy()
+    }
+
+    private suspend fun TestScope.createModelWithFeeBanner(account: AccountKind): YieldSupplyNotificationsModel {
+        coEvery { getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any()) } returns
+            CryptoCurrencyWarning.BalanceNotEnoughForFee(tokenCurrency = token, coinCurrency = usdc).right()
+        val model = createModel(feeStatus = statusOf(usdc), account = account)
+        updates.emit(YieldSupplyNotificationData(feeValue = null, feeError = GetFeeError.GaslessError.NotEnoughFunds))
+        advanceUntilIdle()
+        return model
+    }
+
+    private fun YieldSupplyNotificationsModel.clickFeeBanner() {
+        val notification = uiState.value.single() as NotificationUM.Error.TokenExceedsBalance
+        notification.onClick?.invoke()
+    }
+
+    private fun TestScope.createModel(
+        feeStatus: CryptoCurrencyStatus,
+        account: AccountKind = AccountKind.Portfolio,
+    ): YieldSupplyNotificationsModel {
         val model = YieldSupplyNotificationsModel(
             paramsContainer = MutableParamsContainer(
                 YieldSupplyNotificationsComponent.Params(
                     userWalletId = userWalletId,
                     cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
                     feeCryptoCurrencyStatusFlow = MutableStateFlow(feeStatus),
+                    account = account,
                     callback = mockk(relaxed = true),
                 ),
             ),
@@ -149,7 +197,6 @@ internal class YieldSupplyNotificationsModelTest : YieldSupplyActionModelTestBas
             router = router,
             getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
             yieldSupplyNotificationsUpdateListener = updateListener,
-            currencyStatusResolver = mockk(relaxed = true),
         )
         advanceUntilIdle()
         return model

@@ -1,6 +1,7 @@
 package com.tangem.features.earn.lending.impl.provider.aave
 
 import app.cash.turbine.test
+import app.cash.turbine.turbineScope
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -26,6 +27,7 @@ import com.tangem.features.earn.lending.impl.provider.LendingAsset
 import com.tangem.features.earn.lending.impl.provider.LendingDepositGate
 import com.tangem.features.earn.lending.impl.provider.LendingMarket
 import com.tangem.features.earn.lending.impl.provider.LendingPosition
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
@@ -33,12 +35,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -65,24 +70,25 @@ internal class AaveLendingProviderTest {
     private val statuses = MutableStateFlow<Set<YieldModuleStatus>>(emptySet())
     private val networkUpdates = MutableSharedFlow<NetworkStatus>(replay = 1)
 
-    private val provider = AaveLendingProvider(
-        assetResolver = mockk(),
-        markets = AaveMarkets(yieldSupplyRepository),
-        moduleReader = AaveModuleReader(yieldTransactions),
-        apyHistoryLoader = mockk(),
-        yieldSupplyRepository = yieldSupplyRepository,
-        networkStatusSupplier = networkStatusSupplier,
-        statusSupplier = statusSupplier,
-        statusFetcher = statusFetcher,
-    )
+    private lateinit var provider: AaveLendingProvider
 
     @BeforeEach
     fun setUp() {
+        provider = AaveLendingProvider(
+            assetResolver = mockk(),
+            markets = AaveMarkets(yieldSupplyRepository),
+            moduleReader = AaveModuleReader(yieldTransactions),
+            apyHistoryLoader = mockk(),
+            yieldSupplyRepository = yieldSupplyRepository,
+            networkStatusSupplier = networkStatusSupplier,
+            statusSupplier = statusSupplier,
+            statusFetcher = statusFetcher,
+        )
         clearMocks(yieldTransactions, yieldSupplyRepository, statusSupplier, statusFetcher, networkStatusSupplier)
         markets.value = listOf(wethMarket())
         statuses.value = emptySet()
         networkUpdates.resetReplayCache()
-        networkUpdates.tryEmit(mockk(relaxed = true))
+        networkUpdates.tryEmit(networkUpdate())
 
         every { yieldSupplyRepository.getMarketsFlow() } returns markets
         coEvery { yieldSupplyRepository.isYieldSupplySupported(userWalletId, eth) } returns true
@@ -141,6 +147,7 @@ internal class AaveLendingProviderTest {
                     withdrawLiquidity = BigDecimal("10"),
                 ),
                 source = StatusSource.CACHE,
+                isPositionLoading = true,
             )
             assertThat(actual).isEqualTo(expected)
             cancelAndIgnoreRemainingEvents()
@@ -167,6 +174,7 @@ internal class AaveLendingProviderTest {
                     withdrawLiquidity = BigDecimal("10"),
                 ),
                 source = StatusSource.CACHE,
+                isPositionLoading = true,
             )
             assertThat(actual).isEqualTo(expected)
             cancelAndIgnoreRemainingEvents()
@@ -184,6 +192,78 @@ internal class AaveLendingProviderTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `GIVEN the WETH status read still running WHEN market THEN position loading`() = runTest {
+        // Arrange
+        coEvery { statusFetcher(any()) } coAnswers { awaitCancellation() }
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().isPositionLoading).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN the WETH status read answered before its status is stored WHEN market THEN position still loading`() =
+        runTest {
+            // Act & Assert
+            provider.market(userWalletId, asset).test {
+                assertThat(expectMostRecentItem().isPositionLoading).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a stored WETH status WHEN market THEN position loading only while the status is on CACHE`(
+        model: StoredStatusModel,
+    ) = runTest {
+        // Arrange
+        statuses.value = setOf(wethStatus(balance = "0", source = model.source))
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().isPositionLoading).isEqualTo(model.isPositionLoading)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private fun provideTestModels() = listOf(
+        StoredStatusModel(source = StatusSource.CACHE, isPositionLoading = true),
+        StoredStatusModel(source = StatusSource.ACTUAL, isPositionLoading = false),
+        StoredStatusModel(source = StatusSource.ONLY_CACHE, isPositionLoading = false),
+    )
+
+    @Test
+    fun `GIVEN a network without a derivation WHEN market THEN position not loading`() = runTest {
+        // Arrange
+        networkUpdates.resetReplayCache()
+        networkUpdates.tryEmit(NetworkStatus(network = eth.network, value = NetworkStatus.MissedDerivation))
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().isPositionLoading).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN the WETH status fetch failed while the module read still runs WHEN market THEN position not loading`() =
+        runTest {
+            // Arrange
+            coEvery { statusFetcher(any()) } returns IllegalStateException("rpc").left()
+            coEvery { yieldTransactions.getYieldModuleVersionStatus(userWalletId, eth.network) } coAnswers {
+                awaitCancellation()
+            }
+
+            // Act & Assert
+            provider.market(userWalletId, asset).test {
+                assertThat(expectMostRecentItem().isPositionLoading).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 
     @Test
     fun `GIVEN WETH status with balance WHEN market THEN position from module with actual source`() = runTest {
@@ -278,7 +358,7 @@ internal class AaveLendingProviderTest {
                 IllegalStateException("rpc")
 
             // Act
-            networkUpdates.emit(mockk(relaxed = true))
+            networkUpdates.emit(networkUpdate())
 
             // Assert
             val actual = expectMostRecentItem()
@@ -300,7 +380,7 @@ internal class AaveLendingProviderTest {
                 YieldModuleVersionStatus.Indeterminate(reason = "rpc")
 
             // Act
-            networkUpdates.emit(mockk(relaxed = true))
+            networkUpdates.emit(networkUpdate())
 
             // Assert
             val actual = expectMostRecentItem()
@@ -320,6 +400,7 @@ internal class AaveLendingProviderTest {
             provider.market(userWalletId, asset).test {
                 val actual = expectMostRecentItem()
                 assertThat(actual.deposit).isEqualTo(LendingDepositGate.ReadFailed)
+                assertThat(actual.isPositionLoading).isFalse()
                 assertThat(actual.source).isEqualTo(StatusSource.ONLY_CACHE)
                 cancelAndIgnoreRemainingEvents()
             }
@@ -346,7 +427,7 @@ internal class AaveLendingProviderTest {
             expectMostRecentItem()
 
             // Act
-            networkUpdates.emit(mockk(relaxed = true))
+            networkUpdates.emit(networkUpdate())
             expectMostRecentItem()
 
             // Assert
@@ -365,7 +446,7 @@ internal class AaveLendingProviderTest {
             coEvery { statusFetcher(any()) } returns Unit.right()
 
             // Act
-            networkUpdates.emit(mockk(relaxed = true))
+            networkUpdates.emit(networkUpdate())
 
             // Assert
             val actual = expectMostRecentItem()
@@ -384,6 +465,153 @@ internal class AaveLendingProviderTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `GIVEN WETH in the cached markets WHEN market THEN its rate is ACTUAL without a markets update`() = runTest {
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem()).isEqualTo(expectedMarket(apy("0.03"), StatusSource.ACTUAL))
+            coVerify(exactly = 0) { yieldSupplyRepository.updateMarkets() }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN WETH missing from the cached markets WHEN market THEN rate is CACHE until the update brings it`() =
+        runTest {
+            // Arrange
+            val updateGate = CompletableDeferred<Unit>()
+            markets.value = emptyList()
+            coEvery { yieldSupplyRepository.updateMarkets() } coAnswers {
+                updateGate.await()
+                markets.value = listOf(wethMarket())
+                markets.value
+            }
+
+            // Act & Assert
+            provider.market(userWalletId, asset).test {
+                val whileUpdating = expectMostRecentItem()
+                updateGate.complete(Unit)
+                val afterUpdate = expectMostRecentItem()
+                assertThat(whileUpdating).isEqualTo(expectedMarket(rate = null, rateSource = StatusSource.CACHE))
+                assertThat(afterUpdate).isEqualTo(expectedMarket(apy("0.03"), StatusSource.ACTUAL))
+                coVerify(exactly = 1) { yieldSupplyRepository.updateMarkets() }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN two subscriptions miss WETH at once WHEN market THEN the markets are updated once for both`() =
+        runTest {
+            // Arrange
+            val updateGate = CompletableDeferred<Unit>()
+            markets.value = emptyList()
+            coEvery { yieldSupplyRepository.updateMarkets() } coAnswers {
+                updateGate.await()
+                markets.value = listOf(wethMarket())
+                markets.value
+            }
+
+            // Act & Assert
+            turbineScope {
+                val first = provider.market(userWalletId, asset).testIn(backgroundScope)
+                val second = provider.market(userWalletId, asset).testIn(backgroundScope)
+                updateGate.complete(Unit)
+                assertThat(first.expectMostRecentItem()).isEqualTo(expectedMarket(apy("0.03"), StatusSource.ACTUAL))
+                assertThat(second.expectMostRecentItem()).isEqualTo(expectedMarket(apy("0.03"), StatusSource.ACTUAL))
+                coVerify(exactly = 1) { yieldSupplyRepository.updateMarkets() }
+                first.cancelAndIgnoreRemainingEvents()
+                second.cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN two subscriptions miss WETH at once and the update fails WHEN market THEN one update leaves both ONLY_CACHE`() =
+        runTest {
+            // Arrange
+            val updateGate = CompletableDeferred<Unit>()
+            markets.value = emptyList()
+            coEvery { yieldSupplyRepository.updateMarkets() } coAnswers {
+                updateGate.await()
+                throw IllegalStateException("backend")
+            }
+
+            // Act & Assert
+            turbineScope {
+                val first = provider.market(userWalletId, asset).testIn(backgroundScope)
+                val second = provider.market(userWalletId, asset).testIn(backgroundScope)
+                updateGate.complete(Unit)
+                val expected = expectedMarket(rate = null, rateSource = StatusSource.ONLY_CACHE)
+                assertThat(first.expectMostRecentItem()).isEqualTo(expected)
+                assertThat(second.expectMostRecentItem()).isEqualTo(expected)
+                coVerify(exactly = 1) { yieldSupplyRepository.updateMarkets() }
+                first.cancelAndIgnoreRemainingEvents()
+                second.cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN WETH missing from the cached markets and the update omits it WHEN market THEN no rate on ACTUAL`() =
+        runTest {
+            // Arrange
+            markets.value = emptyList()
+            coEvery { yieldSupplyRepository.updateMarkets() } returns emptyList()
+
+            // Act & Assert
+            provider.market(userWalletId, asset).test {
+                assertThat(expectMostRecentItem()).isEqualTo(expectedMarket(rate = null, rateSource = StatusSource.ACTUAL))
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN an update that did not list WETH WHEN a later subscription misses it THEN the markets are not updated again`() =
+        runTest {
+            // Arrange
+            markets.value = emptyList()
+            coEvery { yieldSupplyRepository.updateMarkets() } returns emptyList()
+            provider.market(userWalletId, asset).test {
+                expectMostRecentItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            // Act & Assert
+            provider.market(userWalletId, asset).test {
+                assertThat(expectMostRecentItem()).isEqualTo(expectedMarket(rate = null, rateSource = StatusSource.ACTUAL))
+                coVerify(exactly = 1) { yieldSupplyRepository.updateMarkets() }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN a refresh that did not list WETH WHEN market THEN the markets are not updated again`() = runTest {
+        // Arrange
+        markets.value = emptyList()
+        coEvery { yieldSupplyRepository.updateMarkets() } returns emptyList()
+        provider.refresh(userWalletId, asset)
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem()).isEqualTo(expectedMarket(rate = null, rateSource = StatusSource.ACTUAL))
+            coVerify(exactly = 1) { yieldSupplyRepository.updateMarkets() }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN WETH missing from the cached markets and the update fails WHEN market THEN no rate on ONLY_CACHE`() =
+        runTest {
+            // Arrange
+            markets.value = emptyList()
+            coEvery { yieldSupplyRepository.updateMarkets() } throws IllegalStateException("backend")
+
+            // Act & Assert
+            provider.market(userWalletId, asset).test {
+                val expected = expectedMarket(rate = null, rateSource = StatusSource.ONLY_CACHE)
+                assertThat(expectMostRecentItem()).isEqualTo(expected)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 
     @Test
     fun `GIVEN markets and status refresh succeed WHEN refresh THEN Right and both refreshed`() = runTest {
@@ -461,13 +689,34 @@ internal class AaveLendingProviderTest {
         totalApyEst = BigDecimal(totalApyEst),
     )
 
-    private fun wethStatus(balance: String) = MockYieldSupply.moduleStatus(
+    private fun wethStatus(balance: String, source: StatusSource = StatusSource.ACTUAL) = MockYieldSupply.moduleStatus(
         networkId = eth.network.id,
         tokenAddress = WETH.lowercase(),
         effectiveProtocolBalance = BigDecimal(balance),
+        source = source,
     )
 
+    private fun networkUpdate() = NetworkStatus(network = eth.network, value = NetworkStatus.Unreachable(address = null))
+
     private fun apy(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)
+
+    private fun expectedMarket(rate: EarnProductRate?, rateSource: StatusSource) = LendingMarket(
+        rate = rate,
+        isOpen = true,
+        deposit = LendingDepositGate.Loading,
+        position = null,
+        maxWithdraw = null,
+        providerState = AaveModuleRead(
+            status = null,
+            version = YieldModuleVersionStatus.UpToDate,
+            withdrawLiquidity = BigDecimal("10"),
+        ),
+        source = StatusSource.CACHE,
+        rateSource = rateSource,
+        isPositionLoading = true,
+    )
+
+    data class StoredStatusModel(val source: StatusSource, val isPositionLoading: Boolean)
 
     private companion object {
         const val WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"

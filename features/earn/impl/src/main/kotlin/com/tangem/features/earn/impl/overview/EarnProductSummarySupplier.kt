@@ -18,9 +18,13 @@ internal data class EarnProductSummaries(
     val products: Map<CryptoCurrency.ID, List<EarnProductSummary>>,
     val rateSources: Map<CryptoCurrency.ID, List<EarnProductSummary>>,
     val source: StatusSource,
+    val isAwaitingProducts: Boolean = false,
+    val pendingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
 ) {
 
     operator fun get(id: CryptoCurrency.ID): List<EarnProductSummary> = products[id].orEmpty()
+
+    fun isPending(id: CryptoCurrency.ID): Boolean = isAwaitingProducts || id in pendingCurrencies
 }
 
 internal interface EarnProductSummaryProducer : FlowProducer<EarnProductSummaries> {

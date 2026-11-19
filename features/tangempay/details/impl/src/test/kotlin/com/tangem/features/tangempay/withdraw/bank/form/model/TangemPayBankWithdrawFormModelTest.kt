@@ -307,57 +307,49 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ProfileNames {
+    inner class SpeiRecipient {
 
         @Test
-        fun `GIVEN profile names WHEN SPEI form shown THEN names are locked and the CLABE field explains itself`() {
+        fun `GIVEN SPEI form WHEN shown THEN names are typed in after the CLABE that explains itself`() {
             // Act
-            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+            val model = createModel(formFields = speiFields)
 
             // Assert
-            assertThat(model.uiState.value.fields.filterIsInstance<FieldUM.Locked>()).containsExactly(
-                FieldUM.Locked(
-                    field = BankWithdrawFormField.FirstName,
-                    value = "José",
-                    placeholder = BankWithdrawFormField.FirstName.placeholder,
-                ),
-                FieldUM.Locked(
-                    field = BankWithdrawFormField.LastName,
-                    value = "Hernández",
-                    placeholder = BankWithdrawFormField.LastName.placeholder,
-                ),
+            val imeActions = model.uiState.value.fields
+                .filterIsInstance<FieldUM.Text>()
+                .map { it.field to it.keyboardOptions.imeAction.toString() }
+            assertThat(imeActions).containsExactly(
+                BankWithdrawFormField.Clabe to "Next",
+                BankWithdrawFormField.FirstName to "Next",
+                BankWithdrawFormField.LastName to "Done",
             ).inOrder()
             assertThat(textField(model, BankWithdrawFormField.Clabe).helperText)
                 .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_field_clabe_hint))
         }
 
         @Test
-        fun `GIVEN a name typed earlier WHEN SPEI form shown with profile names THEN the profile name is shown`() {
+        fun `GIVEN CLABE one digit short WHEN focus moves to the first name THEN CLABE error shown before continue`() {
             // Arrange
-            setDraftFirstName("Typed")
+            val model = createModel(formFields = speiFields)
+            focus(model, BankWithdrawFormField.Clabe)
+            fill(model, BankWithdrawFormField.Clabe, "00201007777777777")
 
             // Act
-            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+            focus(model, BankWithdrawFormField.FirstName)
+            textField(model, BankWithdrawFormField.Clabe).onFocusChange(false)
 
             // Assert
-            assertThat(anyField(model, BankWithdrawFormField.FirstName).value).isEqualTo("José")
+            assertThat(textField(model, BankWithdrawFormField.Clabe).error)
+                .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe))
         }
 
         @Test
-        fun `GIVEN profile names WHEN SPEI form shown THEN the CLABE field finishes the input`() {
-            // Act
-            val model = createModel(formFields = speiFields, lockedValues = profileNames)
-
-            // Assert
-            assertThat(textField(model, BankWithdrawFormField.Clabe).keyboardOptions.imeAction.toString())
-                .isEqualTo("Done")
-        }
-
-        @Test
-        fun `GIVEN profile names with accents WHEN valid CLABE continued THEN names reported without a Latin check`() {
+        fun `GIVEN typed names with accents WHEN valid CLABE continued THEN typed names reported`() {
             // Arrange
-            val model = createModel(formFields = speiFields, lockedValues = profileNames)
+            val model = createModel(formFields = speiFields)
             fill(model, BankWithdrawFormField.Clabe, "002010077777777771")
+            fill(model, BankWithdrawFormField.FirstName, "José")
+            fill(model, BankWithdrawFormField.LastName, "Hernández")
 
             // Act
             model.uiState.value.onContinueClick()
@@ -1532,7 +1524,6 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         formFields: ImmutableList<BankWithdrawFormField> = fields,
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.RecipientDetails,
         sourceAccount: BankWithdrawSourceAccount = paymentAccount,
-        lockedValues: Map<BankWithdrawFormField, String> = emptyMap(),
     ): TangemPayBankWithdrawFormModel = TangemPayBankWithdrawFormModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawFormModel.Params(
@@ -1541,7 +1532,6 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
                     draft = draft,
                     step = step,
                     fields = formFields,
-                    lockedValues = lockedValues,
                     savedAccounts = savedAccounts,
                     onBack = onBack,
                     onContinue = onContinue,
@@ -1561,10 +1551,6 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             BankWithdrawFormField.Clabe,
             BankWithdrawFormField.FirstName,
             BankWithdrawFormField.LastName,
-        )
-        val profileNames = mapOf(
-            BankWithdrawFormField.FirstName to "José",
-            BankWithdrawFormField.LastName to "Hernández",
         )
         val addressFields = persistentListOf(BankWithdrawFormField.Country, BankWithdrawFormField.Region)
         val usAddressFields = persistentListOf(

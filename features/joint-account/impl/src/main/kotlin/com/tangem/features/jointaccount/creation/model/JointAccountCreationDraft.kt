@@ -8,8 +8,12 @@ import com.tangem.domain.models.wallet.UserWalletId
  * creation payload.
  *
  * Each step owns its chunk: going back and pressing Continue again simply overwrites that step's part.
+ *
+ * @property walletId the wallet the flow was opened for or the one picked after the intro; the config step
+ *   starts from it and may still switch it
  */
 internal data class JointAccountCreationDraft(
+    val walletId: UserWalletId? = null,
     val config: Config? = null,
     val composition: Composition? = null,
     val displayName: String? = null,
