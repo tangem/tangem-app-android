@@ -21,7 +21,6 @@ import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
-import com.tangem.features.tangempay.withdraw.bank.model.CustomerNameState
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.speiDestination
@@ -200,7 +199,6 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
             selection = state.resolve(draft = draft, options = options, isEditing = false),
             sheet = AmountSheet.ROUTES,
             networkFee = networkFee,
-            customerName = CustomerNameState.Loaded(firstName = "José", lastName = "Hernández"),
             isBalanceHidden = false,
         ) as Content
 
@@ -221,41 +219,28 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
 
     @ParameterizedTest
     @MethodSource("providePlaceholderModels")
-    fun `GIVEN fee or name not loaded WHEN create THEN placeholder screen instead of the form`(model: PlaceholderModel) {
+    fun `GIVEN fee not loaded WHEN create THEN placeholder screen instead of the form`(model: PlaceholderModel) {
         // Arrange
         val factory = createFactory(moneyAccount)
 
         // Act
-        val actual = factory.createWith(
-            networkFee = model.networkFee,
-            customerName = model.customerName,
-            rail = BankRail.SPEI,
-        )
+        val actual = factory.createWith(networkFee = model.networkFee, rail = BankRail.SPEI)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
-    @EnumSource(value = CustomerNameKind::class)
-    fun `GIVEN a US rail picked WHEN the name is not loaded THEN the form shows`(kind: CustomerNameKind) {
+    @EnumSource(value = BankRail::class, names = ["ACH", "SPEI"])
+    fun `GIVEN rail picked WHEN fee loaded THEN the form shows`(rail: BankRail) {
         // Arrange
         val factory = createFactory(moneyAccount)
 
         // Act
-        val actual = factory.createWith(
-            networkFee = NetworkFeeState.Loaded(BigDecimal("0.03")),
-            customerName = kind.state,
-            rail = BankRail.ACH,
-        )
+        val actual = factory.createWith(networkFee = NetworkFeeState.Loaded(BigDecimal("0.03")), rail = rail)
 
         // Assert
         assertThat(actual).isInstanceOf(Content::class.java)
-    }
-
-    enum class CustomerNameKind(val state: CustomerNameState) {
-        LOADING(CustomerNameState.Loading),
-        UNREACHABLE(CustomerNameState.Unreachable),
     }
 
     private fun providePlaceholderModels() = listOf(
@@ -272,37 +257,11 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
             networkFee = NetworkFeeState.Unreachable,
             expected = unreachable(R.string.tangempay_withdraw_bank_network_fee_unreachable),
         ),
-        PlaceholderModel(
-            networkFee = NetworkFeeState.Loaded(BigDecimal("0.03")),
-            customerName = CustomerNameState.Loading,
-            expected = Loading(
-                header = header,
-                from = moneyAccountFrom,
-                currencySymbol = "$",
-                onBackClick = onBackClick,
-            ),
-        ),
-        PlaceholderModel(
-            networkFee = NetworkFeeState.Loaded(BigDecimal("0.03")),
-            customerName = CustomerNameState.Unreachable,
-            expected = unreachable(R.string.tangempay_withdraw_bank_data_unreachable),
-        ),
-        PlaceholderModel(
-            networkFee = NetworkFeeState.Unreachable,
-            customerName = CustomerNameState.Loading,
-            expected = unreachable(R.string.tangempay_withdraw_bank_network_fee_unreachable),
-        ),
-        PlaceholderModel(
-            networkFee = NetworkFeeState.Unreachable,
-            customerName = CustomerNameState.Unreachable,
-            expected = unreachable(R.string.tangempay_withdraw_bank_data_unreachable),
-        ),
     )
 
     internal data class PlaceholderModel(
         val networkFee: NetworkFeeState,
         val expected: TangemPayBankWithdrawAmountUM,
-        val customerName: CustomerNameState = CustomerNameState.NotNeeded,
     )
 
     private fun unreachable(messageRes: Int) = Unreachable(
@@ -325,7 +284,6 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
     private fun TangemPayBankWithdrawAmountUMFactory.createWith(
         networkFee: NetworkFeeState,
         sheet: AmountSheet? = null,
-        customerName: CustomerNameState = CustomerNameState.NotNeeded,
         rail: BankRail? = null,
     ) = create(
         draft = draft,
@@ -340,7 +298,6 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         ),
         sheet = sheet,
         networkFee = networkFee,
-        customerName = customerName,
         isBalanceHidden = false,
     )
 

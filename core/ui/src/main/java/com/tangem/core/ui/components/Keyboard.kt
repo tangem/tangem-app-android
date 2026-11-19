@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -57,6 +58,22 @@ fun rememberIsKeyboardVisible(): State<Boolean> {
     return remember(keyboard) {
         derivedStateOf {
             keyboard.isOpened
+        }
+    }
+}
+
+@Composable
+fun ClearFocusOnKeyboardHidden(isEnabled: Boolean = true) {
+    val focusManager = LocalFocusManager.current
+    val isKeyboardVisible by rememberIsKeyboardVisible()
+    val isClearingEnabled by rememberUpdatedState(isEnabled)
+    var wasKeyboardVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(isKeyboardVisible) {
+        if (isKeyboardVisible) {
+            wasKeyboardVisible = true
+        } else if (wasKeyboardVisible) {
+            wasKeyboardVisible = false
+            if (isClearingEnabled) focusManager.clearFocus()
         }
     }
 }

@@ -93,7 +93,6 @@ internal class TangemPayBankWithdrawFormComponent(
         val draft: StateFlow<BankWithdrawDraft>,
         val step: TangemPayBankWithdrawInnerRoute,
         val fields: ImmutableList<BankWithdrawFormField>,
-        val lockedValues: Map<BankWithdrawFormField, String>,
         val savedAccounts: StateFlow<List<BankAccount>>,
         val onBack: (result: BankWithdrawFormResult) -> Unit,
         val onContinue: (result: BankWithdrawFormResult) -> Unit,
