@@ -34,6 +34,12 @@ sealed class FeeSelectorParams {
     abstract val isTronGaslessSupported: Boolean
 
     /**
+     * The coin's transaction is a contract call that sends no value, so Smart Gas can relay it and gasless fee tokens
+     * are offered for a coin too. A plain coin transfer carries its amount as value and never gets them.
+     */
+    abstract val isGaslessForCoinAllowed: Boolean
+
+    /**
      * Asks whether a third party can pay the network fee for the quoted transaction. Called with the fee the user would
      * pay; null for flows that never offer it.
      */
@@ -54,6 +60,7 @@ sealed class FeeSelectorParams {
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
         override val isTronGaslessSupported: Boolean = false,
+        override val isGaslessForCoinAllowed: Boolean = false,
         override val onLoadSponsoredFee: (suspend (TransactionFee) -> SponsoredFeeAvailability)? = null,
         override val onDisableCustomFee: () -> Boolean = { false },
         val bottomSheetShown: (Boolean) -> Unit = {},
@@ -75,6 +82,7 @@ sealed class FeeSelectorParams {
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
         override val isTronGaslessSupported: Boolean = false,
+        override val isGaslessForCoinAllowed: Boolean = false,
         override val onLoadSponsoredFee: (suspend (TransactionFee) -> SponsoredFeeAvailability)? = null,
         override val onDisableCustomFee: () -> Boolean = { false },
         val callback: FeeSelectorModelCallback,

@@ -757,7 +757,10 @@ internal class LendingEarnProductTest {
     )
 
     private companion object {
-        val WITHDRAW = Withdraw(notice = resourceReference(R.string.lending_withdraw_instant_notice))
+        val WITHDRAW = Withdraw(
+            isGaslessAllowed = true,
+            notice = resourceReference(R.string.lending_withdraw_instant_notice),
+        )
         val FEE_TEXT = BigDecimal.ZERO.format { percent(minFractionDigits = 0) }
         val RATE = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY)
         val ADD_FUNDS = resourceReference(R.string.common_add_funds)

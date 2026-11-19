@@ -27,8 +27,10 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.fixFee
@@ -73,6 +75,7 @@ import com.tangem.features.earn.product.api.session.VerifiedPlan
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.earn.product.api.session.WithdrawMode
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -125,6 +128,14 @@ internal class LendingSessionTest {
     private val analyticsSender: LendingAnalyticsSender = mockk(relaxUnitFun = true)
     private val accountNames: LendingAccountNames = mockk()
     private val pendingTracker: YieldSupplyPendingTracker = mockk(relaxUnitFun = true)
+    private val gaslessFees: LendingGaslessFees = mockk()
+    private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
+    private val usdc = currencies.createToken(
+        blockchain = Blockchain.Ethereum,
+        contractAddress = USDC,
+        symbol = "USDC",
+        decimals = 6,
+    )
     private val provider = FakeLendingProvider(assets = mapOf(eth.id to asset))
 
     private val session = createSession(provider)
@@ -147,6 +158,8 @@ internal class LendingSessionTest {
             analyticsSender,
             accountNames,
             pendingTracker,
+            gaslessFees,
+            createAndSendEvmGaslessTransactionUseCase,
         )
         coEvery { accountNames.nameOf(userWalletId, eth.id) } returns ACCOUNT_NAME
         provider.refreshCalls.clear()
@@ -190,6 +203,7 @@ internal class LendingSessionTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class LoadFee {
 
         @Test
@@ -250,19 +264,59 @@ internal class LendingSessionTest {
             assertThat(actual).isEqualTo(GetFeeError.UnknownError.left())
         }
 
-        @Test
-        fun `GIVEN fee levels WHEN loadFeeExtended THEN wraps them for the coin`() = runTest {
+        @ParameterizedTest
+        @MethodSource("provideCoinOnlyFees")
+        fun `GIVEN action Smart Gas cannot relay WHEN loadFeeExtended THEN the coin pays the fee levels`(
+            model: CoinOnlyFeeModel,
+        ) = runTest {
             // Arrange
-            val levels = TransactionFee.Single(normal = selectedFee(DEPOSIT_GAS))
             arrangeDeposit(built = listOf(rawDeposit))
-            coEvery { transactions.feeLevels(userWallet = any(), asset = any(), txs = any()) } returns
-                levels.right()
+            val levels = arrangeWithdrawFeeLevels()
+            coEvery {
+                transactions.feeLevels(userWallet = userWallet, asset = asset, txs = listOf(rawDeposit))
+            } returns levels.right()
 
             // Act
-            val actual = session.loadFeeExtended(Deposit(), EarnAmount.Exact(DEPOSIT_AMOUNT), feeCurrency = null)
+            val actual = session.loadFeeExtended(model.action, EarnAmount.Exact(model.amount), feeCurrency = null)
 
             // Assert
-            assertThat(actual).isEqualTo(TransactionFeeExtended(transactionFee = levels, feeTokenId = eth.id).right())
+            assertThat(actual).isEqualTo(
+                TransactionFeeExtended(transactionFee = levels, feeTokenId = eth.id, nativeFee = levels).right(),
+            )
+            coVerify(exactly = 0) {
+                gaslessFees.quote(userWallet = any(), currency = any(), withdrawal = any(), nativeFee = any(), feeToken = any())
+            }
+        }
+
+        private fun provideCoinOnlyFees() = listOf(
+            CoinOnlyFeeModel(action = Deposit(), amount = DEPOSIT_AMOUNT),
+            CoinOnlyFeeModel(action = Withdraw(), amount = WITHDRAW_AMOUNT),
+        )
+
+        @Test
+        fun `GIVEN gasless withdrawal WHEN loadFeeExtended THEN Smart Gas quotes the withdrawal call`() = runTest {
+            // Arrange
+            val levels = arrangeWithdrawFeeLevels()
+            val feeToken = MockYieldSupply.loadedStatus(currency = usdc)
+            coEvery {
+                gaslessFees.quote(
+                    userWallet = userWallet,
+                    currency = eth,
+                    withdrawal = rawWithdraw,
+                    nativeFee = levels,
+                    feeToken = feeToken,
+                )
+            } returns smartGasFee().right()
+
+            // Act
+            val actual = session.loadFeeExtended(
+                action = Withdraw(isGaslessAllowed = true),
+                amount = EarnAmount.Exact(WITHDRAW_AMOUNT),
+                feeCurrency = feeToken,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(smartGasFee().right())
         }
     }
 
@@ -386,6 +440,28 @@ internal class LendingSessionTest {
             // Assert
             assertThat(actual).isEqualTo(withdrawPlan().right())
         }
+
+        @ParameterizedTest
+        @MethodSource("provideSmartGasPrepareModels")
+        fun `GIVEN Smart Gas fee WHEN prepare THEN only an action it can relay keeps the quote`(model: SmartGasPrepareModel) =
+            runTest {
+                // Arrange
+                arrangeDeposit(built = listOf(rawDeposit))
+                arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+                val selection = EarnFeeSelection(fee = tokenFee(), extended = smartGasFee())
+
+                // Act
+                val actual = session.prepare(model.action, EarnAmount.Exact(model.amount), selection)
+
+                // Assert
+                assertThat(actual.getOrNull()?.let { (it as LendingPlan).gaslessFee }).isEqualTo(model.expected)
+            }
+
+        private fun provideSmartGasPrepareModels() = listOf(
+            SmartGasPrepareModel(action = Withdraw(isGaslessAllowed = true), amount = WITHDRAW_AMOUNT, expected = smartGasFee()),
+            SmartGasPrepareModel(action = Withdraw(), amount = WITHDRAW_AMOUNT, expected = null),
+            SmartGasPrepareModel(action = Deposit(), amount = DEPOSIT_AMOUNT, expected = null),
+        )
 
         @Test
         fun `GIVEN tiny deposit WHEN prepare THEN builds the plan with no minimum`() = runTest {
@@ -564,6 +640,62 @@ internal class LendingSessionTest {
 
             // Assert
             assertThat(actual.verifiedPlan()).isEqualTo(withdrawPlan())
+        }
+
+        @Test
+        fun `GIVEN Smart Gas withdraw, no ETH and the token covering the fee WHEN verify THEN verifies the plan`() =
+            runTest {
+                // Arrange
+                arrangeSmartGasVerify(tokenBalance = TOKEN_FEE)
+                val plan = smartGasWithdrawPlan()
+
+                // Act
+                val actual = session.verify(plan)
+
+                // Assert
+                assertThat(actual.verifiedPlan()).isEqualTo(plan)
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideSmartGasRejections")
+        fun `GIVEN Smart Gas withdraw WHEN verify THEN only the fee token balance and the signed gas decide`(
+            model: SmartGasVerifyModel,
+        ) = runTest {
+            // Arrange
+            arrangeSmartGasVerify(tokenBalance = model.tokenBalance, ethBalance = model.ethBalance)
+
+            // Act
+            val actual = session.verify(smartGasWithdrawPlan(callGasLimit = model.callGasLimit))
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideSmartGasRejections() = listOf(
+            SmartGasVerifyModel(
+                name = "token falls short",
+                tokenBalance = TOKEN_FEE - BigDecimal.ONE,
+                expected = EarnVerification.Rejected(EarnSessionError.InsufficientBalance),
+            ),
+            SmartGasVerifyModel(
+                name = "token balance unknown, ETH would cover the fee",
+                tokenBalance = null,
+                ethBalance = BALANCE,
+                expected = EarnVerification.Rejected(EarnSessionError.Failed()),
+            ),
+            SmartGasVerifyModel(
+                name = "the call may run out of the signed gas",
+                tokenBalance = TOKEN_FEE,
+                callGasLimit = WITHDRAW_GAS - BigInteger.ONE,
+                expected = EarnVerification.Changed(smartGasWithdrawPlan(callGasLimit = WITHDRAW_GAS - BigInteger.ONE)),
+            ),
+        )
+
+        private fun arrangeSmartGasVerify(tokenBalance: BigDecimal?, ethBalance: BigDecimal = BigDecimal.ZERO) {
+            arrangeState(assetState(balance = ethBalance))
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+            arrangeVerifier(Unit.right())
+            coEvery { gaslessFees.balanceOf(userWalletId = userWalletId, fee = any()) } returns tokenBalance
         }
 
         @Test
@@ -1025,6 +1157,43 @@ internal class LendingSessionTest {
         }
 
         @Test
+        fun `GIVEN Smart Gas withdraw WHEN execute THEN relays it and shows the fee in the token`() = runTest {
+            // Arrange
+            arrangeState(assetState(balance = BigDecimal.ZERO))
+            arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+            coEvery { gaslessFees.balanceOf(userWalletId = userWalletId, fee = any()) } returns TOKEN_FEE
+            val plan = verified(smartGasWithdrawPlan())
+            coEvery {
+                createAndSendEvmGaslessTransactionUseCase(
+                    userWallet = userWallet,
+                    transactionDataList = listOf(estimatedWithdraw),
+                    fee = smartGasFee(),
+                )
+            } returns SMART_GAS_HASH.right()
+
+            // Act
+            session.execute(plan).test {
+                // Assert
+                awaitItem()
+                val sent = awaitItem() as EarnSigningStep.Sent
+                val expectedRef = txRef(id = SMART_GAS_HASH, actionId = "withdraw", createdAt = sent.ref.createdAt)
+                assertThat(awaitItem()).isEqualTo(EarnSigningStep.Done(expectedRef, smartGasWithdrawResult()))
+                awaitComplete()
+            }
+            coVerify(exactly = 0) {
+                sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+            }
+            coVerify(exactly = 1) {
+                pendingTracker.addPending(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = eth,
+                    txIds = listOf(SMART_GAS_HASH),
+                    depositContext = null,
+                )
+            }
+        }
+
+        @Test
         fun `GIVEN withdraw WHEN execute THEN shows the withdrawal result`() = runTest {
             // Arrange
             arrangeWithdraw(amount = WITHDRAW_AMOUNT)
@@ -1214,15 +1383,18 @@ internal class LendingSessionTest {
             transactions = transactions,
             getUserWalletUseCase = getUserWalletUseCase,
             depositRows = LendingDepositRows(lendingProvider = lendingProvider),
+            gaslessFees = gaslessFees,
         ),
         sender = LendingTxSender(
             getUserWalletUseCase = getUserWalletUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
+            createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
             pendingTracker = pendingTracker,
         ),
         transactionRepository = transactionRepository,
         analyticsSender = analyticsSender,
         accountNames = accountNames,
+        gaslessFees = gaslessFees,
     )
 
     private fun arrangeState(state: LendingAssetState) = arrangeSnapshot(stateMap(state))
@@ -1273,6 +1445,23 @@ internal class LendingSessionTest {
         coEvery { transactions.estimate(userWallet = userWallet, asset = asset, txs = listOf(rawWithdraw)) } returns
             listOf(estimatedWithdraw).right()
     }
+
+    private fun arrangeWithdrawFeeLevels(): TransactionFee {
+        val levels = TransactionFee.Single(normal = selectedFee(WITHDRAW_GAS))
+        arrangeWithdraw(amount = WITHDRAW_AMOUNT)
+        coEvery { transactions.feeLevels(userWallet = userWallet, asset = asset, txs = listOf(rawWithdraw)) } returns
+            levels.right()
+        return levels
+    }
+
+    private fun smartGasFee() = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(normal = tokenFee()),
+        feeTokenId = usdc.id,
+        callGasLimits = listOf(WITHDRAW_GAS),
+        gaslessProtocolData = GaslessProtocolData.Evm,
+    )
+
+    private fun tokenFee(): Fee = Fee.Common(Amount(currencySymbol = "USDC", value = TOKEN_FEE, decimals = 6))
 
     private fun arrangeVerifier(result: Either<LendingTxError, Unit>) {
         coEvery {
@@ -1356,6 +1545,12 @@ internal class LendingSessionTest {
         isWithUpgrade = false,
     )
 
+    private fun smartGasWithdrawPlan(callGasLimit: BigInteger = WITHDRAW_GAS) = withdrawPlan().copy(
+        fee = tokenFee(),
+        action = Withdraw(isGaslessAllowed = true),
+        gaslessFee = smartGasFee().copy(callGasLimits = listOf(callGasLimit)),
+    )
+
     private val updateRequiredText = resourceReference(R.string.lending_update_app_message)
 
     private fun gasLimitText(required: BigInteger) =
@@ -1392,6 +1587,14 @@ internal class LendingSessionTest {
         ),
         secondary = EarnResultButton(resourceReference(R.string.common_go_to_token), EarnFlowExit.ToToken),
     )
+
+    private fun smartGasWithdrawResult(): EarnResult {
+        val result = withdrawResult(tokenFee())
+        val feeRow = result.rows.last().copy(
+            value = EarnValue.Text(stringReference(TOKEN_FEE.format { crypto("USDC", decimals = 6).fee() })),
+        )
+        return result.copy(rows = result.rows.dropLast(1) + feeRow)
+    }
 
     private fun withdrawResult(fee: Fee) = EarnResult(
         title = resourceReference(
@@ -1443,6 +1646,24 @@ internal class LendingSessionTest {
         override fun toString(): String = name
     }
 
+    data class SmartGasPrepareModel(
+        val action: EarnFlowAction,
+        val amount: BigDecimal,
+        val expected: TransactionFeeExtended?,
+    )
+
+    data class CoinOnlyFeeModel(val action: EarnFlowAction, val amount: BigDecimal)
+
+    data class SmartGasVerifyModel(
+        val name: String,
+        val tokenBalance: BigDecimal?,
+        val expected: EarnVerification,
+        val ethBalance: BigDecimal = BigDecimal.ZERO,
+        val callGasLimit: BigInteger = WITHDRAW_GAS,
+    ) {
+        override fun toString(): String = name
+    }
+
     data class WithdrawVerifyModel(val amount: BigDecimal, val position: BigDecimal, val isEntire: Boolean)
 
     private data class TestProviderState(
@@ -1460,6 +1681,8 @@ internal class LendingSessionTest {
 
     private companion object {
         const val WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        const val USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        const val SMART_GAS_HASH = "0xrelayed"
         const val OTHER = "0x0000000000000000000000000000000000000bad"
         const val PLAN_KEY = "plan-1"
         const val NEW_PLAN_KEY = "plan-2"
@@ -1475,6 +1698,7 @@ internal class LendingSessionTest {
         val POSITION = BigDecimal("1.2")
         val MAX_WITHDRAW = BigDecimal("1")
         val WITHDRAW_AMOUNT = BigDecimal("0.5")
+        val TOKEN_FEE = BigDecimal("1.5")
         val PREPARATION_GAS: BigInteger = BigInteger.valueOf(100_000)
         val DEPOSIT_GAS: BigInteger = BigInteger.valueOf(200_000)
         val WITHDRAW_GAS: BigInteger = BigInteger.valueOf(150_000)

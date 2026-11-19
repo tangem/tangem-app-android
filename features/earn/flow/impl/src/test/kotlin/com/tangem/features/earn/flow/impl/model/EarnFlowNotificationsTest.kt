@@ -3,11 +3,16 @@ package com.tangem.features.earn.flow.impl.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.yield.MockYieldSupply
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,6 +46,51 @@ internal class EarnFlowNotificationsTest {
         // Assert
         assertThat(actual).containsExactly(feeExceedsBalance)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideSmartGasModels")
+    fun `GIVEN Smart Gas fee WHEN withdrawal amount THEN fee token balance decides the card`(model: SmartGasModel) {
+        // Arrange
+        val state = EarnFlowState(
+            step = EarnFlowStep.Amount,
+            status = testStatus(),
+            feeStatus = testStatus(amount = BigDecimal.ZERO),
+            fee = testFeeContent(
+                value = "1.5",
+                extended = smartGasFee,
+                feeCryptoCurrencyStatus = MockYieldSupply.loadedStatus(currency = feeToken, amount = model.tokenBalance),
+            ),
+        )
+
+        // Act
+        val actual = EarnFlowNotifications.amount(state, isFromPosition = true, onFeeReload = {})
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideSmartGasModels() = listOf(
+        SmartGasModel(tokenBalance = BigDecimal("2"), expected = emptyList()),
+        SmartGasModel(tokenBalance = BigDecimal("1"), expected = listOf(tokenFeeExceedsBalance)),
+    )
+
+    private val feeToken = MockYieldSupply.token(symbol = "USDC")
+
+    private val smartGasFee = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(testFee("1.5")),
+        feeTokenId = feeToken.id,
+        gaslessProtocolData = GaslessProtocolData.Evm,
+    )
+
+    private val tokenFeeExceedsBalance = NotificationUM.Error.ExceedsBalance(
+        networkIconId = feeToken.networkIconResId,
+        currencyName = feeToken.name,
+        feeName = feeToken.name,
+        feeSymbol = feeToken.symbol,
+        networkName = feeToken.name,
+    )
+
+    data class SmartGasModel(val tokenBalance: BigDecimal, val expected: List<NotificationUM>)
 
     private fun provideTestModels() = listOf(
         FeeModel(

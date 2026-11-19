@@ -51,7 +51,11 @@ internal fun lendingWithdrawResult(amount: BigDecimal, currency: CryptoCurrency,
         ),
         EarnRow(
             label = resourceReference(R.string.common_network_fee_title),
-            value = EarnValue.Text(stringReference(fee.amount.value.format { crypto(currency).fee() })),
+            value = EarnValue.Text(
+                stringReference(
+                    fee.amount.value.format { crypto(fee.amount.currencySymbol, fee.amount.decimals).fee() },
+                ),
+            ),
         ),
     ),
     primary = EarnResultButton(resourceReference(R.string.common_done), EarnFlowExit.Done),

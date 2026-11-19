@@ -13,6 +13,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
@@ -128,6 +129,7 @@ internal class EarnFlowModel @Inject constructor(
     private var feeJob: Job? = null
     private var prepareJob: Job? = null
     private var executeJob: Job? = null
+    private var pickedFeeToken: CryptoCurrencyStatus? = null
 
     /** Declared after everything the converters read: `Eagerly` on an immediate dispatcher maps right here. */
     val amount: StateFlow<EarnAmountUM?> = state.map(::toAmountUM).stateIn(modelScope, SharingStarted.Eagerly, null)
@@ -171,9 +173,10 @@ internal class EarnFlowModel @Inject constructor(
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> = session.loadFee(action, enteredSessionAmount())
 
     suspend fun loadFeeExtended(feeCurrency: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> =
-        session.loadFeeExtended(action, enteredSessionAmount(), feeCurrency)
+        session.loadFeeExtended(action, enteredSessionAmount(), feeCurrency ?: pickedFeeToken)
 
     fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
+        rememberFeeTokenPick(feeSelectorUM)
         feeJob?.cancel()
         // A new fee on the confirmation outdates the plan at once, before the suspend calls below re-prepare it.
         state.update { current ->
@@ -351,6 +354,13 @@ internal class EarnFlowModel @Inject constructor(
      */
     private fun refreshFeeEstimate() {
         modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
+    }
+
+    /** The selector forgets a picked fee token when a reload resets it to loading, so the pick is kept here */
+    private fun rememberFeeTokenPick(feeSelectorUM: FeeSelectorUM) {
+        val feeExtraInfo = (feeSelectorUM as? FeeSelectorUM.Content)?.feeExtraInfo ?: return
+        if (!feeExtraInfo.isFeeTokenSelectedByUser) return
+        pickedFeeToken = feeExtraInfo.feeCryptoCurrencyStatus.takeIf { it.currency is CryptoCurrency.Token }
     }
 
     private fun reloadFee() {

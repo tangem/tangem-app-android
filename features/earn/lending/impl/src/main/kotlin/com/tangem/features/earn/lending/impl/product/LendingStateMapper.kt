@@ -157,7 +157,10 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         )
-        private val WITHDRAW = Withdraw(notice = resourceReference(R.string.lending_withdraw_instant_notice))
+        private val WITHDRAW = Withdraw(
+            isGaslessAllowed = true,
+            notice = resourceReference(R.string.lending_withdraw_instant_notice),
+        )
         val PENDING_BLOCK = EarnBlock(
             reason = resourceReference(R.string.lending_error_previous_transaction_processing),
         )

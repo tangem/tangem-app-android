@@ -29,7 +29,7 @@ internal class LendingAnalyticsSender @Inject constructor(
         analyticsEventHandler.send(
             LendingAnalyticsEvent.TransactionSubmitted(operation = operation, isWithUpgrade = plan.isWithUpgrade),
         )
-        analyticsEventHandler.send(transactionSent(currency = currency, feeType = plan.feeType))
+        analyticsEventHandler.send(transactionSent(currency = currency, plan = plan))
     }
 
     /** A refusal on the card is not a failed transaction */
@@ -45,17 +45,21 @@ internal class LendingAnalyticsSender @Inject constructor(
         )
     }
 
-    /** Lending is offered on network coins only, so the fee is paid in the lent currency itself */
-    private fun transactionSent(currency: CryptoCurrency, feeType: AnalyticsParam.FeeType) = Basic.TransactionSent(
-        sentFrom = AnalyticsParam.TxSentFrom.Earning(
-            blockchain = currency.network.name,
-            token = currency.symbol,
-            feeType = feeType,
-            feeToken = currency.symbol,
-            feeAssetType = AnalyticsParam.FeeAssetType.Coin,
-        ),
-        memoType = Basic.TransactionSent.MemoType.Null,
-        isCustomToken = currency.isCustom,
-        isCustomFeeToken = currency.isCustom,
-    )
+    /** Lending is offered on network coins only, so a fee not paid through Smart Gas is paid in the lent coin */
+    private fun transactionSent(currency: CryptoCurrency, plan: LendingPlan): Basic.TransactionSent {
+        val isPaidInToken = plan.gaslessFee != null
+        val feeAssetType = if (isPaidInToken) AnalyticsParam.FeeAssetType.Token else AnalyticsParam.FeeAssetType.Coin
+        return Basic.TransactionSent(
+            sentFrom = AnalyticsParam.TxSentFrom.Earning(
+                blockchain = currency.network.name,
+                token = currency.symbol,
+                feeType = plan.feeType,
+                feeToken = plan.fee.amount.currencySymbol,
+                feeAssetType = feeAssetType,
+            ),
+            memoType = Basic.TransactionSent.MemoType.Null,
+            isCustomToken = currency.isCustom,
+            isCustomFeeToken = !isPaidInToken && currency.isCustom,
+        )
+    }
 }

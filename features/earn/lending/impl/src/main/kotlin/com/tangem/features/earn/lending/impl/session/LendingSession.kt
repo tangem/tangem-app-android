@@ -5,7 +5,6 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
@@ -61,18 +60,17 @@ internal class LendingSession @AssistedInject constructor(
     private val transactionRepository: YieldSupplyTransactionRepository,
     private val analyticsSender: LendingAnalyticsSender,
     private val accountNames: LendingAccountNames,
+    private val gaslessFees: LendingGaslessFees,
 ) : EarnSession {
 
     override suspend fun loadFee(action: EarnFlowAction, amount: EarnAmount?): Either<GetFeeError, TransactionFee> =
         either {
-            val operation = ensureNotNull(action.toLendingOperation()) { GetFeeError.UnknownError }
-            val state = ensureNotNull(currentState()) { GetFeeError.UnknownError }
-            val value = ensureNotNull(amount.resolve(state, operation)) { GetFeeError.UnknownError }
+            val input = ensureNotNull(feeInput(action, amount)) { GetFeeError.UnknownError }
             planFactory.feeLevels(
                 userWalletId = params.userWalletId,
-                state = state,
-                operation = operation,
-                amount = value,
+                state = input.state,
+                operation = input.operation,
+                amount = input.amount,
             ).bind()
         }
 
@@ -80,8 +78,16 @@ internal class LendingSession @AssistedInject constructor(
         action: EarnFlowAction,
         amount: EarnAmount?,
         feeCurrency: CryptoCurrencyStatus?,
-    ): Either<GetFeeError, TransactionFeeExtended> = loadFee(action, amount).map { fee ->
-        TransactionFeeExtended(transactionFee = fee, feeTokenId = params.currency.id)
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
+        val input = ensureNotNull(feeInput(action, amount)) { GetFeeError.UnknownError }
+        planFactory.feeExtended(
+            userWalletId = params.userWalletId,
+            state = input.state,
+            operation = input.operation,
+            amount = input.amount,
+            isGaslessAllowed = action.isGaslessAllowed,
+            feeToken = feeCurrency,
+        ).bind()
     }
 
     override suspend fun maxAmount(action: EarnFlowAction): Either<EarnSessionError, BigDecimal> = either {
@@ -155,18 +161,23 @@ internal class LendingSession @AssistedInject constructor(
 
     private suspend fun recheck(plan: LendingPlan): Either<EarnSessionError, EarnVerification> = either {
         val operation = ensureNotNull(plan.action.toLendingOperation()) { EarnSessionError.Failed() }
-        val selectedFee = ensureNotNull(plan.fee as? Fee.Ethereum) { EarnSessionError.Failed() }
         val sentGasLimits = ensureNotNull(plan.sentGasLimits()) { EarnSessionError.Failed() }
         val state = ensureNotNull(currentState()) { EarnSessionError.Failed() }
         ensure(!state.hasPendingTx) { EarnSessionError.Rejected(LendingStateMapper.PENDING_BLOCK.reason) }
-        ensureAffordable(plan = plan, operation = operation, state = state, fee = selectedFee)
+        val gaslessFee = plan.gaslessFee
+        val feePayingBalance = if (gaslessFee != null) {
+            gaslessFees.balanceOf(userWalletId = params.userWalletId, fee = gaslessFee)
+        } else {
+            state.balance
+        }
+        ensureAffordable(plan = plan, operation = operation, state = state, feePayingBalance = feePayingBalance)
 
         val newPlan = planFactory.plan(
             userWalletId = params.userWalletId,
             state = state,
             action = plan.action,
             amount = plan.rebuildAmount(state),
-            fee = EarnFeeSelection(fee = plan.fee, extended = null, feeType = plan.feeType),
+            fee = EarnFeeSelection(fee = plan.fee, extended = plan.gaslessFee, feeType = plan.feeType),
         ).bind()
         val isRebuilt = newPlan.planKey != plan.planKey ||
             !newPlan.hasSameTransactionsAs(plan, params.currency.network.rawId)
@@ -200,19 +211,20 @@ internal class LendingSession @AssistedInject constructor(
         plan: LendingPlan,
         operation: LendingOperation,
         state: LendingAssetState,
-        fee: Fee,
+        feePayingBalance: BigDecimal?,
     ) {
-        val balance = ensureNotNull(state.balance) { EarnSessionError.Failed() }
-        val feeValue = ensureNotNull(fee.amount.value) { EarnSessionError.Failed() }
+        val feeValue = ensureNotNull(plan.fee.amount.value) { EarnSessionError.Failed() }
         when (operation) {
             LendingOperation.Deposit -> {
+                val balance = ensureNotNull(state.balance) { EarnSessionError.Failed() }
                 ensure(state.market.isOpen) { EarnSessionError.Rejected(LendingStateMapper.CLOSED_BLOCK.reason) }
                 ensure(plan.amount + feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
             LendingOperation.Withdraw -> {
                 val maxWithdraw = ensureNotNull(state.market.maxWithdraw) { EarnSessionError.Failed() }
                 ensure(plan.amount <= maxWithdraw) { EarnSessionError.ExceedsLimit(maxWithdraw) }
-                // The withdrawn ETH arrives only with the transaction, so its gas is paid from the wallet balance
+                // The withdrawn ETH arrives only with the transaction, so the fee is paid from what the wallet holds
+                val balance = ensureNotNull(feePayingBalance) { EarnSessionError.Failed() }
                 ensure(feeValue <= balance) { EarnSessionError.InsufficientBalance }
             }
         }
@@ -264,6 +276,13 @@ internal class LendingSession @AssistedInject constructor(
         lendingProvider.refresh(params.userWalletId, asset)
     }
 
+    private suspend fun feeInput(action: EarnFlowAction, amount: EarnAmount?): FeeInput? {
+        val operation = action.toLendingOperation() ?: return null
+        val state = currentState() ?: return null
+        val value = amount.resolve(state, operation) ?: return null
+        return FeeInput(operation = operation, state = state, amount = value)
+    }
+
     private suspend fun currentState(): LendingAssetState? =
         lendingSupplier(params.userWalletId).first().assets[params.currency.id]
 
@@ -304,6 +323,8 @@ internal class LendingSession @AssistedInject constructor(
         val POLL_INTERVAL = 10.seconds
     }
 }
+
+private class FeeInput(val operation: LendingOperation, val state: LendingAssetState, val amount: BigDecimal)
 
 /** File-private so that only [LendingSession.verify] creates it and [LendingSession.execute] sends nothing else */
 private class LendingVerifiedPlan(override val plan: LendingPlan) : VerifiedPlan

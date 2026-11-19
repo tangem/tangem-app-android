@@ -34,6 +34,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -69,6 +70,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -1116,6 +1118,66 @@ internal class EarnFlowModelTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FeeTokenPick {
+
+        @ParameterizedTest
+        @MethodSource("providePicks")
+        fun `GIVEN fee results WHEN selector asks for a quote THEN session gets the fee token the user picked`(
+            model: FeeTokenPickModel,
+        ) = runTest {
+            // Arrange
+            coEvery {
+                session.loadFeeExtended(action = any(), amount = any(), feeCurrency = any())
+            } returns GetFeeError.UnknownError.left()
+            val flow = createModel(action = Withdraw(isGaslessAllowed = true))
+            advanceUntilIdle()
+            model.results.forEach(flow::onFeeResult)
+
+            // Act
+            flow.loadFeeExtended(feeCurrency = model.requested)
+
+            // Assert
+            coVerify(exactly = 1) {
+                session.loadFeeExtended(action = any(), amount = any(), feeCurrency = model.expected)
+            }
+            flow.onDestroy()
+        }
+
+        private fun providePicks() = listOf(
+            FeeTokenPickModel(
+                name = "token picked, then the selector reset to loading",
+                results = listOf(picked(usdcStatus), FeeSelectorUM.Loading),
+                requested = null,
+                expected = usdcStatus,
+            ),
+            FeeTokenPickModel(
+                name = "token picked, then the coin picked",
+                results = listOf(picked(usdcStatus), picked(testStatus()), FeeSelectorUM.Loading),
+                requested = null,
+                expected = null,
+            ),
+            FeeTokenPickModel(
+                name = "token chosen automatically",
+                results = listOf(testFeeContent("1.5", feeCryptoCurrencyStatus = usdcStatus)),
+                requested = null,
+                expected = null,
+            ),
+            FeeTokenPickModel(
+                name = "token the selector asks for",
+                results = listOf(picked(usdcStatus)),
+                requested = usdtStatus,
+                expected = usdtStatus,
+            ),
+        )
+
+        private fun picked(feeCurrency: CryptoCurrencyStatus): FeeSelectorUM.Content {
+            val content = testFeeContent("1.5", feeCryptoCurrencyStatus = feeCurrency)
+            return content.copy(feeExtraInfo = content.feeExtraInfo.copy(isFeeTokenSelectedByUser = true))
+        }
+    }
+
+    @Nested
     inner class Confirmation {
 
         @Test
@@ -1791,6 +1853,20 @@ internal class EarnFlowModelTest {
         advanceUntilIdle()
         assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
         return model
+    }
+
+    private val usdcStatus = MockYieldSupply.loadedStatus(currency = MockYieldSupply.token(symbol = "USDC"))
+    private val usdtStatus = MockYieldSupply.loadedStatus(
+        currency = MockYieldSupply.token(contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7", symbol = "USDT"),
+    )
+
+    data class FeeTokenPickModel(
+        val name: String,
+        val results: List<FeeSelectorUM>,
+        val requested: CryptoCurrencyStatus?,
+        val expected: CryptoCurrencyStatus?,
+    ) {
+        override fun toString(): String = name
     }
 
     private fun TestScope.createModel(

@@ -72,6 +72,7 @@ internal fun testFeeContent(
     value: String,
     isPrimaryButtonEnabled: Boolean = true,
     extended: TransactionFeeExtended? = null,
+    feeCryptoCurrencyStatus: CryptoCurrencyStatus = testStatus(),
 ): FeeSelectorUM.Content {
     val fee = testFee(value)
     return FeeSelectorUM.Content(
@@ -83,7 +84,7 @@ internal fun testFeeContent(
             isFeeApproximate = false,
             isFeeConvertibleToFiat = true,
             isTronToken = false,
-            feeCryptoCurrencyStatus = testStatus(),
+            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             transactionFeeExtended = extended,
         ),
         feeFiatRateUM = null,
