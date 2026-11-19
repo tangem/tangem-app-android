@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -39,6 +40,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -162,10 +164,50 @@ internal class PolymarketSoccerModelTest {
     }
 
     @Test
-    fun `GIVEN not found WHEN retry succeeds THEN error is replaced with content`() = runTest {
+    fun `GIVEN not a match WHEN first loaded THEN the event is reopened on the event screen`() = runTest {
+        // Arrange
+        coEvery { getEvent(any(), any()) } returns PolymarketEventError.NotFound.left()
+        val transform = slot<(List<Route>) -> List<Route>>()
+        every { router.navigate(capture(transform), any()) } returns Unit
+        val model = createModel()
+        val route = PolymarketRoute.EventDetails("child", wallet, categoryLabel = "Soccer", isSoccerMatch = true)
+        val otherEvent = PolymarketRoute.EventDetails("other", wallet, isSoccerMatch = true)
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(transform.captured(listOf(route))).containsExactly(route.copy(isSoccerMatch = false))
+        assertThat(transform.captured(listOf(otherEvent))).containsExactly(otherEvent)
+        assertThat(model.uiState.value).isNotEqualTo(PolymarketSoccerUM.Error)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN loaded match WHEN refresh answers not found THEN content is kept on the soccer screen`() = runTest {
+        // Arrange
+        coEvery { getEvent(any(), any()) } returns soccerEvent(emptyList()).right()
+        coEvery { getMainEvent(any(), any()) } returns PolymarketEventError.NotFound.left()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        advanceTimeBy(30_000)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(PolymarketSoccerUM.Content::class.java)
+        verify(exactly = 0) { router.navigate(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN network failure WHEN retry succeeds THEN error is replaced with content`() = runTest {
         // Arrange
         coEvery { getEvent(any(), any()) } returnsMany listOf(
-            PolymarketEventError.NotFound.left(), soccerEvent(emptyList()).right(),
+            PolymarketEventError.Network.left(), soccerEvent(emptyList()).right(),
         )
         val model = createModel()
         model.onResume()

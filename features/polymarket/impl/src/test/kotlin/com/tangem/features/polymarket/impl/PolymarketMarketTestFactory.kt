@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.domain.polymarket.model.PolymarketTeam
 import java.math.BigDecimal
 
 internal fun createPolymarketEvent(
@@ -106,4 +107,9 @@ internal fun createPolymarketOutcome(
     title = title,
     probability = probability,
     legacyAssetId = legacyAssetId,
+)
+
+internal fun createSoccerMatchTeams(): List<PolymarketTeam> = listOf(
+    PolymarketTeam(name = "Home", abbreviation = "HOM", alias = null, logoUrl = null, ordering = "home"),
+    PolymarketTeam(name = "Away", abbreviation = "AWY", alias = null, logoUrl = null, ordering = "away"),
 )

@@ -23,8 +23,8 @@ import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsCompone
 import com.tangem.features.polymarket.impl.details.model.chart.PolymarketEventChartController
 import com.tangem.features.polymarket.impl.details.model.transformer.PolymarketEventDetailsContentTransformer
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
-import com.tangem.features.polymarket.impl.navigation.SOCCER_EVENT_TYPE
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.isSoccerMatch
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -174,7 +174,8 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     }
 
     private fun isSoccerEvent(): Boolean =
-        polymarketFeatureToggles.isPolymarketPhaseTwoEnabled && event?.eventType == SOCCER_EVENT_TYPE
+        polymarketFeatureToggles.isPolymarketPhaseTwoEnabled && params.isSoccerMatch != false &&
+            event?.isSoccerMatch == true
 
     private fun redirectToSoccer(): Boolean {
         if (!isSoccerEvent()) return false
@@ -182,7 +183,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             router.navigate(transformer = { stack ->
                 val current = stack.lastOrNull() as? PolymarketRoute.EventDetails
                 if (current?.eventId == params.eventId && current.userWalletId == params.userWalletId) {
-                    stack.dropLast(1) + current.copy(eventType = SOCCER_EVENT_TYPE)
+                    stack.dropLast(1) + current.copy(isSoccerMatch = true)
                 } else {
                     stack
                 }

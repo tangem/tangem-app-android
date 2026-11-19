@@ -16,12 +16,14 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketSportsState
+import com.tangem.domain.polymarket.model.PolymarketTeam
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRequest
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.features.polymarket.impl.category.PolymarketCategoryComponent
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createSoccerMatchTeams
 import com.tangem.features.polymarket.impl.common.feed.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent.Action as ActivationAction
 import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBanner
@@ -155,7 +157,7 @@ internal class PolymarketCategoryModelTest {
         runCurrent()
         model.uiState.value.subcategories.single { it.id == 14 }.onClick()
         runCurrent()
-        feeds.last().load("soccer", eventType = "soccer")
+        feeds.last().load("soccer", eventType = "soccer", teams = createSoccerMatchTeams())
         runCurrent()
         val card = model.cards().single()
         val event = createPolymarketEvent(id = "soccer")
@@ -167,7 +169,7 @@ internal class PolymarketCategoryModelTest {
 
         // Assert
         verify {
-            router.push(PolymarketRoute.EventDetails("soccer", walletId, categoryLabel = "soccer", eventType = "soccer"))
+            router.push(PolymarketRoute.EventDetails("soccer", walletId, categoryLabel = "soccer", isSoccerMatch = true))
             router.push(PolymarketRoute.PlacePrediction(walletId, "soccer", market.id, market.outcomes.first().assetId))
         }
     }
@@ -490,9 +492,10 @@ internal class PolymarketCategoryModelTest {
                 MutableSharedFlow<Pair<PolymarketEventsUpdateRequest, BatchUpdateResult<Int, PolymarketEventsBatch>>>()
         }
 
-        fun load(id: String, eventType: String? = null) {
+        fun load(id: String, eventType: String? = null, teams: List<PolymarketTeam>? = null) {
+            val event = createPolymarketEvent(id = id).copy(eventType = eventType, teams = teams)
             state.value = BatchListState(
-                listOf(Batch(0, PolymarketEventsBatch(listOf(createPolymarketEvent(id = id).copy(eventType = eventType)), requestCursor = null))),
+                listOf(Batch(0, PolymarketEventsBatch(listOf(event), requestCursor = null))),
                 PaginationStatus.EndOfPagination,
             )
         }

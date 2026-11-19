@@ -36,6 +36,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createSoccerMatchTeams
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -661,7 +662,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = batchOf(createEvent().copy(eventType = "soccer")))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent().copy(eventType = "soccer", teams = createSoccerMatchTeams())))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -676,7 +677,7 @@ internal class PolymarketMainModelTest {
                     eventId = "event-1",
                     userWalletId = USER_WALLET_ID,
                     categoryLabel = "Trending",
-                    eventType = "soccer",
+                    isSoccerMatch = true,
                 ),
                 any(),
             )
@@ -2226,6 +2227,7 @@ internal class PolymarketMainModelTest {
             router.push(
                 PolymarketRoute.EventDetails(
                     eventId = "question-event", userWalletId = USER_WALLET_ID, categoryLabel = "Sports",
+                    isSoccerMatch = false,
                 ),
             )
         }
