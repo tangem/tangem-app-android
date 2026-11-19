@@ -232,6 +232,46 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         coVerify(exactly = 0) { getOnrampFeesUseCase(any(), any()) }
     }
 
+    @ParameterizedTest
+    @MethodSource("providePercentLocaleModels")
+    fun `GIVEN locale WHEN percentage route fee shown THEN percent sign follows the number without a space`(
+        model: PercentLocaleModel,
+    ) = runTest {
+        // Arrange
+        Locale.setDefault(model.locale)
+        val percentageFee = BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.PERCENTAGE,
+            amount = BigDecimal("1.5"),
+        )
+
+        // Act
+        val detailsModel = createModel(
+            bankCredentials = bankCredentials(rail = "ACH", depositFee = percentageFee),
+            feeSource = FeeSource.Route,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(detailsModel.uiState.value.fees).isEqualTo(
+            TangemPayOnrampFeesUM.Content(
+                rows = persistentListOf(
+                    TangemPayOnrampFeesUM.FeeRow(type = "ACH", title = stringReference("ACH"), value = model.expected),
+                ),
+            ),
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSwiftWarningModels")
+    fun `GIVEN rail WHEN details shown THEN SWIFT note shown only for US rails`(model: SwiftWarningModel) = runTest {
+        // Act
+        val detailsModel = createModel(bankCredentials = model.credentials, feeSource = model.feeSource)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(detailsModel.uiState.value.isSwiftWarningShown).isEqualTo(model.expected)
+    }
+
     @Test
     fun `GIVEN fees request fails WHEN retry succeeds THEN fee rows shown`() = runTest {
         // Arrange
@@ -489,6 +529,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         )
         assertThat(state.minimumDeposit).isEqualTo(stringReference("MX$38"))
         assertThat(state.dailyDepositLimit).isNull()
+        assertThat(state.isSwiftWarningShown).isFalse()
     }
 
     @Test
@@ -502,9 +543,11 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
         model.clickTab(index = 0)
 
         // Assert
-        assertThat(model.uiState.value.requisites.map { it.key })
+        val state = model.uiState.value
+        assertThat(state.requisites.map { it.key })
             .containsExactlyElementsIn(US_REQUISITE_KEYS)
             .inOrder()
+        assertThat(state.isSwiftWarningShown).isTrue()
     }
 
     @Test
@@ -617,6 +660,23 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     )
 
     data class RateModel(val rate: BigDecimal, val expectedValue: String)
+
+    private fun providePercentLocaleModels() = listOf(
+        PercentLocaleModel(locale = Locale.US, expected = "1.5%"),
+        PercentLocaleModel(locale = Locale.forLanguageTag("ru-RU"), expected = "1,5%"),
+        PercentLocaleModel(locale = Locale.FRANCE, expected = "1,5%"),
+        PercentLocaleModel(locale = Locale.GERMANY, expected = "1,5%"),
+    )
+
+    data class PercentLocaleModel(val locale: Locale, val expected: String)
+
+    private fun provideSwiftWarningModels() = listOf(
+        SwiftWarningModel(credentials = USD_ROUTE, feeSource = FeeSource.Route, expected = true),
+        SwiftWarningModel(credentials = SPEI_CREDENTIALS, feeSource = FeeSource.Route, expected = false),
+        SwiftWarningModel(credentials = bankCredentials(), feeSource = FeeSource.Catalogue(product), expected = true),
+    )
+
+    data class SwiftWarningModel(val credentials: BankCredentials, val feeSource: FeeSource, val expected: Boolean)
 
     private fun TangemPayBankTransferOnrampDetailsModel.clickTab(index: Int) {
         (uiState.value.tabs[index] as TangemTabItemUM.Content).onClick()
