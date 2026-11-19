@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -26,6 +27,8 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
@@ -82,6 +85,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val inviteSharing: JointAccountInviteSharing,
     private val currentTimeProvider: CurrentTimeProvider,
     private val pushPermissionPrompt: JointAccountPushPermissionPrompt,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountMembersListParams>()
@@ -346,6 +350,7 @@ internal class JointAccountMembersModel @Inject constructor(
             .onLeft { error ->
                 TangemLogger.e("Failed to issue the invite of slot $slot", error.cause)
                 if (error is JointAccountInviteIssueError.Failed) {
+                    analyticsEventHandler.send(JointAccountError(source = ErrorSource.Invite, cause = error.cause))
                     uiMessageSender.send(
                         SnackbarMessage(message = resourceReference(CoreUiR.string.common_unknown_error)),
                     )

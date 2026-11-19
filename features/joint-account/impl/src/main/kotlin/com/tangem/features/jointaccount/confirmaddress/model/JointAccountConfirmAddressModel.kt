@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.confirmaddress.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -27,6 +28,8 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.features.jointaccount.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,6 +69,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val pollingCoordinator: JointAccountPollingCoordinator,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountConfirmAddressComponent.Params>()
@@ -160,7 +164,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
 
         if (account == null) {
             TangemLogger.e("Joint account confirmation failed: no account behind the shown address")
-            showError()
+            showError(JointAccountError(source = ErrorSource.Confirm, errorMessage = "No account"))
             return
         }
 
@@ -204,12 +208,15 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             JointAccountConfirmationError.NotReadyForConfirmation,
             JointAccountConfirmationError.AddressMismatch,
             JointAccountConfirmationError.NotMember,
-            is JointAccountFlowError.Failed,
-            -> showError()
+            -> showError(JointAccountError(source = ErrorSource.Confirm, errorMessage = error.toString()))
+            is JointAccountFlowError.Failed -> {
+                showError(JointAccountError(source = ErrorSource.Confirm, cause = error.cause))
+            }
         }
     }
 
-    private fun showError() {
+    private fun showError(event: JointAccountError) {
+        analyticsEventHandler.send(event)
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.common_error),

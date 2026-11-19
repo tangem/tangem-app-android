@@ -54,6 +54,28 @@ internal class JointAccountAnalyticsEventTest {
         )
     }
 
+    @ParameterizedTest
+    @EnumSource(ErrorSource::class)
+    fun `GIVEN an error source WHEN error event built THEN Source matches the spec`(source: ErrorSource) {
+        // Arrange
+        val expected = when (source) {
+            ErrorSource.Create -> "Create"
+            ErrorSource.Join -> "Join"
+            ErrorSource.CreateOperation -> "Create Operation"
+            ErrorSource.Sign -> "Sign"
+            ErrorSource.Decline -> "Decline"
+            ErrorSource.Cancel -> "Cancel"
+            ErrorSource.Confirm -> "Confirm"
+            ErrorSource.Invite -> "Invite"
+        }
+
+        // Act
+        val event = JointAccountError(source = source, errorMessage = "message")
+
+        // Assert
+        assertThat(event.params).isEqualTo(mapOf("Source" to expected, "Error Message" to "message"))
+    }
+
     data class ErrorModel(val cause: Throwable, val expectedParams: Map<String, String>)
 
     private fun provideTestModels() = listOf(

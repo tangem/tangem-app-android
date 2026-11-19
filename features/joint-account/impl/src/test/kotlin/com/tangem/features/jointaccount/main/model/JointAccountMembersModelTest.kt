@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.common.ui.account.AccountIconUM
@@ -35,6 +36,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
@@ -94,6 +97,7 @@ internal class JointAccountMembersModelTest {
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val issueJointAccountInviteUseCase: IssueJointAccountInviteUseCase = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
     private val userWallet: UserWallet = mockk()
@@ -119,6 +123,7 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher,
             pollingCoordinator,
             issueJointAccountInviteUseCase,
+            analyticsEventHandler,
             getUserWalletUseCase,
             ensureWalletLinkedUseCase,
             ownerAddressResolver,
@@ -444,11 +449,12 @@ internal class JointAccountMembersModelTest {
     fun `GIVEN issuing fails WHEN invite clicked THEN error snackbar, no sheet and the button is back`() =
         runTest {
             // Arrange
+            val failure = IllegalStateException("offline")
             stub(account = pendingAccount(members = listOf(creator)))
             stubAccountRecord()
             coEvery {
                 issueJointAccountInviteUseCase(accountId = any(), slot = any())
-            } returns JointAccountInviteIssueError.Failed(cause = IllegalStateException("offline")).left()
+            } returns JointAccountInviteIssueError.Failed(cause = failure).left()
             val model = createModel()
             val openedSheets = model.bottomSheetNavigation.trackSlot()
             val message = slot<SnackbarMessage>()
@@ -465,6 +471,9 @@ internal class JointAccountMembersModelTest {
                     onDismissRequest = NO_OP,
                 ),
             )
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Invite, cause = failure))
+            }
             assertThat(openedSheets).isEmpty()
             assertThat(model.uiState.value.freeSlots.first().action)
                 .isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
@@ -487,6 +496,7 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
         assertThat(openedSheets).isEmpty()
         assertThat(model.uiState.value.freeSlots.first().action)
             .isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
@@ -955,6 +965,7 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher = jointAccountListFetcher,
             pollingCoordinator = pollingCoordinator,
             issueJointAccountInviteUseCase = issueJointAccountInviteUseCase,
+            analyticsEventHandler = analyticsEventHandler,
             getUserWalletUseCase = getUserWalletUseCase,
             ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
             ownerAddressResolver = ownerAddressResolver,
