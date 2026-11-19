@@ -106,11 +106,6 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         return createCurrency(responseToken = responseToken, userWallet = userWallet, network = network)
     }
 
-    /** Custom is a token the backend doesn't list (no id) or one that is not on the account's own path */
-    private fun UserTokensResponse.Token.isCustomIn(jointPath: Network.DerivationPath.Joint): Boolean {
-        return id == null || derivationPath != jointPath.value
-    }
-
     private fun resolveBlockchain(responseToken: UserTokensResponse.Token, userWallet: UserWallet): Blockchain? {
         val blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
@@ -179,4 +174,9 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             isCustom = isCustomToken(id, network),
         )
     }
+}
+
+/** Custom is a token the backend doesn't list (no id) or one that is not on the account's own path */
+fun UserTokensResponse.Token.isCustomIn(jointPath: Network.DerivationPath.Joint): Boolean {
+    return id.isNullOrBlank() || derivationPath != jointPath.value
 }

@@ -73,6 +73,11 @@ internal class ResponseCryptoCurrenciesFactoryTest {
             expectedSymbols = listOf("ETH"),
         ),
         JointModel(
+            name = "a token with a blank id",
+            token = token.copy(id = " "),
+            expectedSymbols = listOf("ETH"),
+        ),
+        JointModel(
             name = "a token on another path",
             token = token.copy(derivationPath = "m/44'/60'/0'/0/0"),
             expectedSymbols = listOf("ETH"),
