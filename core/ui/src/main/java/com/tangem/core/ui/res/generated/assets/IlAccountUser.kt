@@ -24,20 +24,20 @@ val Icons.il_account_user: ImageVector
         if (_il_account_user != null) return _il_account_user!!
         _il_account_user = ImageVector.Builder(
             name = "il_account_user",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f,
+            defaultWidth = 48.dp,
+            defaultHeight = 48.dp,
+            viewportWidth = 48f,
+            viewportHeight = 48f,
         ).apply {
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M8.27539 4.42407C10.3724 2.45075 13.5915 2.45078 15.6885 4.42407C15.6912 4.42667 15.6936 4.4302 15.6963 4.43286C15.7005 4.43692 15.7058 4.44046 15.71 4.44458C17.8001 6.53465 17.8319 9.90444 15.6885 11.9221C13.6328 13.8567 10.2751 14.0494 8.23242 11.8791C6.29804 9.82354 6.10513 6.46655 8.27539 4.42407Z"),
+                pathData = addPathNodes("M20.2749 16.4708C22.3722 14.5097 25.5916 14.5097 27.6889 16.4708C27.6917 16.4734 27.6941 16.4769 27.6967 16.4796C27.701 16.4836 27.7062 16.4871 27.7104 16.4912C29.8009 18.5684 29.8326 21.9174 27.6889 23.9226C25.633 25.8453 22.2749 26.0368 20.232 23.8799C18.2973 21.837 18.1044 18.5007 20.2749 16.4708Z"),
             )
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M14.5684 14.6252C17.6529 14.6253 19.9987 17.1019 19.999 20.0559C19.999 20.6082 19.5513 21.0559 18.999 21.0559H5.00098C4.4488 21.0558 4.00098 20.6081 4.00098 20.0559C4.00127 16.9716 6.47857 14.6254 9.43262 14.6252H14.5684Z"),
+                pathData = addPathNodes("M26.5687 26.609C29.6536 26.6091 31.9997 29.0704 32 32.0062C32 32.555 31.5522 33 30.9999 33H17.0001C16.4479 32.9999 16 32.555 16 32.0062C16.0003 28.9409 18.4779 26.6092 21.4323 26.609H26.5687Z"),
             )
         }.build()
         return _il_account_user!!
