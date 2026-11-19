@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds2.expandable.ExpandableCaptionText
@@ -25,14 +26,19 @@ import com.tangem.utils.StringsSigns
 
 /** Collapsed subtitle: `label · description`. The separating dot is dropped with either side. */
 @Composable
-internal fun AccountRowSubtitle(label: TextReference?, description: TextReference?, modifier: Modifier = Modifier) {
+internal fun AccountRowSubtitle(
+    label: TextReference?,
+    description: TextReference?,
+    modifier: Modifier = Modifier,
+    labelColor: Color = TangemTheme.colors3.text.secondary,
+) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (label != null) {
-            ExpandableCaptionText(text = label)
+            ExpandableCaptionText(text = label, color = labelColor)
         }
         if (label != null && description != null) {
             ExpandableDot()
