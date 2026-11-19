@@ -1469,9 +1469,16 @@
   <string name="money_account_onboarding_transfers_card_subtitle">使用專屬帳戶資訊</string>
   <string name="money_account_onboarding_transfers_card_title">以法幣付款與收款</string>
   <string name="money_account_send_bank_transfer_unavailable">無法使用</string>
+  <string name="money_account_send_conversion">兌換</string>
+  <string name="money_account_send_fees_deducted">費用會在兌換前扣除</string>
   <string name="money_account_send_fees_footer">費用包含%s服務費和預估網路費</string>
+  <string name="money_account_send_fees_network">%s 網路</string>
+  <string name="money_account_send_fees_title">費用</string>
+  <string name="money_account_send_fees_total">總計</string>
   <string name="money_account_send_network_fee_note">費用包含預估網路費%s，可能隨網路活躍度變化</string>
   <string name="money_account_send_pay_button">支付 %s</string>
+  <string name="money_account_send_rate_lock">匯率鎖定 %s</string>
+  <string name="money_account_send_recipient_gets">收款人將收到</string>
   <string name="money_account_send_unavailable_description">請於 5 分鐘後再試</string>
   <string name="money_account_send_unavailable_title">操作目前無法使用</string>
   <string name="news_all_news">所有新聞</string>
@@ -2478,7 +2485,7 @@
   <string name="tangempay_bank_transfer_details_fee_header">存款方式與費用</string>
   <string name="tangempay_bank_transfer_details_limitations">限制</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">最低存款金額</string>
-  <string name="tangempay_bank_transfer_details_rate_disclaimer">參考匯率。存款將以到帳當日匯率計算</string>
+  <string name="tangempay_bank_transfer_details_rate_disclaimer">參考匯率。存款將以到帳當日匯率計算。</string>
   <string name="tangempay_bank_transfer_details_reference_warning">轉帳時請附上參考編號，否則存款可能無法入帳。</string>
   <string name="tangempay_bank_transfer_failed_title">帳戶資訊建立失敗</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
@@ -2963,9 +2970,12 @@
   <string name="tangempay_withdraw_bank_account_type_saving">儲蓄帳戶</string>
   <string name="tangempay_withdraw_bank_account_type_screen_title">選擇帳戶類型</string>
   <string name="tangempay_withdraw_bank_account_type_title">帳戶類型</string>
+  <string name="tangempay_withdraw_bank_amount_error_min">提款金額不得低於 %s</string>
   <string name="tangempay_withdraw_bank_amount_error_range">請設定 %1$s 至 %2$s 之間的金額</string>
   <string name="tangempay_withdraw_bank_amount_not_enough_funds">餘額不足</string>
+  <string name="tangempay_withdraw_bank_choose_transfer_method">選擇轉帳方式</string>
   <string name="tangempay_withdraw_bank_confirm_title">確認轉帳</string>
+  <string name="tangempay_withdraw_bank_data_unreachable">無法載入轉帳資訊，請檢查網路連線或點擊重新整理</string>
   <string name="tangempay_withdraw_bank_error_business">該企業類型暫不支援轉帳</string>
   <string name="tangempay_withdraw_bank_error_general_title">無法執行此操作</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">目前無法向收款人所在地區轉帳</string>
@@ -2975,12 +2985,15 @@
     <item quantity="other">%d 個工作天</item>
   </plurals>
   <string name="tangempay_withdraw_bank_eta_same_business_day">同一個工作日</string>
+  <string name="tangempay_withdraw_bank_eta_within_minutes">幾分鐘內</string>
   <string name="tangempay_withdraw_bank_field_account_number">帳號</string>
   <string name="tangempay_withdraw_bank_field_bank_address_line1">銀行地址（第 1 行）</string>
   <string name="tangempay_withdraw_bank_field_bank_city">銀行所在城市</string>
   <string name="tangempay_withdraw_bank_field_bank_name">銀行名稱</string>
   <string name="tangempay_withdraw_bank_field_bank_region">銀行所在地區／州</string>
   <string name="tangempay_withdraw_bank_field_business_name">企業名稱</string>
+  <string name="tangempay_withdraw_bank_field_clabe_hint">收款人墨西哥銀行的 18 位數帳號</string>
+  <string name="tangempay_withdraw_bank_field_error_clabe">CLABE 不正確</string>
   <string name="tangempay_withdraw_bank_field_error_invalid_format">文字格式無效</string>
   <string name="tangempay_withdraw_bank_field_error_routing_number">路由號碼不正確</string>
   <string name="tangempay_withdraw_bank_field_routing_number">路由號碼</string>
