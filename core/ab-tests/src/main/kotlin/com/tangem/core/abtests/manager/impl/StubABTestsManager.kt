@@ -21,4 +21,6 @@ internal class StubABTestsManager : ABTestsManager {
     }
 
     override fun peekValue(key: String): String? = null
+
+    override fun getCachedValue(key: String): String? = null
 }
