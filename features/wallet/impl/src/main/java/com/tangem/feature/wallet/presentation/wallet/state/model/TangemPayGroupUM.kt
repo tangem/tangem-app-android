@@ -16,6 +16,7 @@ internal sealed interface TangemPayGroupUM {
         val balanceCaption: TextReference,
         val isBalanceFlickering: Boolean,
         val isExpanded: Boolean,
+        val isActionRequired: Boolean,
         val onClick: () -> Unit,
     ) : TangemPayGroupUM
 }

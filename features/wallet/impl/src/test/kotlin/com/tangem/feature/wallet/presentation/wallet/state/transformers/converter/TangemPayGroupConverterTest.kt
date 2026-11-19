@@ -21,14 +21,18 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIn
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayGroupUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayGroupConverterTest {
 
     private val clickIntents: WalletContentClickIntents = mockk(relaxed = true)
@@ -174,6 +178,83 @@ internal class TangemPayGroupConverterTest {
         )
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN accounts action required state WHEN convert THEN group action required state matches`(
+        model: ActionRequiredModel,
+    ) {
+        // Act
+        val result = converter(expandedAccounts = emptySet()).convert(
+            paymentStatus = paymentStatus(loadedValue(balance = BigDecimal("1545.35"))),
+            moneyStatus = moneyStatus(activeValue(balance = BigDecimal("340.00"))),
+            tangemPayMainUM = model.tangemPayMainUM,
+            moneyAccountMainUM = model.moneyAccountMainUM,
+        ) as TangemPayGroupUM.Content
+
+        // Assert
+        assertThat(result).isEqualTo(
+            expectedContent(
+                accountsCount = 2,
+                balance = usd(BigDecimal("1885.35")),
+                isBalanceFlickering = false,
+                isExpanded = false,
+                onClick = result.onClick,
+                isActionRequired = model.expectedIsActionRequired,
+            ),
+        )
+    }
+
+    private fun provideTestModels() = listOf(
+        ActionRequiredModel(
+            tangemPayMainUM = tangemPayContent(isActionRequired = true),
+            moneyAccountMainUM = moneyAccountContent(isActionRequired = false),
+            expectedIsActionRequired = true,
+        ),
+        ActionRequiredModel(
+            tangemPayMainUM = tangemPayContent(isActionRequired = false),
+            moneyAccountMainUM = moneyAccountContent(isActionRequired = true),
+            expectedIsActionRequired = true,
+        ),
+        ActionRequiredModel(
+            tangemPayMainUM = tangemPayContent(isActionRequired = true),
+            moneyAccountMainUM = moneyAccountContent(isActionRequired = true),
+            expectedIsActionRequired = true,
+        ),
+        ActionRequiredModel(
+            tangemPayMainUM = tangemPayContent(isActionRequired = false),
+            moneyAccountMainUM = moneyAccountContent(isActionRequired = false),
+            expectedIsActionRequired = false,
+        ),
+        ActionRequiredModel(
+            tangemPayMainUM = TangemPayMainUM.ActionRequired(onClick = {}),
+            moneyAccountMainUM = MoneyAccountMainUM.Unavailable,
+            expectedIsActionRequired = false,
+        ),
+    )
+
+    data class ActionRequiredModel(
+        val tangemPayMainUM: TangemPayMainUM,
+        val moneyAccountMainUM: MoneyAccountMainUM,
+        val expectedIsActionRequired: Boolean,
+    )
+
+    private fun tangemPayContent(isActionRequired: Boolean) = TangemPayMainUM.Content(
+        subtitle = stringReference("*1234"),
+        isBalanceFlickering = false,
+        balance = stringReference("$1,545.35"),
+        balanceSubtitle = stringReference("USDC"),
+        onClick = {},
+        shouldShowOnlyCacheWarning = false,
+        isActionRequired = isActionRequired,
+    )
+
+    private fun moneyAccountContent(isActionRequired: Boolean) = MoneyAccountMainUM.Content(
+        subtitle = stringReference("USD account"),
+        balance = null,
+        isActionRequired = isActionRequired,
+        onClick = {},
+    )
+
     private fun converter(expandedAccounts: Set<AccountId>) = TangemPayGroupConverter(
         expandedAccounts = expandedAccounts,
         clickIntents = clickIntents,
@@ -185,18 +266,24 @@ internal class TangemPayGroupConverterTest {
         isBalanceFlickering: Boolean,
         isExpanded: Boolean,
         onClick: () -> Unit,
+        isActionRequired: Boolean = false,
     ) = TangemPayGroupUM.Content(
         id = "TangemPayGroup",
         title = resourceReference(R.string.tangempay_main_group_title),
-        label = pluralReference(
-            id = R.plurals.tangempay_main_group_subtitle,
-            count = accountsCount,
-            formatArgs = wrappedList(accountsCount),
-        ),
+        label = if (isActionRequired) {
+            resourceReference(R.string.tangempay_action_required_title)
+        } else {
+            pluralReference(
+                id = R.plurals.tangempay_main_group_subtitle,
+                count = accountsCount,
+                formatArgs = wrappedList(accountsCount),
+            )
+        },
         balance = balance,
         balanceCaption = stringReference("USD"),
         isBalanceFlickering = isBalanceFlickering,
         isExpanded = isExpanded,
+        isActionRequired = isActionRequired,
         onClick = onClick,
     )
 
