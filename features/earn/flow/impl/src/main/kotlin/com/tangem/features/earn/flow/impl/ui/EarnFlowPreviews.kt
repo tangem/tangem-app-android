@@ -103,13 +103,9 @@ internal data class EarnPreview(val preset: EarnPreviewPreset, val action: EarnP
         title = if (isWithdraw) stringReference("Withdrawal") else stringReference("Deposit to Lending on Aave"),
         amountState = AmountStatePreviewData.amountStateV2,
         clickIntents = AmountScreenClickIntentsStub,
-        percents = if (isWithdraw) {
-            persistentListOf()
-        } else {
-            listOf(25, 50, 75, 100).map { percent ->
-                PredefinedPercentButtonUM(id = "$percent", label = stringReference("$percent%"), onClick = {})
-            }.toImmutableList()
-        },
+        percents = listOf(25, 50, 75, 100).map { percent ->
+            PredefinedPercentButtonUM(id = "$percent", label = stringReference("$percent%"), onClick = {})
+        }.toImmutableList(),
         notice = notice,
         notifications = persistentListOf(),
         primary = TangemButtonUM(text = actionLabel, type = TangemButtonType.Primary, onClick = {}),

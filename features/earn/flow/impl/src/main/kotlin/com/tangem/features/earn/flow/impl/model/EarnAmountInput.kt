@@ -62,13 +62,19 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
         return change(state, if (field.isFiatValue) field.fiatValue else field.value)
     }
 
+    /**
+     * 100% is the Max: cut to the currency decimals it would fall short of a position and leave dust behind. A share
+     * that rounds to zero clears the field, as the shared transformer skips a zero and would keep the previous amount.
+     */
     fun percent(state: EarnFlowState, percent: Int): AmountState? {
+        if (percent == FULL_SHARE_PERCENT) return max(state)
         val status = state.status ?: return null
         val share = state.availableMax
             ?.multiply(BigDecimal(percent))
             ?.divide(ONE_HUNDRED)
             ?.setScale(status.currency.decimals, RoundingMode.DOWN)
             ?: return null
+        if (share.signum() == 0) return change(state, "")
         return set(state, EnterAmountBoundary(amount = share, fiatRate = status.value.fiatRate))
     }
 
@@ -120,8 +126,7 @@ internal class EarnAmountInput(private val clickIntents: AmountScreenClickIntent
     private fun withPendingShare(state: EarnFlowState): EarnFlowState {
         val pending = state.pendingSharePercent ?: return state
         if (!isShareReady(state)) return state
-        val amountState = if (pending == FULL_SHARE_PERCENT) max(state) else percent(state, pending)
-        return state.copy(pendingSharePercent = null, amountState = amountState ?: state.amountState)
+        return state.copy(pendingSharePercent = null, amountState = percent(state, pending) ?: state.amountState)
     }
 
     private fun isNoLongerAffordable(entered: BigDecimal?, previousMax: BigDecimal?, newMax: BigDecimal): Boolean =
