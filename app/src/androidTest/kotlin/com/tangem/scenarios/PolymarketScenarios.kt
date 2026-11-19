@@ -1,13 +1,14 @@
 package com.tangem.scenarios
 
+import android.net.Uri
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.findWireMockRequestHeaders
-import com.tangem.common.utils.findWireMockRequestQueryParamValues
 import com.tangem.common.utils.findWireMockRequestTimestamps
+import com.tangem.common.utils.findWireMockRequestUrls
 import com.tangem.screens.onMarketsScreen
 import com.tangem.screens.onPolymarketMainScreen
 import com.tangem.screens.onPolymarketOnboardingScreen
@@ -174,13 +175,11 @@ fun BaseTestCase.assertPolymarketApprovalsRequestMatchesWallet(approvalsRequests
 }
 
 fun BaseTestCase.assertPolymarketRelayerNonceRequested(nonceRequestsBefore: Int) {
-    val addresses = findWireMockRequestQueryParamValues("GET", POLYMARKET_RELAYER_NONCE_PATH, "address")
-        .drop(nonceRequestsBefore)
-    val types = findWireMockRequestQueryParamValues("GET", POLYMARKET_RELAYER_NONCE_PATH, "type")
-        .drop(nonceRequestsBefore)
-    Assert.assertEquals("Expected one nonce request", 1, addresses.size)
-    Assert.assertEquals(POLYMARKET_OWNER_ADDRESS.lowercase(), addresses.single().lowercase())
-    Assert.assertEquals("WALLET", types.single())
+    val urls = findWireMockRequestUrls("GET", POLYMARKET_RELAYER_NONCE_PATH).drop(nonceRequestsBefore)
+    Assert.assertEquals("Expected one nonce request", 1, urls.size)
+    val url = Uri.parse(urls.single())
+    Assert.assertEquals(POLYMARKET_OWNER_ADDRESS.lowercase(), url.getQueryParameter("address").orEmpty().lowercase())
+    Assert.assertEquals("WALLET", url.getQueryParameter("type"))
 }
 
 fun BaseTestCase.assertPolymarketApprovalsNonce(approvalsRequestsBefore: Int) {

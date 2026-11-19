@@ -579,7 +579,7 @@ class PolymarketOnboardingTest : BaseTestCase() {
     @DisplayName("Polymarket: onboarding. Approvals in progress, the approvals request is not sent")
     fun approvalsInProgressPollsStatusTest() {
         val walletState = "ApprovalsInProgress1"
-        val minimumStatusPolls = 3
+        val minimumStatusReads = 4
 
         setupHooks(
             additionalBeforeAppLaunchSection = {
@@ -611,9 +611,9 @@ class PolymarketOnboardingTest : BaseTestCase() {
             step("Assert the approvals request was not sent") {
                 assertEquals(approvalsRequestsBefore, getWireMockRequestCount("POST", POLYMARKET_APPROVALS_PATH))
             }
-            step("Assert the status was polled") {
+            step("Assert the status was read until it became final") {
                 assertTrue(
-                    getWireMockRequestCount("GET", POLYMARKET_WALLET_PATH) >= statusRequestsBefore + minimumStatusPolls,
+                    getWireMockRequestCount("GET", POLYMARKET_WALLET_PATH) >= statusRequestsBefore + minimumStatusReads,
                 )
             }
         }
