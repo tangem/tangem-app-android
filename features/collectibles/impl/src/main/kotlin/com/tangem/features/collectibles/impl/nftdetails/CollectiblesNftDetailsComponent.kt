@@ -1,39 +1,43 @@
 package com.tangem.features.collectibles.impl.nftdetails
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.impl.nftdetails.model.CollectiblesNftDetailsModel
+import com.tangem.features.collectibles.impl.nftdetails.ui.CollectiblesNftDetailsScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.serialization.Serializable
 
 internal class CollectiblesNftDetailsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted private val params: Params,
+    @Assisted params: Params,
 ) : ComposableContentComponent, AppComponentContext by context {
+
+    private val model: CollectiblesNftDetailsModel = getOrCreateModel(params = params)
 
     @Composable
     override fun Content(modifier: Modifier) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(TangemTheme.colors3.bg.primary),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(text = "DETAILS\n id: ${params.id}", textAlign = TextAlign.Center)
-        }
+        val state by model.uiState.collectAsStateWithLifecycle()
+        CollectiblesNftDetailsScreen(
+            state = state,
+            onBackClick = model::onBackClick,
+            onCloseClick = model::onCloseClick,
+            onBuybackClick = model::onBuybackClick,
+            modifier = modifier,
+        )
     }
 
-    data class Params(val userWalletId: UserWalletId, val id: String)
+    data class Params(val userWalletId: UserWalletId, val id: String, val ownership: Ownership)
+
+    @Serializable
+    enum class Ownership { Owned, NotOwned }
 
     @AssistedFactory
     interface Factory {

@@ -3,6 +3,7 @@ package com.tangem.features.collectibles.impl.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.collectibles.impl.discovery.model.CollectiblesDiscoveryModel
+import com.tangem.features.collectibles.impl.nftdetails.model.CollectiblesNftDetailsModel
 import com.tangem.features.collectibles.impl.inventory.model.CollectiblesInventoryModel
 import com.tangem.features.collectibles.impl.machinedetails.model.CollectiblesMachineDetailsModel
 import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
@@ -53,4 +54,9 @@ internal interface CollectiblesModelModule {
     @IntoMap
     @ClassKey(CollectiblesInventoryModel::class)
     fun bindCollectiblesInventoryModel(impl: CollectiblesInventoryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CollectiblesNftDetailsModel::class)
+    fun bindCollectiblesNftDetailsModel(impl: CollectiblesNftDetailsModel): Model
 }
