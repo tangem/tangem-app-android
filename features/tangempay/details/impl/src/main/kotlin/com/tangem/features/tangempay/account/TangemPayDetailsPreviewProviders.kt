@@ -162,7 +162,6 @@ internal class TangemPayDetailsTxHistoryProvider : CollectionPreviewParameterPro
         PreviewTangemPayTxHistoryComponent.loadingUM,
         PreviewTangemPayTxHistoryComponent.contentUM,
         PreviewTangemPayTxHistoryComponent.emptyUM,
-        PreviewTangemPayTxHistoryComponent.compactEmptyUM,
         PreviewTangemPayTxHistoryComponent.errorUM,
     ),
 )

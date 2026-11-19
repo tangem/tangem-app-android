@@ -8,7 +8,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -22,21 +21,17 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayTxHistoryModelTest {
 
     private val repository: TangemPayTxHistoryRepository = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(repository, getBalanceHidingSettingsUseCase, tangemPayFeatureToggles)
+        clearMocks(repository, getBalanceHidingSettingsUseCase)
         every { getBalanceHidingSettingsUseCase() } returns flowOf(
             BalanceHidingSettings(
                 isHidingEnabledInSettings = false,
@@ -47,20 +42,16 @@ internal class TangemPayTxHistoryModelTest {
         every { repository.getTxHistoryBatchFlow(any(), any(), any()) } returns emptyHistoryBatchFlow()
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `GIVEN compact empty history toggle WHEN history is empty THEN empty state follows the toggle`(
-        isCompactEmptyHistoryEnabled: Boolean,
-    ) = runTest {
+    @Test
+    fun `GIVEN empty history WHEN model created THEN empty state shown`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isCompactEmptyHistoryEnabled } returns isCompactEmptyHistoryEnabled
         val model = createModel(testScope = this)
 
         // Act
         advanceUntilIdle()
 
         // Assert
-        val expected = TangemPayTxHistoryUM.Empty(isBalanceHidden = false, isCompact = isCompactEmptyHistoryEnabled)
+        val expected = TangemPayTxHistoryUM.Empty(isBalanceHidden = false)
         assertThat(model.uiState.value).isEqualTo(expected)
         model.onDestroy()
     }
@@ -85,7 +76,6 @@ internal class TangemPayTxHistoryModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             txHistoryUpdateListener = TangemPayTxHistoryUpdateListener(),
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
     }
 }

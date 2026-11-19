@@ -318,7 +318,7 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val emptyHistoryText: KNode = child {
         hasTestTag(EmptyTransactionBlockTestTags.TEXT)
-        hasText(getResourceString(CoreResR.string.transaction_history_empty_transactions))
+        hasText(getResourceString(CoreResR.string.tangempay_transaction_history_empty))
         useUnmergedTree = true
     }
 
