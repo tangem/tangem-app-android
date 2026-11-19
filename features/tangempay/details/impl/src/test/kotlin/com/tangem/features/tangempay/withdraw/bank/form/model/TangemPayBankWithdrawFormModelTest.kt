@@ -9,6 +9,7 @@ import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayModelTestBase
@@ -1140,6 +1141,44 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         }
 
         @Test
+        fun `GIVEN CLABE focused and typed WHEN saved recipients match THEN only SPEI recipients suggested`() {
+            // Arrange
+            savedAccounts.value = listOf(clabeAchTwin, hanako, didenko)
+            val model = createModel(formFields = speiFields)
+
+            // Act
+            focus(model, BankWithdrawFormField.Clabe)
+            fill(model, BankWithdrawFormField.Clabe, "082")
+
+            // Assert
+            assertThat(suggestions(model)).containsExactly(
+                Suggestion(
+                    id = "acc-4",
+                    matchedPrefix = "082",
+                    accountNumberSuffix = "520000821400017",
+                    name = "Hanako A.",
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN CLABE suggestion WHEN clicked THEN SPEI recipient reported`() {
+            // Arrange
+            savedAccounts.value = listOf(hanako)
+            val model = createModel(formFields = speiFields)
+            focus(model, BankWithdrawFormField.Clabe)
+            fill(model, BankWithdrawFormField.Clabe, "082")
+
+            // Act
+            model.uiState.value.suggestions.single().onClick()
+
+            // Assert
+            verify(exactly = 1) { onSavedRecipientSelected(hanako) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN fields without account number WHEN typed THEN no suggestions`() {
             // Arrange
             savedAccounts.value = listOf(didenko, arasakaCorp)
@@ -1578,7 +1617,14 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             beneficiary = Beneficiary.Individual(firstName = "Saburo", lastName = "Arasaka"),
             accountNumber = "7719004432",
         )
-        val california = TangemPayRegion(code = "CA", name = "California", isSuggested = true)
+        val hanako = bankAccount(
+            id = "acc-4",
+            beneficiary = Beneficiary.Individual(firstName = "Hanako", lastName = "Arasaka"),
+            accountNumber = "082520000821400017",
+            rail = BankRail.SPEI,
+        )
+        val clabeAchTwin = bankAccount(id = "acc-5", accountNumber = "0825200008", rail = BankRail.ACH)
+        val california =TangemPayRegion(code = "CA", name = "California", isSuggested = true)
         val texas = TangemPayRegion(code = "TX", name = "Texas", isSuggested = false)
         val newYork = TangemPayRegion(code = "NY", name = "New York", isSuggested = false)
         val californiaIso = TangemPayRegion(code = "US-CA", name = "California", isSuggested = true)

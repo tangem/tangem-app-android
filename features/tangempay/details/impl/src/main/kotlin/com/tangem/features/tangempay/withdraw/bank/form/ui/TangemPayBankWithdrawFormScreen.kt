@@ -35,7 +35,7 @@ import com.tangem.features.tangempay.common.TextInput
 import com.tangem.features.tangempay.common.TextInputState
 import com.tangem.features.tangempay.common.revealAboveFooter
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.canSuggestSavedRecipients
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.SuggestionUM
@@ -74,15 +74,15 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
                 .padding(bottom = FooterHeight),
             verticalArrangement = Arrangement.spacedBy(FieldSpacing),
         ) {
-            val accountNumberIndex = state.fields.indexOfFirst { it.field == BankWithdrawFormField.AccountNumber }
-            if (accountNumberIndex == -1) {
+            val numberIndex = state.fields.indexOfFirst { it.field.canSuggestSavedRecipients }
+            if (numberIndex == -1) {
                 state.fields.fastForEach { field -> FormField(state = field) }
             } else {
-                state.fields.subList(fromIndex = 0, toIndex = accountNumberIndex + 1)
+                state.fields.subList(fromIndex = 0, toIndex = numberIndex + 1)
                     .fastForEach { field -> FormField(state = field) }
                 SuggestionsOrFields(
                     suggestions = state.suggestions,
-                    fields = state.fields.subList(fromIndex = accountNumberIndex + 1, toIndex = state.fields.size),
+                    fields = state.fields.subList(fromIndex = numberIndex + 1, toIndex = state.fields.size),
                 )
             }
         }
