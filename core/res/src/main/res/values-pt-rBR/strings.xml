@@ -3143,14 +3143,15 @@
   <string name="tangempay_available_balance">Saldo disponível</string>
   <string name="tangempay_bank_transfer_creating_description">Normalmente, leva até 5 minutos. Em casos raros, até 48 horas</string>
   <string name="tangempay_bank_transfer_creating_title">Criando seus dados de conta</string>
-  <string name="tangempay_bank_transfer_details_conversion_notice">O valor recebido em %s será convertido para USD</string>
+  <string name="tangempay_bank_transfer_details_conversion_notice">O valor recebido em %s será convertido para USD</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">Depósitos diários</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Se quiser depositar mais de %s, entre em contato com o suporte</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_left">Limite diário restante</string>
+  <string name="tangempay_bank_transfer_details_exchange_rate">Taxa de câmbio</string>
   <string name="tangempay_bank_transfer_details_fee_header">Métodos de depósito e taxas</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitações</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">Depósito mínimo</string>
-  <string name="tangempay_bank_transfer_details_rate_disclaimer">Taxa de câmbio indicativa. O depósito será creditado pela taxa de câmbio vigente no dia em que for recebido</string>
+  <string name="tangempay_bank_transfer_details_rate_disclaimer">Taxa de câmbio indicativa. O depósito será creditado pela taxa de câmbio vigente no dia em que for recebido.</string>
   <string name="tangempay_bank_transfer_details_reference_warning">Inclua a referência na transferência. Sem ela, o depósito poderá não ser creditado</string>
   <string name="tangempay_bank_transfer_failed_title">Não foi possível criar os dados da conta</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
@@ -3649,7 +3650,7 @@
   <string name="tangempay_withdraw_bank_amount_not_enough_funds">Saldo insuficiente</string>
   <string name="tangempay_withdraw_bank_choose_transfer_method">Escolha o método de transferência</string>
   <string name="tangempay_withdraw_bank_confirm_title">Confirmar transferência</string>
-  <string name="tangempay_withdraw_bank_data_unreachable">Não foi possível carregar os dados de transferência. Verifique sua conexão com a internet ou toque para atualizar</string>
+  <string name="tangempay_withdraw_bank_data_unreachable">Não foi possível carregar os dados de transferência. Verifique sua conexão com a internet ou toque para atualizar.</string>
   <string name="tangempay_withdraw_bank_error_business">As transferências não estão disponíveis para este tipo de negócio</string>
   <string name="tangempay_withdraw_bank_error_general_title">Não foi possível realizar a operação</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">As transferências para a região do destinatário não estão disponíveis no momento</string>

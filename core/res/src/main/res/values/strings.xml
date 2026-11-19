@@ -1365,6 +1365,7 @@
   <string name="joint_account_invite_member_title">Invite Member</string>
   <string name="joint_account_invite_member_verifies_subtitle">It starts working once everyone verifies it.</string>
   <string name="joint_account_invite_member_verifies_title">Then each of you verifies</string>
+  <string name="joint_account_invite_members_about_approvals_title">About approvals</string>
   <string name="joint_account_invite_members_about_signatures_description">Every transaction from this account needs approval from %1$s of %2$s members. Each member signs with their own wallet. The transaction is sent only after it collects enough signatures.</string>
   <string name="joint_account_invite_members_about_signatures_title">About signatures</string>
   <string name="joint_account_invite_members_approvals_value">Any %1$s of %2$s</string>
@@ -3262,7 +3263,7 @@
   <string name="tangempay_bank_transfer_details_fee_header">Deposit methods and fees</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitations</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">Minimum deposit</string>
-  <string name="tangempay_bank_transfer_details_rate_disclaimer">Indicative rate. A deposit is credited at the rate on the day it arrives</string>
+  <string name="tangempay_bank_transfer_details_rate_disclaimer">Indicative rate. A deposit is credited at the rate on the day it arrives.</string>
   <string name="tangempay_bank_transfer_details_reference_warning">Include the reference in the transfer. Without it, the deposit may not be credited</string>
   <string name="tangempay_bank_transfer_failed_title">Failed to create account details</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
@@ -3761,7 +3762,7 @@
   <string name="tangempay_withdraw_bank_amount_not_enough_funds">Not enough funds</string>
   <string name="tangempay_withdraw_bank_choose_transfer_method">Choose transfer method</string>
   <string name="tangempay_withdraw_bank_confirm_title">Confirm transfer</string>
-  <string name="tangempay_withdraw_bank_data_unreachable">Couldn\'t load transfer details. Check your internet connection or tap to refresh</string>
+  <string name="tangempay_withdraw_bank_data_unreachable">Couldn\'t load transfer details. Check your internet connection or tap to refresh.</string>
   <string name="tangempay_withdraw_bank_error_business">Transfers are not available for this type of business</string>
   <string name="tangempay_withdraw_bank_error_general_title">Unable to perform the operation</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">Transfers to recipient\'s region currently unavailable</string>
@@ -3787,7 +3788,7 @@
   <string name="tangempay_withdraw_bank_geo_country_selected">Selected country</string>
   <string name="tangempay_withdraw_bank_geo_state_selected">Selected state</string>
   <string name="tangempay_withdraw_bank_geo_state_title">State</string>
-  <string name="tangempay_withdraw_bank_network_fee_unreachable">Network fee info unreachable. Check your internet connection or tap to refresh</string>
+  <string name="tangempay_withdraw_bank_network_fee_unreachable">Network fee info unreachable. Check your internet connection or tap to refresh.</string>
   <string name="tangempay_withdraw_bank_offramp_unavailable">Off-ramp unavailable</string>
   <string name="tangempay_withdraw_bank_placeholder_address_line1">Eg., Ebunike st., Apt. 32</string>
   <string name="tangempay_withdraw_bank_placeholder_bank_name">Eg., Goldman Sachs</string>
