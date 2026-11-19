@@ -41,6 +41,7 @@ internal class EarnApyChartComponent @AssistedInject constructor(
         val history: suspend (EarnPeriod) -> Either<Throwable, EarnApyHistory>,
         val currentRate: StateFlow<EarnProductRate>,
         val reloads: Flow<Unit> = emptyFlow(),
+        val hasCalculator: Boolean = false,
         val callback: ModelCallback? = null,
     )
 

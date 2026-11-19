@@ -196,7 +196,8 @@ internal class EarnInfoModel @Inject constructor(
             history = { period -> product.apyHistory(productParams, period) },
             currentRate = chartRate,
             reloads = chartReloads,
-            callback = this.takeIf { ready.projection != null },
+            hasCalculator = ready.projection != null,
+            callback = this,
         )
     }
 

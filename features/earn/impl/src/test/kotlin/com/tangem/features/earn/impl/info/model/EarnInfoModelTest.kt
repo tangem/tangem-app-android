@@ -687,7 +687,7 @@ internal class EarnInfoModelTest {
             }
 
         @Test
-        fun `GIVEN chartParams WHEN created THEN periods and rate come from Ready, defaultPeriod is the last and callback is the model`() =
+        fun `GIVEN chartParams WHEN created THEN periods and rate come from Ready, defaultPeriod is the last, the calculator is shown and callback is the model`() =
             runTest {
                 // Arrange
                 val model = createModel()
@@ -701,6 +701,7 @@ internal class EarnInfoModelTest {
                 assertThat(params.periods).isEqualTo(ready.apyPeriods)
                 assertThat(params.defaultPeriod).isEqualTo(ready.apyPeriods.last())
                 assertThat(params.currentRate.value).isEqualTo(ready.rate)
+                assertThat(params.hasCalculator).isTrue()
                 assertThat(params.callback).isSameInstanceAs(model)
                 model.onDestroy()
             }
@@ -738,7 +739,7 @@ internal class EarnInfoModelTest {
         }
 
         @Test
-        fun `GIVEN Ready without projection WHEN chartParams THEN there is no callback and the chart hides the calculator button`() =
+        fun `GIVEN Ready without projection WHEN chartParams THEN no calculator but the model still gets period changes`() =
             runTest {
                 // Arrange
                 product.stateFlow.value = knownState().copy(projection = null)
@@ -749,7 +750,8 @@ internal class EarnInfoModelTest {
                 val params = model.chartParams()
 
                 // Assert
-                assertThat(params.callback).isNull()
+                assertThat(params.hasCalculator).isFalse()
+                assertThat(params.callback).isSameInstanceAs(model)
                 model.onDestroy()
             }
     }
