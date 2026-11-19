@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
@@ -17,7 +18,7 @@ import dagger.assisted.AssistedInject
 
 internal class CollectiblesNftDetailsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: Params,
+    @Assisted private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     @Composable
@@ -26,9 +27,9 @@ internal class CollectiblesNftDetailsComponent @AssistedInject constructor(
             modifier = modifier
                 .fillMaxSize()
                 .background(TangemTheme.colors3.bg.primary),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
-            Text(text = "DETAILS")
+            Text(text = "DETAILS\n id: ${params.id}", textAlign = TextAlign.Center)
         }
     }
 
