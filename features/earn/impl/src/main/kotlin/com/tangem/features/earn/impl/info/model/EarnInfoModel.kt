@@ -41,6 +41,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.toUM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -80,6 +81,7 @@ internal class EarnInfoModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+    private val appScope: AppCoroutineScope,
     private val blogUrlBuilder: TangemBlogUrlBuilder,
 ) : Model(), EarnApyChartComponent.ModelCallback, EarnCalculatorSheetComponent.ModelCallback {
 
@@ -189,7 +191,8 @@ internal class EarnInfoModel @Inject constructor(
         setRefreshing(isRefreshing = true)
         modelScope.launch {
             try {
-                refresh(product)
+                // A refresh cut short leaves the stored statuses on CACHE, so it outlives the screen
+                appScope.async { refresh(product) }.await()
             } finally {
                 setRefreshing(isRefreshing = false)
             }

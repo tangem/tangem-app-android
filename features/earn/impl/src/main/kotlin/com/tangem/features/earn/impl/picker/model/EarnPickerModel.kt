@@ -39,6 +39,7 @@ import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.session.EarnAction
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -60,6 +61,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicBoolean
@@ -77,6 +79,7 @@ internal class EarnPickerModel @Inject constructor(
     private val converter: EarnPickerConverter,
     singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val overviewFetcher: EarnOverviewFetcher,
+    private val appScope: AppCoroutineScope,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
@@ -280,15 +283,17 @@ internal class EarnPickerModel @Inject constructor(
 
     override fun onRetryClick(product: EarnProduct) {
         modelScope.launch {
-            product.refresh(productParams).onLeft {
-                TangemLogger.e("Earn picker: refresh of ${product.id.value} failed", it)
-            }
+            appScope.async {
+                product.refresh(productParams).onLeft {
+                    TangemLogger.e("Earn picker: refresh of ${product.id.value} failed", it)
+                }
+            }.await()
             stateRestarts.update { it + 1 }
         }
     }
 
     override fun onOverviewRetryClick() {
-        modelScope.launch {
+        appScope.launch {
             overviewFetcher(EarnOverviewFetcher.Params(params.userWalletId, params.cryptoCurrency)).onLeft {
                 TangemLogger.e("Earn picker: overview fetch failed", it)
             }
