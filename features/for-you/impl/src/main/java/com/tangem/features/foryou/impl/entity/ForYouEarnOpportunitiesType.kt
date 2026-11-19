@@ -1,13 +1,14 @@
 package com.tangem.features.foryou.impl.entity
 
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.staking.model.StakingIntegrationID
 
 /**
  * The earn product behind an earn-opportunities row. Resolved once per token when the row is built
  * and carried through the click callback, so the model knows which earn screen to open
- * ([com.tangem.common.routing.AppRoute.YieldSupplyEntry] or [com.tangem.common.routing.AppRoute.Staking])
- * without re-resolving availability.
+ * ([com.tangem.common.routing.AppRoute.YieldSupplyEntry], [com.tangem.common.routing.AppRoute.Staking] or
+ * [com.tangem.common.routing.AppRoute.EarnEntry]) without re-resolving availability.
  */
 internal sealed interface ForYouEarnOpportunitiesType {
 
@@ -37,6 +38,18 @@ internal sealed interface ForYouEarnOpportunitiesType {
      */
     data class Staking(
         val integrationID: StakingIntegrationID,
+        override val rewardType: EarnRewardType,
+    ) : ForYouEarnOpportunitiesType {
+        override val analyticsValue: String = "Staking"
+    }
+
+    /**
+     * Rate and destination come from Earn's headline.
+     *
+     * @property activeRoute `null` opens Earn in `Auto` start
+     */
+    data class Earn(
+        val activeRoute: Route?,
         override val rewardType: EarnRewardType,
     ) : ForYouEarnOpportunitiesType {
         override val analyticsValue: String = "Staking"
