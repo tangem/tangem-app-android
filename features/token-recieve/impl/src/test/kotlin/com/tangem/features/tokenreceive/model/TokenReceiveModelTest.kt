@@ -39,7 +39,7 @@ internal class TokenReceiveModelTest {
         model: ScreenModel,
     ) {
         // Arrange
-        every { featureToggles.isNewReceiveScreenEnabled } returns model.isToggleEnabled
+        every { featureToggles.isAddFundsReceiveEnabled } returns model.isToggleEnabled
         every { abTestsManager.getCachedValue(EXPERIMENT_KEY) } returns model.cachedVariant
 
         // Act

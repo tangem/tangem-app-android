@@ -51,7 +51,7 @@ internal class TokenReceiveModel @Inject constructor(
 
     val params = paramsContainer.require<TokenReceiveComponent.Params>()
 
-    val isNewScreenShown = featureToggles.isNewReceiveScreenEnabled &&
+    val isNewScreenShown = featureToggles.isAddFundsReceiveEnabled &&
         params.isNewScreenAllowed &&
         getAddFundsUpdateVariant() == AddFundsUpdateVariant.TREATMENT
 
