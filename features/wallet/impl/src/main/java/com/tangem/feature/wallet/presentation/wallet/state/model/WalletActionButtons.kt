@@ -2,13 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -27,18 +25,9 @@ internal sealed class WalletActionButtons(
     val buttonUM: TangemButtonUM
         get() = TangemButtonUM(
             text = text,
-            tangemIconUM = TangemIconUM.Icon(
-                iconRes = iconRes,
-                tintReference = {
-                    if (isEnabled) {
-                        TangemTheme.colors3.icon.primary
-                    } else {
-                        TangemTheme.colors3.icon.tertiary
-                    }
-                },
-            ),
-            type = TangemButtonType.Secondary,
-            shape = TangemButtonShape.Rounded,
+            iconStart = TangemIconUM.Icon(iconRes = iconRes),
+            variant = TangemButton.Variant.Material,
+            size = TangemButton.Size.X14,
             onClick = onClick,
             isEnabled = isEnabled,
         )

@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow

@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
