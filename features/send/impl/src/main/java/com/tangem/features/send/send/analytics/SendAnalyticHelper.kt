@@ -45,11 +45,11 @@ internal class SendAnalyticHelper @Inject constructor(
         } else {
             AnalyticsParam.FeeAssetType.Token
         }
-        val fromDerivationIndex = account?.derivationIndex?.value
+        val fromDerivationIndex = account?.analyticsDerivationIndex()
         val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val destinationAccount = getAccountCurrencyByAddressUseCase(destination)
             .getOrNull()?.account
-        val toDerivationIndex = destinationAccount?.derivationIndex?.value
+        val toDerivationIndex = destinationAccount?.analyticsDerivationIndex()
         val fromAccountType = account.toAnalyticsAccountType()
         analyticsEventHandler.send(
             SendAnalyticEvents.TransactionScreenOpened(
@@ -83,6 +83,12 @@ internal class SendAnalyticHelper @Inject constructor(
                 jointComposition = jointComposition,
             ),
         )
+    }
+
+    /** Joint accounts are numbered on their own, apart from crypto accounts; the account type tells them apart */
+    private fun Account.analyticsDerivationIndex(): Int? = when (this) {
+        is Account.Joint -> ownerKeyIndex.value
+        else -> derivationIndex?.value
     }
 
     private fun Account?.toAnalyticsAccountType(): AnalyticsParam.AccountType = when (this) {

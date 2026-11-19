@@ -166,10 +166,11 @@ sealed class JointAccountAnalyticsEvent(
     }
 }
 
+/** Names the place the flow was started from, with the values of `[Settings / Wallet Settings] Button - Add Account` */
 private val AppRoute.JointAccountCreation.Source.value: String
     get() = when (this) {
-        AppRoute.JointAccountCreation.Source.AddAccount -> "Add Account"
-        AppRoute.JointAccountCreation.Source.MainScreen -> "Main Screen"
+        AppRoute.JointAccountCreation.Source.AddAccount -> AnalyticsParam.ScreensSources.Settings.value
+        AppRoute.JointAccountCreation.Source.MainScreen -> AnalyticsParam.ScreensSources.Markets.value
         AppRoute.JointAccountCreation.Source.AllServices -> "All Services"
     }
 
