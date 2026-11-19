@@ -97,6 +97,7 @@ internal class TangemPayBankWithdrawFormComponent(
         val onBack: (result: BankWithdrawFormResult) -> Unit,
         val onContinue: (result: BankWithdrawFormResult) -> Unit,
         val onSavedRecipientSelected: (account: BankAccount) -> Unit,
+        val onRecipientFormOpened: () -> Unit,
         val onCloseFlow: () -> Unit,
     )
 }

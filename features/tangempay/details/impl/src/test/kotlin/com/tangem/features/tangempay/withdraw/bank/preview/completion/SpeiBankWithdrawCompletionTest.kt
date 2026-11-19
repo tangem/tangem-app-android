@@ -29,6 +29,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -53,10 +54,13 @@ internal class SpeiBankWithdrawCompletionTest {
     private val idempotencyKeys = mutableListOf<String>()
     private val states = mutableListOf<CompletionState>()
     private var now: DateTime = NOW
+    private val newRecipientListener: NewRecipientListener = mockk(relaxed = true)
+    private var expiredQuoteCount = 0
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(bankOfframpOrderRepository, moneyAccountTransfer)
+        clearMocks(bankOfframpOrderRepository, moneyAccountTransfer, newRecipientListener)
+        expiredQuoteCount = 0
         now = NOW
         changedNetworkFees.clear()
         idempotencyKeys.clear()
@@ -297,6 +301,36 @@ internal class SpeiBankWithdrawCompletionTest {
             assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Idle).inOrder()
         }
 
+    @Test
+    fun `GIVEN transfer refused as expired WHEN complete THEN the expired quote is reported once`() = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createTransfer(userWalletId, QUOTE_ID) } returns
+            BankOfframpError.QuoteExpired.left()
+        val completion = createCompletion()
+        completion.prepare(draft, states::add)
+
+        // Act
+        completion.complete(draft, states::add)
+
+        // Assert
+        assertThat(expiredQuoteCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN transfer refused for another reason WHEN complete THEN no expired quote is reported`() = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createTransfer(userWalletId, QUOTE_ID) } returns
+            BankOfframpError.Rejected.left()
+        val completion = createCompletion()
+        completion.prepare(draft, states::add)
+
+        // Act
+        completion.complete(draft, states::add)
+
+        // Assert
+        assertThat(expiredQuoteCount).isEqualTo(0)
+    }
+
     @ParameterizedTest
     @MethodSource("provideTransientFailureModels")
     fun `GIVEN unanswered quote requests WHEN prepare THEN terms keep loading and are asked again under the same key`(
@@ -340,7 +374,7 @@ internal class SpeiBankWithdrawCompletionTest {
             // Assert
             assertThat(states).containsExactly(
                 CompletionState.Idle,
-                CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104110999),
+                CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104110999, isQuoteFailure = true),
             ).inOrder()
             assertThat(testScheduler.currentTime).isEqualTo(120_000L)
             coVerify(exactly = 8) { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) }
@@ -384,6 +418,92 @@ internal class SpeiBankWithdrawCompletionTest {
         }
     }
 
+    @Test
+    fun `GIVEN new recipient WHEN quoted twice THEN recipient saved reported once for SPEI`() = runTest {
+        // Arrange
+        val newRecipientDraft = newSpeiRecipientDraft()
+        coEvery { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) } returnsMany listOf(
+            quote(bankAccountId = "acc-new", expiresAt = NOW.plusMinutes(2)).right(),
+            quote(bankAccountId = "acc-new").right(),
+        )
+        val completion = createCompletion()
+        completion.prepare(newRecipientDraft, states::add)
+        now = NOW.plusMinutes(2).minusSeconds(10)
+
+        // Act
+        completion.complete(newRecipientDraft, states::add)
+
+        // Assert
+        coVerify(exactly = 2) { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) }
+        verify(exactly = 1) { newRecipientListener.onSaved(SPEI_RECIPIENT_DETAILS) }
+        verify(exactly = 0) { newRecipientListener.onRejected(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN saved recipient WHEN quoted THEN no recipient result reported`() = runTest {
+        // Arrange
+        val completion = createCompletion()
+
+        // Act
+        completion.prepare(draft, states::add)
+
+        // Assert
+        verify(exactly = 0) { newRecipientListener.onSaved(any()) }
+        verify(exactly = 0) { newRecipientListener.onRejected(any(), any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRecipientRefusalModels")
+    fun `GIVEN new recipient WHEN quote fails THEN only an answered refusal reported with its code`(
+        model: RecipientRefusalModel,
+    ) = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) } returns
+            model.error.left()
+        val completion = createCompletion()
+
+        // Act
+        completion.prepare(newSpeiRecipientDraft(), states::add)
+
+        // Assert
+        verify(exactly = model.expectedRejections) {
+            newRecipientListener.onRejected(recipient = SPEI_RECIPIENT_DETAILS, errorCode = model.error.errorCode)
+        }
+        verify(exactly = 0) { newRecipientListener.onSaved(any()) }
+    }
+
+    @Test
+    fun `GIVEN recipient saved by an earlier quote WHEN a later quote is refused THEN no rejection reported`() =
+        runTest {
+            // Arrange
+            val newRecipientDraft = newSpeiRecipientDraft()
+            coEvery {
+                bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any())
+            } returnsMany listOf(
+                quote(bankAccountId = "acc-new", expiresAt = NOW.plusMinutes(2)).right(),
+                INVALID_RECIPIENT.left(),
+            )
+            val completion = createCompletion()
+            completion.prepare(newRecipientDraft, states::add)
+            now = NOW.plusMinutes(2).minusSeconds(10)
+
+            // Act
+            completion.prepare(newRecipientDraft, states::add)
+
+            // Assert
+            coVerify(exactly = 1) {
+                bankOfframpOrderRepository.createQuote(
+                    userWalletId = userWalletId,
+                    productInstanceId = PRODUCT_INSTANCE_ID,
+                    amount = any(),
+                    recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-new"),
+                    idempotencyKey = any(),
+                )
+            }
+            verify(exactly = 1) { newRecipientListener.onSaved(SPEI_RECIPIENT_DETAILS) }
+            verify(exactly = 0) { newRecipientListener.onRejected(any(), any()) }
+        }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN quote refused WHEN prepare THEN the failure follows the error and no quote is held`(
@@ -426,6 +546,25 @@ internal class SpeiBankWithdrawCompletionTest {
             assertThat(idempotencyKeys).hasSize(2)
         }
 
+    @Test
+    fun `GIVEN no quote held WHEN complete and the new quote is refused THEN a quote failure and nothing sent`() =
+        runTest {
+            // Arrange
+            coEvery { bankOfframpOrderRepository.createQuote(userWalletId, any(), any(), any(), any()) } returns
+                BankOfframpError.AmountOutOfLimits.left()
+            val completion = createCompletion()
+
+            // Act
+            completion.complete(draft, states::add)
+
+            // Assert
+            assertThat(states).containsExactly(
+                CompletionState.Idle,
+                CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140168, isQuoteFailure = true),
+            ).inOrder()
+            coVerify(exactly = 0) { bankOfframpOrderRepository.createTransfer(any(), any()) }
+        }
+
     @ParameterizedTest
     @MethodSource("provideSendFailureModels")
     fun `GIVEN send fails WHEN complete THEN the state follows the failure`(model: SendFailureModel) = runTest {
@@ -465,35 +604,35 @@ internal class SpeiBankWithdrawCompletionTest {
     private fun provideTestModels() = listOf(
         RefusalModel(
             error = BankOfframpError.Validation,
-            expected = CompletionState.Failed(failure = PreviewFailure.General),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.SenderRegionUnsupported,
-            expected = CompletionState.Failed(failure = PreviewFailure.SenderRegion, errorCode = 104140165),
+            expected = CompletionState.Failed(failure = PreviewFailure.SenderRegion, errorCode = 104140165, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.AmountOutOfLimits,
-            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140168),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140168, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.VerificationIncomplete,
-            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140166),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140166, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.Unknown(cause = null, errorCode = 104110001),
-            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104110001),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104110001, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.QuoteExpired,
-            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140164),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140164, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true, errorCode = 104004001),
-            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104004001),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104004001, isQuoteFailure = true),
         ),
         RefusalModel(
             error = BankOfframpError.Unknown(cause = null),
-            expected = CompletionState.Failed(failure = PreviewFailure.General),
+            expected = CompletionState.Failed(failure = PreviewFailure.General, isQuoteFailure = true),
         ),
     )
 
@@ -535,10 +674,26 @@ internal class SpeiBankWithdrawCompletionTest {
         val expectedNetworkFees: List<BigDecimal> = emptyList(),
     )
 
+    private fun provideRecipientRefusalModels() = listOf(
+        RecipientRefusalModel(error = INVALID_RECIPIENT, expectedRejections = 1),
+        RecipientRefusalModel(error = BankOfframpError.RecipientRegionUnsupported, expectedRejections = 1),
+        RecipientRefusalModel(error = BankOfframpError.BusinessUnsupported, expectedRejections = 1),
+        RecipientRefusalModel(error = BankOfframpError.AmountOutOfLimits, expectedRejections = 0),
+        RecipientRefusalModel(error = BankOfframpError.SenderRegionUnsupported, expectedRejections = 0),
+        RecipientRefusalModel(error = BankOfframpError.VerificationIncomplete, expectedRejections = 0),
+        RecipientRefusalModel(error = BankOfframpError.Rejected, expectedRejections = 0),
+        RecipientRefusalModel(error = BankOfframpError.Unknown(cause = null), expectedRejections = 0),
+        RecipientRefusalModel(error = OFFLINE, expectedRejections = 0),
+    )
+
+    internal data class RecipientRefusalModel(val error: BankOfframpError, val expectedRejections: Int)
+
     private fun createCompletion() = SpeiBankWithdrawCompletion(
         userWalletId = userWalletId,
         productInstanceId = PRODUCT_INSTANCE_ID,
         onNetworkFeeChanged = changedNetworkFees::add,
+        onQuoteExpired = { expiredQuoteCount++ },
+        newRecipientListener = newRecipientListener,
         bankOfframpOrderRepository = bankOfframpOrderRepository,
         moneyAccountTransfer = moneyAccountTransfer,
         currentTimeProvider = CurrentTimeProvider { now.millis },
@@ -590,6 +745,7 @@ internal class SpeiBankWithdrawCompletionTest {
         val NOW: DateTime = DateTime.parse("2026-11-10T10:00:00Z")
         val FAR_EXPIRY: DateTime = NOW.plusMinutes(15)
         val OFFLINE = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true, errorCode = 104110999)
+        val INVALID_RECIPIENT = BankOfframpError.BadRequest
         val SERVER_UNAVAILABLE = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true, errorCode = 104004006)
         val SPEI_DESTINATION = speiDestination()
         val SPEI_RECIPIENT_DETAILS = BankAccountDetails(

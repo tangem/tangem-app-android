@@ -41,10 +41,14 @@ internal class BankWithdrawCompletionFactoryTest {
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
     private val onDestinationChanged: (OfframpDestination) -> Unit = {}
     private val onNetworkFeeChanged: (BigDecimal) -> Unit = {}
+    private val onQuoteExpired: () -> Unit = {}
+    private val newRecipientListener: NewRecipientListener = mockk()
     private val callbacks = BankWithdrawCompletionFactory.Callbacks(
         onOrderCreated = onOrderCreated,
         onDestinationChanged = onDestinationChanged,
         onNetworkFeeChanged = onNetworkFeeChanged,
+        onQuoteExpired = onQuoteExpired,
+        newRecipientListener = newRecipientListener,
     )
     private val onState: (CompletionState) -> Unit = {}
     private val speiQuote = MutableStateFlow<BankOfframpQuote?>(null)
@@ -60,10 +64,22 @@ internal class BankWithdrawCompletionFactoryTest {
             speiCompletionFactory,
         )
         every {
-            routeCompletionFactory.create(userWalletId, PRODUCT_INSTANCE_ID, onDestinationChanged, onNetworkFeeChanged)
+            routeCompletionFactory.create(
+                userWalletId,
+                PRODUCT_INSTANCE_ID,
+                onDestinationChanged,
+                onNetworkFeeChanged,
+                newRecipientListener,
+            )
         } returns routeCompletion
         every {
-            speiCompletionFactory.create(userWalletId, PRODUCT_INSTANCE_ID, onNetworkFeeChanged)
+            speiCompletionFactory.create(
+                userWalletId,
+                PRODUCT_INSTANCE_ID,
+                onNetworkFeeChanged,
+                onQuoteExpired,
+                newRecipientListener,
+            )
         } returns speiCompletion
         coEvery { routeCompletion.complete(any(), any()) } returns Unit
         coEvery { speiCompletion.complete(any(), any()) } returns Unit
@@ -86,8 +102,8 @@ internal class BankWithdrawCompletionFactoryTest {
 
         // Assert
         assertThat(actual).isSameInstanceAs(orderCompletion)
-        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any(), any()) }
-        verify(exactly = 0) { speiCompletionFactory.create(any(), any(), any()) }
+        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { speiCompletionFactory.create(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -150,8 +166,8 @@ internal class BankWithdrawCompletionFactoryTest {
 
         // Assert
         assertThat(states).containsExactly(CompletionState.Failed(PreviewFailure.UnsupportedConfiguration))
-        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any(), any()) }
-        verify(exactly = 0) { speiCompletionFactory.create(any(), any(), any()) }
+        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { speiCompletionFactory.create(any(), any(), any(), any(), any()) }
     }
 
     private fun TestScope.createMoneyAccountCompletion() = factory.create(

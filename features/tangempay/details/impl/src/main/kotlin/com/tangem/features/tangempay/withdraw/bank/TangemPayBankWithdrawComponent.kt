@@ -127,6 +127,8 @@ internal class TangemPayBankWithdrawComponent(
                 onOrderCreated = model::onOrderCreated,
                 onDestinationChanged = model::onDestinationChanged,
                 onNetworkFeeChanged = model::onNetworkFeeChanged,
+                newRecipientListener = model.newRecipientListener,
+                onQuoteShown = model::onQuoteShown,
                 onCompleted = ::onOrderSigned,
                 onTransferOutcomeUnknown = params.onWithdrawSent,
                 onCloseFlow = params.onCloseFlow,
@@ -175,6 +177,7 @@ internal class TangemPayBankWithdrawComponent(
             sourceAccount = params.sourceAccount,
             draft = model.draft,
             options = params.options,
+            isSavedAccountsLoaded = model.isSavedAccountsLoaded,
             step = step,
             onContinue = { result ->
                 model.onAmountConfirmed(result)
@@ -223,6 +226,7 @@ internal class TangemPayBankWithdrawComponent(
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
             onSavedRecipientSelected = ::onSavedRecipientSelected,
+            onRecipientFormOpened = model::onRecipientFormOpened,
             onCloseFlow = params.onCloseFlow,
         ),
         countrySelectorFactory = countrySelectorFactory,

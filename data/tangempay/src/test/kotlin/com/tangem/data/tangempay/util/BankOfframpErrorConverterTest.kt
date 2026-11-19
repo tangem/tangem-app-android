@@ -63,6 +63,38 @@ internal class BankOfframpErrorConverterTest {
     }
 
     @Test
+    fun `GIVEN MXN on and the bad request code WHEN converted THEN bad request error keeping the code`() {
+        // Act
+        val actual = BankOfframpErrorConverter.convert(
+            BankOfframpErrorConverter.Input(
+                error = TangemPayApiError.Unknown(errorCode = 104130100),
+                operation = "createQuote",
+                isMxnEnabled = true,
+            ),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(BankOfframpError.BadRequest)
+        assertThat(actual.errorCode).isEqualTo(104130100)
+    }
+
+    @Test
+    fun `GIVEN MXN off and the bad request code WHEN converted THEN unknown error keeping the code`() {
+        // Act
+        val actual = BankOfframpErrorConverter.convert(
+            BankOfframpErrorConverter.Input(
+                error = TangemPayApiError.Unknown(errorCode = 104130100),
+                operation = "createQuote",
+                isMxnEnabled = false,
+            ),
+        )
+
+        // Assert
+        assertThat(actual).isInstanceOf(BankOfframpError.Unknown::class.java)
+        assertThat(actual.errorCode).isEqualTo(104130100)
+    }
+
+    @Test
     fun `GIVEN any other api error WHEN converted THEN unknown error with the cause and the error code`() {
         // Act
         val actual = BankOfframpErrorConverter.convert(

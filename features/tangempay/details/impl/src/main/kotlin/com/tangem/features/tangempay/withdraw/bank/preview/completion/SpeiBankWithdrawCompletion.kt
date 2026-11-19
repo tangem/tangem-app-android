@@ -28,10 +28,13 @@ import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 import java.util.UUID
 
+@Suppress("LongParameterList")
 internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val productInstanceId: String,
     @Assisted private val onNetworkFeeChanged: (BigDecimal) -> Unit,
+    @Assisted private val onQuoteExpired: () -> Unit,
+    @Assisted private val newRecipientListener: NewRecipientListener,
     private val bankOfframpOrderRepository: BankOfframpOrderRepository,
     private val moneyAccountTransfer: MoneyAccountTransfer,
     private val currentTimeProvider: CurrentTimeProvider,
@@ -109,7 +112,7 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
             val error = requestQuote(request).leftOrNull() ?: return
             attemptsLeft--
             if (!error.isUnanswered() || attemptsLeft == 0) {
-                onQuoteFailed(error = error, onState = onState)
+                onQuoteFailed(error = error, request = request, onState = onState)
                 return
             }
             val message = "SPEI quote failed, retrying in $retryDelayMillis ms: $error"
@@ -141,8 +144,9 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
                     quote = newQuote,
                     isLockTrusted = newQuote.isLockTrusted(currentTimeProvider.nowMillis()),
                 )
-                if (request.recipient is BankOfframpRecipient.New) {
-                    registeredRecipients[request.recipient] = BankOfframpRecipient.Saved(newQuote.bankAccountId)
+                request.recipient.unregisteredNew()?.let { recipient ->
+                    registeredRecipients[recipient] = BankOfframpRecipient.Saved(newQuote.bankAccountId)
+                    newRecipientListener.onSaved(recipient.details)
                 }
                 quote.value = newQuote
             }
@@ -156,6 +160,7 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
     ) {
         TangemLogger.withTag(TAG).e("SPEI transfer creation failed: $error")
         if (error == BankOfframpError.QuoteExpired) {
+            onQuoteExpired()
             attempt = null
             refreshQuote(request = request, onState = onState)
             return
@@ -164,9 +169,15 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         onState(CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode))
     }
 
-    private fun onQuoteFailed(error: BankOfframpError, onState: (CompletionState) -> Unit) {
+    private fun onQuoteFailed(error: BankOfframpError, request: QuoteRequest, onState: (CompletionState) -> Unit) {
         TangemLogger.withTag(TAG).e("SPEI quote failed: $error")
-        onState(CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode))
+        val unregistered = request.recipient.unregisteredNew()
+        if (unregistered != null && error.isRecipientRefusal()) {
+            newRecipientListener.onRejected(recipient = unregistered.details, errorCode = error.errorCode)
+        }
+        onState(
+            CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode, isQuoteFailure = true),
+        )
     }
 
     private suspend fun send(
@@ -211,6 +222,9 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         return QuoteRequest(amount = amount.truncatedToCents(), recipient = recipient)
     }
 
+    private fun BankOfframpRecipient.unregisteredNew(): BankOfframpRecipient.New? =
+        (this as? BankOfframpRecipient.New)?.takeIf { it !in registeredRecipients }
+
     private fun BankOfframpError.isOutcomeUnknown(): Boolean = this is BankOfframpError.Unknown && isOutcomeUnknown
 
     private fun BankOfframpError.isUnanswered(): Boolean =
@@ -234,6 +248,8 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
             userWalletId: UserWalletId,
             productInstanceId: String,
             onNetworkFeeChanged: (BigDecimal) -> Unit,
+            onQuoteExpired: () -> Unit,
+            newRecipientListener: NewRecipientListener,
         ): SpeiBankWithdrawCompletion
     }
 }

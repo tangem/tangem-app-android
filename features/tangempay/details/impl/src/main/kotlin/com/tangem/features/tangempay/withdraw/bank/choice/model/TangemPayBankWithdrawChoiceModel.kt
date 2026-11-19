@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.choice.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -26,12 +25,12 @@ internal class TangemPayBankWithdrawChoiceModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    analytics: AnalyticsEventHandler,
+    withdrawAnalyticsFactory: BankWithdrawAnalytics.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawChoiceComponent.Params>()
 
-    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
+    private val withdrawAnalytics = withdrawAnalyticsFactory.create(sourceAccount = params.sourceAccount)
 
     private val umFactory = TangemPayBankWithdrawChoiceUMFactory(
         config = params.config,

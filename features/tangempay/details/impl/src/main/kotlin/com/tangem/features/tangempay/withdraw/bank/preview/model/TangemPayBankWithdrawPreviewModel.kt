@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.isColdWallet
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.AmountErrorReason
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -56,14 +57,14 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     completionFactory: BankWithdrawCompletionFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    analytics: AnalyticsEventHandler,
+    withdrawAnalyticsFactory: BankWithdrawAnalytics.Factory,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val currentTimeProvider: CurrentTimeProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
 
-    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
+    private val withdrawAnalytics = withdrawAnalyticsFactory.create(sourceAccount = params.sourceAccount)
 
     private val completion = completionFactory.create(
         sourceAccount = params.sourceAccount,
@@ -72,6 +73,8 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             onOrderCreated = params.onOrderCreated,
             onDestinationChanged = params.onDestinationChanged,
             onNetworkFeeChanged = params.onNetworkFeeChanged,
+            onQuoteExpired = ::reportQuoteExpired,
+            newRecipientListener = params.newRecipientListener,
         ),
     )
 
@@ -94,6 +97,10 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private var isQuoteFailure = false
 
+    private var isScreenVisible = false
+
+    private var expiredQuoteId: String? = null
+
     private val isSending: Boolean get() = state.value.isSending
 
     val uiState: StateFlow<TangemPayBankWithdrawPreviewUM>
@@ -109,8 +116,12 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         lockedQuotes()
             .onEach { quote -> state.update { it.copy(quote = quote) } }
             .launchIn(modelScope)
+        completion.quote
+            .filterNotNull()
+            .onEach(params.onQuoteShown)
+            .launchIn(modelScope)
         requoteWhenLockRunsOut()
-        withdrawAnalytics.onConfirmationScreenOpened()
+        withdrawAnalytics.onConfirmationScreenOpened(params.draft.value)
         params.draft
             .map(BankWithdrawDraft::toOrderRequest)
             .distinctUntilChanged()
@@ -156,7 +167,10 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             .map { it.completion == CompletionState.Idle && it.quote?.secondsLeft == 0L }
             .distinctUntilChanged()
             .filter { hasRunOut -> hasRunOut }
-            .onEach { prepare() }
+            .onEach {
+                reportQuoteExpired()
+                prepare()
+            }
             .launchIn(modelScope)
     }
 
@@ -166,14 +180,32 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         modelScope.launch {
             completion.prepare(draft) { completionState ->
                 isQuoteFailure = completionState is CompletionState.Failed
+                if (isQuoteFailure) reportQuoteError(AmountErrorReason.QUOTE_UNAVAILABLE)
                 state.update { it.copy(completion = completionState) }
             }
         }.saveIn(completionJobHolder)
     }
 
+    fun onScreenVisibilityChanged(isVisible: Boolean) {
+        isScreenVisible = isVisible
+    }
+
+    private fun reportQuoteExpired() {
+        if (!isScreenVisible) return
+        val quoteId = state.value.quote?.quote?.quoteId
+        if (quoteId != null && quoteId == expiredQuoteId) return
+        expiredQuoteId = quoteId
+        reportQuoteError(AmountErrorReason.QUOTE_EXPIRED)
+    }
+
+    private fun reportQuoteError(reason: AmountErrorReason) {
+        val rail = params.draft.value.destination?.rail ?: return
+        withdrawAnalytics.onAmountErrorShown(rail = rail, reason = reason)
+    }
+
     private fun onSendClick() {
         if (isSending) return
-        withdrawAnalytics.onSendClicked()
+        withdrawAnalytics.onSendClicked(params.draft.value)
         complete()
     }
 
@@ -209,8 +241,12 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     }
 
     private fun onCompletionFailed(failed: CompletionState.Failed, draft: BankWithdrawDraft) {
-        withdrawAnalytics.onSendAttempted(draft)
-        withdrawAnalytics.onSendFailed(errorCode = failed.errorCode)
+        if (failed.isQuoteFailure) {
+            reportQuoteError(AmountErrorReason.QUOTE_UNAVAILABLE)
+        } else {
+            withdrawAnalytics.onSendAttempted(draft)
+            withdrawAnalytics.onSendFailed(errorCode = failed.errorCode, rail = draft.destination?.rail)
+        }
         if (failed.failure == PreviewFailure.TransferOutcomeUnknown) params.onTransferOutcomeUnknown()
     }
 

@@ -8,6 +8,9 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessage
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -28,6 +31,15 @@ internal abstract class TangemPayModelTestBase {
     }
 
     protected fun <M : Model> M.destroyAfterTest(): M = also(modelsToDestroy::add)
+
+    protected fun withdrawAnalyticsFactory(moneyAccountFeatureToggles: MoneyAccountFeatureToggles) =
+        object : BankWithdrawAnalytics.Factory {
+            override fun create(sourceAccount: BankWithdrawSourceAccount) = BankWithdrawAnalytics(
+                sourceAccount = sourceAccount,
+                analytics = analytics,
+                moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+            )
+        }
 
     protected fun lastBottomSheet(): MessageBottomSheetUM {
         val message = slot<EventMessage>()

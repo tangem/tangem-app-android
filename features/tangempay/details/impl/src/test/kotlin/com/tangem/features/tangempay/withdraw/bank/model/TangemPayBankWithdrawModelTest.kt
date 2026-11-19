@@ -8,6 +8,7 @@ import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
@@ -24,6 +25,7 @@ import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_POLYGON
+import com.tangem.features.tangempay.withdraw.bank.bankOfframpQuote
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
@@ -31,6 +33,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFi
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.bank.speiDestination
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toOrderRequest
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
@@ -41,6 +44,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -641,6 +645,214 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
         val expectedIncludeSpei: Boolean,
     )
 
+    @Test
+    fun `GIVEN money account SPEI send WHEN order signed THEN send succesfull carries the SPEI method`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+        model.onAmountConfirmed(speiAmount(BigDecimal("500")))
+
+        // Act
+        model.onOrderSigned()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.SendSucceeded(
+                    method = MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_SPEI,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account saved entry WHEN its recipient loads THEN recipient selected sent with its rail`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns
+            listOf(bankAccount(id = "acc-1", rail = BankRail.WIRE)).right()
+
+        // Act
+        val model = createModel(entry = BankWithdrawEntry.Saved("acc-1"), sourceAccount = MONEY_ACCOUNT)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientSelected(rail = BankRail.WIRE))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account form WHEN a suggested recipient is picked THEN recipient selected sent with its rail`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+
+        // Act
+        model.onSavedRecipientSelected(bankAccount(id = "acc-2", rail = BankRail.ACH))
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientSelected(rail = BankRail.ACH))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN MXN toggle off WHEN a saved recipient is picked outside the list THEN recipient selected not sent`() {
+        // Arrange
+        coEvery { getBankAccountsUseCase(userWalletId, any()) } returns
+            listOf(bankAccount(id = "acc-1", rail = BankRail.WIRE)).right()
+
+        // Act
+        val model = createModel(entry = BankWithdrawEntry.Saved("acc-1"), sourceAccount = MONEY_ACCOUNT)
+        model.onSavedRecipientSelected(bankAccount(id = "acc-2", rail = BankRail.ACH))
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents.OfframpRecipientSelected>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN recipient form opened twice WHEN reported THEN form opened sent once with the rail and type`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+        model.onAmountConfirmed(speiAmount(BigDecimal("500")))
+
+        // Act
+        model.onRecipientFormOpened()
+        model.onRecipientFormOpened()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.OfframpRecipientFormOpened(
+                    rail = BankRail.SPEI,
+                    recipientType = MoneyAccountAnalyticsEvents.RecipientType.OWN,
+                ),
+            )
+        }
+        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.OfframpRecipientFormOpened>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no rail picked yet WHEN recipient form reported THEN nothing sent until a rail exists`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+        model.onRecipientFormOpened()
+
+        // Act
+        model.onAmountConfirmed(speiAmount(BigDecimal("500")))
+        model.onRecipientFormOpened()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.OfframpRecipientFormOpened>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN quotes for one amount and then another WHEN shown THEN quote shown sent once per amount`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+        model.onAmountConfirmed(speiAmount(BigDecimal("500")))
+
+        // Act
+        model.onQuoteShown(bankOfframpQuote(quoteId = "quote-1", sourceAmount = BigDecimal("500.00")))
+        model.onQuoteShown(bankOfframpQuote(quoteId = "quote-2", sourceAmount = BigDecimal("500")))
+        model.onAmountConfirmed(speiAmount(BigDecimal("60")))
+        model.onQuoteShown(bankOfframpQuote(quoteId = "quote-3", sourceAmount = BigDecimal("60.00")))
+        model.onAmountConfirmed(speiAmount(BigDecimal("500")))
+        model.onQuoteShown(bankOfframpQuote(quoteId = "quote-4", sourceAmount = BigDecimal("500.00")))
+
+        // Assert
+        verifyOrder {
+            analytics.send(quoteShown(band = MoneyAccountAnalyticsEvents.AmountBand.FROM_100_TO_1K))
+            analytics.send(quoteShown(band = MoneyAccountAnalyticsEvents.AmountBand.FROM_10_TO_100))
+        }
+        verify(exactly = 2) { analytics.send(ofType<MoneyAccountAnalyticsEvents.OfframpQuoteShown>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new recipient accepted twice and another once WHEN reported THEN recipient saved sent per recipient`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+        val recipient = bankAccount(id = "acc-1").details
+        val other = bankAccount(id = "acc-2", accountNumber = "1111111111").details
+
+        // Act
+        model.newRecipientListener.onSaved(recipient)
+        model.newRecipientListener.onSaved(recipient)
+        model.newRecipientListener.onSaved(other)
+
+        // Assert
+        verify(exactly = 2) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.OfframpRecipientSaved(
+                    rail = BankRail.ACH,
+                    recipientType = MoneyAccountAnalyticsEvents.RecipientType.OWN,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new recipient refused twice WHEN reported THEN recipient save failed sent each time`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal, sourceAccount = MONEY_ACCOUNT)
+        val recipient = bankAccount().details.copy(rail = BankRail.SPEI)
+
+        // Act
+        model.newRecipientListener.onRejected(recipient = recipient, errorCode = INVALID_RECIPIENT_ERROR_CODE)
+        model.newRecipientListener.onRejected(recipient = recipient, errorCode = INVALID_RECIPIENT_ERROR_CODE)
+
+        // Assert
+        verify(exactly = 2) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.OfframpRecipientSaveFailed(
+                    rail = BankRail.SPEI,
+                    errorCode = INVALID_RECIPIENT_ERROR_CODE,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN payment account WHEN quote and recipient results reported THEN no money account event sent`() {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(speiAmount(BigDecimal("500")))
+
+        // Act
+        model.onQuoteShown(bankOfframpQuote())
+        model.newRecipientListener.onSaved(bankAccount().details)
+        model.newRecipientListener.onRejected(recipient = bankAccount().details, errorCode = null)
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents>()) }
+        model.onDestroy()
+    }
+
+    private fun speiAmount(amount: BigDecimal) = BankWithdrawAmountResult(
+        amount = amount,
+        source = bankWithdrawSource(),
+        destination = speiDestination(),
+        networkFee = BigDecimal.ZERO,
+    )
+
+    private fun quoteShown(band: MoneyAccountAnalyticsEvents.AmountBand) =
+        MoneyAccountAnalyticsEvents.OfframpQuoteShown(rail = BankRail.SPEI, amountBand = band)
+
     private fun createModel(
         entry: BankWithdrawEntry,
         sourceAccount: BankWithdrawSourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
@@ -660,6 +872,11 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
         getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
         getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,
         speiAvailability = speiAvailability,
-        analytics = analytics,
+        withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
     )
+
+    private companion object {
+        val MONEY_ACCOUNT = BankWithdrawSourceAccount.Money(UserWalletId("011"), productInstanceId = "instance-1")
+        const val INVALID_RECIPIENT_ERROR_CODE = 104_130_100
+    }
 }
