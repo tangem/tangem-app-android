@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.main.entity.factory
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
@@ -90,13 +91,43 @@ internal class OnrampStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN design system off WHEN getInitialState THEN legacy header with more button and no flag`() {
+        // Arrange & Act
+        val result = factory.getInitialState(
+            currency = "BTC",
+            onClose = {},
+            openSettings = {},
+            isNewDesignSystemEnabled = false,
+        )
+
+        // Assert
+        assertThat(result.topBarConfig.countryButtonUM).isNull()
+        assertThat(result.topBarConfig.endButtonUM).isInstanceOf(TopAppBarButtonUM.Icon::class.java)
+    }
+
+    @Test
+    fun `GIVEN design system on WHEN getInitialState THEN flag button shown and more button hidden`() {
+        // Arrange & Act
+        val result = factory.getInitialState(
+            currency = "BTC",
+            onClose = {},
+            openSettings = {},
+            isNewDesignSystemEnabled = true,
+        )
+
+        // Assert
+        assertThat(result.topBarConfig.countryButtonUM).isNotNull()
+        assertThat(result.topBarConfig.endButtonUM).isNull()
+    }
+
+    @Test
     fun `GIVEN initial loading WHEN getCountryFlagState THEN flag set and button state kept`() {
         // Arrange
         currentState = factory.getInitialState(
             currency = "BTC",
             onClose = {},
             openSettings = {},
-            isCountryByIpEnabled = true,
+            isNewDesignSystemEnabled = true,
         )
 
         // Act
@@ -118,7 +149,7 @@ internal class OnrampStateFactoryTest {
             currency = "BTC",
             onClose = {},
             openSettings = {},
-            isCountryByIpEnabled = true,
+            isNewDesignSystemEnabled = true,
         )
         currentState = factory.getReadyState(currency = USD_CURRENCY)
 
@@ -141,7 +172,7 @@ internal class OnrampStateFactoryTest {
             currency = "BTC",
             onClose = {},
             openSettings = {},
-            isCountryByIpEnabled = true,
+            isNewDesignSystemEnabled = true,
         )
         val offer = OnrampOfferUM(
             category = OnrampOfferCategoryUM.Recommended,

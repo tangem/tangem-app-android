@@ -94,6 +94,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     val params = paramsContainer.require<OnrampMainComponent.Params>()
 
     private val isCountryByIpEnabled: Boolean = onrampFeatureToggles.isCountryByIpEnabled
+    private val isNewDesignSystemEnabled: Boolean = onrampFeatureToggles.isNewDesignSystemEnabled
 
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         OnrampAmountButtonUMStateFactory()
@@ -115,7 +116,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 currency = params.cryptoCurrency.name,
                 onClose = ::onCloseClick,
                 openSettings = ::openSettings,
-                isCountryByIpEnabled = isCountryByIpEnabled,
+                isNewDesignSystemEnabled = isNewDesignSystemEnabled,
             ),
         )
 
@@ -332,7 +333,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 currency = params.cryptoCurrency.name,
                 onClose = router::pop,
                 openSettings = ::openSettings,
-                isCountryByIpEnabled = isCountryByIpEnabled,
+                isNewDesignSystemEnabled = isNewDesignSystemEnabled,
             )
         }
         modelScope.launch {

@@ -1,10 +1,8 @@
 package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
@@ -12,41 +10,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.ds.message.TangemMessage
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
-import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
-import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampMainTopBarUM
 import com.tangem.features.onramp.main.entity.takesSlots
-import com.tangem.core.ui.R as CoreUiR
-import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
 internal fun OnrampMainScreen(
@@ -96,17 +78,7 @@ private fun OnrampTopNavigationDs(
 private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifier) {
     val countryButton = config.countryButtonUM
     if (countryButton != null) {
-        if (LocalOnrampDesignSystemEnabled.current) {
-            OnrampTopNavigationDs(config = config, countryButton = countryButton, modifier = modifier)
-        } else {
-            TangemTopBar(
-                modifier = modifier,
-                title = config.title,
-                subtitle = config.subtitle,
-                startContent = { CountryButton(state = countryButton) },
-                endContent = { CloseButton(state = config.startButtonUM) },
-            )
-        }
+        OnrampTopNavigationDs(config = config, countryButton = countryButton, modifier = modifier)
     } else {
         TangemTopAppBar(
             modifier = modifier,
@@ -116,52 +88,6 @@ private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifi
             subtitle = config.subtitle.resolveReference(),
         )
     }
-}
-
-@Composable
-@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
-private fun CountryButton(state: OnrampCountryButtonUM, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .clickable(
-                enabled = state.isEnabled,
-                role = Role.Button,
-                onClickLabel = stringResourceSafe(R.string.onramp_settings_residence),
-                onClick = state.onClick,
-            )
-            .semantics { state.countryName?.let { contentDescription = it } }
-            .testTag(TopAppBarTestTags.MORE_BUTTON),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (state.flagUrl != null) {
-            SubcomposeAsyncImage(
-                modifier = Modifier.fillMaxSize(),
-                model = state.flagUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
-                error = {
-                    Box(Modifier.fillMaxSize().background(TangemTheme.colors.stroke.primary, CircleShape))
-                },
-            )
-        }
-    }
-}
-
-@Composable
-@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
-private fun CloseButton(state: TopAppBarButtonUM, modifier: Modifier = Modifier) {
-    TangemTopBarActionContent(
-        actionUM = TangemTopBarActionUM(
-            iconRes = CoreUiR.drawable.ic_close_24,
-            isActionable = state.isEnabled,
-            onClick = state.onClicked,
-            ghostModeProgress = 1f,
-        ),
-        modifier = modifier.testTag(TopAppBarTestTags.CLOSE_BUTTON),
-    )
 }
 
 @Composable
