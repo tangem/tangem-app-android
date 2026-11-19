@@ -4,8 +4,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
 import com.tangem.features.tangempay.account.CashbackBlockUM
 import com.tangem.features.tangempay.account.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.account.TangemPayDetailsTopBarConfig
@@ -70,6 +73,53 @@ internal class CashbackUMTest {
         assertThat(actual).isEqualTo(state.copy(cashbackBlockState = block))
     }
 
+    @Test
+    fun `GIVEN ds menu with current plan WHEN withCashback THEN cashback entry inserted right below current plan`() {
+        // Arrange
+        val state = detailsState(currentPlanItem, supportItem).withDsMenu(DS_CURRENT_PLAN_ENTRY, DS_SUPPORT_ENTRY)
+
+        // Act
+        val actual = state.withCashback(CashbackUM(menuItem = cashbackItem))
+
+        // Assert
+        assertThat(actual.topBarConfig.menu?.entries)
+            .containsExactly(DS_CURRENT_PLAN_ENTRY, dsCashbackEntry(), DS_SUPPORT_ENTRY)
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN ds menu without current plan WHEN withCashback THEN cashback entry inserted first`() {
+        // Arrange
+        val state = detailsState(supportItem).withDsMenu(DS_SUPPORT_ENTRY)
+
+        // Act
+        val actual = state.withCashback(CashbackUM(menuItem = cashbackItem))
+
+        // Assert
+        assertThat(actual.topBarConfig.menu?.entries).containsExactly(dsCashbackEntry(), DS_SUPPORT_ENTRY).inOrder()
+    }
+
+    @Test
+    fun `GIVEN no ds menu WHEN withCashback THEN menu stays absent`() {
+        // Arrange
+        val state = detailsState(currentPlanItem, supportItem)
+
+        // Act
+        val actual = state.withCashback(CashbackUM(menuItem = cashbackItem))
+
+        // Assert
+        assertThat(actual.topBarConfig.menu).isNull()
+    }
+
+    private fun dsCashbackEntry(): TangemMenu.UiState.Item = TangemMenu.UiState.Item(
+        label = cashbackItem.title,
+        onClick = cashbackItem.onClick,
+        iconStart = Icons.ic_percent_backward_20,
+    )
+
+    private fun TangemPayDetailsUM.withDsMenu(vararg entries: TangemMenu.UiState.Entry): TangemPayDetailsUM =
+        copy(topBarConfig = topBarConfig.copy(menu = TangemMenu.UiState(entries = persistentListOf(*entries))))
+
     private fun detailsState(vararg menuItems: TangemPayDropDownItemUM): TangemPayDetailsUM = TangemPayDetailsUM(
         topBarConfig = TangemPayDetailsTopBarConfig(
             onBackClick = {},
@@ -95,4 +145,15 @@ internal class CashbackUMTest {
         onClick = {},
         icon = TangemIconUM.Empty,
     )
+
+    private companion object {
+        val DS_CURRENT_PLAN_ENTRY = TangemMenu.UiState.Item(
+            label = resourceReference(R.string.tangempay_current_plan_title),
+            onClick = {},
+        )
+        val DS_SUPPORT_ENTRY = TangemMenu.UiState.Item(
+            label = resourceReference(R.string.tangempay_pay_support),
+            onClick = {},
+        )
+    }
 }

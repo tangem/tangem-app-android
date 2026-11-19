@@ -2,6 +2,8 @@ package com.tangem.features.tangempay.card.details
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
@@ -20,6 +22,8 @@ internal data class TangemPayCardPageUM(
     val cardState: TangemPayCardState = TangemPayCardState.Active,
     val menuItems: ImmutableList<TangemPayDropDownItemUM>,
     val delivery: TangemPayCardDeliveryUM? = null,
+    val actionsMenu: TangemMenu.UiState? = null,
+    val payMenu: TangemMenu.UiState? = null,
 )
 
 @Immutable
@@ -38,9 +42,10 @@ internal data class TangemPayCardPageSetting(
     val testTag: String? = null,
     val onClick: () -> Unit,
     @param:DrawableRes val iconRes: Int,
+    val iconVector: ImageVector? = null,
 ) {
 
     enum class Id {
-        Details, Freeze, ChangePin
+        Details, Freeze, ChangePin, Actions
     }
 }

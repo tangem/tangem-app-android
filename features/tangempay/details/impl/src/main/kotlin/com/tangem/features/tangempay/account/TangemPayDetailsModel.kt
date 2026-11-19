@@ -48,6 +48,7 @@ import com.tangem.domain.tangempay.model.KycAdditionalInfoAccount
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.account.cashback.withCashback
 import com.tangem.features.tangempay.addfunds.AddFundsListener
@@ -93,6 +94,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     getUserWalletUseCase: GetUserWalletUseCase,
     cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
     kycAdditionalInfoPopupStore: KycAdditionalInfoPopupStore,
 ) : Model(),
     TangemPayTxHistoryUiActions,
@@ -114,6 +116,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         onOpenMenu = ::onOpenMenu,
         intents = this,
         isColdWallet = getUserWalletUseCase(userWalletId).getOrNull()?.isColdWallet == true,
+        isCardRemovalAnimated = tangemPayFeatureToggles.isCardActionsEnabled,
+        isDsMenuEnabled = tangemPayFeatureToggles.isCardActionsEnabled,
     )
 
     private val baseState = MutableStateFlow(

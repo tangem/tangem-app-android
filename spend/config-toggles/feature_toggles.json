@@ -26,5 +26,9 @@
     {
         "name": "AND_19706_PAY_COMPACT_EMPTY_HISTORY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_19693_PAY_CARD_ACTIONS_ENABLED",
+        "version": "undefined"
     }
 ]

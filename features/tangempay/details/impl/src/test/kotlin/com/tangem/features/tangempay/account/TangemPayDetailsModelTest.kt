@@ -67,6 +67,7 @@ import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.tangempay.TangemPayModelTestBase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -1350,8 +1351,13 @@ internal class TangemPayDetailsModelTest : TangemPayModelTestBase() {
                 every { this@mockk(any()) } returns GetUserWalletError.UserWalletNotFound.left()
             },
             tangemPayCurrencyFactory = mockk(relaxed = true),
+            tangemPayFeatureToggles = featureToggles(),
             kycAdditionalInfoPopupStore = kycAdditionalInfoPopupStore,
         ).destroyAfterTest()
+    }
+
+    private fun featureToggles(): TangemPayFeatureToggles = mockk {
+        every { isCardActionsEnabled } returns false
     }
 
     private fun bankOfframpOrder(id: String = "order-1"): Order = Order(

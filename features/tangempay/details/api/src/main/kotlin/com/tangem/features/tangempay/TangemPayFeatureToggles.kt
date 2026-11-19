@@ -5,4 +5,5 @@ interface TangemPayFeatureToggles {
     val isGoogleWalletButtonAlwaysShown: Boolean
     val isOrderFrameworkEnabled: Boolean
     val isCompactEmptyHistoryEnabled: Boolean
+    val isCardActionsEnabled: Boolean
 }

@@ -32,6 +32,16 @@ internal sealed class TangemPayCardNavigation {
     ) : TangemPayCardNavigation()
 
     @Serializable
+    data class CloseCardConfirm(
+        val userWalletId: UserWalletId,
+        val cardId: String,
+        val customerId: String?,
+        val cardName: String?,
+        val lastDigits: String,
+        val canFreeze: Boolean,
+    ) : TangemPayCardNavigation()
+
+    @Serializable
     data class AddFunds(
         val walletId: UserWalletId,
         val cryptoBalance: SerializedBigDecimal,
