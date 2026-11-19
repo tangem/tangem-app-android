@@ -184,12 +184,14 @@ internal fun LazyListScope.tangemPayGroup(
                 label = groupUM.label,
                 balance = groupUM.balance,
                 balanceBottom = {
-                    Text(
-                        text = groupUM.balanceCaption.resolveReference(),
-                        style = TangemTheme.typography3.caption.medium,
-                        color = TangemTheme.colors3.text.secondary,
-                        maxLines = 1,
-                    )
+                    if (groupUM.balance != null) {
+                        Text(
+                            text = groupUM.balanceCaption.resolveReference(),
+                            style = TangemTheme.typography3.caption.medium,
+                            color = TangemTheme.colors3.text.secondary,
+                            maxLines = 1,
+                        )
+                    }
                 },
                 isBalanceHidden = isBalanceHidden,
                 isBalanceFlickering = groupUM.isBalanceFlickering,

@@ -18,7 +18,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIn
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayGroupUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
 internal class TangemPayGroupConverter(
@@ -58,11 +57,7 @@ internal class TangemPayGroupConverter(
                     formatArgs = wrappedList(2),
                 )
             },
-            balance = if (balances.isEmpty()) {
-                stringReference(DASH_SIGN)
-            } else {
-                formatUsd(balances.fold(BigDecimal.ZERO, BigDecimal::add))
-            },
+            balance = if (balances.isEmpty()) null else formatUsd(balances.fold(BigDecimal.ZERO, BigDecimal::add)),
             balanceCaption = stringReference(USD_CURRENCY_CODE),
             isBalanceFlickering = paymentStatus.value.isRefreshing() || moneyStatus.value.isRefreshing(),
             isExpanded = isExpanded,

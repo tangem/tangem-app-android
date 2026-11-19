@@ -22,7 +22,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayGroupU
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
@@ -139,7 +138,7 @@ internal class TangemPayGroupConverterTest {
     }
 
     @Test
-    fun `GIVEN no balances available WHEN convert THEN dash shown`() {
+    fun `GIVEN no balances available WHEN convert THEN balance hidden`() {
         // Act
         val result = converter(expandedAccounts = emptySet()).convert(
             paymentStatus = paymentStatus(loadedValue(balance = null)),
@@ -149,7 +148,7 @@ internal class TangemPayGroupConverterTest {
         ) as TangemPayGroupUM.Content
 
         // Assert
-        assertThat(result.balance).isEqualTo(stringReference(DASH_SIGN))
+        assertThat(result.balance).isNull()
     }
 
     @Test
@@ -257,7 +256,7 @@ internal class TangemPayGroupConverterTest {
     )
 
     private fun expectedContent(
-        balance: TextReference,
+        balance: TextReference?,
         isBalanceFlickering: Boolean,
         isExpanded: Boolean,
         onClick: () -> Unit,
