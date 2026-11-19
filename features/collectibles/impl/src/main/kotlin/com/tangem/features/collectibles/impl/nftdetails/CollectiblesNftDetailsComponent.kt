@@ -1,8 +1,5 @@
 package com.tangem.features.collectibles.impl.nftdetails
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -32,7 +29,7 @@ internal class CollectiblesNftDetailsComponent @AssistedInject constructor(
             onBackClick = model::onBackClick,
             onCloseClick = model::onCloseClick,
             onBuybackClick = model::onBuybackClick,
-            modifier = modifier
+            modifier = modifier,
         )
     }
 

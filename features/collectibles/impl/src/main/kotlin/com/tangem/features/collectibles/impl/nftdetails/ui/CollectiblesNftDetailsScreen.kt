@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
@@ -41,6 +42,7 @@ import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
@@ -76,8 +78,7 @@ internal fun CollectiblesNftDetailsScreen(
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(
-                // TODO([REDACTED_TASK_KEY]): move to Lokalise
-                title = stringReference("Card"),
+                title = resourceReference(R.string.collectibles_card_details_title),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = onBackClick,
                 onClose = onCloseClick,
@@ -273,7 +274,7 @@ private fun CollectiblesNftDetailsScreenPreview() {
                     CollectiblesNftDetailsUM.DetailRowUM(label = stringReference("Insured value"), value = "$62.00"),
                 ),
                 buyback = CollectiblesNftDetailsUM.BuybackUM(
-                    timeLeft = stringReference("Buyback available for 25h 24m"),
+                    timeLeft = stringReference("Buyback is available for 25h 24m"),
                     buttonText = stringReference("Accept buyback for $55.80"),
                 ),
                 cardAspect = DEFAULT_CARD_ASPECT,
