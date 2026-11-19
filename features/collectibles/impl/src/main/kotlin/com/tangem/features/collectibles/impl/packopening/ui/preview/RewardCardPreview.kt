@@ -11,10 +11,11 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.RewardCardTiming
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.state.RewardCardAccent
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.state.RewardCardProgress
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardContent
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
-import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardProgress
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 
 /** Early in the grow and the turn. */
@@ -41,7 +42,7 @@ private fun RewardCard_Preview(@PreviewParameter(RewardCardPreviewProvider::clas
 
 private data class RewardCardPreviewParams(
     val progress: RewardCardProgress,
-    val accent: RewardCardUM.Accent = RewardCardUM.Accent.Green,
+    val accent: RewardCardAccent = RewardCardAccent.Green,
     val sellBack: SellBackButtonUM = PreviewSellBack,
 )
 
@@ -50,9 +51,9 @@ private class RewardCardPreviewProvider : PreviewParameterProvider<RewardCardPre
 
     override val values: Sequence<RewardCardPreviewParams> = sequenceOf(
         RewardCardPreviewParams(progress = RewardCardProgress.Settled),
-        RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardUM.Accent.Neutral),
-        RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardUM.Accent.Blue),
-        RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardUM.Accent.Violet),
+        RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardAccent.Neutral),
+        RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardAccent.Blue),
+        RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardAccent.Violet),
         RewardCardPreviewParams(
             progress = RewardCardProgress.Settled,
             sellBack = SellBackButtonUM(
@@ -92,7 +93,7 @@ private val PreviewSellBack = SellBackButtonUM(
 
 private val RewardCardPreviewUM = RewardCardUM(
     rarity = resourceReference(R.string.collectibles_open_pack_pull_uncommon),
-    accent = RewardCardUM.Accent.Green,
+    accent = RewardCardAccent.Green,
     title = "2024 Series One",
     editionNumber = "#216",
     marketValue = "$62.00",

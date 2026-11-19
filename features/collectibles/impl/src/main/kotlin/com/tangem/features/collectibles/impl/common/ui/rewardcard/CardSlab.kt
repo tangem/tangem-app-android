@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard
+package com.tangem.features.collectibles.impl.common.ui.rewardcard
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -19,8 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.surface.TangemSurface
-import com.tangem.features.collectibles.impl.packopening.PackOpeningConst.SLAB_INSET
-import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.state.RewardCardAccent
 
 private val SLAB_RADIUS = 20.dp
 
@@ -36,7 +35,7 @@ private const val GLOSS_PEAK_ALPHA = 0.12f
 
 @Composable
 internal fun PsaSlab(
-    accent: RewardCardUM.Accent,
+    accent: RewardCardAccent,
     settle: Float,
     cardWidth: Dp,
     cardHeight: Dp,
@@ -123,9 +122,9 @@ private data class GlossBand(
 }
 
 /** A common card gets no glow; the rest follow the tier colours, epic taking the shared multicolour glow. */
-private fun RewardCardUM.Accent.glowVariant(): TangemGlowRing.Variant? = when (this) {
-    RewardCardUM.Accent.Neutral -> null
-    RewardCardUM.Accent.Green -> TangemGlowRing.Variant.Success
-    RewardCardUM.Accent.Blue -> TangemGlowRing.Variant.Info
-    RewardCardUM.Accent.Violet -> TangemGlowRing.Variant.Magic
+private fun RewardCardAccent.glowVariant(): TangemGlowRing.Variant? = when (this) {
+    RewardCardAccent.Neutral -> null
+    RewardCardAccent.Green -> TangemGlowRing.Variant.Success
+    RewardCardAccent.Blue -> TangemGlowRing.Variant.Info
+    RewardCardAccent.Violet -> TangemGlowRing.Variant.Magic
 }

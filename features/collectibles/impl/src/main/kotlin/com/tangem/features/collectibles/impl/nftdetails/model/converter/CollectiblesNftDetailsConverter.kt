@@ -20,7 +20,7 @@ internal object CollectiblesNftDetailsConverter {
     fun convert(card: CollectiblesInventoryMockSource.Card): CollectiblesNftDetailsUM.Content {
         return CollectiblesNftDetailsUM.Content(
             frontImageUrl = card.imageUrl,
-            backImageUrl = null,
+            backImageUrl = card.backImageUrl,
             title = "${card.year} $NUMBER_SIGN${card.serialNumber} ${card.cardName}",
             subtitle = "${card.gradingCompany} ${card.gradeValue} $DOT ${card.price}",
             details = persistentListOf(

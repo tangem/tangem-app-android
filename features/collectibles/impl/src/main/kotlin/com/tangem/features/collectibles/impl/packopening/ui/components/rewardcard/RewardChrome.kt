@@ -31,6 +31,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_dot_12_filled
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.state.RewardCardAccent
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 
@@ -156,10 +157,10 @@ private fun ChromeRow(progress: Float, content: @Composable () -> Unit) {
     }
 }
 
-private fun RewardCardUM.Accent.badgeStatus(): TangemBadge.Status = when (this) {
-    RewardCardUM.Accent.Neutral -> TangemBadge.Status.Neutral
-    RewardCardUM.Accent.Green -> TangemBadge.Status.Success
-    RewardCardUM.Accent.Blue -> TangemBadge.Status.Info
+private fun RewardCardAccent.badgeStatus(): TangemBadge.Status = when (this) {
+    RewardCardAccent.Neutral -> TangemBadge.Status.Neutral
+    RewardCardAccent.Green -> TangemBadge.Status.Success
+    RewardCardAccent.Blue -> TangemBadge.Status.Info
     // TODO([REDACTED_TASK_KEY]): the design's epic badge is a placeholder copy of rare; the badge has no violet status
-    RewardCardUM.Accent.Violet -> TangemBadge.Status.Info
+    RewardCardAccent.Violet -> TangemBadge.Status.Info
 }

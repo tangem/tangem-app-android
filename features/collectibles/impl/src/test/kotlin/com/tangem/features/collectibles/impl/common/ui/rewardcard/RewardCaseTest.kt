@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard
+package com.tangem.features.collectibles.impl.common.ui.rewardcard
 
 import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
@@ -12,7 +12,7 @@ private const val TOLERANCE = 0.001f
 private const val CARD_ASPECT = 406f / 260f
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class RewardCardTest {
+internal class RewardCaseTest {
 
     @ParameterizedTest
     @MethodSource("provideCaseSizeModels")

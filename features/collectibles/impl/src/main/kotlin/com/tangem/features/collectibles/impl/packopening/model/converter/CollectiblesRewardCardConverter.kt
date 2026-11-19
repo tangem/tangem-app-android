@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.state.RewardCardAccent
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import com.tangem.utils.StringsSigns.NUMBER_SIGN
 
@@ -33,11 +34,11 @@ internal object CollectiblesRewardCardConverter {
         },
     )
 
-    private fun CollectibleRarity?.toAccent(): RewardCardUM.Accent = when (this) {
-        CollectibleRarity.COMMON, null -> RewardCardUM.Accent.Neutral
-        CollectibleRarity.UNCOMMON -> RewardCardUM.Accent.Green
-        CollectibleRarity.RARE -> RewardCardUM.Accent.Blue
-        CollectibleRarity.EPIC -> RewardCardUM.Accent.Violet
+    private fun CollectibleRarity?.toAccent(): RewardCardAccent = when (this) {
+        CollectibleRarity.COMMON, null -> RewardCardAccent.Neutral
+        CollectibleRarity.UNCOMMON -> RewardCardAccent.Green
+        CollectibleRarity.RARE -> RewardCardAccent.Blue
+        CollectibleRarity.EPIC -> RewardCardAccent.Violet
     }
 
     private fun String?.toNumber(): String = this?.let { "$NUMBER_SIGN$it" }.orEmpty()

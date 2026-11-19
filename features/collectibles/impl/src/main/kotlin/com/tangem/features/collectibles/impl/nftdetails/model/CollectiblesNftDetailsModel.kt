@@ -7,12 +7,12 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.DEFAULT_CARD_ASPECT
 import com.tangem.features.collectibles.impl.nftdetails.CollectiblesNftDetailsComponent
 import com.tangem.features.collectibles.impl.nftdetails.model.converter.CollectiblesNftDetailsConverter
 import com.tangem.features.collectibles.impl.nftdetails.ui.state.CollectiblesNftDetailsUM
 import com.tangem.features.collectibles.impl.inventory.model.CollectiblesInventoryMockSource
 import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.DEFAULT_CARD_ASPECT
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
