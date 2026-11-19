@@ -6,4 +6,6 @@ interface EarnFeatureToggles {
 
     /** An Earn opportunity opens the user's holdings of the token before offering to add it. */
     val isUserPortfolioEnabled: Boolean
+
+    val isGauntletVaultEnabled: Boolean
 }
