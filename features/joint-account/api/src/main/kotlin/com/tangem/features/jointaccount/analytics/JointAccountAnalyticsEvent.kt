@@ -151,7 +151,9 @@ sealed class JointAccountAnalyticsEvent(
         CreateOperation("Create Operation"),
         Sign("Sign"),
         Decline("Decline"),
-        Delete("Delete"),
+        Cancel("Cancel"),
+        Confirm("Confirm"),
+        Invite("Invite"),
     }
 
     private companion object {
