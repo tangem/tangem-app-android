@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard
+package com.tangem.features.collectibles.impl.common.ui.rewardcard
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test

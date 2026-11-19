@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.packopening.ui.state
+package com.tangem.features.collectibles.impl.common.ui.rewardcard.state
 
 internal data class RewardCardProgress(
     val grow: Float,

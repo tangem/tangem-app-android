@@ -25,6 +25,9 @@ features/collectibles/
   impl/
     common/ui/      — CollectiblesStatus (inline error/empty), CollectiblesLoadMoreEffect, CollectiblesBottomSheet,
                       CollectiblesPackImage
+    common/ui/rewardcard/ — the card in its case, shared by packopening and nftdetails: RewardCase, CardFaces
+                      (tap flip, glare), CardTiltState (hold tilt and its springs), CardGestures (tap vs hold),
+                      CardSlab, CardChoreography, RewardCardTiming, state/RewardCardAccent
     di/             — Component, Model and FeatureToggles Hilt modules
     onboarding/     — First screen; marketing copy, FAQ, "Create Gacha account"
     stories/        — Slide-based explainer, reachable again from the main menu
@@ -35,7 +38,7 @@ features/collectibles/
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
     packopenfailed/ — "Failed to open pack": the terminal status screen that replaces the confirm order
     inventory/      — The user's cards, Buyback / Collection tabs. Mock data; search is not wired yet
-    nftdetails/     — One inventory card in full: the flippable case (packopening's RewardCase, settled), title, grading rows.
+    nftdetails/     — One inventory card in full: the case (common RewardCase, settled; tap flips, hold tilts), title, grading rows.
                       Mock data from CollectiblesInventoryMockSource; physical delivery is not built
 ```
 
@@ -45,14 +48,14 @@ features/collectibles/
 packopening/
   CollectiblesPackOpeningComponent  — the route; bottom-sheet slot, system back handler, reports the app theme
   CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory / RefundOnTheWay / AutoBuyback
-  PackOpeningConst                  — VIDEO_READY_TIMEOUT_MS, card-slab constants
+  PackOpeningConst                  — video and card-image timeouts
   model/CollectiblesPackOpeningModel
   model/converter/                  — CollectiblesPackOpeningConverter (order), CollectiblesRewardCardConverter
                                       (RewardCardUM from OpenedCollectiblePack)
   video/                            — PackRevealVideoPlayer, DefaultPackRevealVideoPlayer(+Factory): glue over
                                       `:core:media`'s OneShotVideoController and SoundClip
   video/source/                     — PackRevealAsset, PackRevealAssetCache (the engine's RemoteClipCache)
-  ui/components/{confirmorder,packreveal,rewardcard}, ui/preview, ui/state
+  ui/components/{confirmorder,packreveal,rewardcard (RewardCard screen layout + chrome)}, ui/preview, ui/state
 ```
 
 **Package convention:** both sides use the **plural** `com.tangem.features.collectibles.*` — api is
@@ -83,7 +86,7 @@ quirk here.) Impl has no `res/`, no `AndroidManifest.xml` and no `androidTest/`;
 | `CollectiblesPackOpeningModel` | Runs the purchase, picks full vs short reveal, drives the `Stage` | `impl/.../packopening/model/CollectiblesPackOpeningModel.kt` |
 | `CollectiblesPackOpeningScreen` | Layers confirm order / reveal video / reward card by `Stage` | `impl/.../packopening/ui/CollectiblesPackOpeningScreen.kt` |
 | `DefaultPackRevealVideoPlayer` | `OneShotVideoController` (video) + `SoundClip` (skip sound) from `:core:media`; trips the card reveal | `impl/.../packopening/video/DefaultPackRevealVideoPlayer.kt` |
-| `CardChoreography` / `RewardCardTiming` | Pure maths for the card's grow / turn / settle; `Default` and `Skipped` timings; JVM-tested | `impl/.../packopening/ui/components/rewardcard/CardChoreography.kt` |
+| `CardChoreography` / `RewardCardTiming` | Pure maths for the card's grow / turn / settle; `Default` and `Skipped` timings; JVM-tested | `impl/.../common/ui/rewardcard/CardChoreography.kt` |
 | `OpenCollectiblePackUseCase` | Buy → pay on chain → await payment → open; emits `OpenPackStep` | `domain/collectibles/.../usecase/OpenCollectiblePackUseCase.kt` |
 | `CollectiblesMainList` | The single `LazyColumn`; header + discovery's items + filler | `impl/.../main/ui/components/CollectiblesMainList.kt` |
 | `CollectiblesMainUM` | Screen chrome only — balance, actions, collection, menu | `impl/.../main/ui/state/CollectiblesMainUM.kt` |

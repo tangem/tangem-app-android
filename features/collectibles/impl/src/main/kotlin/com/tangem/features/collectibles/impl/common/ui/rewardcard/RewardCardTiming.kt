@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard
+package com.tangem.features.collectibles.impl.common.ui.rewardcard
 
 internal data class RewardCardTiming(
     val growMs: Int,

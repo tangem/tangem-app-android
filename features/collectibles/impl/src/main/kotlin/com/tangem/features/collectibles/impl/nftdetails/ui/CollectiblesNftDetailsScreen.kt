@@ -50,13 +50,13 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.DEFAULT_CARD_ASPECT
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.RewardCardTiming
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.RewardCase
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.rewardCaseCameraDistance
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.rewardCaseSize
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.state.RewardCardProgress
 import com.tangem.features.collectibles.impl.nftdetails.ui.state.CollectiblesNftDetailsUM
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.DEFAULT_CARD_ASPECT
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCase
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.rewardCaseCameraDistance
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.rewardCaseSize
-import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardProgress
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 

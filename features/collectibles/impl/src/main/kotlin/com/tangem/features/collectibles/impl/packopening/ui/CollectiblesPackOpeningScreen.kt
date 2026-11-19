@@ -4,12 +4,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.RewardCardTiming
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.rememberCardAspect
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.ConfirmOrder
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.rememberPackLaunchProgress
 import com.tangem.features.collectibles.impl.packopening.ui.components.packreveal.PackReveal
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCard
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
-import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.rememberCardAspect
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 
