@@ -285,6 +285,7 @@ internal fun createEarnOverviews(
             bestProductId = null,
             activeCount = if (isActive) 1 else 0,
             totalPosition = null,
+            productCount = 1,
         ).takeIf { hasBanner },
     )
     return EarnOverviews(byCurrency = mapOf(currency.id to overview), source = StatusSource.ACTUAL)
