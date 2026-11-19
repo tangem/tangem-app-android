@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.analytics
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidResult
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
@@ -116,6 +117,66 @@ internal class JointAccountAnalyticsEventTest {
     private companion object {
         const val HTTP_MESSAGE = "Bad request"
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConfirmAddress {
+
+        @Test
+        fun `GIVEN account size WHEN Confirm Address Screen Opened built THEN id and params match the spec`() {
+            // Act
+            val event = JointAccountAnalyticsEvent.ConfirmAddressScreenOpened(membersCount = 3, threshold = 2)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Confirm Address Screen Opened")
+            assertThat(event.params).isEqualTo(mapOf("Members Count" to "3", "Threshold" to "2"))
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN activation flag WHEN Account Confirmed built THEN id and params match the spec`(
+            model: ConfirmedModel,
+        ) {
+            // Act
+            val event = JointAccountAnalyticsEvent.AccountConfirmed(
+                membersCount = 3,
+                threshold = 2,
+                isAccountActivated = model.isAccountActivated,
+            )
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Account Confirmed")
+            assertThat(event.params).isEqualTo(
+                mapOf("Members Count" to "3", "Threshold" to "2", "Account Activated" to model.expected),
+            )
+        }
+
+        @Test
+        fun `GIVEN account size WHEN Button Address Doesn't Match built THEN id and params match the spec`() {
+            // Act
+            val event = JointAccountAnalyticsEvent.ButtonAddressDoesntMatch(membersCount = 3, threshold = 2)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Button - Address Doesn't Match")
+            assertThat(event.params).isEqualTo(mapOf("Members Count" to "3", "Threshold" to "2"))
+        }
+
+        @Test
+        fun `GIVEN Button Address Doesn't Match WHEN mirrored to monitoring THEN it is a counter without attributes`() {
+            // Act
+            val event = JointAccountAnalyticsEvent.ButtonAddressDoesntMatch(membersCount = 3, threshold = 2)
+
+            // Assert
+            assertThat(event.otelMetric).isEqualTo(OtelMetric.Counter(allowedParams = emptySet()))
+        }
+
+        private fun provideTestModels() = listOf(
+            ConfirmedModel(isAccountActivated = true, expected = "Yes"),
+            ConfirmedModel(isAccountActivated = false, expected = "No"),
+        )
+    }
+
+    data class ConfirmedModel(val isAccountActivated: Boolean, val expected: String)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

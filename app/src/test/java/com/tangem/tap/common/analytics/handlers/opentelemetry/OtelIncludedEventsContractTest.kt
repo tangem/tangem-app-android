@@ -19,6 +19,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeBucket
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -64,6 +65,10 @@ internal class OtelIncludedEventsContractTest {
     }
 
     private fun provideTestModels() = listOf(
+        ContractModel(
+            event = JointAccountAnalyticsEvent.ButtonAddressDoesntMatch(membersCount = 3, threshold = 2),
+            expectedDroppedParams = setOf("Members Count", "Threshold"),
+        ),
         ContractModel(
             event = Basic.TransactionSent(
                 sentFrom = AnalyticsParam.TxSentFrom.Send(
