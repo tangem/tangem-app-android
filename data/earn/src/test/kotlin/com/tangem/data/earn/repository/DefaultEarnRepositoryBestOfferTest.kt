@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.earn.DefaultEarnErrorResolver
+import com.tangem.data.earn.createEarnResponse
 import com.tangem.data.earn.datastore.EarnFilterStore
 import com.tangem.data.earn.datastore.EarnNetworksStore
 import com.tangem.data.earn.datastore.EarnTokensCatalogStore
@@ -13,7 +14,6 @@ import com.tangem.data.earn.datastore.EarnTopTokensStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.EarnListResponse
 import com.tangem.datasource.api.tangemTech.models.EarnResponse
-import com.tangem.datasource.api.tangemTech.models.EarnTokenResponse
 import com.tangem.datasource.api.tangemTech.models.MetaEarnListResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.earn.EarnRewardType
@@ -58,7 +58,8 @@ internal class DefaultEarnRepositoryBestOfferTest {
     @ProvideTestModels
     fun `GIVEN offers of a type WHEN getBestOffer THEN returns the first row`(model: TypeModel) = runTest {
         // Arrange
-        stubFirstRow(type = model.apiType, response = response(items = listOf(earnResponse(type = model.apiType))))
+        val earnResponse = createEarnResponse(apy = "0.24", type = model.apiType, tokenId = "eth", tokenName = "ETH")
+        stubFirstRow(type = model.apiType, response = response(items = listOf(earnResponse)))
 
         // Act
         val actual = repository.getBestOffer(model.type)
@@ -81,6 +82,7 @@ internal class DefaultEarnRepositoryBestOfferTest {
     private fun provideTestModels() = listOf(
         TypeModel(type = EarnType.STAKING, apiType = "staking"),
         TypeModel(type = EarnType.YIELD, apiType = "yield"),
+        TypeModel(type = EarnType.VAULT, apiType = "vault"),
     )
 
     @Test
@@ -133,13 +135,5 @@ internal class DefaultEarnRepositoryBestOfferTest {
             meta = MetaEarnListResponse(page = 1, limit = 1, total = items.size, hasNext = false),
             items = items,
         ),
-    )
-
-    private fun earnResponse(type: String) = EarnResponse(
-        apy = "0.24",
-        networkId = "ethereum",
-        rewardType = "apy",
-        type = type,
-        token = EarnTokenResponse(id = "eth", symbol = "ETH", name = "ETH", address = null, decimalCount = 18),
     )
 }

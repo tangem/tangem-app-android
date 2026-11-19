@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * @param apy - percent of earning
  * @param networkId - id of network
  * @param rewardType - apr or apy
- * @param type - staking or yield
+ * @param type - staking, yield or vault
  * @param tokenSymbol - symbol of token (ex. "ATOM")
  * @param tokenName - name of token (ex. "Cosmos Hub")
  * @param tokenId - id of token (ex. "cosmos")
@@ -31,5 +31,5 @@ enum class EarnRewardType {
 }
 
 enum class EarnType {
-    STAKING, YIELD
+    STAKING, YIELD, VAULT
 }

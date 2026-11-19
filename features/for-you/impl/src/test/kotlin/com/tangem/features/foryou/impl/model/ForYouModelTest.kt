@@ -292,7 +292,7 @@ internal class ForYouModelTest {
             verify { getEarnTokensBatchFlowUseCase(any(), TOP_EARN_TOKENS_BATCH_SIZE) }
             val action = contextSlot.captured.actionsFlow.first() as BatchAction.Reload
             assertThat(action.requestParams).isEqualTo(
-                EarnTokensListConfig(type = null, networks = null, isForEarn = false),
+                EarnTokensListConfig(type = null, networks = null, isForEarn = false, isVaultsIncluded = false),
             )
         }
 

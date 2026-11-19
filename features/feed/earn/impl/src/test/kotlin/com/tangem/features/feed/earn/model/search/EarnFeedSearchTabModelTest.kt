@@ -122,7 +122,7 @@ internal class EarnFeedSearchTabModelTest {
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
         every { getSearchResultsUseCase(any()) } returns flowOf(searchResult())
-        every { getEarnTokensCatalogUseCase() } returns catalog
+        every { getEarnTokensCatalogUseCase(isVaultsIncluded = any()) } returns catalog
         coEvery { fetchEarnTokensCatalogUseCase() } answers {
             fetchCount++
             catalog.value = fetchResult
