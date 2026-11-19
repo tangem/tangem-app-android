@@ -34,7 +34,9 @@ features/collectibles/
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
     packopenfailed/ — "Failed to open pack": the terminal status screen that replaces the confirm order
-    inventory/      — The user's cards, Buyback / Collection tabs and search over both. Mock data
+    inventory/      — The user's cards, Buyback / Collection tabs. Mock data; search is not wired yet
+    nftdetails/     — One inventory card in full: the flippable case (packopening's RewardCase, settled), title, grading rows.
+                      Mock data from CollectiblesInventoryMockSource; physical delivery is not built
 ```
 
 `packopening/` in detail:
@@ -118,6 +120,8 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
         "Keep card" / a completed "Sell back" → router.pop() to MachineDetails
         OpenPackStep.Failed.OpenFailed → router.replaceCurrent(PackOpenFailed)
   ├─ CollectiblesRoute.Inventory → CollectiblesInventoryComponent → CollectiblesInventoryModel (modal, close → router.pop())
+  │     card tap → router.push(NftDetails(id))
+  ├─ CollectiblesRoute.NftDetails(id) → CollectiblesNftDetailsComponent → CollectiblesNftDetailsModel (back → router.pop(); close → router.popTo(Main(id)))
   └─ CollectiblesRoute.PackOpenFailed → CollectiblesPackOpenFailedComponent (no model)
         terminal: close and system back → router.popTo(Main(id)); "Get assistance" is a stub ([REDACTED_TASK_KEY])
 ```

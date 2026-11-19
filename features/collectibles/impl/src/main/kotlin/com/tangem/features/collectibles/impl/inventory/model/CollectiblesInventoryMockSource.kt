@@ -25,10 +25,17 @@ internal class CollectiblesInventoryMockSource @Inject constructor() {
         val id: String,
         val imageUrl: String,
         val title: String,
+        val year: String,
+        val cardName: String,
         val price: String,
         val grade: String,
+        val gradingCompany: String,
+        val gradeValue: String,
+        val gradingId: String,
+        val serialNumber: String,
         /** What is left of the buyback window; `null` for a card already in the collection */
         val timeLeft: Duration?,
+        val buybackPrice: String?,
     )
 
     private val cardsByTab = MutableStateFlow<Map<CollectiblesInventoryTab, Either<Throwable, List<Card>>>?>(null)
@@ -50,6 +57,9 @@ internal class CollectiblesInventoryMockSource @Inject constructor() {
             .distinctUntilChanged()
     }
 
+    /** Reads only what the inventory already holds, the way the full view takes its card from the cache. */
+    fun getCard(id: String): Card? = (BUYBACK + COLLECTION).firstOrNull { card -> card.id == id }
+
     suspend fun refresh() {
         delay(timeMillis = 1_000L)
 
@@ -64,30 +74,53 @@ internal class CollectiblesInventoryMockSource @Inject constructor() {
         )
     }
 
-    private data class Nft(val name: String, val image: String, val grade: String, val price: String)
+    private data class Nft(
+        val name: String,
+        val year: String,
+        val cardName: String,
+        val image: String,
+        val gradingCompany: String,
+        val gradeValue: String,
+        val price: String,
+        val buybackPrice: String,
+    )
 
     private companion object {
 
         val NFTS = listOf(
             Nft(
                 name = "2002 Pokemon Neo Destiny Unown T",
+                year = "2002",
+                cardName = "Unown T",
                 image = "https://arweave.net/wH0aDz0evnRMzOVG8xaIvML6qF97XGaVBZeQvI6Q5L0",
-                grade = "CGC 9",
+                gradingCompany = "CGC",
+                gradeValue = "9",
                 price = "$13",
+                buybackPrice = "$11.05",
             ),
             Nft(
                 name = "2026 Pokemon Mega Evolution Prom",
+                year = "2026",
+                cardName = "Mega Evolution Prom",
                 image = "https://arweave.net/HVWnaGt_wzTwa3FrEDFZwehyJ21w93didewd4BgyHqE",
-                grade = "CGC 9.5",
+                gradingCompany = "CGC",
+                gradeValue = "9.5",
                 price = "$30",
+                buybackPrice = "$25.50",
             ),
             Nft(
                 name = "1999 #13 MUK-HOLO PSA 9 POKEMON",
+                year = "1999",
+                cardName = "MUK-HOLO",
                 image = "https://arweave.net/1Bgy4YOi2pvuUd1yOAsJyAK571xA8aSSmweyAUdii5E",
-                grade = "PSA 9",
+                gradingCompany = "PSA",
+                gradeValue = "9",
                 price = "$192",
+                buybackPrice = "$163.20",
             ),
         )
+
+        const val GRADING_ID_BASE = 4_812_000_000L
 
         val BUYBACK_TIMERS = listOf(
             Duration.ZERO,
@@ -111,9 +144,16 @@ internal class CollectiblesInventoryMockSource @Inject constructor() {
                 id = id,
                 imageUrl = nft.image,
                 title = nft.name,
+                year = nft.year,
+                cardName = nft.cardName,
                 price = nft.price,
-                grade = nft.grade,
+                grade = "${nft.gradingCompany} ${nft.gradeValue}",
+                gradingCompany = nft.gradingCompany,
+                gradeValue = nft.gradeValue,
+                gradingId = (GRADING_ID_BASE + index).toString(),
+                serialNumber = (index + 1).toString(),
                 timeLeft = timeLeft,
+                buybackPrice = nft.buybackPrice.takeIf { timeLeft != null },
             )
         }
     }

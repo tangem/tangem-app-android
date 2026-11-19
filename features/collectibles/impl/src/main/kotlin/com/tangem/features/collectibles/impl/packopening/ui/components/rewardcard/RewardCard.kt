@@ -44,7 +44,7 @@ private const val DESIGN_CARD_WIDTH = 260f
 private const val DESIGN_CARD_HEIGHT = 406f
 
 /** Height to width of the window until the card's image has loaded. */
-private const val DEFAULT_CARD_ASPECT = DESIGN_CARD_HEIGHT / DESIGN_CARD_WIDTH
+internal const val DEFAULT_CARD_ASPECT = DESIGN_CARD_HEIGHT / DESIGN_CARD_WIDTH
 
 /** The window keeps the design height, scaled with the screen width; its width follows the card. */
 private const val CARD_HEIGHT_FRACTION = DESIGN_CARD_HEIGHT / DESIGN_FRAME_WIDTH
@@ -140,8 +140,7 @@ internal fun RewardCardContent(
             },
         ) { contentPadding ->
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                val cameraDistance =
-                    constraints.maxWidth * PERSPECTIVE_OF_SCREEN_WIDTH / PackOpeningConst.CAMERA_PX_PER_INCH
+                val cameraDistance = rewardCaseCameraDistance(widthPx = constraints.maxWidth)
                 val caseBackdrop = rememberHazeState()
 
                 Box(
@@ -158,7 +157,9 @@ internal fun RewardCardContent(
                     case = {
                         CompositionLocalProvider(LocalHazeState provides caseBackdrop) {
                             RewardCase(
-                                um = um,
+                                frontImageUrl = um.frontImageUrl,
+                                backImageUrl = um.backImageUrl,
+                                accent = um.accent,
                                 timing = timing,
                                 progress = progress,
                                 cameraDistance = cameraDistance,
@@ -180,6 +181,9 @@ internal fun RewardCardContent(
         }
     }
 }
+
+internal fun rewardCaseCameraDistance(widthPx: Int): Float =
+    widthPx * PERSPECTIVE_OF_SCREEN_WIDTH / PackOpeningConst.CAMERA_PX_PER_INCH
 
 /** The case shrinks only when the gaps around it would otherwise drop below [MIN_GAP]. */
 internal fun rewardCaseSize(maxWidth: Dp, maxHeight: Dp, cardAspect: Float): DpSize {
@@ -246,11 +250,13 @@ private fun RewardLayout(
 }
 
 @Composable
-private fun RewardCase(
-    um: RewardCardUM,
+internal fun RewardCase(
+    frontImageUrl: String?,
+    backImageUrl: String?,
     timing: RewardCardTiming,
     progress: RewardCardProgress,
     cameraDistance: Float,
+    accent: RewardCardUM.Accent = RewardCardUM.Accent.Neutral,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val cardWidth = maxWidth - SLAB_INSET_WIDTH
@@ -284,7 +290,7 @@ private fun RewardCase(
             }
 
         PsaSlab(
-            accent = um.accent,
+            accent = accent,
             settle = progress.settle,
             cardWidth = cardWidth,
             cardHeight = cardHeight,
@@ -294,7 +300,8 @@ private fun RewardCase(
         CardFaces(
             angle = CardChoreography.spinDegrees(spin = progress.spin),
             cameraDistance = cameraDistance,
-            um = um,
+            frontImageUrl = frontImageUrl,
+            backImageUrl = backImageUrl,
             isFlipEnabled = progress.settle >= 1f,
             modifier = place,
         )
