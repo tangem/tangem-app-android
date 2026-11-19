@@ -46,14 +46,7 @@ internal fun LazyListScope.tangemPayTxHistoryItems(listState: LazyListState, sta
             contentItems(listState = listState, state = state)
         }
         is TangemPayTxHistoryUM.Empty -> {
-            if (state.isCompact) {
-                compactEmptyItem()
-            } else {
-                tangemPayTxHistoryNonContentItem(
-                    listState = listState,
-                    state = TangemPayEmptyTransactionHistoryState.Empty,
-                )
-            }
+            compactEmptyItem()
         }
         is TangemPayTxHistoryUM.Error -> {
             tangemPayTxHistoryNonContentItem(
