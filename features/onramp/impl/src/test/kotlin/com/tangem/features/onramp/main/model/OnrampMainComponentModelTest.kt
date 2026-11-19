@@ -1811,6 +1811,29 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
+    fun `GIVEN country by IP off and design system on WHEN country emitted THEN flag shown`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("USD").copy(name = "Country", image = "https://flag.png").right())
+
+        // Act
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = false,
+            isNewDesignSystemEnabled = true,
+        )
+        scheduler.runCurrent()
+
+        // Assert
+        val countryButton = model.state.value.topBarConfig.countryButtonUM
+        assertThat(countryButton?.flagUrl).isEqualTo("https://flag.png")
+        assertThat(countryButton?.countryName).isEqualTo("Country")
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN toggle on WHEN model created THEN country button shown and country reset`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()

@@ -541,7 +541,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifLeft = ::handleOnrampError,
                     ifRight = { country ->
                         if (country == null) return@onEach
-                        if (isCountryByIpEnabled) {
+                        if (isNewDesignSystemEnabled) {
                             state.update { stateFactory.getCountryFlagState(it, country.image, country.name) }
                         }
                         if (isCountryByIpEnabled && isIpCheckPending) awaitLatestAvailabilityCheck()
@@ -579,17 +579,16 @@ internal class OnrampMainComponentModel @Inject constructor(
             is OnrampMainComponentUM.InitialLoading ->
                 stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
         }
-        return if (isCountryByIpEnabled) {
-            withRegionRestriction(
-                stateFactory.getCountryFlagState(
-                    state = updatedState,
-                    flagUrl = country.image,
-                    countryName = country.name,
-                ),
+        val withFlag = if (isNewDesignSystemEnabled) {
+            stateFactory.getCountryFlagState(
+                state = updatedState,
+                flagUrl = country.image,
+                countryName = country.name,
             )
         } else {
             updatedState
         }
+        return if (isCountryByIpEnabled) withRegionRestriction(withFlag) else withFlag
     }
 
     /**
