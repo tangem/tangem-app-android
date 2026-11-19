@@ -59,6 +59,7 @@ internal class TangemPayGroupConverter(
             } else {
                 formatUsd(balances.fold(BigDecimal.ZERO, BigDecimal::add))
             },
+            balanceCaption = stringReference(USD_CURRENCY_CODE),
             isBalanceFlickering = paymentStatus.value.isRefreshing() || moneyStatus.value.isRefreshing(),
             isExpanded = isExpanded,
             onClick = { clickIntents.onTangemPayGroupClick(accountId = groupAccountId, isExpanded = isExpanded) },
@@ -66,7 +67,7 @@ internal class TangemPayGroupConverter(
     }
 
     private fun formatUsd(amount: BigDecimal): TextReference {
-        val currency = getJavaCurrencyByCode("USD")
+        val currency = getJavaCurrencyByCode(USD_CURRENCY_CODE)
         return stringReference(
             amount.format {
                 fiat(
@@ -97,4 +98,8 @@ internal class TangemPayGroupConverter(
         this is PaymentAccountStatusValue.Loading || source == StatusSource.CACHE
 
     private fun MoneyAccountStatusValue.isRefreshing(): Boolean = source == StatusSource.CACHE
+
+    private companion object {
+        const val USD_CURRENCY_CODE = "USD"
+    }
 }

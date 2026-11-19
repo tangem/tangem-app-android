@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -20,6 +21,7 @@ import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.expandable.EXPANDABLE_ROW_REVEAL_DURATION_MILLIS
 import com.tangem.core.ui.ds2.expandable.ExpandableRowRevealItem
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -159,6 +161,14 @@ internal fun LazyListScope.tangemPayGroup(
             title = groupUM.title,
             label = groupUM.label,
             balance = groupUM.balance,
+            balanceBottom = {
+                Text(
+                    text = groupUM.balanceCaption.resolveReference(),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                    maxLines = 1,
+                )
+            },
             isBalanceHidden = isBalanceHidden,
             isBalanceFlickering = groupUM.isBalanceFlickering,
             showCompactBalance = false,
