@@ -345,7 +345,7 @@ internal class WalletModel @Inject constructor(
                     analyticsEventsHandler.send(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
-                            accountsCount = accountList?.accounts?.size,
+                            accountsCount = accountList?.accountsCountWithoutJoint(),
                             jointAccountsCounts = jointAccountsCounts,
                             isBackedUp = isWalletBackedUpUseCase(selectedWallet),
                             completedBackups = getCompletedBackupsUseCase(selectedWallet),
@@ -1080,6 +1080,9 @@ internal class WalletModel @Inject constructor(
 private fun AccountList.listedJointAccountIds(): Set<String> = accounts
     .filterIsInstance<Account.Joint>()
     .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
+
+//Joint accounts are reported by their own counters
+internal fun AccountList.accountsCountWithoutJoint(): Int = accounts.count { it !is Account.Joint }
 
 /** Archived joint accounts are not in [accountList], so only the statuses of the accounts it holds are counted */
 internal fun jointAccountsCounts(
