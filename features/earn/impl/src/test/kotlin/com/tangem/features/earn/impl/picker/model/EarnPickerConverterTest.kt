@@ -135,12 +135,18 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN one summary WHEN convert THEN there are no cards`() {
+        fun `GIVEN one summary WHEN convert THEN its card is shown and selected`() {
             // Act
-            val actual = convert(summaries = listOf(lendingSummary))
+            val actual = convert(summaries = listOf(lendingSummary), selectedId = lending.id).cardInfos()
 
             // Assert
-            assertThat(actual.products).isEmpty()
+            val expected = CardInfo(
+                id = "lending",
+                title = lending.title,
+                rate = lendingSummary.rateText,
+                isSelected = true,
+            )
+            assertThat(actual).containsExactly(expected)
         }
 
         @Test
