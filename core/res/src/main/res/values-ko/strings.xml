@@ -3,7 +3,7 @@
   <string name="email_fallback_alert_description">고객 지원은 연중무휴 24시간 운영됩니다. 답변까지 최대 24시간이 걸릴 수 있습니다. 진단 데이터를 요청드릴 수 있습니다.</string>
   <string name="email_fallback_alert_share_logs_button">로그 공유</string>
   <string name="hw_upgrade_to_cold_badge">콜드 지갑으로 업그레이드</string>
-  <string name="money_account_add_funds_bank_description">은행 계좌에서 ACH/Wire 또는 SPEI로 USD 수취</string>
+  <string name="money_account_add_funds_bank_description">미국 은행에서 ACH로 USD를 받거나 멕시코 은행에서 SPEI로 MXN을 받으세요</string>
   <string name="money_account_add_funds_receive_description">Polygon 네트워크의 USDC를 계좌 주소로 전송</string>
   <string name="money_account_add_funds_swap_description">지갑의 암호화폐로 USD 계좌에 입금</string>
   <string name="money_account_balance_unavailable_description">잔액을 불러오는 데 문제가 발생했습니다. 나중에 다시 시도해 주세요.</string>
@@ -16,7 +16,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">입금 후 개설됩니다</string>
   <string name="money_account_main_status_dialog_activating_description">계좌를 준비하고 있습니다. 시간이 다소 걸릴 수 있습니다</string>
-  <string name="money_account_main_status_dialog_activating_title">은행 계좌 개설 중</string>
+  <string name="money_account_main_status_dialog_activating_title">USD 계좌 개설 중</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">더 많은 지역으로 서비스를 확대하기 위해 노력하고 있습니다. 도움이 필요하신가요?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">더 많은 지역으로 확장하기 위해 노력하고 있습니다. 도움이 필요하신가요? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">아직 해당 지역에서 이용할 수 없습니다</string>
@@ -33,7 +33,7 @@
   <string name="money_account_main_status_verification">인증 진행 중…</string>
   <string name="money_account_onboarding_currency_card_caption">계좌 통화</string>
   <string name="money_account_onboarding_description">일반 은행 계좌처럼 작동합니다. 다만 암호화폐 기반이며 완전히 고객님의 통제 아래 있습니다.</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay는 금융 기술 회사이며 은행이 아닙니다. 은행 서비스는 FDIC 회원사인 SSB가 제공합니다. SSB에 예치된 자금은 해당 제한 사항 및 FDIC 규정에 따라 예금자 1인당, 보험 가입 은행별로 최대 250,000달러까지 FDIC 보험 적용 대상이 될 수 있습니다.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay는 은행이 아닙니다. 계좌 정보는 SSB Bank가 제공합니다. 자금은 USDC로 보유되며, SSB Bank의 예금으로 보유되지 않습니다. USDC는 FDIC의 보험 적용을 받지 않습니다.</string>
   <string name="money_account_onboarding_earn_card_caption">수익</string>
   <string name="money_account_onboarding_fees_error">수수료 정보를 불러오지 못했습니다.\n탭하여 다시 불러오기</string>
   <string name="money_account_onboarding_fees_notice">SWIFT 송금은 지원되지 않습니다. 송금하시면 반환됩니다</string>
@@ -307,7 +307,7 @@
   <string name="tangempay_sync_needed_body">갱신하여 카드와 계좌를 확인해 주세요</string>
   <string name="tangempay_sync_needed_button">세션 갱신</string>
   <string name="tangempay_sync_needed_title">세션이 만료되었습니다</string>
-  <string name="tangempay_topup_bank_transfer_body">ACH/Wire로 은행 계좌에서 USD를 받으세요</string>
+  <string name="tangempay_topup_bank_transfer_body">ACH로 미국 은행 계좌에서 USD를 받으세요</string>
   <string name="tangempay_topup_bank_transfer_title">은행 계좌에서</string>
   <string name="tangempay_topup_receive_title">다른 지갑 또는 거래소에서</string>
   <string name="tangempay_topup_swap_title">Tangem Wallet에서</string>
@@ -332,7 +332,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">결제</string>
-  <string name="tangempay_unified_onboarding_payments_title">일상에 필요한 ACH 및 전신 송금</string>
+  <string name="tangempay_unified_onboarding_payments_title">일상에 필요한 은행 송금</string>
   <string name="tangempay_unified_onboarding_plan_caption">하나의 플랜</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic은 무료입니다.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus는 두 가지 모두에 훨씬 더 많은 혜택까지</string>

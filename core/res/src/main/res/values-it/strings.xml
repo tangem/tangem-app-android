@@ -1460,7 +1460,7 @@
   <string name="money_account_onboarding_terms_notice">Utilizzando il servizio, si accettano i %1$s del fornitore</string>
   <string name="money_account_onboarding_title">Aprire un conto USD</string>
   <string name="money_account_onboarding_transfers_card_caption">Entrate. Uscite.</string>
-  <string name="money_account_onboarding_transfers_card_subtitle">con un conto dedicato con coordinate bancarie</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">con coordinate di conto dedicate</string>
   <string name="money_account_onboarding_transfers_card_title">Invio e ricezione di pagamenti in valuta</string>
   <string name="money_account_send_bank_transfer_unavailable">Non disponibile</string>
   <string name="money_account_send_fees_footer">Le commissioni includono il servizio %s e la commissione di rete stimata</string>
@@ -2439,7 +2439,7 @@
   <string name="tangempay_action_required_title">Azione richiesta</string>
   <string name="tangempay_available_balance">Saldo</string>
   <string name="tangempay_bank_transfer_creating_description">Di solito richiede fino a 5 minuti. In rari casi, fino a 48 ore</string>
-  <string name="tangempay_bank_transfer_creating_title">Creazione delle tue coordinate bancarie</string>
+  <string name="tangempay_bank_transfer_creating_title">Creazione delle tue coordinate di conto</string>
   <string name="tangempay_bank_transfer_details_conversion_notice">I %s ricevuti verranno convertiti in USD</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">Depositi giornalieri</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Se vuoi depositare più di %s, contatta il supporto</string>
@@ -2450,6 +2450,7 @@
   <string name="tangempay_bank_transfer_details_minimum_deposit">Deposito minimo</string>
   <string name="tangempay_bank_transfer_details_rate_disclaimer">Tasso indicativo. Un deposito viene accreditato al tasso del giorno in cui viene ricevuto</string>
   <string name="tangempay_bank_transfer_details_reference_warning">Includere il riferimento nel bonifico. Senza di esso, il deposito potrebbe non essere accreditato</string>
+  <string name="tangempay_bank_transfer_failed_title">Impossibile creare le coordinate del conto</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Tocca per ricaricare</string>
   <string name="tangempay_bank_transfer_fee_error_title">Errore nel caricamento delle commissioni</string>
@@ -2460,11 +2461,11 @@
   <string name="tangempay_bank_transfer_legal">Utilizzando il servizio, accetti %1$s</string>
   <string name="tangempay_bank_transfer_onboarding_description">Invia e ricevi bonifici bancari in USD. Gli USD saranno convertiti in USDC al tasso 1:1.</string>
   <string name="tangempay_bank_transfer_onboarding_fee_header">Informazioni sulle commissioni</string>
-  <string name="tangempay_bank_transfer_onboarding_title">Ottieni le coordinate bancarie USA</string>
+  <string name="tangempay_bank_transfer_onboarding_title">Ottieni le coordinate di conto USA</string>
   <string name="tangempay_bank_transfer_request_sent">Richiesta inviata</string>
   <string name="tangempay_bank_transfer_show_details">Mostra dettagli</string>
   <string name="tangempay_bank_transfer_success_subtitle">Potrebbe richiedere un po\' di tempo</string>
-  <string name="tangempay_bank_transfer_success_title">Preparazione dati bancari</string>
+  <string name="tangempay_bank_transfer_success_title">Preparazione delle tue coordinate di conto</string>
   <string name="tangempay_bank_transfer_swift_warning">I bonifici SWIFT non sono accettati e saranno restituiti</string>
   <string name="tangempay_bank_transfer_terms_of_use">Termini di servizio</string>
   <string name="tangempay_campaign_cashback_description">Su tutti gli acquisti. Pagato in USDC — non in punti o token sconosciuti</string>
@@ -2871,7 +2872,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario USA tramite ACH</string>
-  <string name="tangempay_topup_bank_transfer_pending_body">Creazione delle tue coordinate bancarie...</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">Creazione delle tue coordinate di conto...</string>
   <string name="tangempay_topup_bank_transfer_title">Da un conto bancario</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
   <string name="tangempay_topup_receive_title">Da un altro wallet o exchange</string>
@@ -2905,12 +2906,12 @@
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus copre entrambi e offre molto di più</string>
   <string name="tangempay_unified_onboarding_terms_button">Termini e commissioni</string>
   <string name="tangempay_usdc_on_polygon_network">USDC sulla rete Polygon</string>
-  <string name="tangempay_va_account_details">Dettagli conto</string>
+  <string name="tangempay_va_account_details">Coordinate del conto</string>
   <string name="tangempay_va_available_to_deposit_day">Deposito max/giorno:</string>
   <string name="tangempay_va_banking_details_error_description">Riprova o contatta l’assistenza se il problema persiste</string>
-  <string name="tangempay_va_banking_details_error_title">Impossibile caricare i dati bancari</string>
+  <string name="tangempay_va_banking_details_error_title">Impossibile caricare le coordinate del conto</string>
   <string name="tangempay_va_banner_failed_description">Riprova o contatta il supporto se il problema persiste</string>
-  <string name="tangempay_va_banner_failed_title">Impossibile creare le coordinate bancarie</string>
+  <string name="tangempay_va_banner_failed_title">Impossibile creare le coordinate del conto</string>
   <string name="tangempay_va_limit_resetting_everyday">Limite azzerato ogni giorno</string>
   <string name="tangempay_verified_badge_available">Disponibile</string>
   <string name="tangempay_verified_choose_plan">Scegli piano</string>

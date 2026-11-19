@@ -1466,7 +1466,7 @@
   <string name="money_account_onboarding_terms_notice">使用本服務即表示您同意服務提供方的%1$s</string>
   <string name="money_account_onboarding_title">開通美元帳戶</string>
   <string name="money_account_onboarding_transfers_card_caption">入帳。出帳。</string>
-  <string name="money_account_onboarding_transfers_card_subtitle">使用具備銀行資訊的專屬帳戶</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">使用專屬帳戶資訊</string>
   <string name="money_account_onboarding_transfers_card_title">以法幣付款與收款</string>
   <string name="money_account_send_bank_transfer_unavailable">無法使用</string>
   <string name="money_account_send_fees_footer">費用包含%s服務費和預估網路費</string>
@@ -2469,7 +2469,7 @@
   <string name="tangempay_action_required_title">需要採取行動</string>
   <string name="tangempay_available_balance">可用餘額</string>
   <string name="tangempay_bank_transfer_creating_description">通常最多需要 5 分鐘，少數情況下最長需 48 小時</string>
-  <string name="tangempay_bank_transfer_creating_title">正在建立您的銀行帳戶資訊</string>
+  <string name="tangempay_bank_transfer_creating_title">正在建立您的帳戶資訊</string>
   <string name="tangempay_bank_transfer_details_conversion_notice">收到的 %s 將兌換為美元</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">每日存款</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">如需存入超過 %s，請聯絡客服</string>
@@ -2480,6 +2480,7 @@
   <string name="tangempay_bank_transfer_details_minimum_deposit">最低存款金額</string>
   <string name="tangempay_bank_transfer_details_rate_disclaimer">參考匯率。存款將以到帳當日匯率計算</string>
   <string name="tangempay_bank_transfer_details_reference_warning">轉帳時請附上參考編號，否則存款可能無法入帳。</string>
+  <string name="tangempay_bank_transfer_failed_title">帳戶資訊建立失敗</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">點擊重新載入</string>
   <string name="tangempay_bank_transfer_fee_error_title">載入手續費資訊失敗</string>
@@ -2490,11 +2491,11 @@
   <string name="tangempay_bank_transfer_legal">使用本服務即表示您同意服務提供商的 %1$s</string>
   <string name="tangempay_bank_transfer_onboarding_description">收發美元法幣銀行轉帳。美元將以 1:1 匯率兌換為 USDC。</string>
   <string name="tangempay_bank_transfer_onboarding_fee_header">費用資訊</string>
-  <string name="tangempay_bank_transfer_onboarding_title">獲取美國銀行帳戶資訊</string>
+  <string name="tangempay_bank_transfer_onboarding_title">獲取美國帳戶資訊</string>
   <string name="tangempay_bank_transfer_request_sent">請求已送出</string>
   <string name="tangempay_bank_transfer_show_details">顯示詳情</string>
   <string name="tangempay_bank_transfer_success_subtitle">這可能需要一些時間</string>
-  <string name="tangempay_bank_transfer_success_title">正在準備您的銀行資訊</string>
+  <string name="tangempay_bank_transfer_success_title">正在準備您的帳戶資訊</string>
   <string name="tangempay_bank_transfer_swift_warning">不接受 SWIFT 轉帳，款項將退回</string>
   <string name="tangempay_bank_transfer_terms_of_use">服務條款</string>
   <string name="tangempay_campaign_cashback_description">適用於所有消費。以 USDC 發放，而非點數或不知名的代幣</string>
@@ -2897,7 +2898,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">透過 ACH 從美國的銀行帳戶接收美元</string>
-  <string name="tangempay_topup_bank_transfer_pending_body">正在建立您的銀行帳戶資訊...</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">正在建立您的帳戶資訊...</string>
   <string name="tangempay_topup_bank_transfer_title">從銀行帳戶</string>
   <string name="tangempay_topup_receive_body_multichain">將 USDC 或 USDT 傳送至您帳戶的地址</string>
   <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
@@ -2931,12 +2932,12 @@
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus 涵蓋兩者，還有更多權益</string>
   <string name="tangempay_unified_onboarding_terms_button">條款與費用</string>
   <string name="tangempay_usdc_on_polygon_network">Polygon 網路上的 USDC</string>
-  <string name="tangempay_va_account_details">帳戶詳情</string>
+  <string name="tangempay_va_account_details">帳戶資訊</string>
   <string name="tangempay_va_available_to_deposit_day">每日可存入金額：</string>
   <string name="tangempay_va_banking_details_error_description">請重試，如果問題仍然存在，請聯絡客服</string>
-  <string name="tangempay_va_banking_details_error_title">無法載入銀行資訊</string>
+  <string name="tangempay_va_banking_details_error_title">無法載入帳戶資訊</string>
   <string name="tangempay_va_banner_failed_description">請再試一次；若問題持續發生，請聯絡客服</string>
-  <string name="tangempay_va_banner_failed_title">銀行帳戶資訊建立失敗</string>
+  <string name="tangempay_va_banner_failed_title">帳戶資訊建立失敗</string>
   <string name="tangempay_va_limit_resetting_everyday">限額每日重置</string>
   <string name="tangempay_verified_badge_available">可用</string>
   <string name="tangempay_verified_choose_plan">選擇方案</string>
