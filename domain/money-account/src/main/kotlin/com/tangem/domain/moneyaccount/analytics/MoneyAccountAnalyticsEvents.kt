@@ -3,6 +3,7 @@ package com.tangem.domain.moneyaccount.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
 import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import java.math.BigDecimal
 
 sealed class MoneyAccountAnalyticsEvents(
@@ -127,24 +128,67 @@ sealed class MoneyAccountAnalyticsEvents(
         event = "VA Offramp Recipient List Opened",
     )
 
-    class OfframpRecipientSelected : MoneyAccountAnalyticsEvents(
+    data class OfframpRecipientSelected(val rail: BankRail?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Offramp Recipient Selected",
+        params = railParams(rail),
     )
 
-    class OfframpAmountScreenOpened : MoneyAccountAnalyticsEvents(
+    data class OfframpAmountScreenOpened(val rail: BankRail?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Offramp Amount Screen Opened",
+        params = railParams(rail),
     )
 
-    class OfframpConfirmationScreenOpened : MoneyAccountAnalyticsEvents(
+    data class OfframpConfirmationScreenOpened(val rail: BankRail?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Offramp Confirmation Screen Opened",
+        params = railParams(rail),
     )
 
-    class OfframpRecipientTransferConfirmed : MoneyAccountAnalyticsEvents(
+    data class OfframpRecipientTransferConfirmed(val rail: BankRail?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Offramp Recipient Transfer Confirmed",
+        params = railParams(rail),
+    )
+
+    data class OfframpRecipientFormOpened(
+        val rail: BankRail,
+        val recipientType: RecipientType,
+    ) : MoneyAccountAnalyticsEvents(
+        categoryName = TRANSFER_CATEGORY,
+        event = "VA Offramp Recipient Form Opened",
+        params = railParams(rail) + ("recipient_type" to recipientType.value),
+    )
+
+    data class OfframpRecipientSaved(
+        val rail: BankRail,
+        val recipientType: RecipientType,
+    ) : MoneyAccountAnalyticsEvents(
+        categoryName = TRANSFER_CATEGORY,
+        event = "VA Offramp Recipient Saved",
+        params = railParams(rail) + ("recipient_type" to recipientType.value),
+    )
+
+    data class OfframpRecipientSaveFailed(val rail: BankRail, val errorCode: Int?) : MoneyAccountAnalyticsEvents(
+        categoryName = TRANSFER_CATEGORY,
+        event = "VA Offramp Recipient Save Failed",
+        params = railParams(rail) + errorCodeParams(errorCode),
+    )
+
+    data class OfframpQuoteShown(val rail: BankRail, val amountBand: AmountBand) : MoneyAccountAnalyticsEvents(
+        categoryName = TRANSFER_CATEGORY,
+        event = "VA Offramp Quote Shown",
+        params = railParams(rail) + ("amount_band" to amountBand.value),
+    )
+
+    data class OfframpAmountErrorShown(
+        val rail: BankRail,
+        val reason: AmountErrorReason,
+    ) : MoneyAccountAnalyticsEvents(
+        categoryName = TRANSFER_CATEGORY,
+        event = "VA Offramp Amount Error Shown",
+        params = railParams(rail) + ("reason" to reason.value),
     )
 
     data class SendConfirmed(val amountUsdc: BigDecimal, val method: SendMethod) : MoneyAccountAnalyticsEvents(
@@ -156,15 +200,16 @@ sealed class MoneyAccountAnalyticsEvents(
         ),
     )
 
-    data class SendFailed(val errorCode: Int?) : MoneyAccountAnalyticsEvents(
+    data class SendFailed(val errorCode: Int?, val method: SendMethod?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Send failed",
-        params = buildMap { if (errorCode != null) put("error_code", errorCode.toString()) },
+        params = errorCodeParams(errorCode) + methodParams(method),
     )
 
-    class SendSucceeded : MoneyAccountAnalyticsEvents(
+    data class SendSucceeded(val method: SendMethod?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Send succesfull",
+        params = methodParams(method),
     )
 
     enum class AccountState(val value: String) {
@@ -209,6 +254,16 @@ sealed class MoneyAccountAnalyticsEvents(
     enum class SendMethod(val value: String) {
         BANK_TRANSFER_ACH("bank_transfer_ach"),
         BANK_TRANSFER_WIRE("bank_transfer_wire"),
+        BANK_TRANSFER_SPEI("bank_transfer_spei"),
+        ;
+
+        companion object {
+            fun of(rail: BankRail): SendMethod = when (rail) {
+                BankRail.ACH -> BANK_TRANSFER_ACH
+                BankRail.WIRE -> BANK_TRANSFER_WIRE
+                BankRail.SPEI -> BANK_TRANSFER_SPEI
+            }
+        }
     }
 
     enum class DepositCurrency(val value: String) {
@@ -234,11 +289,58 @@ sealed class MoneyAccountAnalyticsEvents(
         }
     }
 
+    enum class RecipientType(val value: String) {
+        OWN("own"),
+        SOMEONE_ELSE("someone_else"),
+        BUSINESS("business"),
+    }
+
+    enum class AmountErrorReason(val value: String) {
+        BELOW_MINIMUM("below_minimum"),
+        ABOVE_BALANCE("above_balance"),
+        QUOTE_UNAVAILABLE("quote_unavailable"),
+        QUOTE_EXPIRED("quote_expired"),
+    }
+
+    enum class AmountBand(val value: String) {
+        UNDER_10("<10"),
+        FROM_10_TO_100("10-100"),
+        FROM_100_TO_1K("100-1k"),
+        OVER_1K(">1k"),
+        ;
+
+        companion object {
+            private val TEN = BigDecimal("10")
+            private val HUNDRED = BigDecimal("100")
+            private val THOUSAND = BigDecimal("1000")
+
+            fun of(amount: BigDecimal): AmountBand = when {
+                amount < TEN -> UNDER_10
+                amount < HUNDRED -> FROM_10_TO_100
+                amount <= THOUSAND -> FROM_100_TO_1K
+                else -> OVER_1K
+            }
+        }
+    }
+
     private companion object {
         const val CASH_ACCOUNT_CATEGORY = "Cash Account"
         const val TRANSFER_CATEGORY = "VA Transfer"
 
         fun currencyParams(currency: DepositCurrency?): Map<String, String> =
             currency?.let { mapOf("currency" to it.value) }.orEmpty()
+
+        fun railParams(rail: BankRail?): Map<String, String> = when (rail) {
+            BankRail.ACH -> mapOf("rail" to "ach")
+            BankRail.WIRE -> mapOf("rail" to "wire")
+            BankRail.SPEI -> mapOf("rail" to "spei")
+            null -> emptyMap()
+        }
+
+        fun methodParams(method: SendMethod?): Map<String, String> =
+            method?.let { mapOf("method" to it.value) }.orEmpty()
+
+        fun errorCodeParams(errorCode: Int?): Map<String, String> =
+            errorCode?.let { mapOf("error_code" to it.toString()) }.orEmpty()
     }
 }

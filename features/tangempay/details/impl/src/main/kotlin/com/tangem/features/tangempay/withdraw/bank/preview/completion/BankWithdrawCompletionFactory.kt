@@ -35,11 +35,14 @@ internal class BankWithdrawCompletionFactory @Inject constructor(
                     productInstanceId = productInstanceId,
                     onDestinationChanged = callbacks.onDestinationChanged,
                     onNetworkFeeChanged = callbacks.onNetworkFeeChanged,
+                    newRecipientListener = callbacks.newRecipientListener,
                 ),
                 spei = speiCompletionFactory.create(
                     userWalletId = sourceAccount.userWalletId,
                     productInstanceId = productInstanceId,
                     onNetworkFeeChanged = callbacks.onNetworkFeeChanged,
+                    onQuoteExpired = callbacks.onQuoteExpired,
+                    newRecipientListener = callbacks.newRecipientListener,
                 ),
             )
         } ?: UnavailableBankWithdrawCompletion
@@ -49,6 +52,8 @@ internal class BankWithdrawCompletionFactory @Inject constructor(
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
         val onDestinationChanged: (OfframpDestination) -> Unit,
         val onNetworkFeeChanged: (BigDecimal) -> Unit,
+        val onQuoteExpired: () -> Unit,
+        val newRecipientListener: NewRecipientListener,
     )
 }
 

@@ -767,7 +767,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         ),
         ApiErrorModel(
             apiError = TangemPayApiError.Unknown(errorCode = 104_130_100),
-            expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false, errorCode = 104_130_100),
+            expected = BankOfframpError.BadRequest,
         ),
         ApiErrorModel(
             apiError = TangemPayApiError.ServerUnavailable,

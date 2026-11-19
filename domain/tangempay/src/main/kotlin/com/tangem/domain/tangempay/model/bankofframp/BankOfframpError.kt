@@ -7,6 +7,9 @@ sealed interface BankOfframpError {
     val errorCode: Int? get() = null
 
     data object Validation : BankOfframpError
+    data object BadRequest : BankOfframpError {
+        override val errorCode: Int = 104_130_100
+    }
     data object RecipientRegionUnsupported : BankOfframpError
     data object SenderRegionUnsupported : BankOfframpError {
         override val errorCode: Int = TangemPayApiError.BankOfframpRegionUnsupported.errorCode

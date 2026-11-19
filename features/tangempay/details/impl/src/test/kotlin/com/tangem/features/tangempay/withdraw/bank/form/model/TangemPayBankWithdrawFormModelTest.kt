@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
@@ -23,10 +24,12 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -44,10 +47,14 @@ import kotlin.reflect.KClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
 
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk {
+        every { isMxnEnabled } returns true
+    }
     private val onBack: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onContinue: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onOpenSelector: (CountrySelectorConfig) -> Unit = mockk(relaxed = true)
     private val onSavedRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
+    private val onRecipientFormOpened: () -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
@@ -65,6 +72,7 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
     fun resetMocks() {
         clearMocks(
             analytics,
+            onRecipientFormOpened,
             router,
             uiMessageSender,
             onBack,
@@ -1431,9 +1439,30 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             model.onDestroy()
         }
 
+        @ParameterizedTest
+        @MethodSource("recipientFormOpenedCases")
+        fun `GIVEN form step WHEN model created THEN the wizard is told only when a new recipient form opens`(
+            model: RecipientFormOpenedModel,
+        ) {
+            // Arrange
+            draft.value = model.draft
+
+            // Act
+            val formModel = createModel(step = model.step, sourceAccount = model.sourceAccount)
+
+            // Assert
+            verify(exactly = model.expectedCalls) { onRecipientFormOpened() }
+            formModel.onDestroy()
+        }
+
         @Test
         fun `GIVEN money account WHEN recipient details filled and continued THEN no event is sent`() {
             // Arrange
+            draft.value = BankWithdrawDraft(
+                entry = BankWithdrawEntry.NewPersonal,
+                newRecipient = NewRecipientDraft(isThirdParty = false),
+                destination = offrampDestination(rail = BankRail.ACH),
+            )
             val model = createModel(sourceAccount = moneyAccount)
             fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
             fill(model, BankWithdrawFormField.RoutingNumber, "021000021")
@@ -1448,6 +1477,57 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             verify(exactly = 1) { onContinue(any()) }
             model.onDestroy()
         }
+
+        private fun recipientFormOpenedCases() = listOf(
+            RecipientFormOpenedModel(
+                name = "money account, SPEI recipient details",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.SPEI),
+                expectedCalls = 1,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, ACH recipient details for someone else",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.ACH, isThirdParty = true),
+                expectedCalls = 1,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, recipient details reopened from the confirmation",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+                draft = newDraft(rail = BankRail.SPEI),
+                expectedCalls = 0,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, bank details",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.BankDetails,
+                draft = newDraft(rail = BankRail.ACH, isThirdParty = false),
+                expectedCalls = 0,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, saved recipient picked",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.ACH).copy(recipient = bankAccount()),
+                expectedCalls = 0,
+            ),
+            RecipientFormOpenedModel(
+                name = "payment account, recipient details",
+                sourceAccount = paymentAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.ACH),
+                expectedCalls = 1,
+            ),
+        )
+
+        private fun newDraft(rail: BankRail, isThirdParty: Boolean? = null) = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            newRecipient = NewRecipientDraft(isThirdParty = isThirdParty),
+            destination = offrampDestination(rail = rail),
+        )
 
         private fun provideTestModels() = listOf(
             ScreenOpenedModel(
@@ -1575,6 +1655,7 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
                     onBack = onBack,
                     onContinue = onContinue,
                     onSavedRecipientSelected = onSavedRecipientSelected,
+                    onRecipientFormOpened = onRecipientFormOpened,
                     onCloseFlow = onCloseFlow,
                 ),
                 onOpenSelector = onOpenSelector,
@@ -1582,8 +1663,18 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         ),
         dispatchers = dispatchers,
         router = router,
-        analytics = analytics,
+        withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
     ).destroyAfterTest()
+
+    data class RecipientFormOpenedModel(
+        val name: String,
+        val sourceAccount: BankWithdrawSourceAccount,
+        val step: TangemPayBankWithdrawInnerRoute,
+        val draft: BankWithdrawDraft,
+        val expectedCalls: Int,
+    ) {
+        override fun toString(): String = name
+    }
 
     private companion object {
         val speiFields = persistentListOf(

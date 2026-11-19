@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
@@ -18,6 +19,7 @@ import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithd
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +31,9 @@ import org.junit.jupiter.params.ParameterizedTest
 
 internal class TangemPayBankWithdrawChoiceModelTest : TangemPayModelTestBase() {
 
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk {
+        every { isMxnEnabled } returns true
+    }
     private val onContinue: (String) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
@@ -316,6 +321,6 @@ internal class TangemPayBankWithdrawChoiceModelTest : TangemPayModelTestBase() {
         ),
         dispatchers = dispatchers,
         router = router,
-        analytics = analytics,
+        withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
     )
 }

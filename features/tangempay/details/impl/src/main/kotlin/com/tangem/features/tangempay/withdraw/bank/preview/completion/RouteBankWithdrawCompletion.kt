@@ -23,11 +23,13 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import java.util.UUID
 
+@Suppress("LongParameterList")
 internal class RouteBankWithdrawCompletion @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val productInstanceId: String,
     @Assisted private val onDestinationChanged: (OfframpDestination) -> Unit,
     @Assisted private val onNetworkFeeChanged: (BigDecimal) -> Unit,
+    @Assisted private val newRecipientListener: NewRecipientListener,
     private val bankOfframpOrderRepository: BankOfframpOrderRepository,
     private val moneyAccountTransfer: MoneyAccountTransfer,
 ) : BankWithdrawCompletion {
@@ -82,11 +84,17 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
             idempotencyKey = current.idempotencyKey,
         ).fold(
             ifLeft = { error ->
+                if (current.recipient is BankOfframpRecipient.New && error.isRecipientRefusal()) {
+                    newRecipientListener.onRejected(recipient = current.recipient.details, errorCode = error.errorCode)
+                }
                 onRouteFailed(error = error, onState = onState)
                 null
             },
             ifRight = { route ->
                 attempt = current.copy(route = route)
+                if (current.recipient is BankOfframpRecipient.New) {
+                    newRecipientListener.onSaved(current.recipient.details)
+                }
                 route
             },
         )
@@ -166,6 +174,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
             productInstanceId: String,
             onDestinationChanged: (OfframpDestination) -> Unit,
             onNetworkFeeChanged: (BigDecimal) -> Unit,
+            newRecipientListener: NewRecipientListener,
         ): RouteBankWithdrawCompletion
     }
 }
