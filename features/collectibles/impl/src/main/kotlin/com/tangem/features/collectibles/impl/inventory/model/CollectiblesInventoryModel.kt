@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.nftdetails.CollectiblesNftDetailsComponent
 import com.tangem.features.collectibles.impl.inventory.model.converter.CollectiblesInventoryContentConverter
 import com.tangem.features.collectibles.impl.inventory.model.converter.CollectiblesInventoryConverter
 import com.tangem.features.collectibles.impl.inventory.model.converter.CollectiblesInventoryTabsConverter
@@ -130,7 +131,9 @@ internal class CollectiblesInventoryModel @Inject constructor(
     }
 
     private fun onCardClick(cardId: String) {
-        router.push(CollectiblesRoute.NftDetails(id = cardId))
+        router.push(
+            CollectiblesRoute.NftDetails(id = cardId, ownership = CollectiblesNftDetailsComponent.Ownership.Owned),
+        )
     }
 
     /** `null` until the first result arrives: the tab is still loading. */

@@ -13,6 +13,7 @@ import com.tangem.features.collectibles.impl.nftdetails.ui.CollectiblesNftDetail
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.serialization.Serializable
 
 internal class CollectiblesNftDetailsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -33,7 +34,10 @@ internal class CollectiblesNftDetailsComponent @AssistedInject constructor(
         )
     }
 
-    data class Params(val userWalletId: UserWalletId, val id: String)
+    data class Params(val userWalletId: UserWalletId, val id: String, val ownership: Ownership)
+
+    @Serializable
+    enum class Ownership { Owned, NotOwned }
 
     @AssistedFactory
     interface Factory {

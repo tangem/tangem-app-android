@@ -117,7 +117,11 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             CollectiblesRoute.Inventory -> inventoryComponentFactory.create(context = childContext)
             is CollectiblesRoute.NftDetails -> nftDetailsComponentFactory.create(
                 context = childContext,
-                params = CollectiblesNftDetailsComponent.Params(userWalletId = params.userWalletId, id = route.id),
+                params = CollectiblesNftDetailsComponent.Params(
+                    userWalletId = params.userWalletId,
+                    id = route.id,
+                    ownership = route.ownership,
+                ),
             )
         }
     }
