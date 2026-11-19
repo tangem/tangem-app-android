@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.findWireMockRequestHeaders
+import com.tangem.common.utils.findWireMockRequestQueryParamValues
 import com.tangem.common.utils.findWireMockRequestTimestamps
 import com.tangem.screens.onMarketsScreen
 import com.tangem.screens.onPolymarketMainScreen
@@ -33,6 +34,7 @@ internal const val POLYMARKET_DEPLOY_PATH = "/api/predictions/v1/wallet/deploy"
 internal const val POLYMARKET_APPROVALS_PATH = "/api/predictions/v1/wallet/approvals"
 internal const val POLYMARKET_DERIVE_KEY_PATH = "/clob.polymarket.com/auth/derive-api-key"
 internal const val POLYMARKET_CREATE_KEY_PATH = "/clob.polymarket.com/auth/api-key"
+internal const val POLYMARKET_RELAYER_NONCE_PATH = "/relayer-v2.polymarket.com/nonce"
 internal const val POLYMARKET_BRIDGE_DEPOSIT_PATH = "/bridge.polymarket.com/deposit"
 internal const val POLYMARKET_BALANCE_PATH = "/clob.polymarket.com/balance-allowance"
 
@@ -42,6 +44,71 @@ internal const val POLYMARKET_DEPOSIT_WALLET = "0x6F908B3B67b9F9C40413775fFf48b2
 internal const val POLYMARKET_DERIVED_API_KEY = "00000000-0000-4000-8000-000000000001"
 internal const val POLYMARKET_CREATED_API_KEY = "00000000-0000-4000-8000-000000000002"
 internal const val POLYMARKET_API_PASSPHRASE = "mock-polymarket-passphrase"
+internal const val POLYMARKET_RELAYER_NONCE = "7"
+private const val POLYMARKET_APPROVE_SELECTOR = "0x095ea7b3"
+private const val POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR = "0xa22cb465"
+private const val POLYMARKET_SELECTOR_LENGTH = 10
+private const val POLYMARKET_WORD_HEX_LENGTH = 64
+private const val POLYMARKET_APPROVE_DATA_LENGTH = POLYMARKET_SELECTOR_LENGTH + 2 * POLYMARKET_WORD_HEX_LENGTH
+private const val POLYMARKET_ADDRESS_HEX_LENGTH = 40
+private const val POLYMARKET_MAX_UINT256_WORD = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+private const val POLYMARKET_TRUE_WORD = "0000000000000000000000000000000000000000000000000000000000000001"
+private const val POLYMARKET_COLLATERAL = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB"
+private const val POLYMARKET_CONDITIONAL_TOKENS = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
+private const val POLYMARKET_POSITION_MANAGER = "0x006F54F7f9A22e0000CC2AB60031000000ae9fEF"
+
+private data class PolymarketApprovalCallTriple(val target: String, val selector: String, val spender: String)
+
+private fun approvalCall(selector: String, target: String, spender: String) =
+    PolymarketApprovalCallTriple(target.lowercase(), selector, spender.lowercase())
+
+private val POLYMARKET_EXPECTED_APPROVAL_CALLS = setOf(
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0xE111180000d2663C0091e4f400237545B87B996B"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0xe2222d279d744050d28e00520010520000310F59"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0xAdA100Db00Ca00073811820692005400218FcE1f"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0xadA2005600Dec949baf300f4C6120000bDB6eAab"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa"),
+    approvalCall(POLYMARKET_APPROVE_SELECTOR, POLYMARKET_COLLATERAL, "0x12121212006e4CD160D18e3f00711DA5c3372600"),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0xE111180000d2663C0091e4f400237545B87B996B",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0xe2222d279d744050d28e00520010520000310F59",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0xAdA100Db00Ca00073811820692005400218FcE1f",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0xadA2005600Dec949baf300f4C6120000bDB6eAab",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0x1000008dD9001B968442c1000017eaE6E0dA00Ba",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_CONDITIONAL_TOKENS,
+        "0x200000900045e3B6259600682756002200028933",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_POSITION_MANAGER,
+        "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa",
+    ),
+    approvalCall(
+        POLYMARKET_SET_APPROVAL_FOR_ALL_SELECTOR, POLYMARKET_POSITION_MANAGER,
+        "0x12121212006e4CD160D18e3f00711DA5c3372600",
+    ),
+)
+internal const val POLYMARKET_APPROVALS_DEADLINE_SECONDS = 600L
 
 fun BaseTestCase.openMainScreenWithPolymarketHotWallet() {
     openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
@@ -104,6 +171,78 @@ fun BaseTestCase.assertPolymarketApprovalsRequestMatchesWallet(approvalsRequests
     val actual = JSONObject(approvalsBodies.single())
     Assert.assertEquals(POLYMARKET_OWNER_ADDRESS, actual.getString("ownerAddress"))
     Assert.assertEquals(POLYMARKET_DEPOSIT_WALLET, actual.getString("depositWalletAddress"))
+}
+
+fun BaseTestCase.assertPolymarketRelayerNonceRequested(nonceRequestsBefore: Int) {
+    val addresses = findWireMockRequestQueryParamValues("GET", POLYMARKET_RELAYER_NONCE_PATH, "address")
+        .drop(nonceRequestsBefore)
+    val types = findWireMockRequestQueryParamValues("GET", POLYMARKET_RELAYER_NONCE_PATH, "type")
+        .drop(nonceRequestsBefore)
+    Assert.assertEquals("Expected one nonce request", 1, addresses.size)
+    Assert.assertEquals(POLYMARKET_OWNER_ADDRESS.lowercase(), addresses.single().lowercase())
+    Assert.assertEquals("WALLET", types.single())
+}
+
+fun BaseTestCase.assertPolymarketApprovalsNonce(approvalsRequestsBefore: Int) {
+    val nonce = singlePolymarketApprovalsRequest(approvalsRequestsBefore).getString("nonce")
+    Assert.assertEquals(POLYMARKET_RELAYER_NONCE, nonce)
+}
+
+fun BaseTestCase.assertPolymarketApprovalsDeadline(
+    approvalsRequestsBefore: Int,
+    signedNotBeforeSeconds: Long,
+    signedNotAfterSeconds: Long,
+) {
+    val deadline = singlePolymarketApprovalsRequest(approvalsRequestsBefore).getString("deadline").toLong()
+    Assert.assertTrue(
+        "Deadline $deadline must be ${POLYMARKET_APPROVALS_DEADLINE_SECONDS}s after signing",
+        deadline in (signedNotBeforeSeconds + POLYMARKET_APPROVALS_DEADLINE_SECONDS)..
+            (signedNotAfterSeconds + POLYMARKET_APPROVALS_DEADLINE_SECONDS),
+    )
+}
+
+fun BaseTestCase.assertPolymarketApprovalsCalls(approvalsRequestsBefore: Int) {
+    val calls = singlePolymarketApprovalsRequest(approvalsRequestsBefore).getJSONArray("calls")
+    val actual = List(calls.length()) { index ->
+        val call = calls.getJSONObject(index)
+        val data = call.getString("data")
+        Assert.assertEquals("Call $index value", "0", call.getString("value"))
+        val selector = data.take(POLYMARKET_SELECTOR_LENGTH)
+        val amountWord = data.drop(POLYMARKET_APPROVE_DATA_LENGTH - POLYMARKET_WORD_HEX_LENGTH)
+        val expectedWord = if (selector == POLYMARKET_APPROVE_SELECTOR) {
+            POLYMARKET_MAX_UINT256_WORD
+        } else {
+            POLYMARKET_TRUE_WORD
+        }
+        Assert.assertEquals("Call $index data length", POLYMARKET_APPROVE_DATA_LENGTH, data.length)
+        Assert.assertEquals("Call $index amount or flag", expectedWord, amountWord)
+        val spenderWord = data.substring(
+            POLYMARKET_SELECTOR_LENGTH,
+            POLYMARKET_SELECTOR_LENGTH + POLYMARKET_WORD_HEX_LENGTH,
+        )
+        PolymarketApprovalCallTriple(
+            target = call.getString("target").lowercase(),
+            selector = selector,
+            spender = "0x" + spenderWord.takeLast(POLYMARKET_ADDRESS_HEX_LENGTH),
+        )
+    }
+    Assert.assertEquals(POLYMARKET_EXPECTED_APPROVAL_CALLS.size, actual.size)
+    Assert.assertEquals(POLYMARKET_EXPECTED_APPROVAL_CALLS, actual.toSet())
+}
+
+fun BaseTestCase.assertPolymarketApprovalsSignature(approvalsRequestsBefore: Int) {
+    val signature = singlePolymarketApprovalsRequest(approvalsRequestsBefore).getString("signature")
+    Assert.assertTrue(
+        "Batch signature must be a hex string, was $signature",
+        Regex("0x[0-9a-fA-F]{130}").matches(signature),
+    )
+}
+
+private fun singlePolymarketApprovalsRequest(approvalsRequestsBefore: Int): JSONObject {
+    val bodies = findWireMockRequestBodies(method = "POST", urlPath = POLYMARKET_APPROVALS_PATH)
+        .drop(approvalsRequestsBefore)
+    Assert.assertEquals("Expected exactly one approvals request", 1, bodies.size)
+    return JSONObject(bodies.single())
 }
 
 fun BaseTestCase.assertPolymarketL1HeadersSent(method: String, urlPath: String, requestsBefore: Int) {
