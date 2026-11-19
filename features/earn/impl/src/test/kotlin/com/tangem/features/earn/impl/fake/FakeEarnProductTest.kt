@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
+import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
@@ -119,6 +120,42 @@ internal class FakeEarnProductTest {
 
     internal data class ProviderIconModel(val preset: FakeEarnProductPreset, val expectedLogo: Int) {
         override fun toString(): String = "$preset -> $expectedLogo"
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN preset WHEN product created THEN analytics carry the category and product of that preset`(
+            model: AnalyticsModel,
+        ) {
+            // Act
+            val actual = createProduct(model.preset).analytics
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedAnalytics)
+        }
+
+        private fun provideTestModels() = listOf(
+            AnalyticsModel(
+                FakeEarnProductPreset.Lending,
+                expectedAnalytics = EarnProductAnalytics(category = "ETH Lending", product = "Lending"),
+            ),
+            AnalyticsModel(
+                FakeEarnProductPreset.Staking,
+                expectedAnalytics = EarnProductAnalytics(category = "Earn", product = "Staking"),
+            ),
+            AnalyticsModel(
+                FakeEarnProductPreset.Vault,
+                expectedAnalytics = EarnProductAnalytics(category = "Earn", product = "Vault"),
+            ),
+        )
+    }
+
+    internal data class AnalyticsModel(val preset: FakeEarnProductPreset, val expectedAnalytics: EarnProductAnalytics) {
+        override fun toString(): String = "$preset -> $expectedAnalytics"
     }
 
     @Nested

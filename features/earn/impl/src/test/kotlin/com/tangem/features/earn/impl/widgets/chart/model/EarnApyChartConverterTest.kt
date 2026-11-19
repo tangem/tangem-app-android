@@ -233,10 +233,19 @@ internal class EarnApyChartConverterTest {
     }
 
     @Test
+    fun `GIVEN a callback without a calculator WHEN convert THEN there is no calculator button`() {
+        // Act
+        val actual = convert(history, params = params(callback = mockk(relaxed = true), hasCalculator = false))
+
+        // Assert
+        assertThat(actual.onCalculatorClick).isNull()
+    }
+
+    @Test
     fun `GIVEN a callback WHEN onCalculatorClick THEN the callback is called once`() {
         // Arrange
         val callback = mockk<EarnApyChartComponent.ModelCallback>(relaxed = true)
-        val actual = convert(history, params = params(callback = callback))
+        val actual = convert(history, params = params(callback = callback, hasCalculator = true))
 
         // Act
         requireNotNull(actual.onCalculatorClick).invoke()
@@ -421,12 +430,14 @@ internal class EarnApyChartConverterTest {
 
     private fun params(
         callback: EarnApyChartComponent.ModelCallback? = null,
+        hasCalculator: Boolean = false,
         rate: EarnProductRate = rate("0.055", EarnRateType.APY),
     ) = EarnApyChartComponent.Params(
         periods = periods,
         defaultPeriod = periods[2],
         history = { IllegalStateException("unused").left() },
         currentRate = MutableStateFlow(rate),
+        hasCalculator = hasCalculator,
         callback = callback,
     )
 

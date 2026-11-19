@@ -19,6 +19,9 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.logging.Severity
 import com.tangem.utils.logging.TangemLogger
+import io.mockk.clearMocks
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -51,6 +54,8 @@ internal class EarnApyChartModelTest {
         EarnPeriod(id = "6m", label = stringReference("6M")),
     )
 
+    private val callback: EarnApyChartComponent.ModelCallback = mockk(relaxed = true)
+
     private val requested = mutableListOf<String>()
     private val logs = mutableListOf<Pair<Severity, String>>()
 
@@ -58,6 +63,7 @@ internal class EarnApyChartModelTest {
 
     @BeforeEach
     fun setUp() {
+        clearMocks(callback)
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
         requested.clear()
@@ -209,6 +215,53 @@ internal class EarnApyChartModelTest {
         // Assert
         assertThat(selected).isEqualTo(1)
         assertThat(cleared).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN default 6m WHEN clicking 1m THEN onPeriodChange 1m once`() = runTest {
+        // Arrange
+        val model = createModel { historyOf(count = 3).right() }
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[0].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { callback.onPeriodChange(periods[0]) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN default 6m WHEN clicking 6m THEN no callback`() = runTest {
+        // Arrange
+        val model = createModel { historyOf(count = 3).right() }
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[2].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { callback.onPeriodChange(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 1m selected WHEN clicking 1m again THEN no second callback`() = runTest {
+        // Arrange
+        val model = createModel { historyOf(count = 3).right() }
+        advanceUntilIdle()
+        model.uiState.value.periods[0].onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[0].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { callback.onPeriodChange(periods[0]) }
         model.onDestroy()
     }
 
@@ -674,6 +727,7 @@ internal class EarnApyChartModelTest {
                 history = history,
                 currentRate = currentRate,
                 reloads = reloads,
+                callback = callback,
             ),
         ),
         converter = EarnApyChartConverter(),

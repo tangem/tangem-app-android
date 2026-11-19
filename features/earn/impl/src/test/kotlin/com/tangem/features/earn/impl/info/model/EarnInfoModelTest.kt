@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
@@ -29,10 +30,16 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
+import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.R
+import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
+import com.tangem.features.earn.impl.analytics.EarnInfoAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnUsdValuation
+import com.tangem.features.earn.impl.analytics.InfoAction
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
@@ -43,6 +50,7 @@ import com.tangem.features.earn.impl.info.EarnInfoComponent
 import com.tangem.features.earn.impl.info.ui.state.EarnInfoUM
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
+import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
@@ -50,6 +58,7 @@ import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnApyHistory
 import com.tangem.features.earn.product.api.product.EarnFreshness
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnPositionState
@@ -112,6 +121,8 @@ internal class EarnInfoModelTest {
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val isBalanceHidden = MutableStateFlow(false)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val usdValuation: EarnUsdValuation = mockk()
     private val ethereum: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val productParams = EarnProduct.Params(USER_WALLET_ID, ethereum)
     private val converter = EarnInfoConverter(actions = EarnInfoActions())
@@ -130,6 +141,8 @@ internal class EarnInfoModelTest {
             getSelectedAppCurrency,
             singleQuoteStatusFetcher,
             getBalanceHidingSettingsUseCase,
+            analyticsEventHandler,
+            usdValuation,
         )
         mockkObject(CryptoCurrencyStatusOperations)
         mockkObject(TangemLogger)
@@ -140,6 +153,7 @@ internal class EarnInfoModelTest {
         coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
         stubStatus(status())
+        coEvery { usdValuation.bucket(any(), any()) } returns null
     }
 
     @AfterEach
@@ -673,7 +687,7 @@ internal class EarnInfoModelTest {
             }
 
         @Test
-        fun `GIVEN chartParams WHEN created THEN periods and rate come from Ready, defaultPeriod is the last and callback is the model`() =
+        fun `GIVEN chartParams WHEN created THEN periods and rate come from Ready, defaultPeriod is the last, the calculator is shown and callback is the model`() =
             runTest {
                 // Arrange
                 val model = createModel()
@@ -687,6 +701,7 @@ internal class EarnInfoModelTest {
                 assertThat(params.periods).isEqualTo(ready.apyPeriods)
                 assertThat(params.defaultPeriod).isEqualTo(ready.apyPeriods.last())
                 assertThat(params.currentRate.value).isEqualTo(ready.rate)
+                assertThat(params.hasCalculator).isTrue()
                 assertThat(params.callback).isSameInstanceAs(model)
                 model.onDestroy()
             }
@@ -724,7 +739,7 @@ internal class EarnInfoModelTest {
         }
 
         @Test
-        fun `GIVEN Ready without projection WHEN chartParams THEN there is no callback and the chart hides the calculator button`() =
+        fun `GIVEN Ready without projection WHEN chartParams THEN no calculator but the model still gets period changes`() =
             runTest {
                 // Arrange
                 product.stateFlow.value = knownState().copy(projection = null)
@@ -735,7 +750,8 @@ internal class EarnInfoModelTest {
                 val params = model.chartParams()
 
                 // Assert
-                assertThat(params.callback).isNull()
+                assertThat(params.hasCalculator).isFalse()
+                assertThat(params.callback).isSameInstanceAs(model)
                 model.onDestroy()
             }
     }
@@ -774,6 +790,298 @@ internal class EarnInfoModelTest {
             assertThat(sheet.last()).isNull()
             model.onDestroy()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN Ready with a valued position and earned WHEN shown THEN Info Screen Opened with both buckets`() =
+            runTest {
+                // Arrange
+                product.stateFlow.value = product.readyState().withPosition(
+                    cryptoAmount = BigDecimal("1"),
+                    earned = BigDecimal("0.01"),
+                )
+                coEvery { usdValuation.bucket(ethereum, BigDecimal("1")) } returns "1K-5K"
+                coEvery { usdValuation.bucket(ethereum, BigDecimal("0.01")) } returns "<50"
+                val model = createModel(source = EarnEntrySource.TokenPage)
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                val expected = EarnInfoAnalyticsEvent.InfoScreenOpened(
+                    category = "ETH Lending",
+                    source = EarnEntrySource.TokenPage,
+                    positionBucket = "1K-5K",
+                    earnedBucket = "<50",
+                    currentApy = "5.50",
+                )
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnInfoAnalyticsEvent.InfoScreenOpened>()) }
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN another entry source WHEN shown THEN Info Screen Opened carries that source`() = runTest {
+            // Arrange
+            val model = createModel(source = EarnEntrySource.EarnBanner)
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            val expected = EarnInfoAnalyticsEvent.InfoScreenOpened(
+                category = "ETH Lending",
+                source = EarnEntrySource.EarnBanner,
+                positionBucket = null,
+                earnedBucket = null,
+                currentApy = "5.50",
+            )
+            verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN earned null WHEN shown THEN no Earned Bucket and earned is not valued`() = runTest {
+            // Arrange
+            product.stateFlow.value = product.readyState().withPosition(
+                cryptoAmount = BigDecimal("1"),
+                earned = null,
+            )
+            coEvery { usdValuation.bucket(ethereum, BigDecimal("1")) } returns "1K-5K"
+            val model = createModel()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            val expected = EarnInfoAnalyticsEvent.InfoScreenOpened(
+                category = "ETH Lending",
+                source = EarnEntrySource.TokenPage,
+                positionBucket = "1K-5K",
+                earnedBucket = null,
+                currentApy = "5.50",
+            )
+            verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            coVerify(exactly = 1) { usdValuation.bucket(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two Ready frames WHEN collected THEN one Info Screen Opened`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            product.stateFlow.value = product.readyState().copy(description = stringReference("changed"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnInfoAnalyticsEvent.InfoScreenOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no quote WHEN shown THEN Info Screen Opened without buckets`() = runTest {
+            // Arrange
+            coEvery { usdValuation.bucket(any(), any()) } returns null
+            val model = createModel()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            val expected = EarnInfoAnalyticsEvent.InfoScreenOpened(
+                category = "ETH Lending",
+                source = EarnEntrySource.TokenPage,
+                positionBucket = null,
+                earnedBucket = null,
+                currentApy = "5.50",
+            )
+            verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Unavailable WHEN frame THEN redirect and no Info Screen Opened`() = runTest {
+            // Arrange
+            product.stateFlow.value = EarnProductState.Unavailable
+            val model = createModel()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verifyRedirectedOnce()
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN position Unknown WHEN frame THEN redirect and no Info Screen Opened`() = runTest {
+            // Arrange
+            product.stateFlow.value = product.readyState().copy(position = EarnPositionState.Unknown)
+            val model = createModel()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verifyRedirectedOnce()
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN onPeriodChange 3m THEN Chart Period 3M`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onPeriodChange(EarnPeriod(id = "3m", label = stringReference("3M")))
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(EarnInfoAnalyticsEvent.ChartPeriod("ETH Lending", "3M")) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN onPeriodChange with an unknown period THEN no Chart Period`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onPeriodChange(EarnPeriod(id = "1y", label = stringReference("1Y")))
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnInfoAnalyticsEvent.ChartPeriod>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN Withdraw clicked THEN Info Screen Action Withdraw and the handler gets the action`() =
+            runTest {
+                // Arrange
+                val model = createModel()
+                advanceUntilIdle()
+                val withdraw = product.readyState().secondary.first().action
+
+                // Act
+                requireNotNull(model.uiState.value).secondary.first().onClick()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(EarnInfoAnalyticsEvent.InfoScreenAction("ETH Lending", InfoAction.Withdraw))
+                }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.AddFunds>()) }
+                assertThat(product.handled).containsExactly(withdraw)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN shown WHEN Deposit clicked THEN Info Screen Action Add Funds, Add Funds and the handler gets the action`() =
+            runTest {
+                // Arrange
+                val model = createModel()
+                advanceUntilIdle()
+                val deposit = product.readyState().primary.action
+
+                // Act
+                requireNotNull(model.uiState.value).primary.onClick()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(EarnInfoAnalyticsEvent.InfoScreenAction("ETH Lending", InfoAction.AddFunds))
+                }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnPickerAnalyticsEvent.AddFunds(token = ethereum.symbol, source = EarnAddFundsSource.InfoScreen),
+                    )
+                }
+                assertThat(product.handled).containsExactly(deposit)
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN shown WHEN Claim clicked THEN no action event and the handler gets the action`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+            val claim = requireNotNull(product.readyState().knownPosition().rewards).claimAction
+
+            // Act
+            requireNotNull(requireNotNull(model.uiState.value).rewards).claim.onClick()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnInfoAnalyticsEvent.InfoScreenAction>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.AddFunds>()) }
+            assertThat(product.handled).containsExactly(claim)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN onHorizonChange Year10 THEN Calculator Horizon with the product name`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onHorizonChange(EarnHorizon.Year10)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(EarnPickerAnalyticsEvent.CalculatorHorizon("Lending", EarnHorizon.Year10))
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shown WHEN onInputChange MonthlyTopUp THEN Calculator Input with the product name`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onInputChange(EarnCalculatorComponent.Input.MonthlyTopUp)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnPickerAnalyticsEvent.CalculatorInput("Lending", EarnCalculatorComponent.Input.MonthlyTopUp),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN unknown product WHEN chart and calculator callbacks fire THEN nothing is sent and nothing throws`() =
+            runTest {
+                // Arrange
+                val model = createModel(products = emptyList(), productId = EarnProductId("unknown"))
+                advanceUntilIdle()
+
+                // Act
+                model.onPeriodChange(EarnPeriod(id = "3m", label = stringReference("3M")))
+                model.onHorizonChange(EarnHorizon.Year10)
+                model.onInputChange(EarnCalculatorComponent.Input.InitialBalance)
+
+                // Assert
+                verify(exactly = 0) { analyticsEventHandler.send(any()) }
+                model.onDestroy()
+            }
+
+        private fun EarnProductState.Ready.withPosition(cryptoAmount: BigDecimal, earned: BigDecimal?) =
+            copy(
+                position = EarnPositionState.Known(
+                    knownPosition().copy(cryptoAmount = cryptoAmount, earned = earned),
+                ),
+            )
     }
 
     @Nested
@@ -1132,6 +1440,7 @@ internal class EarnInfoModelTest {
         products: List<EarnProduct> = listOf(product),
         productId: EarnProductId = product.id,
         cryptoCurrency: CryptoCurrency = ethereum,
+        source: EarnEntrySource = EarnEntrySource.TokenPage,
     ): EarnInfoModel = EarnInfoModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
@@ -1139,6 +1448,7 @@ internal class EarnInfoModelTest {
                 userWalletId = USER_WALLET_ID,
                 cryptoCurrency = cryptoCurrency,
                 productId = productId,
+                source = source,
             ),
         ),
         registry = EarnProductsRegistry(products = products.toSet(), rateSources = emptySet()),
@@ -1152,6 +1462,8 @@ internal class EarnInfoModelTest {
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
         appScope = TestAppCoroutineScope(StandardTestDispatcher(testScheduler)),
         blogUrlBuilder = blogUrlBuilder,
+        analyticsEventHandler = analyticsEventHandler,
+        usdValuation = usdValuation,
     )
 
     /** Info redirects from under a flow pushed on top of it, so the flow must stay on top. */

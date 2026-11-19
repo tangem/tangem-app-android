@@ -114,7 +114,7 @@ internal class LendingEarnProductTest {
             val actual = product.analytics
 
             // Assert
-            assertThat(actual).isEqualTo(EarnProductAnalytics(category = "Earn", product = "Lending"))
+            assertThat(actual).isEqualTo(EarnProductAnalytics(category = "ETH Lending", product = "Lending"))
         }
 
         @Test

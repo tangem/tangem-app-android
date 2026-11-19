@@ -135,7 +135,9 @@ internal class EarnApyChartConverter @Inject constructor() {
         selectedBar = null,
         isLoading = false,
         onBarSelected = onBarSelected,
-        onCalculatorClick = params.callback?.let { callback -> { callback.onCalculatorClick() } },
+        onCalculatorClick = params.callback
+            ?.takeIf { params.hasCalculator }
+            ?.let { callback -> { callback.onCalculatorClick() } },
     )
 
     private fun currentRate(rate: EarnProductRate, locale: Locale): TextReference =

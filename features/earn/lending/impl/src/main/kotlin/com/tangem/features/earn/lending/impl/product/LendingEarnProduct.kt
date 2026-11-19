@@ -57,7 +57,7 @@ internal class LendingEarnProduct @Inject constructor(
 
     override val provider: EarnProvider = lendingProvider.info
 
-    override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "Earn", product = "Lending")
+    override val analytics: EarnProductAnalytics = EarnProductAnalytics(category = "ETH Lending", product = "Lending")
 
     override val legal: EarnLegal = lendingProvider.legal
 

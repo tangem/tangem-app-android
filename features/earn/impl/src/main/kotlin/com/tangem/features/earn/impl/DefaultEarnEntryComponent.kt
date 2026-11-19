@@ -99,6 +99,7 @@ internal class DefaultEarnEntryComponent @AssistedInject constructor(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = params.cryptoCurrency,
                     productId = route.productId,
+                    source = params.source,
                 ),
             )
             is EarnFlowRoute -> createFlowChild(route = route, childContext = childContext)
