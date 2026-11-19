@@ -29,9 +29,13 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.AccountConfirmed
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ButtonAddressDoesntMatch
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ConfirmAddressScreenOpened
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
@@ -54,6 +58,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -212,6 +217,7 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<ButtonAddressDoesntMatch>()) }
         signing.complete(Unit)
     }
 
@@ -436,7 +442,8 @@ internal class JointAccountConfirmAddressModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<AccountConfirmed>()) }
     }
 
     @Test
@@ -456,6 +463,77 @@ internal class JointAccountConfirmAddressModelTest {
         }
         coVerify(exactly = 0) { confirmUseCase(account = any()) }
     }
+
+    @Test
+    fun `GIVEN confirming account WHEN model created THEN the screen opening is reported once`() = runTest {
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(ConfirmAddressScreenOpened(membersCount = 2, threshold = 2))
+        }
+    }
+
+    @Test
+    fun `GIVEN the account is not read yet WHEN model created THEN the screen opening is not reported`() = runTest {
+        // Arrange
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(emptyList())
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN shown address WHEN mismatch clicked THEN the click is reported`() = runTest {
+        // Arrange
+        coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns WalletMetaInfo(USER_WALLET_ID).right()
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onMismatchClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(ButtonAddressDoesntMatch(membersCount = 2, threshold = 2))
+        }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN backend accepts the confirmation WHEN confirm clicked THEN it is reported with the activation`(
+        model: ConfirmedModel,
+    ) = runTest {
+        // Arrange
+        coEvery { confirmUseCase(account = jointAccount) } returns
+            confirmingAccount().copy(status = model.status).right()
+        val confirmAddressModel = createModel()
+
+        // Act
+        confirmAddressModel.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                AccountConfirmed(membersCount = 2, threshold = 2, isAccountActivated = model.expectedActivated),
+            )
+        }
+    }
+
+    data class ConfirmedModel(val status: JointAccount.Status, val expectedActivated: Boolean)
+
+    private fun provideTestModels() = listOf(
+        ConfirmedModel(status = JointAccount.Status.ACTIVE, expectedActivated = true),
+        ConfirmedModel(status = JointAccount.Status.CONFIRMING, expectedActivated = false),
+    )
 
     @Test
     fun `GIVEN model created WHEN resumed THEN the joint accounts are polled for the wallet`() = runTest {
