@@ -149,28 +149,24 @@ internal class DefaultEarnRepository(
 
     override suspend fun getYieldOffers(): Either<Throwable, EarnYieldOffers> = Either.catch {
         // The same request as the Earn screen's first page with the Yield Mode filter and all networks
-        val response = getFirstEarnPage(type = YIELD_TYPE, limit = YIELD_OFFERS_LIMIT)
+        val response = getFirstEarnPage(type = EarnType.YIELD, limit = YIELD_OFFERS_LIMIT)
         EarnYieldOffers(
             total = checkNotNull(response.meta.total) { "Earn list response has no total" },
-            best = response.items.firstOrNull()?.let(EarnTokenConverter::convert),
+            best = response.items.firstNotNullOfOrNull(EarnTokenConverter::convert),
         )
     }
 
     override suspend fun getBestOffer(type: EarnType): Either<Throwable, EarnToken?> = Either.catch {
-        val apiType = when (type) {
-            EarnType.STAKING -> STAKING_TYPE
-            EarnType.YIELD -> YIELD_TYPE
-        }
-        getFirstEarnPage(type = apiType, limit = 1).items.firstOrNull()?.let(EarnTokenConverter::convert)
+        getFirstEarnPage(type = type, limit = 1).items.firstNotNullOfOrNull(EarnTokenConverter::convert)
     }
 
     /** The backend sorts the Earn list by gross APY, descending, so the first row of this page is the best offer. */
-    private suspend fun getFirstEarnPage(type: String, limit: Int): EarnListResponse = withContext(dispatchers.io) {
+    private suspend fun getFirstEarnPage(type: EarnType, limit: Int): EarnListResponse = withContext(dispatchers.io) {
         tangemTechApi.getEarnTokens(
             isForEarn = false,
             page = FIRST_PAGE.toString(),
             limit = limit,
-            type = type,
+            type = type.name.lowercase(),
             apyType = GROSS_APY_TYPE,
         ).getOrThrow()
     }
@@ -190,13 +186,14 @@ internal class DefaultEarnRepository(
 
     private fun List<EarnResponse>.toEarnTokens(userWallet: UserWallet): List<EarnTokenWithCurrency> {
         return mapNotNull { dto ->
+            val earnToken = EarnTokenConverter.convert(dto) ?: return@mapNotNull null
             createCryptoCurrencyForEarnToken(
                 cryptoCurrencyFactory = cryptoCurrencyFactory,
                 userWallet = userWallet,
                 earnToken = dto,
             )?.let { cryptoCurrency ->
                 EarnTokenWithCurrency(
-                    earnToken = EarnTokenConverter.convert(dto),
+                    earnToken = earnToken,
                     cryptoCurrency = cryptoCurrency,
                     networkName = Blockchain.fromNetworkId(dto.networkId)?.fullName.orEmpty(),
                 )
@@ -209,8 +206,6 @@ internal class DefaultEarnRepository(
         private const val INITIAL_BATCH_KEY = 0
         private const val CATALOG_PAGE_SIZE = 50
         private const val YIELD_OFFERS_LIMIT = 20
-        private const val STAKING_TYPE = "staking"
-        private const val YIELD_TYPE = "yield"
         private const val GROSS_APY_TYPE = "gross"
     }
 }

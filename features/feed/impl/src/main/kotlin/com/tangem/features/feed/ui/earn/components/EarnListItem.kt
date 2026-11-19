@@ -118,7 +118,9 @@ private fun ModeBlock(earnType: EarnType, earnTypeTitle: TextReference, modifier
             imageVector = ImageVector.vectorResource(
                 id = when (earnType) {
                     EarnType.STAKING -> R.drawable.ic_staking_new_16
-                    EarnType.YIELD -> R.drawable.ic_yield_mode_16
+                    EarnType.YIELD,
+                    EarnType.VAULT,
+                    -> R.drawable.ic_yield_mode_16
                 },
             ),
             tint = TangemTheme.colors3.icon.secondary,

@@ -62,6 +62,7 @@ internal class ForYouEarnOpportunitiesTopTokenRowConverter(
                         when (earnToken.type) {
                             EarnType.STAKING -> R.string.common_staking
                             EarnType.YIELD -> R.string.common_yield_mode
+                            EarnType.VAULT -> R.string.common_vaults
                         },
                     ),
                 ),
@@ -80,6 +81,7 @@ internal class ForYouEarnOpportunitiesTopTokenRowConverter(
                             apy = earnToken.apy,
                             rewardType = earnToken.rewardType,
                         )
+                        EarnType.VAULT -> return@Content
                     }
                     onTokenClick(
                         null,

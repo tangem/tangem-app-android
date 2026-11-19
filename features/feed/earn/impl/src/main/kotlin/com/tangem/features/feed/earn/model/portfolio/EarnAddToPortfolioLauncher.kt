@@ -141,6 +141,7 @@ internal class EarnAddToPortfolioLauncher(
             when (earnType) {
                 EarnType.STAKING -> stakingRoute(userWalletId, currency)
                 EarnType.YIELD -> yieldRoute(userWalletId, currency)
+                EarnType.VAULT -> vaultRoute(userWalletId, currency)
             }
         } else {
             null
@@ -155,6 +156,15 @@ internal class EarnAddToPortfolioLauncher(
             userWalletId = userWalletId,
             cryptoCurrency = currency,
             integrationId = option.integrationId,
+        )
+    }
+
+    private fun vaultRoute(userWalletId: UserWalletId, currency: CryptoCurrency): AppRoute? {
+        if (!earnFeatureToggles.isEarnEnabled) return null
+        return AppRoute.EarnEntry(
+            userWalletId = userWalletId,
+            cryptoCurrency = currency,
+            source = AppRoute.EarnEntry.Source.Markets,
         )
     }
 

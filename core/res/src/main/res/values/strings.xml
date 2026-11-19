@@ -715,6 +715,7 @@
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
   <string name="common_value_copied">Value copied</string>
+  <string name="common_vaults">Vaults</string>
   <string name="common_view_all">View all</string>
   <string name="common_voting">Voting</string>
   <string name="common_wallet">Wallet</string>
@@ -854,6 +855,7 @@
   <string name="earn_filter_my_networks">My networks</string>
   <string name="earn_filter_networks">Networks</string>
   <string name="earn_filter_staking_type_text">Lock tokens to secure a network</string>
+  <string name="earn_filter_vaults_type_text">Deposit into segregated DeFi yield products</string>
   <string name="earn_filter_yield_type_text">Lend to DeFi protocols</string>
   <string name="earn_get_token_buy_subtitle">Card or bank, via trusted partner</string>
   <string name="earn_get_token_buy_title">Buy %s</string>
@@ -1873,7 +1875,7 @@
   <string name="money_account_onboarding_terms_notice">By using the service, you agree to the provider’s %1$s</string>
   <string name="money_account_onboarding_title">Get a USD account</string>
   <string name="money_account_onboarding_transfers_card_caption">Money in. Money out.</string>
-  <string name="money_account_onboarding_transfers_card_subtitle">with a dedicated account with banking details</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">with dedicated account details</string>
   <string name="money_account_onboarding_transfers_card_title">Send and receive fiat payments</string>
   <string name="money_account_send_bank_transfer_unavailable">Unavailable</string>
   <string name="money_account_send_conversion">Conversion</string>
@@ -3251,7 +3253,7 @@
   <string name="tangempay_action_required_title">Action required</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_bank_transfer_creating_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours</string>
-  <string name="tangempay_bank_transfer_creating_title">Creating your banking details</string>
+  <string name="tangempay_bank_transfer_creating_title">Creating your account details</string>
   <string name="tangempay_bank_transfer_details_conversion_notice">Received %s will be converted to USD</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">Daily deposits</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">If you want to deposit more than %s – contact support</string>
@@ -3262,7 +3264,7 @@
   <string name="tangempay_bank_transfer_details_minimum_deposit">Minimum deposit</string>
   <string name="tangempay_bank_transfer_details_rate_disclaimer">Indicative rate. A deposit is credited at the rate on the day it arrives</string>
   <string name="tangempay_bank_transfer_details_reference_warning">Include the reference in the transfer. Without it, the deposit may not be credited</string>
-  <string name="tangempay_bank_transfer_failed_title">Failed to create banking details</string>
+  <string name="tangempay_bank_transfer_failed_title">Failed to create account details</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Tap to reload</string>
   <string name="tangempay_bank_transfer_fee_error_title">Error loading fee info</string>
@@ -3273,11 +3275,11 @@
   <string name="tangempay_bank_transfer_legal">By using this service, you agree to the provider’s %1$s</string>
   <string name="tangempay_bank_transfer_onboarding_description">Send and receive fiat USD bank transfers. USD will be converted to USDC by 1:1 rate.</string>
   <string name="tangempay_bank_transfer_onboarding_fee_header">Fee information</string>
-  <string name="tangempay_bank_transfer_onboarding_title">Get US-banking details</string>
+  <string name="tangempay_bank_transfer_onboarding_title">Get US account details</string>
   <string name="tangempay_bank_transfer_request_sent">Request sent</string>
   <string name="tangempay_bank_transfer_show_details">Show details</string>
   <string name="tangempay_bank_transfer_success_subtitle">This may take a little time</string>
-  <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
+  <string name="tangempay_bank_transfer_success_title">Preparing your account details</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT transfers are not accepted and will be returned</string>
   <string name="tangempay_bank_transfer_terms_of_use">Terms of Service</string>
   <string name="tangempay_campaign_cashback_description">For all purchases. Paid in USDC — not in points or obscure tokens</string>
@@ -3689,7 +3691,7 @@
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Receive USD from a US bank account via ACH</string>
-  <string name="tangempay_topup_bank_transfer_pending_body">Creating your banking details...</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">Creating your account details...</string>
   <string name="tangempay_topup_bank_transfer_title">From a bank account</string>
   <string name="tangempay_topup_receive_body_multichain">Send USDC or USDT to your account’s address</string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
@@ -3726,9 +3728,9 @@
   <string name="tangempay_va_account_details">Account details</string>
   <string name="tangempay_va_available_to_deposit_day">Available to deposit per day:</string>
   <string name="tangempay_va_banking_details_error_description">Please try again or contact support if the issue persists</string>
-  <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
+  <string name="tangempay_va_banking_details_error_title">Couldn\'t load account details</string>
   <string name="tangempay_va_banner_failed_description">Please try again or contact support if the issue persists</string>
-  <string name="tangempay_va_banner_failed_title">Failed to create banking details</string>
+  <string name="tangempay_va_banner_failed_title">Failed to create account details</string>
   <string name="tangempay_va_limit_resetting_everyday">Limit resets every day</string>
   <string name="tangempay_verified_badge_available">Available</string>
   <string name="tangempay_verified_choose_plan">Choose plan</string>

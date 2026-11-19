@@ -6,16 +6,18 @@ import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.models.earn.EarnNetwork
 import com.tangem.domain.models.earn.EarnNetworks
+import com.tangem.domain.models.earn.EarnType
 
 internal fun createEarnTokensListConfig(
     filter: EarnFilter?,
     earnNetworks: EarnNetworks?,
+    isVaultsIncluded: Boolean,
     isForEarn: Boolean = false,
 ): EarnTokensListConfig {
     val type = when (filter?.earnFilterType) {
         null, EarnFilterType.ALL -> null
-        EarnFilterType.STAKING -> "staking"
-        EarnFilterType.YIELD -> "yield"
+        EarnFilterType.STAKING -> EarnType.STAKING
+        EarnFilterType.YIELD -> EarnType.YIELD
     }
     val networks = when (val network = filter?.earnFilterNetwork) {
         null, is EarnFilterNetwork.AllNetworks -> null
@@ -36,6 +38,7 @@ internal fun createEarnTokensListConfig(
         type = type,
         networks = networks,
         isForEarn = isForEarn,
+        isVaultsIncluded = isVaultsIncluded,
     )
 }
 

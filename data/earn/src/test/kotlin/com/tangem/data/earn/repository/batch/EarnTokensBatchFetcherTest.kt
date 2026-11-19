@@ -5,13 +5,13 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.data.earn.createEarnResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.EarnListResponse
-import com.tangem.datasource.api.tangemTech.models.EarnResponse
-import com.tangem.datasource.api.tangemTech.models.EarnTokenResponse
 import com.tangem.datasource.api.tangemTech.models.MetaEarnListResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.model.EarnTokensListConfig
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.pagination.BatchFetchResult
 import io.mockk.MockKMatcherScope
@@ -123,6 +123,34 @@ internal class EarnTokensBatchFetcherTest {
         }
 
     @Test
+    fun `GIVEN vaults included WHEN a page is fetched THEN only rows of an unknown type are dropped`() = runTest {
+        // Arrange
+        coEvery { getEarnTokensWithApyType() } returns pageOfMixedTypes()
+
+        // Act
+        val result = fetcher.fetchFirst(config(isVaultsIncluded = true)) as BatchFetchResult.Success
+
+        // Assert
+        assertThat(result.data.map { it.earnToken.tokenId to it.earnToken.type })
+            .containsExactly("tether" to EarnType.YIELD, "ethereum" to EarnType.VAULT)
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN vaults left out WHEN a page is fetched THEN vault rows are dropped too`() = runTest {
+        // Arrange
+        coEvery { getEarnTokensWithApyType() } returns pageOfMixedTypes()
+
+        // Act
+        val result = fetcher.fetchFirst(config(isVaultsIncluded = false)) as BatchFetchResult.Success
+
+        // Assert
+        assertThat(result.data.map { it.earnToken.tokenId to it.earnToken.type })
+            .containsExactly("tether" to EarnType.YIELD)
+        assertThat(result.isLast).isFalse()
+    }
+
+    @Test
     fun `GIVEN a token returned on two pages WHEN the next page is fetched THEN it drops the token`() = runTest {
         // Arrange
         coEvery { getEarnTokensWithApyType() } returnsMany listOf(
@@ -158,7 +186,18 @@ internal class EarnTokensBatchFetcherTest {
         assertThat(result.data.map { it.earnToken.tokenId }).containsExactly("tether", "usd-coin").inOrder()
     }
 
-    private fun config() = EarnTokensListConfig(type = null, networks = null, isForEarn = false)
+    private fun config(isVaultsIncluded: Boolean = false) = EarnTokensListConfig(
+        type = null,
+        networks = null,
+        isForEarn = false,
+        isVaultsIncluded = isVaultsIncluded,
+    )
+
+    private fun pageOfMixedTypes() = page(
+        hasNext = true,
+        tokenIds = listOf("tether", "ethereum", "usd-coin"),
+        types = listOf("yield", "vault", "future-type"),
+    )
 
     private fun page(
         hasNext: Boolean?,
@@ -167,22 +206,20 @@ internal class EarnTokensBatchFetcherTest {
         networkId: String = "ethereum",
         tokenIds: List<String> = List(itemCount) { index -> "usd-coin-$index" },
         pageNumber: Int = 1,
+        types: List<String> = List(tokenIds.size) { "yield" },
     ): ApiResponse<EarnListResponse> = ApiResponse.Success(
         data = EarnListResponse(
             meta = MetaEarnListResponse(page = pageNumber, limit = serverLimit, total = 51, hasNext = hasNext),
             items = tokenIds.mapIndexed { index, tokenId ->
-                EarnResponse(
+                createEarnResponse(
                     apy = "0.038400",
                     networkId = networkId,
-                    rewardType = "apy",
-                    type = "yield",
-                    token = EarnTokenResponse(
-                        id = tokenId,
-                        symbol = "USDC",
-                        name = "USDC",
-                        address = "0xabc$index",
-                        decimalCount = 6,
-                    ),
+                    type = types[index],
+                    tokenId = tokenId,
+                    tokenSymbol = "USDC",
+                    tokenName = "USDC",
+                    tokenAddress = "0xabc$index",
+                    decimalCount = 6,
                 )
             },
         ),

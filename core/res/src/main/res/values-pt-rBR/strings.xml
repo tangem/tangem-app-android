@@ -1851,7 +1851,7 @@
   <string name="money_account_onboarding_terms_notice">Ao usar o serviço, você aceita os %1$s do provedor</string>
   <string name="money_account_onboarding_title">Obtenha uma conta em USD</string>
   <string name="money_account_onboarding_transfers_card_caption">Dinheiro entrando. Dinheiro saindo.</string>
-  <string name="money_account_onboarding_transfers_card_subtitle">com uma conta dedicada com dados bancários</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">com dados de conta dedicados</string>
   <string name="money_account_onboarding_transfers_card_title">Envie e receba pagamentos em moeda fiduciária</string>
   <string name="money_account_send_bank_transfer_unavailable">Indisponível</string>
   <string name="money_account_send_conversion">Conversão</string>
@@ -2165,6 +2165,7 @@
   <string name="prediction_balance_total">Saldo total</string>
   <string name="prediction_balance_withdraw">Sacar</string>
   <string name="prediction_cash_out">Sacar</string>
+  <string name="prediction_chart_load_error">Não foi possível carregar o gráfico.\nToque para recarregar.</string>
   <string name="prediction_claim_error_failed">O resgate não foi concluído. Nenhum valor saiu da conta, e você pode tentar novamente.</string>
   <string name="prediction_claim_error_generic">O resgate não pôde ser enviado. Por favor, tente novamente.</string>
   <string name="prediction_claim_error_not_found">Não há nenhum registro desta reivindicação.</string>
@@ -2206,6 +2207,12 @@
   <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_feed_banner_caption">Explore os mercados</string>
   <string name="prediction_feed_banner_message">Faça previsões sobre os acontecimentos de última hora de hoje</string>
+  <string name="prediction_filter_15m">15m</string>
+  <string name="prediction_filter_1h">1h</string>
+  <string name="prediction_filter_4h">4h</string>
+  <string name="prediction_filter_5m">5m</string>
+  <string name="prediction_filter_daily">Diários</string>
+  <string name="prediction_filter_future">Futuros</string>
   <string name="prediction_filter_games">Jogos</string>
   <string name="prediction_filter_questions">Perguntas</string>
   <string name="prediction_history_bought">Comprado</string>
@@ -2375,6 +2382,7 @@
   <string name="prediction_position_result_split_title">Divisão %s</string>
   <string name="prediction_position_result_won_title">Você ganhou %s</string>
   <string name="prediction_positions_active">Ativas</string>
+  <string name="prediction_positions_active_count">Posições ativas: %s</string>
   <string name="prediction_positions_closed">Encerrado</string>
   <string name="prediction_positions_closure_date">Data de encerramento</string>
   <string name="prediction_positions_current_value">Valor atual</string>
@@ -2411,6 +2419,7 @@
   <string name="prediction_positions_unknown">Desconhecido</string>
   <string name="prediction_positions_unrealized_description">A variação no valor das ações que você ainda possui.</string>
   <string name="prediction_positions_unrealized_pnl">L&amp;P não realizado</string>
+  <string name="prediction_positions_value">Valor das posições</string>
   <string name="prediction_positions_view_all_active">Ver todas as posições ativas</string>
   <string name="prediction_positions_won">Vencido</string>
   <string name="prediction_region_restrictions_subtitle">As previsões não estão disponíveis na sua região com base no seu endereço IP. Você ainda pode visualizar os eventos.</string>
@@ -3133,7 +3142,7 @@
   <string name="tangempay_action_required_title">Ação necessária</string>
   <string name="tangempay_available_balance">Saldo disponível</string>
   <string name="tangempay_bank_transfer_creating_description">Normalmente, leva até 5 minutos. Em casos raros, até 48 horas</string>
-  <string name="tangempay_bank_transfer_creating_title">Criando seus dados bancários</string>
+  <string name="tangempay_bank_transfer_creating_title">Criando seus dados de conta</string>
   <string name="tangempay_bank_transfer_details_conversion_notice">O valor recebido em %s será convertido para USD</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">Depósitos diários</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Se quiser depositar mais de %s, entre em contato com o suporte</string>
@@ -3143,7 +3152,7 @@
   <string name="tangempay_bank_transfer_details_minimum_deposit">Depósito mínimo</string>
   <string name="tangempay_bank_transfer_details_rate_disclaimer">Taxa de câmbio indicativa. O depósito será creditado pela taxa de câmbio vigente no dia em que for recebido</string>
   <string name="tangempay_bank_transfer_details_reference_warning">Inclua a referência na transferência. Sem ela, o depósito poderá não ser creditado</string>
-  <string name="tangempay_bank_transfer_failed_title">Não foi possível criar seus dados bancários</string>
+  <string name="tangempay_bank_transfer_failed_title">Não foi possível criar os dados da conta</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Toque para recarregar</string>
   <string name="tangempay_bank_transfer_fee_error_title">Erro ao carregar as informações sobre a taxa</string>
@@ -3154,11 +3163,11 @@
   <string name="tangempay_bank_transfer_legal">Ao utilizar o serviço, você concorda com o provedor %1$s</string>
   <string name="tangempay_bank_transfer_onboarding_description">Envie e receba transferências bancárias em USD. O USD será convertido em USDC à taxa de 1:1.</string>
   <string name="tangempay_bank_transfer_onboarding_fee_header">Informações sobre as taxas</string>
-  <string name="tangempay_bank_transfer_onboarding_title">Obtenha dados bancários dos EUA</string>
+  <string name="tangempay_bank_transfer_onboarding_title">Obtenha dados de conta nos EUA</string>
   <string name="tangempay_bank_transfer_request_sent">Solicitação enviada</string>
   <string name="tangempay_bank_transfer_show_details">Mostrar detalhes</string>
   <string name="tangempay_bank_transfer_success_subtitle">Isso pode levar um pouco de tempo</string>
-  <string name="tangempay_bank_transfer_success_title">Preparando seus dados bancários</string>
+  <string name="tangempay_bank_transfer_success_title">Preparando seus dados de conta</string>
   <string name="tangempay_bank_transfer_swift_warning">Transferências via SWIFT não são aceitas e serão devolvidas</string>
   <string name="tangempay_bank_transfer_terms_of_use">Termos de Serviço</string>
   <string name="tangempay_campaign_cashback_description">Para todas as compras. Pago em USDC — não em pontos ou tokens pouco conhecidos</string>
@@ -3570,7 +3579,7 @@
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária dos EUA via ACH</string>
-  <string name="tangempay_topup_bank_transfer_pending_body">Criando seus dados bancários...</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">Criando seus dados de conta...</string>
   <string name="tangempay_topup_bank_transfer_title">De uma conta bancária</string>
   <string name="tangempay_topup_receive_body_multichain">Envie USDC ou USDT para o endereço da sua conta</string>
   <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
@@ -3604,12 +3613,12 @@
   <string name="tangempay_unified_onboarding_plan_title">%1$s O Plus inclui ambos e oferece muito mais</string>
   <string name="tangempay_unified_onboarding_terms_button">Termos e taxas</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
-  <string name="tangempay_va_account_details">Detalhes da conta</string>
+  <string name="tangempay_va_account_details">Dados da conta</string>
   <string name="tangempay_va_available_to_deposit_day">Disponível para depósito diário:</string>
   <string name="tangempay_va_banking_details_error_description">Tente novamente ou entre em contato com o suporte se o problema persistir</string>
-  <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários</string>
+  <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados da conta</string>
   <string name="tangempay_va_banner_failed_description">Por favor, tente novamente ou entre em contato com o suporte se o problema persistir</string>
-  <string name="tangempay_va_banner_failed_title">Não foi possível criar seus dados bancários</string>
+  <string name="tangempay_va_banner_failed_title">Não foi possível criar os dados da conta</string>
   <string name="tangempay_va_limit_resetting_everyday">O limite é reiniciado todos os dias</string>
   <string name="tangempay_verified_badge_available">Disponível</string>
   <string name="tangempay_verified_choose_plan">Escolher plano</string>

@@ -11,6 +11,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.EarnResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.model.EarnTokensListConfig
+import com.tangem.domain.earn.model.withVaultsIf
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.pagination.BatchFetchResult
@@ -86,7 +87,7 @@ internal class EarnTokensBatchFetcher(
         val distinctPage = distinctPages.startPage(isFirstPage = page == FIRST_PAGE)
 
         fun createEarnTokenWithCurrency(userWallet: UserWallet, dto: EarnResponse): EarnTokenWithCurrency? {
-            val earnToken = EarnTokenConverter.convert(dto)
+            val earnToken = EarnTokenConverter.convert(dto) ?: return null
             val cryptoCurrency = createCryptoCurrencyForEarnToken(
                 cryptoCurrencyFactory = cryptoCurrencyFactory,
                 userWallet = userWallet,
@@ -106,7 +107,7 @@ internal class EarnTokensBatchFetcher(
             isForEarn = params.isForEarn,
             page = page.toString(),
             limit = limit,
-            type = params.type,
+            type = params.type?.name?.lowercase(),
             networks = params.networks,
             apyType = apyType,
         ).getOrThrow()
@@ -117,9 +118,9 @@ internal class EarnTokensBatchFetcher(
             emptyList()
         } else {
             distinctPage.distinct(
-                response.items.mapNotNull { dto ->
-                    createEarnTokenWithCurrency(userWallet, dto)
-                },
+                response.items
+                    .mapNotNull { dto -> createEarnTokenWithCurrency(userWallet, dto) }
+                    .withVaultsIf(params.isVaultsIncluded),
             )
         }
 

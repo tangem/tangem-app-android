@@ -13,6 +13,7 @@ import com.tangem.domain.models.earn.EarnNetwork
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.earn.api.EarnFeatureToggles
@@ -124,7 +125,12 @@ internal class EarnFeedTabModelTest {
         // Assert
         assertThat(dispatchedActions.last()).isEqualTo(
             BatchAction.Reload(
-                requestParams = EarnTokensListConfig(type = "yield", networks = null, isForEarn = false),
+                requestParams = EarnTokensListConfig(
+                    type = EarnType.YIELD,
+                    networks = null,
+                    isForEarn = false,
+                    isVaultsIncluded = false,
+                ),
             ),
         )
         assertThat(underTest.state.value).isNotNull()
@@ -160,13 +166,19 @@ internal class EarnFeedTabModelTest {
         assertThat(dispatchedActions.filterIsInstance<BatchAction.Reload<EarnTokensListConfig>>())
             .containsExactly(
                 BatchAction.Reload(
-                    requestParams = EarnTokensListConfig(type = null, networks = listOf("-1"), isForEarn = false),
+                    requestParams = EarnTokensListConfig(
+                        type = null,
+                        networks = listOf("-1"),
+                        isForEarn = false,
+                        isVaultsIncluded = false,
+                    ),
                 ),
                 BatchAction.Reload(
                     requestParams = EarnTokensListConfig(
                         type = null,
                         networks = listOf("ethereum"),
                         isForEarn = false,
+                        isVaultsIncluded = false,
                     ),
                 ),
             )
@@ -532,7 +544,7 @@ internal class EarnFeedTabModelTest {
         coEvery { fetchTopEarnTokensUseCase(any()) } returns Unit.right()
         coEvery { setEarnFilterUseCase(any()) } returns Unit
         every { getEarnNetworksUseCase() } returns networksFlow
-        every { getTopEarnTokensUseCase() } returns topTokensFlow
+        every { getTopEarnTokensUseCase(isVaultsIncluded = any()) } returns topTokensFlow
         every { getEarnFilterUseCase() } returns filterFlow
 
         every { getEarnTokensBatchFlowUseCase(capture(contextSlot), any()) } answers {

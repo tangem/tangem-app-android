@@ -79,7 +79,7 @@ internal class EarnBlockModelTest {
         every { userWalletsListRepository.userWallets } returns wallets
         every { multiAccountStatusListSupplier.invokeAsMap() } returns accountsByWallet
         every { yieldSupplyApyFlowUseCase() } returns yieldSupplyApy
-        every { getTopEarnTokensUseCase() } returns topEarnTokens
+        every { getTopEarnTokensUseCase(isVaultsIncluded = any()) } returns topEarnTokens
         coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns emptyMap()
     }
 
@@ -186,6 +186,7 @@ internal class EarnBlockModelTest {
         stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
         yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
         getTopEarnTokensUseCase = getTopEarnTokensUseCase,
+        earnFeatureToggles = mockk(relaxed = true),
     )
 
     private fun wallet(id: UserWalletId, isLocked: Boolean = false): UserWallet = mockk<UserWallet.Hot> {

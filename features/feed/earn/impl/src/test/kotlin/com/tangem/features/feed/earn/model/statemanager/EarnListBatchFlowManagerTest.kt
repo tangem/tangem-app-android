@@ -6,6 +6,7 @@ import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.earn.createEarnCurrency
 import com.tangem.features.feed.earn.createEarnToken
 import com.tangem.features.feed.earn.createEarnTokenWithCurrency
@@ -232,7 +233,12 @@ internal class EarnListBatchFlowManagerTest {
     @Test
     fun `GIVEN a config WHEN reload is called THEN the source is asked to start over with it`() = runTest {
         // Arrange
-        val config = EarnTokensListConfig(type = "staking", networks = listOf("ethereum"), isForEarn = false)
+        val config = EarnTokensListConfig(
+            type = EarnType.STAKING,
+            networks = listOf("ethereum"),
+            isForEarn = false,
+            isVaultsIncluded = false,
+        )
         val manager = createManager(config = config)
         advanceUntilIdle()
 
@@ -247,10 +253,15 @@ internal class EarnListBatchFlowManagerTest {
     @Test
     fun `GIVEN the config changed WHEN reload is called THEN the current config is used`() = runTest {
         // Arrange — the manager reads the config through a provider, so a filter change must be picked up
-        var config = EarnTokensListConfig(type = null, networks = null, isForEarn = false)
+        var config = EarnTokensListConfig(type = null, networks = null, isForEarn = false, isVaultsIncluded = false)
         val manager = createManager(configProvider = Provider { config })
         advanceUntilIdle()
-        config = EarnTokensListConfig(type = "yield", networks = null, isForEarn = false)
+        config = EarnTokensListConfig(
+            type = EarnType.YIELD,
+            networks = null,
+            isForEarn = false,
+            isVaultsIncluded = false,
+        )
 
         // Act
         manager.reload()
@@ -302,7 +313,12 @@ internal class EarnListBatchFlowManagerTest {
         }
 
     private fun TestScope.createManager(
-        config: EarnTokensListConfig = EarnTokensListConfig(type = null, networks = null, isForEarn = false),
+        config: EarnTokensListConfig = EarnTokensListConfig(
+            type = null,
+            networks = null,
+            isForEarn = false,
+            isVaultsIncluded = false,
+        ),
         configProvider: Provider<EarnTokensListConfig> = Provider { config },
     ): EarnListBatchFlowManager {
         every { getEarnTokensBatchFlowUseCase(capture(contextSlot), any()) } answers {

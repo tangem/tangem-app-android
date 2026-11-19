@@ -1597,7 +1597,7 @@
   <string name="money_account_onboarding_terms_notice">Користуючись сервісом, ви приймаєте %1$s провайдера</string>
   <string name="money_account_onboarding_title">Відкрийте рахунок у USD</string>
   <string name="money_account_onboarding_transfers_card_caption">Поповнення. Виведення.</string>
-  <string name="money_account_onboarding_transfers_card_subtitle">з окремим рахунком і банківськими реквізитами</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">з власними реквізитами рахунку</string>
   <string name="money_account_onboarding_transfers_card_title">Надсилайте й отримуйте фіатні платежі</string>
   <string name="money_account_send_bank_transfer_unavailable">Недоступно</string>
   <string name="money_account_send_fees_footer">Комісії включають плату за сервіс %s і розрахункову комісію мережі</string>
@@ -2773,11 +2773,12 @@
   <string name="tangempay_action_required_title">Потрібна дія</string>
   <string name="tangempay_available_balance">Баланс</string>
   <string name="tangempay_bank_transfer_creating_description">Зазвичай це займає до 5 хвилин. Іноді — до 48 годин</string>
-  <string name="tangempay_bank_transfer_creating_title">Створюємо ваші банківські реквізити</string>
+  <string name="tangempay_bank_transfer_creating_title">Створюємо ваші реквізити рахунку</string>
   <string name="tangempay_bank_transfer_details_daily_deposits">Денні поповнення</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Щоб поповнити більш ніж на %s, зверніться до служби підтримки</string>
   <string name="tangempay_bank_transfer_details_fee_header">Способи поповнення та комісії</string>
   <string name="tangempay_bank_transfer_details_limitations">Обмеження</string>
+  <string name="tangempay_bank_transfer_failed_title">Не вдалося створити реквізити рахунку</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Натисніть, щоб оновити</string>
   <string name="tangempay_bank_transfer_fee_error_title">Не вдалося завантажити інформацію про комісію</string>
@@ -2788,11 +2789,11 @@
   <string name="tangempay_bank_transfer_legal">Використовуючи сервіс, ви погоджуєтеся з %1$s</string>
   <string name="tangempay_bank_transfer_onboarding_description">Надсилайте й отримуйте банківські перекази в доларах США. USD буде конвертовано в USDC за курсом 1:1.</string>
   <string name="tangempay_bank_transfer_onboarding_fee_header">Інформація про комісії</string>
-  <string name="tangempay_bank_transfer_onboarding_title">Отримайте банківські реквізити США</string>
+  <string name="tangempay_bank_transfer_onboarding_title">Отримайте реквізити рахунку в США</string>
   <string name="tangempay_bank_transfer_request_sent">Запит надіслано</string>
   <string name="tangempay_bank_transfer_show_details">Показати деталі</string>
   <string name="tangempay_bank_transfer_success_subtitle">Це може зайняти певний час</string>
-  <string name="tangempay_bank_transfer_success_title">Підготовка ваших банківських реквізитів</string>
+  <string name="tangempay_bank_transfer_success_title">Готуємо ваші реквізити рахунку</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT-перекази не приймаються, кошти буде повернено</string>
   <string name="tangempay_bank_transfer_terms_of_use">Умови обслуговування</string>
   <string name="tangempay_campaign_cashback_description">За всі покупки. Виплачується в USDC — не в балах і не в маловідомих токенах</string>
@@ -3205,7 +3206,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Отримати USD з рахунку в банку США через ACH</string>
-  <string name="tangempay_topup_bank_transfer_pending_body">Створюємо ваші банківські реквізити...</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">Створюємо ваші реквізити рахунку...</string>
   <string name="tangempay_topup_bank_transfer_title">З банківського рахунку</string>
   <string name="tangempay_topup_receive_body_multichain">Надішліть USDC або USDT на адресу вашого рахунку</string>
   <string name="tangempay_topup_receive_title">З іншого гаманця або біржі</string>
@@ -3242,9 +3243,9 @@
   <string name="tangempay_va_account_details">Реквізити рахунку</string>
   <string name="tangempay_va_available_to_deposit_day">Ліміт на день:</string>
   <string name="tangempay_va_banking_details_error_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема повториться</string>
-  <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити банківські реквізити</string>
+  <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити реквізити рахунку</string>
   <string name="tangempay_va_banner_failed_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема не зникне</string>
-  <string name="tangempay_va_banner_failed_title">Не вдалося створити банківські реквізити</string>
+  <string name="tangempay_va_banner_failed_title">Не вдалося створити реквізити рахунку</string>
   <string name="tangempay_va_limit_resetting_everyday">Ліміт оновлюється щодня</string>
   <string name="tangempay_verified_badge_available">Доступно</string>
   <string name="tangempay_verified_choose_plan">Обрати тариф</string>
