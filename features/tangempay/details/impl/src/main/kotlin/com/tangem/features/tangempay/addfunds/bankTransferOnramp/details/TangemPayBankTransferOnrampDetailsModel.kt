@@ -11,6 +11,7 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
@@ -47,6 +48,12 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     private val requisitesConverter = TangemPayBankTransferOnrampRequisitesUMConverter(onCopyClick = ::onCopyClick)
     private val dailyDepositLimitConverter = TangemPayDailyDepositLimitUMConverter()
 
+    private var selectedIndex = 0
+
+    private val shownIndices = mutableSetOf<Int>()
+
+    private val selectedCredentials: BankCredentials get() = params.bankCredentials[selectedIndex]
+
     val uiState: StateFlow<TangemPayBankTransferOnrampDetailsScreenUM>
         field = MutableStateFlow(
             TangemPayBankTransferOnrampDetailsScreenUM(
@@ -58,11 +65,11 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
                 dailyDepositLimit = null,
                 onShareClick = ::onShareClick,
                 onCloseClick = ::onCloseClick,
-            ).withSelectedRoute(index = 0),
+            ).withSelectedRoute(index = selectedIndex),
         )
 
     init {
-        params.analytics.onDetailsShown()
+        reportSelectedShown()
         val feeSource = params.feeSource
         if (feeSource is FeeSource.Catalogue) loadCatalogueFees(feeSource.product)
     }
@@ -85,7 +92,14 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     }
 
     private fun onTabClick(index: Int) {
+        if (index == selectedIndex) return
+        selectedIndex = index
         uiState.update { state -> state.withSelectedRoute(index) }
+        reportSelectedShown()
+    }
+
+    private fun reportSelectedShown() {
+        if (shownIndices.add(selectedIndex)) params.analytics.onDetailsShown(selectedCredentials)
     }
 
     private fun TangemPayBankTransferOnrampDetailsScreenUM.withSelectedRoute(
@@ -125,12 +139,12 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     }
 
     private fun onCopyClick(field: RequisiteField, value: String) {
-        params.analytics.onFieldCopied(field)
+        params.analytics.onFieldCopied(field = field, credentials = selectedCredentials)
         clipboardManager.setText(text = value, isSensitive = true)
     }
 
     private fun onShareClick() {
-        params.analytics.onShareClicked()
+        params.analytics.onShareClicked(selectedCredentials)
         val requisites = uiState.value.requisites
         shareManager.shareText(requisites.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
     }

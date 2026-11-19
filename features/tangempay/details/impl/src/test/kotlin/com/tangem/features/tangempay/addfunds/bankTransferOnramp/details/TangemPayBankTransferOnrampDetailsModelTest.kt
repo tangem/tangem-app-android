@@ -40,6 +40,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
@@ -100,7 +101,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                 "Bank name" to "SSB Bank",
                 "Bank address" to "8700 Perry Highway",
             ).inOrder()
-            verify(exactly = 1) { detailsAnalytics.onDetailsShown() }
+            verify(exactly = 1) { detailsAnalytics.onDetailsShown(bankCredentials()) }
         }
 
     @Test
@@ -330,7 +331,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = "123456", isSensitive = true) }
-        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER, bankCredentials()) }
     }
 
     @Test
@@ -353,7 +354,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
                     "Bank address: 8700 Perry Highway",
             )
         }
-        verify(exactly = 1) { detailsAnalytics.onShareClicked() }
+        verify(exactly = 1) { detailsAnalytics.onShareClicked(bankCredentials()) }
     }
 
     @Test
@@ -533,6 +534,67 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
     }
 
     @Test
+    fun `GIVEN USD tab shown WHEN MXN tab clicked THEN details shown reported for the MXN route`() = runTest {
+        // Arrange
+        val model = createModelWithRails(listOf(bankCredentials(), SPEI_CREDENTIALS))
+        advanceUntilIdle()
+
+        // Act
+        model.clickTab(index = 1)
+
+        // Assert
+        verifyOrder {
+            detailsAnalytics.onDetailsShown(bankCredentials())
+            detailsAnalytics.onDetailsShown(SPEI_CREDENTIALS)
+        }
+        verify(exactly = 2) { detailsAnalytics.onDetailsShown(any()) }
+    }
+
+    @Test
+    fun `GIVEN both tabs shown WHEN back to the USD tab THEN each route reported once`() = runTest {
+        // Arrange
+        val model = createModelWithRails(listOf(bankCredentials(), SPEI_CREDENTIALS))
+        advanceUntilIdle()
+        model.clickTab(index = 1)
+
+        // Act
+        model.clickTab(index = 0)
+
+        // Assert
+        verify(exactly = 1) { detailsAnalytics.onDetailsShown(bankCredentials()) }
+        verify(exactly = 1) { detailsAnalytics.onDetailsShown(SPEI_CREDENTIALS) }
+    }
+
+    @Test
+    fun `GIVEN USD tab shown WHEN USD tab clicked again THEN details shown not reported twice`() = runTest {
+        // Arrange
+        val model = createModelWithRails(listOf(bankCredentials(), SPEI_CREDENTIALS))
+        advanceUntilIdle()
+
+        // Act
+        model.clickTab(index = 0)
+
+        // Assert
+        verify(exactly = 1) { detailsAnalytics.onDetailsShown(any()) }
+    }
+
+    @Test
+    fun `GIVEN MXN tab selected WHEN CLABE copied and shared THEN both reported for the MXN route`() = runTest {
+        // Arrange
+        val model = createModelWithRails(listOf(bankCredentials(), SPEI_CREDENTIALS))
+        advanceUntilIdle()
+        model.clickTab(index = 1)
+
+        // Act
+        model.uiState.value.requisites.first { it.key == "CLABE" }.onCopyClick()
+        model.uiState.value.onShareClick()
+
+        // Assert
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.CLABE, SPEI_CREDENTIALS) }
+        verify(exactly = 1) { detailsAnalytics.onShareClicked(SPEI_CREDENTIALS) }
+    }
+
+    @Test
     fun `GIVEN MXN tab selected WHEN USD tab clicked THEN US details shown again`() = runTest {
         // Arrange
         val model = createModelWithRails(listOf(bankCredentials(), SPEI_CREDENTIALS))
@@ -575,7 +637,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestB
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = "646180157000000004", isSensitive = true) }
-        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.CLABE) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.CLABE, SPEI_CREDENTIALS) }
     }
 
     private fun TestScope.createModelWithRails(

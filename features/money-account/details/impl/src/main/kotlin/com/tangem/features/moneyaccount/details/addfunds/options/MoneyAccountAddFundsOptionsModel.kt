@@ -68,11 +68,18 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
 
     private fun onBankTransferClick() {
         if (input.isBankTransferLoading) return
-        sendMethodSelected(MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER)
+        val prefetch = prefetchedBankCredentials
+        if (prefetch == null) sendMethodSelected(MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER)
         updateInput { current -> current.copy(isBankTransferLoading = true) }
         modelScope.launch {
-            val prefetched = prefetchedBankCredentials?.await()?.takeIf { it.isRight() }
-            (prefetched ?: loadBankCredentials())
+            val credentials = prefetch?.await()?.takeIf { it.isRight() } ?: loadBankCredentials()
+            if (prefetch != null) {
+                sendMethodSelected(
+                    method = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                    currency = credentials.getOrNull()?.let(MoneyAccountAnalyticsEvents.DepositCurrency::singleOf),
+                )
+            }
+            credentials
                 .onRight(params.listener::onBankDetailsLoaded)
                 .onLeft {
                     updateInput { current -> current.copy(isBankTransferLoading = false) }
@@ -96,8 +103,11 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
         )
     }
 
-    private fun sendMethodSelected(method: MoneyAccountAnalyticsEvents.AddFundsMethod) {
-        analytics.send(MoneyAccountAnalyticsEvents.AddFundsMethodSelected(method))
+    private fun sendMethodSelected(
+        method: MoneyAccountAnalyticsEvents.AddFundsMethod,
+        currency: MoneyAccountAnalyticsEvents.DepositCurrency? = null,
+    ) {
+        analytics.send(MoneyAccountAnalyticsEvents.AddFundsMethodSelected(method = method, currency = currency))
     }
 
     private fun updateInput(transform: (Input) -> Input) {

@@ -2,6 +2,7 @@ package com.tangem.domain.moneyaccount.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.tangempay.TangemPayKycAdditionalInfoAnalyticsEvents.NoticeState
+import com.tangem.domain.tangempay.model.BankCredentials
 import java.math.BigDecimal
 
 sealed class MoneyAccountAnalyticsEvents(
@@ -57,32 +58,47 @@ sealed class MoneyAccountAnalyticsEvents(
         event = "Add Funds Screen Opened",
     )
 
-    data class AddFundsMethodSelected(val method: AddFundsMethod) : MoneyAccountAnalyticsEvents(
+    data class AddFundsMethodSelected(
+        val method: AddFundsMethod,
+        val currency: DepositCurrency? = null,
+    ) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Add Funds Method Selected",
-        params = mapOf("method" to method.value),
+        params = buildMap {
+            put("method", method.value)
+            if (method == AddFundsMethod.BANK_TRANSFER) currency?.let { put("currency", it.value) }
+        },
     )
 
-    class AddFundsBankDetailsShown : MoneyAccountAnalyticsEvents(
+    data class AddFundsBankDetailsShown(val currency: DepositCurrency?) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Add Funds Bank Details Shown",
+        params = currencyParams(currency),
     )
 
-    class AccountDetailsScreenOpened : MoneyAccountAnalyticsEvents(
+    data class AccountDetailsScreenOpened(
+        val currency: DepositCurrency?,
+        val rail: DepositRail?,
+    ) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Account Details Screen Opened",
-        params = mapOf("route_state" to "active"),
+        params = buildMap {
+            put("route_state", "active")
+            currency?.let { put("currency", it.value) }
+            rail?.let { put("rail", it.value) }
+        },
     )
 
-    data class DetailsFieldCopied(val field: String) : MoneyAccountAnalyticsEvents(
+    data class DetailsFieldCopied(val field: String, val currency: DepositCurrency?) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Details Field Copied",
-        params = mapOf("field" to field),
+        params = mapOf("field" to field) + currencyParams(currency),
     )
 
-    class DetailsShared : MoneyAccountAnalyticsEvents(
+    data class DetailsShared(val currency: DepositCurrency?) : MoneyAccountAnalyticsEvents(
         categoryName = CASH_ACCOUNT_CATEGORY,
         event = "Details Shared",
+        params = currencyParams(currency),
     )
 
     class DetailsLoadFailed : MoneyAccountAnalyticsEvents(
@@ -195,8 +211,34 @@ sealed class MoneyAccountAnalyticsEvents(
         BANK_TRANSFER_WIRE("bank_transfer_wire"),
     }
 
+    enum class DepositCurrency(val value: String) {
+        USD("usd"),
+        MXN("mxn"),
+        ;
+
+        companion object {
+            fun of(credentials: BankCredentials): DepositCurrency = if (credentials.isSpei) MXN else USD
+
+            fun singleOf(credentials: List<BankCredentials>): DepositCurrency? =
+                credentials.map(::of).distinct().singleOrNull()
+        }
+    }
+
+    enum class DepositRail(val value: String) {
+        ACH_WIRE("ach_wire"),
+        SPEI("spei"),
+        ;
+
+        companion object {
+            fun of(credentials: BankCredentials): DepositRail = if (credentials.isSpei) SPEI else ACH_WIRE
+        }
+    }
+
     private companion object {
         const val CASH_ACCOUNT_CATEGORY = "Cash Account"
         const val TRANSFER_CATEGORY = "VA Transfer"
+
+        fun currencyParams(currency: DepositCurrency?): Map<String, String> =
+            currency?.let { mapOf("currency" to it.value) }.orEmpty()
     }
 }
