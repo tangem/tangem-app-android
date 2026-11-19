@@ -21,9 +21,12 @@ import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
+import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.staking.impl.fixtures.coin
 import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
 import com.tangem.test.core.ProvideTestModels
@@ -85,17 +88,14 @@ internal class PooledStakingMapperStateTest {
                 ),
             ),
             details = listOf(
-                row(
-                    label = resourceReference(R.string.earn_product_details_risk),
-                    value = resourceReference(R.string.earn_risk_level_low),
-                ),
+                EarnRisk.Low.detailsRow(),
                 row(label = resourceReference(R.string.staking_validator), value = stringReference("P2P")),
                 row(
                     label = resourceReference(R.string.earn_product_details_withdrawals),
                     value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
-                    info = textBlock(
+                    info = EarnRowInfo.Text(
                         title = resourceReference(R.string.earn_product_details_withdrawals),
-                        description = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
+                        text = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
                     ),
                 ),
                 feeRow(percent = "10"),
@@ -337,7 +337,7 @@ internal class PooledStakingMapperStateTest {
             vaults = listOf(MockStaking.vault(apy = BigDecimal(apy)).copy(feePercent = BigDecimal(feePercent))),
         )
 
-    private fun row(label: TextReference, value: TextReference, info: EarnTextBlock? = null): EarnRow = EarnRow(
+    private fun row(label: TextReference, value: TextReference, info: EarnRowInfo? = null): EarnRow = EarnRow(
         label = label,
         value = EarnValue.Text(value),
         info = info,
@@ -351,9 +351,9 @@ internal class PooledStakingMapperStateTest {
     private fun feeRow(percent: String): EarnRow = row(
         label = resourceReference(R.string.earn_product_details_performance_fee),
         value = resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList("$percent%")),
-        info = textBlock(
+        info = EarnRowInfo.Text(
             title = resourceReference(R.string.earn_product_details_performance_fee),
-            description = resourceReference(
+            text = resourceReference(
                 R.string.earn_product_details_performance_fee_info,
                 wrappedList("$percent%"),
             ),

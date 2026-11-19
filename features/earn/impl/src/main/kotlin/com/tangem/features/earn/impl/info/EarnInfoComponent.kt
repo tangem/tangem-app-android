@@ -17,6 +17,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.ui.EarnHowItWorksModal
+import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.info.ui.EarnInfoContent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
@@ -98,6 +99,9 @@ internal class EarnInfoComponent @AssistedInject constructor(
 
         val howItWorks by model.howItWorks.collectAsStateWithLifecycle()
         howItWorks?.let { um -> EarnHowItWorksModal(state = um, onDismiss = model::onHowItWorksDismiss) }
+
+        val rowInfo by model.rowInfo.collectAsStateWithLifecycle()
+        rowInfo?.let { um -> EarnRowInfoModal(state = um, onDismiss = model::onRowInfoDismiss) }
     }
 
     data class Params(

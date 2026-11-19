@@ -13,6 +13,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheet
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetComponent
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheet
@@ -70,6 +71,9 @@ internal class EarnYieldPickerComponent @AssistedInject constructor(
 
         incentiveSheet.BottomSheet()
         getTokenSheet.BottomSheet()
+
+        val rowInfo by model.rowInfo.collectAsStateWithLifecycle()
+        rowInfo?.let { um -> EarnRowInfoModal(state = um, onDismiss = model::onRowInfoDismiss) }
     }
 
     /**

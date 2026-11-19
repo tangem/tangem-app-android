@@ -18,7 +18,6 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
@@ -32,6 +31,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -56,6 +56,7 @@ import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -841,13 +842,11 @@ internal class EarnInfoModelTest {
         }
 
         @Test
-        fun `GIVEN a row with info WHEN onInfoClick THEN uiMessageSender gets a modal message`() = runTest {
+        fun `GIVEN a row with info WHEN onInfoClick THEN rowInfo holds its sheet`() = runTest {
             // Arrange
-            val info = EarnTextBlock(stringReference("Risk"), stringReference("How risky"))
+            val info = EarnRowInfo.Text(title = stringReference("Risk"), text = stringReference("How risky"))
             val row = EarnRow(stringReference("Risk"), EarnValue.Text(stringReference("Low")), info)
             product.stateFlow.value = product.readyState().copy(details = listOf(row))
-            val sent = slot<ModalMessage>()
-            every { uiMessageSender.send(capture(sent)) } returns Unit
             val model = createModel()
             advanceUntilIdle()
 
@@ -855,8 +854,27 @@ internal class EarnInfoModelTest {
             requireNotNull(requireNotNull(model.uiState.value).details.single().onInfoClick).invoke()
 
             // Assert
-            verify(exactly = 1) { uiMessageSender.send(any()) }
-            assertThat(sent.isCaptured).isTrue()
+            val expected = EarnRowInfoUM.Text(title = stringReference("Risk"), text = stringReference("How risky"))
+            assertThat(model.rowInfo.value).isEqualTo(expected)
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an open row info WHEN onRowInfoDismiss THEN rowInfo is cleared`() = runTest {
+            // Arrange
+            val info = EarnRowInfo.Text(title = stringReference("Risk"), text = stringReference("How risky"))
+            val row = EarnRow(stringReference("Risk"), EarnValue.Text(stringReference("Low")), info)
+            product.stateFlow.value = product.readyState().copy(details = listOf(row))
+            val model = createModel()
+            advanceUntilIdle()
+            requireNotNull(requireNotNull(model.uiState.value).details.single().onInfoClick).invoke()
+
+            // Act
+            model.onRowInfoDismiss()
+
+            // Assert
+            assertThat(model.rowInfo.value).isNull()
             model.onDestroy()
         }
 

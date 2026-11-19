@@ -1,7 +1,6 @@
 package com.tangem.features.earn.flow.impl.model
 
 import com.tangem.core.res.R
-import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -10,12 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.ModalMessage
-import com.tangem.core.ui.message.modalMessage
-import com.tangem.features.earn.product.api.product.EarnTextBlock
-import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnSessionError
-import kotlinx.collections.immutable.persistentListOf
 
 internal object EarnFlowDialogs {
 
@@ -37,10 +31,6 @@ internal object EarnFlowDialogs {
         secondAction = EventMessageAction(title = resourceReference(R.string.common_close), onClick = onClose),
         isDismissable = false,
     )
-
-    fun info(block: EarnTextBlock): ModalMessage = modalMessage {
-        content(TangemModalContentUM.Informer.Rich(items = persistentListOf(block.toUM())))
-    }
 
     private fun EarnSessionError.message(currency: CryptoCurrency): TextReference = when (this) {
         is EarnSessionError.Rejected -> reason

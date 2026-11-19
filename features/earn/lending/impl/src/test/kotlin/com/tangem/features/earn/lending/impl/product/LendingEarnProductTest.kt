@@ -47,10 +47,12 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -445,9 +447,9 @@ internal class LendingEarnProductTest {
                         EarnRow(
                             label = resourceReference(R.string.token_details_balance_total),
                             value = EarnValue.Amount(BigDecimal("2")),
-                            info = EarnTextBlock(
+                            info = EarnRowInfo.Text(
                                 title = resourceReference(R.string.token_details_balance_total),
-                                description = resourceReference(
+                                text = resourceReference(
                                     R.string.lending_position_total_balance_info,
                                     wrappedList(FEE_TEXT),
                                 ),
@@ -456,9 +458,9 @@ internal class LendingEarnProductTest {
                         EarnRow(
                             label = resourceReference(R.string.token_details_balance_available),
                             value = EarnValue.Amount(BigDecimal("2")),
-                            info = EarnTextBlock(
+                            info = EarnRowInfo.Text(
                                 title = resourceReference(R.string.token_details_balance_available),
-                                description = resourceReference(R.string.lending_position_available_balance_info),
+                                text = resourceReference(R.string.lending_position_available_balance_info),
                             ),
                         ),
                     ),
@@ -490,6 +492,18 @@ internal class LendingEarnProductTest {
                     resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList(FEE_TEXT)),
                 ),
             ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN provider WHEN state THEN the first detail is the shared low risk row`() = runTest {
+            // Arrange
+            every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState()))
+
+            // Act
+            val actual = product.state(params).first() as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.details.first()).isEqualTo(EarnRisk.Low.detailsRow())
         }
 
         @Test

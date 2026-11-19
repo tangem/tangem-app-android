@@ -37,6 +37,7 @@ import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.product.EarnRewards
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -44,6 +45,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.Withdraw
@@ -226,13 +228,13 @@ internal fun fakeHowItWorks(preset: FakeEarnProductPreset): EarnHowItWorks? = Ea
 private fun fakeRow(label: TextReference, value: TextReference, info: TextReference? = null) = EarnRow(
     label = label,
     value = EarnValue.Text(value),
-    info = info?.let { EarnTextBlock(label, it) },
+    info = info?.let { EarnRowInfo.Text(title = label, text = it) },
 )
 
 private fun fakeAmountRow(label: TextReference, amount: BigDecimal, info: TextReference? = null) = EarnRow(
     label = label,
     value = EarnValue.Amount(amount),
-    info = info?.let { EarnTextBlock(label, it) },
+    info = info?.let { EarnRowInfo.Text(title = label, text = it) },
 )
 
 private fun fakeDetails(): List<EarnRow> {
@@ -240,14 +242,7 @@ private fun fakeDetails(): List<EarnRow> {
     val fee = resourceReference(ResR.string.earn_product_details_performance_fee)
     val percent = wrappedList<Any>(FAKE_FEE_PERCENT)
     return listOf(
-        EarnRow(
-            label = resourceReference(ResR.string.earn_product_details_risk),
-            value = EarnValue.Text(resourceReference(ResR.string.earn_risk_level_low)),
-            info = EarnTextBlock(
-                resourceReference(ResR.string.earn_product_details_risk_info_title),
-                resourceReference(ResR.string.earn_product_details_risk_low_description),
-            ),
-        ),
+        EarnRisk.Low.detailsRow(),
         EarnRow(
             label = resourceReference(ResR.string.earn_product_details_protocol),
             value = EarnValue.Link(

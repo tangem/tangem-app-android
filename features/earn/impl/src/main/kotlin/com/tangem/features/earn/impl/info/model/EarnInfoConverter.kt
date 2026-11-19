@@ -25,6 +25,7 @@ import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRewards
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -135,7 +136,7 @@ internal class EarnInfoConverter @Inject constructor(
     data class Callbacks(
         val onActionClick: (EarnAction) -> Unit,
         val onBlocked: (EarnBlock) -> Unit,
-        val onInfoClick: (EarnTextBlock) -> Unit,
+        val onInfoClick: (EarnRowInfo) -> Unit,
         val onLinkClick: (String) -> Unit,
         val onHowItWorksClick: (EarnHowItWorks) -> Unit,
         val onClose: () -> Unit,
