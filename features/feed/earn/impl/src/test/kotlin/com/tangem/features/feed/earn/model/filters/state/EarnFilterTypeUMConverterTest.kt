@@ -48,6 +48,11 @@ internal class EarnFilterTypeUMConverterTest {
             option = EarnFilterTypeUM.YieldMode,
             expected = EarnFilterType.YIELD,
         ),
+        TypeUMModel(
+            name = "GIVEN the vaults option WHEN converted THEN the filter narrows to vaults",
+            option = EarnFilterTypeUM.Vaults,
+            expected = EarnFilterType.VAULT,
+        ),
     )
 
     internal data class TypeUMModel(

@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.earn.model.EarnFilterType
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.analytics.FilterTypeAnalytic
@@ -14,6 +15,7 @@ import com.tangem.features.feed.earn.model.filters.state.EarnFilterTypeUMConvert
 import com.tangem.features.feed.earn.ui.state.EarnFilterByTypeBottomSheetContentUM
 import com.tangem.features.feed.earn.ui.state.EarnFilterTypeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -25,6 +27,7 @@ import javax.inject.Inject
 internal class EarnTypeFilterModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val earnFeatureToggles: EarnFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -41,6 +44,9 @@ internal class EarnTypeFilterModel @Inject constructor(
 
     private fun configureState(selected: EarnFilterType): EarnFilterByTypeBottomSheetContentUM {
         return EarnFilterByTypeBottomSheetContentUM(
+            options = EarnFilterTypeUM.entries
+                .filter { it != EarnFilterTypeUM.Vaults || earnFeatureToggles.isEarnEnabled }
+                .toImmutableList(),
             selectedOption = EarnFilterTypeConverter().convert(selected),
             onOptionClick = ::handleOnOptionClick,
         )
@@ -54,6 +60,7 @@ internal class EarnTypeFilterModel @Inject constructor(
                     EarnFilterTypeUM.All -> FilterTypeAnalytic.ALL_TYPES
                     EarnFilterTypeUM.Staking -> FilterTypeAnalytic.STAKING
                     EarnFilterTypeUM.YieldMode -> FilterTypeAnalytic.YIELD
+                    EarnFilterTypeUM.Vaults -> FilterTypeAnalytic.VAULTS
                 },
             ),
         )
