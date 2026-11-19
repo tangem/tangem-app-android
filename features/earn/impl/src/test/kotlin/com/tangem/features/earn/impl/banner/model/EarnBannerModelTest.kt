@@ -437,16 +437,35 @@ internal class EarnBannerModelTest {
     inner class Analytics {
 
         @Test
-        fun `GIVEN Offer frames Offer, Hidden, Offer WHEN collected THEN one BannerShown`() = runTest {
+        fun `GIVEN Offer then Enabled WHEN the banner is never on screen THEN no Shown event is sent`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 0)
+            val model = createModel()
+
+            // Act
+            frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.BannerShown>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldRowShown>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Offer frames Offer, Hidden, Offer WHEN each is shown THEN one BannerShown`() = runTest {
             // Arrange
             frames.value = overviewsOf(activeCount = 0, productCount = 3)
             val model = createModel()
 
             // Act
+            model.onShown()
             frames.value = EarnOverviews.Empty
             advanceUntilIdle()
+            model.onShown()
             frames.value = overviewsOf(activeCount = 0, productCount = 3)
             advanceUntilIdle()
+            model.onShown()
 
             // Assert
             verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.BannerShown>()) }
@@ -464,12 +483,13 @@ internal class EarnBannerModelTest {
         }
 
         @Test
-        fun `GIVEN Offer without a rate WHEN collected THEN BannerShown has no best APY`() = runTest {
+        fun `GIVEN Offer without a rate WHEN shown THEN BannerShown has no best APY`() = runTest {
             // Arrange
             frames.value = overviewsOf(activeCount = 0, rate = null, productCount = 1)
+            val model = createModel()
 
             // Act
-            val model = createModel()
+            model.onShown()
 
             // Assert
             verify(exactly = 1) {
@@ -491,6 +511,7 @@ internal class EarnBannerModelTest {
                 // Arrange
                 frames.value = overviewsOf(activeCount = 0, productCount = 3)
                 val model = createModel()
+                model.onShown()
 
                 // Act
                 model.onEnableClick(preselected = lendingId)
@@ -505,12 +526,14 @@ internal class EarnBannerModelTest {
             }
 
         @Test
-        fun `GIVEN Offer WHEN collected THEN no yield row event is sent and no position is valued`() = runTest {
+        fun `GIVEN Offer WHEN shown THEN no yield row event is sent and no position is valued`() = runTest {
             // Arrange
             frames.value = overviewsOf(activeCount = 0)
+            val model = createModel()
 
             // Act
-            val model = createModel()
+            model.onShown()
+            advanceUntilIdle()
 
             // Assert
             verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldRowShown>()) }
@@ -524,9 +547,11 @@ internal class EarnBannerModelTest {
                 // Arrange
                 coEvery { usdValuation.bucket(currency, BigDecimal("0.5")) } returns "1K-5K"
                 frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+                val model = createModel()
 
                 // Act
-                val model = createModel()
+                model.onShown()
+                advanceUntilIdle()
 
                 // Assert
                 verify(exactly = 1) {
@@ -547,9 +572,11 @@ internal class EarnBannerModelTest {
             // Arrange
             coEvery { usdValuation.bucket(currency, BigDecimal("0.5")) } returns null
             frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+            val model = createModel()
 
             // Act
-            val model = createModel()
+            model.onShown()
+            advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) {
@@ -561,16 +588,20 @@ internal class EarnBannerModelTest {
         }
 
         @Test
-        fun `GIVEN Enabled shown WHEN the same state is collected again THEN YieldRowShown is not repeated`() =
+        fun `GIVEN Enabled shown WHEN the same state is shown again THEN YieldRowShown is not repeated`() =
             runTest {
                 // Arrange
                 frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
                 val model = createModel()
+                model.onShown()
 
                 // Act
                 frames.value = EarnOverviews.Empty
                 advanceUntilIdle()
+                model.onShown()
                 frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+                advanceUntilIdle()
+                model.onShown()
                 advanceUntilIdle()
 
                 // Assert
@@ -618,14 +649,16 @@ internal class EarnBannerModelTest {
         }
 
         @Test
-        fun `GIVEN CACHE frame then ACTUAL WHEN collected THEN BannerShown is sent once from the cached frame`() = runTest {
+        fun `GIVEN CACHE frame then ACTUAL WHEN shown THEN BannerShown is sent once from the cached frame`() = runTest {
             // Arrange
             frames.value = overviewsOf(activeCount = 0, source = StatusSource.CACHE)
             val model = createModel()
 
             // Act
+            model.onShown()
             frames.value = overviewsOf(activeCount = 0, source = StatusSource.ACTUAL)
             advanceUntilIdle()
+            model.onShown()
 
             // Assert
             verify(exactly = 1) {

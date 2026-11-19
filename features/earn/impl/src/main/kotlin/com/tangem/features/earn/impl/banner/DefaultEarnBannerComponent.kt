@@ -1,6 +1,7 @@
 package com.tangem.features.earn.impl.banner
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +46,8 @@ internal class DefaultEarnBannerComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+
+        LaunchedEffect(state::class) { model.onShown() }
 
         EarnBannerContent(state = state, modifier = modifier)
     }

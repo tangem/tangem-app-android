@@ -86,13 +86,16 @@ internal class EarnBannerModel @Inject constructor(
             overview?.banner to state
         }
             .onEach { (banner, state) ->
+                if (banner != null) lastBanner = banner
                 uiState.value = state
-                if (banner != null) {
-                    lastBanner = banner
-                    sendShown(state, banner)
-                }
             }
             .launchIn(modelScope)
+    }
+
+    /** The token page creates this model before its lazy list composes the banner, so the UI reports the impression. */
+    fun onShown() {
+        val banner = lastBanner ?: return
+        sendShown(uiState.value, banner)
     }
 
     override fun onEnableClick(preselected: EarnProductId?) {
