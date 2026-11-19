@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,7 +64,7 @@ class DefaultQrScanningComponent @AssistedInject constructor(
                 }
             }
 
-        val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             val selectedImage = uri ?: Uri.EMPTY
             if (selectedImage != Uri.EMPTY) {
                 val mimeType = context.contentResolver.getType(selectedImage)
@@ -80,7 +81,7 @@ class DefaultQrScanningComponent @AssistedInject constructor(
 
         LaunchedEffect(Unit) {
             model.launchGallery.collect {
-                galleryLauncher.launch(GALLERY_IMAGE_FILTER)
+                galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 delay(timeMillis = 2000)
             }
         }
@@ -138,6 +139,5 @@ class DefaultQrScanningComponent @AssistedInject constructor(
     companion object {
 
         private const val IMAGE_MIME_TYPE = "image"
-        private const val GALLERY_IMAGE_FILTER = "$IMAGE_MIME_TYPE/*"
     }
 }
