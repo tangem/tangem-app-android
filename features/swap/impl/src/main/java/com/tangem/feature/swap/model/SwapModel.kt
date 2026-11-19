@@ -22,6 +22,7 @@ import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.notifications.NetworkFeeUnavailableNoticeAnalytics
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
@@ -30,6 +31,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
+import com.tangem.core.analytics.models.event.NetworkFeeUnavailableAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -400,6 +402,11 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    private val networkFeeUnavailableNoticeAnalytics = NetworkFeeUnavailableNoticeAnalytics(
+        analyticsEventHandler = analyticsEventHandler,
+        source = NetworkFeeUnavailableAnalyticsEvent.Source.Swap,
+    )
+
     private var _uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState().withAccountFlowPresentation(),
     )
@@ -413,6 +420,7 @@ internal class SwapModel @Inject constructor(
         get() = _uiState
         internal set(value) {
             _uiState = value.withAccountFlowPresentation()
+            networkFeeUnavailableNoticeAnalytics.onNotificationsUpdated(value.notifications)
         }
 
     val feeSelectorRepository = FeeSelectorRepository()

@@ -284,6 +284,7 @@ internal class DefaultOnrampRepository(
                     expressApi.getProviders(
                         userWalletId = userWallet.walletId.stringValue,
                         refCode = expressUtils.getRefCode(userWallet = userWallet),
+                        batchId = expressUtils.getBatchId(userWallet = userWallet),
                     ).bind()
                 },
                 onError = { error ->

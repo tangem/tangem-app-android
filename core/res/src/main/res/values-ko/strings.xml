@@ -314,6 +314,7 @@
   <string name="tangempay_cashback_accruals_pay_description">거래가 캐시백 프로그램 규정을 준수하는지 확인한 후, 다음 달 11일까지 지급됩니다</string>
   <string name="tangempay_kyc_rejected_button_text">상태 숨기기</string>
   <string name="tangempay_pay_support">고객 지원</string>
+  <string name="tangempay_payment_account_sync_needed">세션 만료됨</string>
   <string name="tangempay_residency_search_empty">검색 결과가 없습니다. 검색어를 변경해 주세요</string>
   <string name="tangempay_sync_needed_body">갱신하여 카드와 계좌를 확인해 주세요</string>
   <string name="tangempay_sync_needed_button">세션 갱신</string>

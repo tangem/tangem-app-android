@@ -14,11 +14,13 @@ import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.tangem.common.ui.notifications.NetworkFeeUnavailableNoticeAnalytics
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.NetworkFeeUnavailableAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -332,7 +334,21 @@ internal class StakingModel @Inject constructor(
 
     init {
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnNetworkFeeUnavailableNotice()
         stateController.initializeWithUserWallet(userWallet)
+    }
+
+    private fun subscribeOnNetworkFeeUnavailableNotice() {
+        val noticeAnalytics = NetworkFeeUnavailableNoticeAnalytics(
+            analyticsEventHandler = analyticsEventHandler,
+            source = NetworkFeeUnavailableAnalyticsEvent.Source.Staking,
+        )
+        stateController.uiState
+            .map { state ->
+                (state.confirmationState as? StakingStates.ConfirmationState.Data)?.notifications.orEmpty()
+            }
+            .onEach(noticeAnalytics::onNotificationsUpdated)
+            .launchIn(modelScope)
     }
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {

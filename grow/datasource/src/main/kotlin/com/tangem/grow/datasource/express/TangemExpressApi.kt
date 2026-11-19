@@ -21,6 +21,7 @@ interface TangemExpressApi {
     suspend fun getAssets(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
+        @Header("batch-id") batchId: String?,
         @Body body: AssetsRequestBody,
     ): ApiResponse<List<Asset>>
 
@@ -29,6 +30,7 @@ interface TangemExpressApi {
     suspend fun getPairs(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
+        @Header("batch-id") batchId: String?,
         @Body body: PairsRequestBody,
     ): ApiResponse<List<SwapPair>>
 
@@ -37,6 +39,7 @@ interface TangemExpressApi {
     suspend fun getProviders(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
+        @Header("batch-id") batchId: String?,
     ): ApiResponse<List<ExchangeProvider>>
 
     @RequiresSessionAuth
@@ -44,6 +47,7 @@ interface TangemExpressApi {
     suspend fun getExchangeQuote(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
+        @Header("batch-id") batchId: String?,
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
@@ -62,6 +66,7 @@ interface TangemExpressApi {
     suspend fun getExchangeData(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
+        @Header("batch-id") batchId: String?,
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
@@ -105,6 +110,7 @@ interface TangemExpressApi {
     suspend fun exchangeSent(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
+        @Header("batch-id") batchId: String?,
         @Body body: ExchangeSentRequestBody,
     ): ApiResponse<ExchangeSentResponseBody>
 
