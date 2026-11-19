@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -15,6 +16,9 @@ import com.tangem.features.earn.api.overview.EarnBannerOverview
 import com.tangem.features.earn.api.overview.EarnOverview
 import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.earn.api.overview.EarnOverviews
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.impl.analytics.EarnBannerAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnUsdValuation
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -30,15 +34,19 @@ import com.tangem.features.earn.impl.sheet.EarnYieldSheetConfig
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -51,6 +59,8 @@ internal class EarnBannerModelTest {
     private val overviewSupplier: EarnOverviewSupplier = mockk()
     private val summarySupplier: EarnProductSummarySupplier = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val usdValuation: EarnUsdValuation = mockk()
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val otherCurrency: CryptoCurrency = MockCryptoCurrencyFactory().bitcoin
 
@@ -67,13 +77,21 @@ internal class EarnBannerModelTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, overviewSupplier, summarySupplier, getBalanceHidingSettingsUseCase)
+        clearMocks(
+            router,
+            overviewSupplier,
+            summarySupplier,
+            getBalanceHidingSettingsUseCase,
+            analyticsEventHandler,
+            usdValuation,
+        )
         frames.value = EarnOverviews.Empty
         productFrames.value = lendingAndStaking()
         isBalanceHidden.value = false
         every { overviewSupplier(USER_WALLET_ID) } returns frames
         every { summarySupplier(USER_WALLET_ID) } returns productFrames
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
+        coEvery { usdValuation.bucket(any(), any()) } returns null
     }
 
     @Test
@@ -414,6 +432,249 @@ internal class EarnBannerModelTest {
         model.onDestroy()
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN Offer then Enabled WHEN the banner is never on screen THEN no Shown event is sent`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 0)
+            val model = createModel()
+
+            // Act
+            frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.BannerShown>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldRowShown>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Offer frames Offer, Hidden, Offer WHEN each is shown THEN one BannerShown`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 0, productCount = 3)
+            val model = createModel()
+
+            // Act
+            model.onShown()
+            frames.value = EarnOverviews.Empty
+            advanceUntilIdle()
+            model.onShown()
+            frames.value = overviewsOf(activeCount = 0, productCount = 3)
+            advanceUntilIdle()
+            model.onShown()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.BannerShown>()) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnBannerAnalyticsEvent.BannerShown(
+                        token = "ETH",
+                        blockchain = "Ethereum",
+                        bestApy = "5.50",
+                        products = 3,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Offer without a rate WHEN shown THEN BannerShown has no best APY`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 0, rate = null, productCount = 1)
+            val model = createModel()
+
+            // Act
+            model.onShown()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnBannerAnalyticsEvent.BannerShown(
+                        token = "ETH",
+                        blockchain = "Ethereum",
+                        bestApy = null,
+                        products = 1,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Offer WHEN onEnableClick THEN BannerEnable is sent after BannerShown and before the navigation`() =
+            runTest {
+                // Arrange
+                frames.value = overviewsOf(activeCount = 0, productCount = 3)
+                val model = createModel()
+                model.onShown()
+
+                // Act
+                model.onEnableClick(preselected = lendingId)
+
+                // Assert
+                verifyOrder {
+                    analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.BannerShown>())
+                    analyticsEventHandler.send(EarnBannerAnalyticsEvent.BannerEnable(token = "ETH", bestApy = "5.50"))
+                    router.push(any(), any())
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Offer WHEN shown THEN no yield row event is sent and no position is valued`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 0)
+            val model = createModel()
+
+            // Act
+            model.onShown()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldRowShown>()) }
+            coVerify(exactly = 0) { usdValuation.bucket(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Enabled with 0 point 5 ETH and a USD quote WHEN shown THEN YieldRowShown has the position bucket`() =
+            runTest {
+                // Arrange
+                coEvery { usdValuation.bucket(currency, BigDecimal("0.5")) } returns "1K-5K"
+                frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+                val model = createModel()
+
+                // Act
+                model.onShown()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnBannerAnalyticsEvent.YieldRowShown(
+                            token = "ETH",
+                            activeCount = 2,
+                            positionBucket = "1K-5K",
+                        ),
+                    )
+                }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.BannerShown>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Enabled and no USD quote WHEN shown THEN YieldRowShown has no position bucket`() = runTest {
+            // Arrange
+            coEvery { usdValuation.bucket(currency, BigDecimal("0.5")) } returns null
+            frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+            val model = createModel()
+
+            // Act
+            model.onShown()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnBannerAnalyticsEvent.YieldRowShown(token = "ETH", activeCount = 2, positionBucket = null),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Enabled shown WHEN the same state is shown again THEN YieldRowShown is not repeated`() =
+            runTest {
+                // Arrange
+                frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+                val model = createModel()
+                model.onShown()
+
+                // Act
+                frames.value = EarnOverviews.Empty
+                advanceUntilIdle()
+                model.onShown()
+                frames.value = overviewsOf(activeCount = 2, totalPosition = BigDecimal("0.5"))
+                advanceUntilIdle()
+                model.onShown()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldRowShown>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Enabled WHEN onBannerClick THEN YieldRow is sent and the sheet is opened`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 2)
+            val model = createModel()
+            val sheetSlot = model.sheetNavigation.trackSlot()
+
+            // Act
+            model.onBannerClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(EarnBannerAnalyticsEvent.YieldRow(token = "ETH", activeCount = 2))
+            }
+            assertThat(sheetSlot).containsExactly(EarnYieldSheetConfig)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a single active product WHEN onBannerClick THEN YieldRow is sent without the sheet`() = runTest {
+            // Arrange
+            productFrames.value = summariesOf(fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known))
+            frames.value = overviewsOf(activeCount = 1)
+            val model = createModel()
+            val sheetSlot = model.sheetNavigation.trackSlot()
+
+            // Act
+            model.onBannerClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(EarnBannerAnalyticsEvent.YieldRow(token = "ETH", activeCount = 1))
+            }
+            assertThat(sheetSlot).isEmpty()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN CACHE frame then ACTUAL WHEN shown THEN BannerShown is sent once from the cached frame`() = runTest {
+            // Arrange
+            frames.value = overviewsOf(activeCount = 0, source = StatusSource.CACHE)
+            val model = createModel()
+
+            // Act
+            model.onShown()
+            frames.value = overviewsOf(activeCount = 0, source = StatusSource.ACTUAL)
+            advanceUntilIdle()
+            model.onShown()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnBannerAnalyticsEvent.BannerShown(
+                        token = "ETH",
+                        blockchain = "Ethereum",
+                        bestApy = "5.50",
+                        products = 1,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+    }
+
     /** Mirrors what a real `childSlot` would track, since bare [SlotNavigation] only relays events. */
     private fun SlotNavigation<EarnYieldSheetConfig>.trackSlot(): List<EarnYieldSheetConfig?> {
         val tracked = mutableListOf<EarnYieldSheetConfig?>()
@@ -438,18 +699,28 @@ internal class EarnBannerModelTest {
         activeCount: Int,
         source: StatusSource = StatusSource.ACTUAL,
         bestProductId: EarnProductId? = lendingId,
+        rate: EarnProductRate? = createRate("0.055"),
+        totalPosition: BigDecimal? = BigDecimal.ONE.takeIf { activeCount > 0 },
+        productCount: Int = 1,
     ) = EarnOverviews(
-        byCurrency = mapOf(currency.id to overviewOf(activeCount, bestProductId)),
+        byCurrency = mapOf(currency.id to overviewOf(activeCount, bestProductId, rate, totalPosition, productCount)),
         source = source,
     )
 
-    private fun overviewOf(activeCount: Int, bestProductId: EarnProductId? = lendingId) = EarnOverview(
+    private fun overviewOf(
+        activeCount: Int,
+        bestProductId: EarnProductId? = lendingId,
+        rate: EarnProductRate? = createRate("0.055"),
+        totalPosition: BigDecimal? = BigDecimal.ONE.takeIf { activeCount > 0 },
+        productCount: Int = 1,
+    ) = EarnOverview(
         headline = null,
         banner = EarnBannerOverview(
-            rate = createRate("0.055"),
+            rate = rate,
             bestProductId = bestProductId,
             activeCount = activeCount,
-            totalPosition = BigDecimal.ONE.takeIf { activeCount > 0 },
+            totalPosition = totalPosition,
+            productCount = productCount,
         ),
     )
 
@@ -463,6 +734,8 @@ internal class EarnBannerModelTest {
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             converter = EarnBannerConverter(),
             router = router,
+            analyticsEventHandler = analyticsEventHandler,
+            usdValuation = usdValuation,
         )
         advanceUntilIdle()
 

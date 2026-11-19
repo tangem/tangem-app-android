@@ -77,6 +77,7 @@ internal class DefaultEarnOverviewSupplier @Inject constructor(
             bestProductId = best?.productId,
             activeCount = positions.size,
             totalPosition = amounts.takeIf { it.isNotEmpty() }?.reduce(BigDecimal::add),
+            productCount = products.size,
         )
     }
 }

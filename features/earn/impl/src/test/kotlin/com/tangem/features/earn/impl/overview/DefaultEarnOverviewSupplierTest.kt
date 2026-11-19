@@ -133,6 +133,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = stakingId,
                         activeCount = 1,
                         totalPosition = BigDecimal("3"),
+                        productCount = 1,
                     ),
                 ),
             )
@@ -172,6 +173,7 @@ internal class DefaultEarnOverviewSupplierTest {
                             bestProductId = stakingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("3"),
+                            productCount = 2,
                         ),
                     ),
                 )
@@ -205,6 +207,7 @@ internal class DefaultEarnOverviewSupplierTest {
                             bestProductId = lendingId,
                             activeCount = 0,
                             totalPosition = null,
+                            productCount = 1,
                         ),
                     ),
                 )
@@ -249,6 +252,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = lendingId,
                         activeCount = 0,
                         totalPosition = null,
+                        productCount = 1,
                     ),
                 ),
             )
@@ -290,6 +294,7 @@ internal class DefaultEarnOverviewSupplierTest {
                                 bestProductId = lendingId,
                                 activeCount = 0,
                                 totalPosition = null,
+                                productCount = 1,
                             ),
                         ),
                         bnbId to EarnOverview(
@@ -342,6 +347,7 @@ internal class DefaultEarnOverviewSupplierTest {
                             bestProductId = stakingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("3"),
+                            productCount = 1,
                         ),
                     ),
                     source = model,
@@ -391,6 +397,7 @@ internal class DefaultEarnOverviewSupplierTest {
                             bestProductId = stakingId,
                             activeCount = 2,
                             totalPosition = BigDecimal("7"),
+                            productCount = 2,
                         ),
                     ),
                 )
@@ -422,6 +429,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = stakingId,
                         activeCount = 0,
                         totalPosition = null,
+                        productCount = 2,
                     ),
                 ),
             )
@@ -431,6 +439,20 @@ internal class DefaultEarnOverviewSupplierTest {
 
             // Assert
             assertThat(actual).containsExactly(expected)
+        }
+
+        @Test
+        fun `GIVEN lending, vault and staking WHEN invoke THEN banner productCount is 3`() = runTest {
+            // Arrange
+            val lending = createSummary(productId = lendingId, rate = createRate(fraction = "0.05"))
+            val vault = createSummary(productId = vaultId, rate = createRate(fraction = "0.03"))
+            val staking = createSummary(productId = stakingId, rate = createRate(fraction = "0.02", type = EarnRateType.APR))
+
+            // Act
+            val actual = collectOverviews(productSummaries(lending, vault, staking))
+
+            // Assert
+            assertThat(actual.single()[ETH_ID]?.banner?.productCount).isEqualTo(3)
         }
 
         @Test
@@ -502,6 +524,7 @@ internal class DefaultEarnOverviewSupplierTest {
                             bestProductId = lendingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("2"),
+                            productCount = 1,
                         ),
                     ),
                 )
@@ -544,6 +567,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = stakingId,
                         activeCount = 0,
                         totalPosition = null,
+                        productCount = 2,
                     ),
                 ),
             )
@@ -586,6 +610,7 @@ internal class DefaultEarnOverviewSupplierTest {
                             bestProductId = lendingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("1"),
+                            productCount = 1,
                         ),
                     ),
                 )
@@ -676,6 +701,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = lendingId,
                         activeCount = 1,
                         totalPosition = BigDecimal("2"),
+                        productCount = 1,
                     ),
                 ),
                 OpenOrHeldModel(
@@ -689,6 +715,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = vaultId,
                         activeCount = 0,
                         totalPosition = null,
+                        productCount = 2,
                     ),
                 ),
                 OpenOrHeldModel(
@@ -699,6 +726,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = null,
                         activeCount = 0,
                         totalPosition = null,
+                        productCount = 1,
                     ),
                 ),
             )
@@ -736,6 +764,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = lendingId,
                         activeCount = 1,
                         totalPosition = BigDecimal("2"),
+                        productCount = 2,
                     ),
                 ),
             )
@@ -777,6 +806,7 @@ internal class DefaultEarnOverviewSupplierTest {
                 bestProductId = lendingId,
                 activeCount = model.expectedActiveCount,
                 totalPosition = model.expectedTotal,
+                productCount = products.size,
             )
 
             // Act
@@ -903,6 +933,7 @@ internal class DefaultEarnOverviewSupplierTest {
                     bestProductId = lendingId,
                     activeCount = 1,
                     totalPosition = BigDecimal("2"),
+                    productCount = 1,
                 ),
             ),
         )
@@ -971,6 +1002,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         bestProductId = lendingId,
                         activeCount = 1,
                         totalPosition = BigDecimal("2"),
+                        productCount = 1,
                     ),
                 ),
             )

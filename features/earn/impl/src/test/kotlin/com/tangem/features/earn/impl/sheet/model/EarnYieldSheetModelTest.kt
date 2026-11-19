@@ -6,6 +6,7 @@ import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.stringReference
@@ -21,6 +22,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.impl.analytics.EarnBannerAnalyticsEvent
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.FakeForeignRoute
@@ -49,6 +51,7 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -57,6 +60,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -74,6 +78,7 @@ internal class EarnYieldSheetModelTest {
     private val getSelectedAppCurrency: GetSelectedAppCurrencyUseCase = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val isBalanceHidden = MutableStateFlow(false)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
     private val lending = createFakeEarnProduct(FakeEarnProductPreset.Lending)
@@ -94,6 +99,7 @@ internal class EarnYieldSheetModelTest {
             accountStatusList,
             getSelectedAppCurrency,
             getBalanceHidingSettingsUseCase,
+            analyticsEventHandler,
         )
         mockkObject(CryptoCurrencyStatusOperations)
         isBalanceHidden.value = false
@@ -415,17 +421,143 @@ internal class EarnYieldSheetModelTest {
         model.onDestroy()
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN empty then filled frames WHEN collected THEN one YieldSheetOpened with sizes of active and inactive`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(summariesFrame(emptyList()))
+                val model = createModel(frames)
+                advanceUntilIdle()
+
+                // Act
+                frames.value = summariesFrame(
+                    listOf(
+                        fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known),
+                        fakeSummary(FakeEarnProductPreset.Staking, FakeEarnPosition.None),
+                        fakeSummary(FakeEarnProductPreset.Vault, FakeEarnPosition.None),
+                    ),
+                )
+                advanceUntilIdle()
+                frames.value = summariesFrame(
+                    listOf(
+                        fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known),
+                        fakeSummary(FakeEarnProductPreset.Staking, FakeEarnPosition.Known),
+                        fakeSummary(FakeEarnProductPreset.Vault, FakeEarnPosition.None),
+                    ),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldSheetOpened>()) }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnBannerAnalyticsEvent.YieldSheetOpened(token = "ETH", activeCount = 1, inactiveCount = 2),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN one active and two inactive WHEN tapping the second inactive THEN YieldSheetRow is sent before the handler`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    listOf(
+                        fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known),
+                        fakeSummary(FakeEarnProductPreset.Staking, FakeEarnPosition.None),
+                        fakeSummary(FakeEarnProductPreset.Vault, FakeEarnPosition.None),
+                    ),
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.inactive[1].onClick()
+
+                // Assert
+                verifyOrder {
+                    analyticsEventHandler.send(
+                        EarnBannerAnalyticsEvent.YieldSheetRow(product = "Vault", isActive = false, position = 3),
+                    )
+                    router.push(any(), any())
+                    callback.onDismiss()
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN one active and two inactive WHEN tapping the active THEN YieldSheetRow is active at position 1`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    listOf(
+                        fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known),
+                        fakeSummary(FakeEarnProductPreset.Staking, FakeEarnPosition.None),
+                        fakeSummary(FakeEarnProductPreset.Vault, FakeEarnPosition.None),
+                    ),
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.active.single().onClick()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnBannerAnalyticsEvent.YieldSheetRow(product = "Lending", isActive = true, position = 1),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN product without a row WHEN onActionClick THEN no YieldSheetRow but the click is handled`() =
+            runTest {
+                // Arrange
+                val model = createModel(listOf(fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)))
+                advanceUntilIdle()
+
+                // Act
+                model.onActionClick(staking.id, TestAction)
+
+                // Assert
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldSheetRow>()) }
+                verify(exactly = 1) { router.push(FakeForeignRoute, any()) }
+                verify(exactly = 1) { callback.onDismiss() }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN product that left the registry WHEN onActionClick THEN no YieldSheetRow is sent`() = runTest {
+            // Arrange
+            val model = createModel(listOf(fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)))
+            advanceUntilIdle()
+
+            // Act
+            model.onActionClick(EarnProductId("gone"), TestAction)
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnBannerAnalyticsEvent.YieldSheetRow>()) }
+            model.onDestroy()
+        }
+    }
+
     private fun TestScope.createModel(
         summaries: List<EarnProductSummary>,
         products: List<EarnProduct> = listOf(lending, staking, vault),
+    ): EarnYieldSheetModel = createModel(
+        summaryFrames = flowOf(summariesFrame(summaries)),
+        products = products,
+    )
+
+    private fun TestScope.createModel(
+        summaryFrames: Flow<EarnProductSummaries>,
+        products: List<EarnProduct> = listOf(lending, staking, vault),
     ): EarnYieldSheetModel {
-        every { summarySupplier(USER_WALLET_ID) } returns flowOf(
-            EarnProductSummaries(
-                products = mapOf(currency.id to summaries),
-                rateSources = emptyMap(),
-                source = StatusSource.ACTUAL,
-            ),
-        )
+        every { summarySupplier(USER_WALLET_ID) } returns summaryFrames
         val registry = EarnProductsRegistry(products = products.toSet(), rateSources = emptySet())
 
         return EarnYieldSheetModel(
@@ -444,8 +576,15 @@ internal class EarnYieldSheetModelTest {
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             converter = EarnYieldSheetConverter(registry = registry),
             router = router,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
+
+    private fun summariesFrame(summaries: List<EarnProductSummary>) = EarnProductSummaries(
+        products = mapOf(currency.id to summaries),
+        rateSources = emptyMap(),
+        source = StatusSource.ACTUAL,
+    )
 
     private fun stubFiatRate(list: AccountStatusList, fiatRate: BigDecimal) {
         val value: CryptoCurrencyStatus.Value = mockk()

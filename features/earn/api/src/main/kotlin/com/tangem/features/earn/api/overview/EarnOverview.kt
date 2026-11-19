@@ -52,6 +52,7 @@ data class EarnBannerOverview(
     val bestProductId: EarnProductId?,
     val activeCount: Int,
     val totalPosition: BigDecimal?,
+    val productCount: Int,
 )
 
 data class EarnHeadline(

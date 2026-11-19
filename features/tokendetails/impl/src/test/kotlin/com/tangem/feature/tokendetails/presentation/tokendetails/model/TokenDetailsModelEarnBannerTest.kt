@@ -92,6 +92,7 @@ internal class TokenDetailsModelEarnBannerTest : TokenDetailsModelTestBase() {
                     bestProductId = null,
                     activeCount = 2,
                     totalPosition = BigDecimal.ONE,
+                    productCount = 2,
                 ),
             ),
         ),
