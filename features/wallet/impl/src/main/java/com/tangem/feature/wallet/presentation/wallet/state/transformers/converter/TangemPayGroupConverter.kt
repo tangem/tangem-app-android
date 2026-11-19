@@ -100,11 +100,9 @@ internal class TangemPayGroupConverter(
 
     private fun MoneyAccountStatusValue.isIssued(): Boolean = this is MoneyAccountStatusValue.Account
 
-    private fun TangemPayMainUM.isActionRequired(): Boolean =
-        this is TangemPayMainUM.Content && isActionRequired
+    private fun TangemPayMainUM.isActionRequired(): Boolean = this is TangemPayMainUM.Content && isActionRequired
 
-    private fun MoneyAccountMainUM.isActionRequired(): Boolean =
-        this is MoneyAccountMainUM.Content && isActionRequired
+    private fun MoneyAccountMainUM.isActionRequired(): Boolean = this is MoneyAccountMainUM.Content && isActionRequired
 
     private fun PaymentAccountStatusValue.isRefreshing(): Boolean =
         this is PaymentAccountStatusValue.Loading || source == StatusSource.CACHE
