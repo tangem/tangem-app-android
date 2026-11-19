@@ -11,6 +11,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldE
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldKind
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.FormState
+import com.tangem.features.tangempay.withdraw.bank.form.model.canSuggestSavedRecipients
 import com.tangem.features.tangempay.withdraw.bank.form.model.kindIn
 import com.tangem.features.tangempay.withdraw.bank.form.model.placeholderIn
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
@@ -65,10 +66,10 @@ internal class TangemPayBankWithdrawFormUMFactory(
         state: FormState,
         accounts: List<BankAccount>,
     ): ImmutableList<SuggestionUM> {
-        val field = BankWithdrawFormField.AccountNumber
-        if (field !in fields || state.focusedField != field) return persistentListOf()
+        val field = state.focusedField?.takeIf { it in fields && it.canSuggestSavedRecipients }
+            ?: return persistentListOf()
         val prefix = values[field].orEmpty().trim()
-        return BankAccountSuggestions.match(accounts = accounts, prefix = prefix)
+        return BankAccountSuggestions.match(accounts = accounts, field = field, prefix = prefix)
             .map { account ->
                 SuggestionUM(
                     id = account.id,

@@ -267,6 +267,25 @@ internal class TangemPayBankWithdrawModelTest : TangemPayModelTestBase() {
     }
 
     @Test
+    fun `GIVEN SPEI confirmed WHEN saved CLABE recipient suggested THEN recipient picked and SPEI kept`() {
+        // Arrange
+        val speiOptions = bankWithdrawOptions(
+            destinations = listOf(offrampDestination(), offrampDestination(rail = BankRail.SPEI)),
+        )
+        val model = createModel(BankWithdrawEntry.NewPersonal, options = speiOptions)
+        model.onAmountConfirmed(achAmountResult().copy(destination = offrampDestination(rail = BankRail.SPEI)))
+        val suggested = bankAccount(id = "acc-5", accountNumber = "082520000821400017", rail = BankRail.SPEI)
+
+        // Act
+        model.onSavedRecipientSelected(suggested)
+
+        // Assert
+        assertThat(model.draft.value.recipient).isEqualTo(suggested)
+        assertThat(model.draft.value.destination).isEqualTo(offrampDestination(rail = BankRail.SPEI))
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN ach confirmed WHEN saved recipient on wire picked from all THEN draft destination switches to wire`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.SeeAll)
