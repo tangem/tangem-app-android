@@ -84,8 +84,6 @@ internal class EarnPickerConverter @Inject constructor(
         selectedId: EarnProductId,
         intents: EarnPickerClickIntents,
     ): ImmutableList<EarnProductCardUM> {
-        if (summaries.size < MIN_SUMMARIES_FOR_CARDS) return persistentListOf()
-
         return summaries.mapNotNull { summary ->
             val product = registry.find(summary.productId) ?: return@mapNotNull null
             EarnProductCardUM(
@@ -120,10 +118,5 @@ internal class EarnPickerConverter @Inject constructor(
         EarnPickerTab.Calculator -> state.projection != null
         EarnPickerTab.Benefits -> state.benefits.isNotEmpty()
         EarnPickerTab.Details -> state.details.isNotEmpty()
-    }
-
-    private companion object {
-
-        const val MIN_SUMMARIES_FOR_CARDS = 2
     }
 }

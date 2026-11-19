@@ -10,7 +10,6 @@ import kotlinx.collections.immutable.ImmutableList
 
 /**
  * @property barTitle the selected product, the screen title while nothing is loaded
- * @property products shown only when the currency has several
  */
 @Immutable
 internal data class EarnPickerUM(
