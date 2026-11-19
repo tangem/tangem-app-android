@@ -10,7 +10,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -23,9 +22,7 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
-import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -79,8 +76,6 @@ internal class CollectiblesMainModel @Inject constructor(
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val sessionKey: CollectiblesSessionKey,
-    private val clipboardManager: ClipboardManager,
     private val getCollectiblePendingPacksUseCase: GetCollectiblePendingPacksUseCase,
     private val dismissCollectiblePendingPackUseCase: DismissCollectiblePendingPackUseCase,
     private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase,
@@ -115,9 +110,6 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var vaultStatus: CollectiblesVaultBalance? = null
 
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    private var sessionKeyAddress: String? = null
-
     private var pendingPacks: List<CollectiblePendingPack> = emptyList()
     private val pendingPacksJobHolder = JobHolder()
     private val addFundsJobHolder = JobHolder()
@@ -126,7 +118,6 @@ internal class CollectiblesMainModel @Inject constructor(
         observeBalance()
         observeCollectiblesStatus()
         refreshRegion()
-        loadSessionKey()
     }
 
     fun onScreenResumed() {
@@ -182,19 +173,6 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private fun onPendingPackCloseClick(txId: String) {
         modelScope.launch { dismissCollectiblePendingPackUseCase(txId) }
-    }
-
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    private fun loadSessionKey() {
-        modelScope.launch {
-            val key = sessionKey.getPublicKeyOrNull(AccountId.forCollectiblesAccount(params.userWalletId))
-                ?: return@launch
-
-            sessionKeyAddress = key.base58
-            uiState.update { state ->
-                state.copy(menu = menuConverter.convert(key.base58).copy(isShown = state.menu.isShown))
-            }
-        }
     }
 
     private fun observeBalance() {
@@ -267,7 +245,7 @@ internal class CollectiblesMainModel @Inject constructor(
             isRegionRestricted = false,
             relink = CollectiblesMainUM.RelinkUM.Hidden,
             pendingPacks = persistentListOf(),
-            menu = menuConverter.convert(null),
+            menu = menuConverter.convert(Unit),
             isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
         )
@@ -300,7 +278,6 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.DELIVERIES -> onDeliveriesClick()
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
-            CollectiblesMenuItem.SESSION_KEY -> onSessionKeyClick()
         }
     }
 
@@ -396,12 +373,6 @@ internal class CollectiblesMainModel @Inject constructor(
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
     }
 
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    private fun onSessionKeyClick() {
-        onMenuDismiss()
-        sessionKeyAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }
-    }
-
     private fun isRelinkLoading(): Boolean {
         return (uiState.value.relink as? CollectiblesMainUM.RelinkUM.Shown)?.isLoading == true
     }
@@ -417,10 +388,7 @@ internal class CollectiblesMainModel @Inject constructor(
             if (userWallet == null) {
                 sendUnknownErrorMessage()
             } else {
-                createOrReactivateCollectiblesAccountUseCase(userWallet).fold(
-                    ifLeft = ::onVaultActionFailed,
-                    ifRight = { loadSessionKey() },
-                )
+                createOrReactivateCollectiblesAccountUseCase(userWallet).onLeft(::onVaultActionFailed)
             }
 
             setRelinkLoading(false)

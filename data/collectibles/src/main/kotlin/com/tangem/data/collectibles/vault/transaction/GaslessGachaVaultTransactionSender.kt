@@ -51,9 +51,10 @@ internal class GaslessGachaVaultTransactionSender @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val signers: GachaVaultSigners,
     private val gaslessRepository: SolanaGaslessTransactionRepository,
-) : GachaVaultTransactionSender {
+) {
 
-    override suspend fun initOrUpdateVault(
+    /** For a device that already holds the owner key, so the vault read costs no card session. */
+    suspend fun initOrUpdateVault(
         userWallet: UserWallet,
         sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
@@ -80,7 +81,8 @@ internal class GaslessGachaVaultTransactionSender @Inject constructor(
         TangemLogger.d("vault: set-up transaction sent")
     }
 
-    override suspend fun deriveOwnerAndSetUpVault(
+    /** Derives the owner key and signs the set-up in the same card session: one tap. */
+    suspend fun deriveOwnerAndSetUpVault(
         userWallet: UserWallet.Cold,
         sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
@@ -100,7 +102,13 @@ internal class GaslessGachaVaultTransactionSender @Inject constructor(
         TangemLogger.d("vault: set-up transaction sent")
     }
 
-    override suspend fun sendPurchasePack(
+    /**
+     * Not idempotent: never call again for the same [memo] while the outcome is unknown.
+     *
+     * @param signer signs with the session key
+     * @return the transaction signature
+     */
+    suspend fun sendPurchasePack(
         userWallet: UserWallet,
         sessionKey: SessionKeyPublicKey,
         amount: Long,
@@ -133,7 +141,15 @@ internal class GaslessGachaVaultTransactionSender @Inject constructor(
         submit(userWalletId = userWallet.walletId, signed = signed)
     }
 
-    override suspend fun withdraw(
+    /**
+     * Moves USDC out of the vault with `withdraw_token`, signed by the owner. Not idempotent: never call again
+     * while the outcome is unknown.
+     *
+     * @param mint the token to withdraw
+     * @param amount base units of the token
+     * @return the transaction signature
+     */
+    suspend fun withdraw(
         userWallet: UserWallet,
         mint: String,
         recipient: String,

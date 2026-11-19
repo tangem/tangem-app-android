@@ -11,11 +11,9 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.core.TangemSdkError
-import com.tangem.data.collectibles.vault.transaction.DevnetGachaVaultTransactionSender
 import com.tangem.data.collectibles.vault.transaction.GachaVaultSigners
 import com.tangem.data.collectibles.vault.transaction.GaslessGachaVaultTransactionSender
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
@@ -38,10 +36,7 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -57,7 +52,6 @@ internal class DefaultGachaVaultRepositoryTest {
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory = mockk()
     private val gaslessSender: GaslessGachaVaultTransactionSender = mockk()
-    private val devnetSender: DevnetGachaVaultTransactionSender = mockk()
     private val sessionKey: CollectiblesSessionKey = mockk()
 
     private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
@@ -75,29 +69,19 @@ internal class DefaultGachaVaultRepositoryTest {
         ownerDeriver = ownerDeriver,
         signers = GachaVaultSigners(cardSdkConfigRepository, hotWalletSignerFactory),
         gaslessSender = gaslessSender,
-        devnetSender = devnetSender,
         sessionKey = sessionKey,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    /** Mainnet goes through the gasless sponsor; only a test card, which addresses devnet, pays in SOL. */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class TransactionSenderChoice {
+    inner class SetUpVault {
 
         @BeforeEach
         fun resetMocks() {
-            clearMocks(gaslessSender, devnetSender, ownerDeriver)
-            mockkStatic(SCAN_RESPONSE_EXT_FILE)
+            clearMocks(gaslessSender, ownerDeriver)
             coEvery { gaslessSender.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
-            coEvery { devnetSender.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
             coEvery { gaslessSender.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
-            coEvery { devnetSender.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
-        }
-
-        @AfterEach
-        fun unmockStatics() {
-            unmockkStatic(SCAN_RESPONSE_EXT_FILE)
         }
 
         @Test
@@ -108,13 +92,12 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) { gaslessSender.initOrUpdateVault(userWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { devnetSender.initOrUpdateVault(any(), any(), any()) }
         }
 
         @Test
-        fun `GIVEN a production card WHEN initOrUpdateVault THEN the gasless sender sets it up`() = runTest {
+        fun `GIVEN a card WHEN initOrUpdateVault THEN the gasless sender sets it up`() = runTest {
             // Arrange
-            val coldWallet = coldWallet(isTestCard = false)
+            val coldWallet: UserWallet.Cold = mockk { every { walletId } returns WALLET_ID }
 
             // Act
             val actual = repository.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS)
@@ -122,13 +105,12 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) { gaslessSender.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { devnetSender.initOrUpdateVault(any(), any(), any()) }
         }
 
         @Test
-        fun `GIVEN a production card WHEN deriveOwnerAndSetUpVault THEN the gasless sender sets it up`() = runTest {
+        fun `GIVEN a card WHEN deriveOwnerAndSetUpVault THEN the gasless sender sets it up`() = runTest {
             // Arrange
-            val coldWallet = coldWallet(isTestCard = false)
+            val coldWallet: UserWallet.Cold = mockk { every { walletId } returns WALLET_ID }
 
             // Act
             val actual = repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS)
@@ -136,21 +118,6 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) { gaslessSender.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { devnetSender.deriveOwnerAndSetUpVault(any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN a test card WHEN initOrUpdateVault THEN the devnet sender sets it up`() = runTest {
-            // Arrange
-            val coldWallet = coldWallet(isTestCard = true)
-
-            // Act
-            val actual = repository.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS)
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) { devnetSender.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { gaslessSender.initOrUpdateVault(any(), any(), any()) }
         }
 
         @Test
@@ -181,12 +148,6 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(CollectiblesAccountError.Cancelled.left())
             coVerify(exactly = 0) { gaslessSender.initOrUpdateVault(any(), any(), any()) }
-        }
-
-        private fun coldWallet(isTestCard: Boolean): UserWallet.Cold {
-            val coldWallet = mockk<UserWallet.Cold> { every { walletId } returns WALLET_ID }
-            every { coldWallet.cardTypesResolver } returns mockk { every { isTestCard() } returns isTestCard }
-            return coldWallet
         }
     }
 
@@ -382,15 +343,8 @@ internal class DefaultGachaVaultRepositoryTest {
 
         @BeforeEach
         fun resetMocks() {
-            clearMocks(gaslessSender, devnetSender)
-            mockkStatic(SCAN_RESPONSE_EXT_FILE)
+            clearMocks(gaslessSender)
             coEvery { gaslessSender.withdraw(any(), any(), any(), any()) } returns TX_HASH.right()
-            coEvery { devnetSender.withdraw(any(), any(), any(), any()) } returns TX_HASH.right()
-        }
-
-        @AfterEach
-        fun unmockStatics() {
-            unmockkStatic(SCAN_RESPONSE_EXT_FILE)
         }
 
         @Test
@@ -403,22 +357,6 @@ internal class DefaultGachaVaultRepositoryTest {
             coVerify(exactly = 1) {
                 gaslessSender.withdraw(userWallet, MINT, RECIPIENT, 12_500_000L)
             }
-            coVerify(exactly = 0) { devnetSender.withdraw(any(), any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN a test card WHEN withdraw THEN the devnet sender pays`() = runTest {
-            // Arrange
-            val coldWallet = mockk<UserWallet.Cold> { every { walletId } returns WALLET_ID }
-            every { coldWallet.cardTypesResolver } returns mockk { every { isTestCard() } returns true }
-
-            // Act
-            val actual = repository.withdraw(coldWallet, VAULT_TOKEN, RECIPIENT, BigDecimal.ONE)
-
-            // Assert
-            assertThat(actual).isEqualTo(TX_HASH.right())
-            coVerify(exactly = 1) { devnetSender.withdraw(coldWallet, MINT, any(), 1_000_000L) }
-            coVerify(exactly = 0) { gaslessSender.withdraw(any(), any(), any(), any()) }
         }
 
         @Test
@@ -614,6 +552,5 @@ internal class DefaultGachaVaultRepositoryTest {
         /** Pushes the message past the 930 bytes a card can sign. */
         const val LARGE_INSTRUCTION_DATA_SIZE = 900
 
-        const val SCAN_RESPONSE_EXT_FILE = "com.tangem.domain.card.common.util.ScanResponseExtKt"
     }
 }

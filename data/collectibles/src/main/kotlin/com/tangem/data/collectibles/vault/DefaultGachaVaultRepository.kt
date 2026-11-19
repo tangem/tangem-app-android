@@ -5,13 +5,10 @@ import arrow.core.flatMap
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
-import com.tangem.data.collectibles.vault.transaction.DevnetGachaVaultTransactionSender
 import com.tangem.data.collectibles.vault.transaction.GachaVaultSigners
-import com.tangem.data.collectibles.vault.transaction.GachaVaultTransactionSender
 import com.tangem.data.collectibles.vault.transaction.GaslessGachaVaultTransactionSender
 import com.tangem.data.collectibles.vault.transaction.vaultWalletManager
 import com.tangem.domain.collectibles.CollectiblesAccountError
@@ -39,8 +36,8 @@ import javax.inject.Inject
  * Adapter over the blockchain SDK's `CollectiblesVaultProvider`, which `WalletManager` implements by delegation —
  * a manager of the wrong blockchain simply answers `isCollectiblesVaultSupported() == false`.
  *
- * Reads go straight to the provider. Writes go through a [GachaVaultTransactionSender]: on mainnet the gasless
- * sponsor pays, on devnet the wallet pays in SOL as before.
+ * Reads go straight to the provider. Writes go through [GaslessGachaVaultTransactionSender]: the gasless sponsor
+ * pays.
  */
 @Suppress("LongParameterList")
 internal class DefaultGachaVaultRepository @Inject constructor(
@@ -50,7 +47,6 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     private val ownerDeriver: CollectiblesOwnerDeriver,
     private val signers: GachaVaultSigners,
     private val gaslessSender: GaslessGachaVaultTransactionSender,
-    private val devnetSender: DevnetGachaVaultTransactionSender,
     private val sessionKey: CollectiblesSessionKey,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : GachaVaultRepository {
@@ -60,7 +56,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = withContext(dispatchers.io) {
-        transactionSender(userWallet).initOrUpdateVault(userWallet, sessionKey, limits)
+        gaslessSender.initOrUpdateVault(userWallet, sessionKey, limits)
     }
 
     /**
@@ -76,13 +72,13 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         when (userWallet) {
             is UserWallet.Cold -> {
                 TangemLogger.d("vault: deriveOwnerAndSetUpVault -> Cold wallet, deriving in a card session (tap)")
-                transactionSender(userWallet).deriveOwnerAndSetUpVault(userWallet, sessionKey, limits)
+                gaslessSender.deriveOwnerAndSetUpVault(userWallet, sessionKey, limits)
             }
             is UserWallet.Hot -> {
                 TangemLogger.d("vault: deriveOwnerAndSetUpVault -> Hot wallet, deriving locally (no tap)")
                 either {
                     ownerDeriver.deriveOwner(userWallet.walletId).bind()
-                    transactionSender(userWallet).initOrUpdateVault(userWallet, sessionKey, limits).bind()
+                    gaslessSender.initOrUpdateVault(userWallet, sessionKey, limits).bind()
                 }
             }
         }
@@ -179,7 +175,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 )
             }
 
-            transactionSender(userWallet).sendPurchasePack(
+            gaslessSender.sendPurchasePack(
                 userWallet = userWallet,
                 sessionKey = sessionKey,
                 amount = amount,
@@ -239,7 +235,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 .mapLeft { GachaVaultError.Unexpected(it).asFailure() }
                 .bind()
 
-            transactionSender(userWallet).withdraw(
+            gaslessSender.withdraw(
                 userWallet = userWallet,
                 mint = token.contractAddress,
                 recipient = recipientWallet,
@@ -259,7 +255,4 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             GachaVaultError.TransactionTooLarge.asFailure()
         }
     }
-
-    private fun transactionSender(userWallet: UserWallet): GachaVaultTransactionSender =
-        if (userWallet.collectiblesVaultBlockchain == Blockchain.SolanaTestnet) devnetSender else gaslessSender
 }
