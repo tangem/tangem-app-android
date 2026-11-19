@@ -30,7 +30,7 @@ internal class EarnTokensListConfigFactoryTest {
         val actual = createEarnTokensListConfig(
             filter = model.filter,
             earnNetworks = model.earnNetworks,
-            isVaultsIncluded = false,
+            isVaultsIncluded = model.isVaultsIncluded,
             isForEarn = model.isForEarn,
         )
 
@@ -73,6 +73,24 @@ internal class EarnTokensListConfigFactoryTest {
                 isForEarn = false,
                 isVaultsIncluded = false,
             ),
+        ),
+        ConfigModel(
+            name = "GIVEN vault type and vaults included WHEN config created THEN type is vault",
+            filter = createEarnFilter(type = EarnFilterType.VAULT),
+            earnNetworks = loadedNetworks,
+            isVaultsIncluded = true,
+            expected = EarnTokensListConfig(
+                type = EarnType.VAULT,
+                networks = null,
+                isForEarn = false,
+                isVaultsIncluded = true,
+            ),
+        ),
+        ConfigModel(
+            name = "GIVEN vault type and vaults left out WHEN config created THEN type is not narrowed",
+            filter = createEarnFilter(type = EarnFilterType.VAULT),
+            earnNetworks = loadedNetworks,
+            expected = EarnTokensListConfig(type = null, networks = null, isForEarn = false, isVaultsIncluded = false),
         ),
         ConfigModel(
             name = "GIVEN all networks WHEN config created THEN networks are null",
@@ -183,6 +201,7 @@ internal class EarnTokensListConfigFactoryTest {
         val name: String,
         val filter: EarnFilter?,
         val earnNetworks: EarnNetworks?,
+        val isVaultsIncluded: Boolean = false,
         val isForEarn: Boolean = false,
         val expected: EarnTokensListConfig,
     ) {

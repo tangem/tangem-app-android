@@ -61,6 +61,7 @@ internal class EarnFilterChipsFactory(
         )
         EarnFilterType.STAKING,
         EarnFilterType.YIELD,
+        EarnFilterType.VAULT,
         -> TangemFilterItemUM.Active(
             id = TYPE_ID,
             value = EarnFilterTypeConverter().convert(filter).title,

@@ -114,6 +114,15 @@ internal class EarnFilterChipsFactoryTest {
                 activeTypeChip(resourceReference(R.string.markets_sort_by_yield_mode_title)),
             ),
         ),
+        ChipsModel(
+            name = "GIVEN the vault type WHEN chips built THEN the type chip shows its title",
+            filter = createEarnFilter(type = EarnFilterType.VAULT),
+            networks = loadedNetworks,
+            expected = listOf(
+                inactiveNetworkChip,
+                activeTypeChip(resourceReference(R.string.common_vaults)),
+            ),
+        ),
     )
 
     private val inactiveNetworkChip

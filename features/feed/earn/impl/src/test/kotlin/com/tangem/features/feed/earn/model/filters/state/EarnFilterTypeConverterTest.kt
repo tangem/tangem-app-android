@@ -38,6 +38,11 @@ internal class EarnFilterTypeConverterTest {
             filter = EarnFilterType.YIELD,
             expected = EarnFilterTypeUM.YieldMode,
         ),
+        TypeModel(
+            name = "GIVEN vault WHEN converted THEN the sheet preselects vaults",
+            filter = EarnFilterType.VAULT,
+            expected = EarnFilterTypeUM.Vaults,
+        ),
     )
 
     internal data class TypeModel(

@@ -23,6 +23,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.earn.impl.R
 import com.tangem.features.feed.earn.ui.state.EarnFilterByTypeBottomSheetContentUM
 import com.tangem.features.feed.earn.ui.state.EarnFilterTypeUM
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun EarnFilterByTypeBottomSheet(config: TangemBottomSheetConfig) {
@@ -41,7 +42,7 @@ internal fun EarnFilterByTypeBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun Content(content: EarnFilterByTypeBottomSheetContentUM) {
     Column {
-        EarnFilterTypeUM.entries.forEachIndexed { index, type ->
+        content.options.forEachIndexed { index, type ->
             TangemRow(
                 titleSlot = {
                     Column(
@@ -72,7 +73,7 @@ private fun Content(content: EarnFilterByTypeBottomSheetContentUM) {
                 },
                 modifier = Modifier.roundedShapeItemDecoration(
                     currentIndex = index,
-                    lastIndex = EarnFilterTypeUM.entries.lastIndex,
+                    lastIndex = content.options.lastIndex,
                     addDefaultPadding = false,
                 ),
                 onClick = { content.onOptionClick(type) },
@@ -93,6 +94,7 @@ private fun Preview() {
                 isShown = true,
                 onDismissRequest = {},
                 content = EarnFilterByTypeBottomSheetContentUM(
+                    options = EarnFilterTypeUM.entries.toImmutableList(),
                     selectedOption = EarnFilterTypeUM.All,
                     onOptionClick = {},
                 ),

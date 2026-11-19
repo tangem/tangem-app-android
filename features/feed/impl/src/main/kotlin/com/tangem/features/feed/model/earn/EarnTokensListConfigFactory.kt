@@ -18,6 +18,7 @@ internal fun createEarnTokensListConfig(
         EarnFilterTypeUM.All -> null
         EarnFilterTypeUM.Staking -> EarnType.STAKING
         EarnFilterTypeUM.YieldMode -> EarnType.YIELD
+        EarnFilterTypeUM.Vaults -> EarnType.VAULT.takeIf { isVaultsIncluded }
     }
     val networks = when (selectedNetworkFilter) {
         is EarnFilterNetworkUM.AllNetworks -> null

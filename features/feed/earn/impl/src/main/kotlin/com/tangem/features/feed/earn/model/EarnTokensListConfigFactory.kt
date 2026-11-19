@@ -18,6 +18,7 @@ internal fun createEarnTokensListConfig(
         null, EarnFilterType.ALL -> null
         EarnFilterType.STAKING -> EarnType.STAKING
         EarnFilterType.YIELD -> EarnType.YIELD
+        EarnFilterType.VAULT -> EarnType.VAULT.takeIf { isVaultsIncluded }
     }
     val networks = when (val network = filter?.earnFilterNetwork) {
         null, is EarnFilterNetwork.AllNetworks -> null
