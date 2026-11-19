@@ -14,8 +14,10 @@ import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.ui.notifications.NetworkFeeUnavailableNoticeAnalytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.NetworkFeeUnavailableAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -111,6 +113,10 @@ internal class WcSendTransactionModel @Inject constructor(
     private var psbtOutputs: List<WcPsbtOutput>? = null
     private var sign: () -> Unit = {}
     private val blockAidUiConverter = WcSendAndReceiveBlockAidUiConverter()
+    private val networkFeeUnavailableNoticeAnalytics = NetworkFeeUnavailableNoticeAnalytics(
+        analyticsEventHandler = analytics,
+        source = NetworkFeeUnavailableAnalyticsEvent.Source.WalletConnect,
+    )
     private val feeReloadState = MutableStateFlow(false)
     private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
     private val securityStatusState =
@@ -230,6 +236,7 @@ internal class WcSendTransactionModel @Inject constructor(
      * Also handles fee results from FeeSelectorBlockComponent
      */
     fun updateFee(feeSelectorUM: FeeSelectorUM) {
+        networkFeeUnavailableNoticeAnalytics.onBannerVisibilityChanged(isShown = feeSelectorUM is FeeSelectorUM.Error)
         val feeErrorNotification = notificationsFactory.createFeeNotifications(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             feeSelectorUM = feeSelectorUM,

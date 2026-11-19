@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.R
+import com.tangem.common.ui.notifications.NetworkFeeUnavailableNoticeAnalytics
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
@@ -22,6 +23,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransa
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ResettableOneTimeEventSender
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.NetworkFeeUnavailableAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -92,6 +94,10 @@ internal class NotificationsModel @Inject constructor(
     private val currency = cryptoCurrencyStatus.currency
     private val appCurrency = params.appCurrency
     private val resettableOneTimeEventSender = ResettableOneTimeEventSender(analyticsEventHandler)
+    private val networkFeeUnavailableNoticeAnalytics = NetworkFeeUnavailableNoticeAnalytics(
+        analyticsEventHandler = analyticsEventHandler,
+        source = NetworkFeeUnavailableAnalyticsEvent.Source.Send,
+    )
 
     private var notificationData = params.notificationData
 
@@ -187,6 +193,7 @@ internal class NotificationsModel @Inject constructor(
             addDomainNotifications(currencyCheck = currencyCheck, sendingAmount = sendingAmount)
         }
 
+        networkFeeUnavailableNoticeAnalytics.onNotificationsUpdated(notifications)
         notificationsUpdateTrigger.callbackHasError(notifications.any { it is NotificationUM.Error })
 
         _uiState.value = notifications.toImmutableList()

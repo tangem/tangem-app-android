@@ -601,7 +601,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
 
         val assentUiState = mockk<StakingUiState>(relaxed = true) {
             every { currentStep } returns StakingStep.Confirmation
-            every { confirmationState } returns mockk<StakingStates.ConfirmationState.Data> {
+            every { confirmationState } returns mockk<StakingStates.ConfirmationState.Data>(relaxed = true) {
                 every { innerState } returns InnerConfirmationStakingState.ASSENT
             }
         }
