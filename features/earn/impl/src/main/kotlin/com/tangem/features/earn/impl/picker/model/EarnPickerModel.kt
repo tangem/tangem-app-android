@@ -9,12 +9,12 @@ import com.tangem.core.media.LoopingVideoController
 import com.tangem.core.media.LoopingVideoState
 import com.tangem.core.media.RemoteClipCache
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.InnerEarnNavigator
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.di.EarnHeroClip
@@ -37,7 +37,8 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProjection
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -157,6 +158,9 @@ internal class EarnPickerModel @Inject constructor(
 
     val heroVideoState: StateFlow<LoopingVideoState>
         get() = heroVideo.state
+
+    val rowInfo: StateFlow<EarnRowInfoUM?>
+        field = MutableStateFlow(null)
 
     private var isScreenResumed = false
     private var isHeroVisible = true
@@ -318,12 +322,12 @@ internal class EarnPickerModel @Inject constructor(
         }
     }
 
-    override fun onInfoClick(block: EarnTextBlock) {
-        uiMessageSender.send(
-            modalMessage {
-                informer { item(title = block.title, description = block.description) }
-            },
-        )
+    override fun onInfoClick(info: EarnRowInfo) {
+        rowInfo.value = info.toUM()
+    }
+
+    fun onRowInfoDismiss() {
+        rowInfo.value = null
     }
 
     override fun onLinkClick(url: String) {

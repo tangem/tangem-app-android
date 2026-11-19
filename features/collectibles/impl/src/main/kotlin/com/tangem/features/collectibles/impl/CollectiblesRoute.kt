@@ -32,4 +32,7 @@ internal sealed interface CollectiblesRoute : Route {
 
     @Serializable
     data object Inventory : CollectiblesRoute
+
+    @Serializable
+    data class NftDetails(val id: String) : CollectiblesRoute
 }

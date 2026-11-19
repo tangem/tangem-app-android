@@ -28,6 +28,8 @@ import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_sign_usd_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.tangempay.main.impl.R
@@ -40,32 +42,36 @@ internal fun TangemPayMainBlockContent(
     isGrouped: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val rowModifier = modifier.tangemPayCard(
+        isActionRequired = false,
+        isGrouped = isGrouped,
+    )
     when (state) {
         is TangemPayMainUM.Empty -> Unit
-        is TangemPayMainUM.Loading -> TangemPayMainLoading(isGrouped = isGrouped, modifier = modifier)
+        is TangemPayMainUM.Loading -> TangemPayMainLoading(modifier = rowModifier)
         is TangemPayMainUM.UnderReview -> TangemPayRow(
-            isGrouped = isGrouped,
+            isGroupAppearance = !isGrouped,
             subtitle = state.subtitle,
-            modifier = modifier,
+            modifier = rowModifier,
             onClick = state.onClick,
         )
         is TangemPayMainUM.ActionRequired -> TangemPayRow(
-            isGrouped = isGrouped,
+            isGroupAppearance = !isGrouped,
             subtitle = resourceReference(R.string.tangempay_action_required_title),
             subtitleColor = TangemTheme.colors3.text.status.warning,
-            modifier = modifier,
+            modifier = rowModifier,
             onClick = state.onClick,
         )
         is TangemPayMainUM.IssuingCard -> TangemPayRow(
-            isGrouped = isGrouped,
+            isGroupAppearance = false,
             subtitle = resourceReference(R.string.money_account_main_status_activating),
-            modifier = modifier,
+            modifier = rowModifier,
             onClick = state.onClick,
         )
         is TangemPayMainUM.FailedToIssue -> TangemPayRow(
-            isGrouped = isGrouped,
+            isGroupAppearance = false,
             subtitle = resourceReference(R.string.tangempay_failed_to_issue_card),
-            modifier = modifier,
+            modifier = rowModifier,
             showError = true,
             onClick = state.onClick,
         )
@@ -76,19 +82,19 @@ internal fun TangemPayMainBlockContent(
             modifier = modifier,
         )
         is TangemPayMainUM.TemporaryUnavailable -> TangemPayUnavailable(
-            isGrouped = isGrouped,
+            isPayGroupAppearance = false,
             subtitle = stringReference(DASH_SIGN),
-            modifier = modifier,
+            modifier = rowModifier,
         )
         is TangemPayMainUM.SyncNeeded -> TangemPayUnavailable(
-            isGrouped = isGrouped,
+            isPayGroupAppearance = !isGrouped,
             subtitle = resourceReference(R.string.tangempay_payment_account_sync_needed),
-            modifier = modifier,
+            modifier = rowModifier,
         )
         is TangemPayMainUM.ExposedDevice -> TangemPayRow(
-            isGrouped = isGrouped,
+            isGroupAppearance = false,
             subtitle = resourceReference(R.string.tangem_pay_rooted_device_subtitle),
-            modifier = modifier,
+            modifier = rowModifier,
         )
     }
 }
@@ -107,7 +113,7 @@ private fun TangemPayMainContent(
             verticalAlignment = TangemRowVerticalAlignment.Center,
             onClick = payMainUM.onClick,
             startSlot = { TangemPayIssuedIcon() },
-            titleSlot = { TangemPayTitle() },
+            titleSlot = { TangemPayTitle(isPayGroupAppearance = false) },
             subtitleSlot = {
                 TangemPaySubtitle(
                     text = payMainUM.subtitle,
@@ -144,7 +150,7 @@ private fun TangemPayMainContent(
 
 @Composable
 private fun TangemPayRow(
-    isGrouped: Boolean,
+    isGroupAppearance: Boolean,
     subtitle: TextReference,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
@@ -152,12 +158,12 @@ private fun TangemPayRow(
     showError: Boolean = false,
 ) {
     TangemRow(
-        modifier = modifier.tangemPayCard(isActionRequired = false, isGrouped = isGrouped),
+        modifier = modifier,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = onClick,
-        startSlot = { TangemPayIcon() },
-        titleSlot = { TangemPayTitle() },
+        startSlot = { TangemPayIcon(isPayGroupAppearance = isGroupAppearance) },
+        titleSlot = { TangemPayTitle(isPayGroupAppearance = isGroupAppearance) },
         subtitleSlot = {
             TangemPaySubtitle(
                 text = subtitle,
@@ -180,15 +186,19 @@ private fun TangemPayRow(
 }
 
 @Composable
-private fun TangemPayUnavailable(isGrouped: Boolean, subtitle: TextReference, modifier: Modifier = Modifier) {
+private fun TangemPayUnavailable(
+    isPayGroupAppearance: Boolean,
+    subtitle: TextReference,
+    modifier: Modifier = Modifier,
+) {
     TangemRow(
-        modifier = modifier.tangemPayCard(isActionRequired = false, isGrouped = isGrouped),
+        modifier = modifier,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        startSlot = { TangemPayIcon() },
+        startSlot = { TangemPayIcon(isPayGroupAppearance = isPayGroupAppearance) },
         titleSlot = {
             Text(
-                text = stringResourceSafe(R.string.tangempay_title),
+                text = stringResourceSafe(tangemPayTitleRes(isPayGroupAppearance = isPayGroupAppearance)),
                 color = TangemTheme.colors3.text.tertiary,
                 style = TangemTheme.typography3.body.medium,
             )
@@ -198,9 +208,25 @@ private fun TangemPayUnavailable(isGrouped: Boolean, subtitle: TextReference, mo
 }
 
 @Composable
-private fun TangemPayIcon() {
+private fun TangemPayIcon(isPayGroupAppearance: Boolean) {
+    if (isPayGroupAppearance) {
+        TangemPayGroupIcon()
+    } else {
+        TangemAvatar(
+            state = TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Visa),
+            size = TangemAvatar.Size.X40,
+        )
+    }
+}
+
+@Composable
+private fun TangemPayGroupIcon() {
     TangemAvatar(
-        state = TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Visa),
+        state = TangemAvatar.UiState.Icon(
+            imageVector = Icons.ic_sign_usd_20,
+            appearance = TangemAvatar.Appearance.Neutral,
+            shape = TangemAvatar.Shape.RoundedSquare,
+        ),
         size = TangemAvatar.Size.X40,
     )
 }
@@ -214,11 +240,17 @@ private fun TangemPayIssuedIcon() {
 }
 
 @Composable
-private fun TangemPayTitle() {
+private fun TangemPayTitle(isPayGroupAppearance: Boolean) {
     TangemRowText(
-        text = resourceReference(R.string.tangempay_title),
+        text = resourceReference(tangemPayTitleRes(isPayGroupAppearance = isPayGroupAppearance)),
         role = TangemRowTextRole.Title,
     )
+}
+
+private fun tangemPayTitleRes(isPayGroupAppearance: Boolean): Int = if (isPayGroupAppearance) {
+    R.string.tangempay_main_group_title
+} else {
+    R.string.tangempay_main_name
 }
 
 @Composable
@@ -263,9 +295,9 @@ private fun TangemPayFiatAmount(text: AnnotatedString, isBalanceFlickering: Bool
 }
 
 @Composable
-private fun TangemPayMainLoading(isGrouped: Boolean, modifier: Modifier = Modifier) {
+private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.tangemPayCard(isActionRequired = false, isGrouped = isGrouped),
+        modifier = modifier,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
@@ -343,7 +375,7 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
             subtitle = TextReference.Str("*1234"),
             isBalanceFlickering = true,
             balance = TextReference.Str("$ 101.56"),
-            balanceSubtitle = TextReference.Str("USDC"),
+            balanceSubtitle = TextReference.Str("USD"),
             onClick = {},
             shouldShowOnlyCacheWarning = true,
             isActionRequired = false,

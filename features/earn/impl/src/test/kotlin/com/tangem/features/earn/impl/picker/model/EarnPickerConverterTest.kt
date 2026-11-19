@@ -26,6 +26,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -83,8 +84,8 @@ internal class EarnPickerConverterTest {
             calls += Call.Incentive
         }
 
-        override fun onInfoClick(block: EarnTextBlock) {
-            calls += Call.Info(block)
+        override fun onInfoClick(info: EarnRowInfo) {
+            calls += Call.Info(info)
         }
 
         override fun onLinkClick(url: String) {
@@ -284,7 +285,7 @@ internal class EarnPickerConverterTest {
         @Test
         fun `GIVEN details rows WHEN convert THEN info and link rows report their clicks and a text row has none`() {
             // Arrange
-            val info = EarnTextBlock(stringReference("title"), stringReference("description"))
+            val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
             val withInfo = EarnRow(stringReference("with"), EarnValue.Text(stringReference("1")), info)
             val link = EarnRow(stringReference("link"), EarnValue.Link(stringReference("Aave"), "https://aave.com"))
             val plain = EarnRow(stringReference("plain"), EarnValue.Text(stringReference("2")))
@@ -430,7 +431,7 @@ internal class EarnPickerConverterTest {
         data class Retry(val product: EarnProduct) : Call
         data object OverviewRetry : Call
         data object Incentive : Call
-        data class Info(val block: EarnTextBlock) : Call
+        data class Info(val info: EarnRowInfo) : Call
         data class Link(val url: String) : Call
         data object Close : Call
     }

@@ -11,7 +11,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -21,6 +20,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.InnerEarnNavigator
 import com.tangem.features.earn.impl.info.EarnInfoChartConfig
 import com.tangem.features.earn.impl.info.EarnInfoComponent
@@ -39,7 +39,7 @@ import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProjection
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -122,6 +122,9 @@ internal class EarnInfoModel @Inject constructor(
     val calculatorSheetNavigation: SlotNavigation<EarnCalculatorSheetConfig> = SlotNavigation()
 
     val howItWorks: StateFlow<EarnHowItWorksUM?>
+        field = MutableStateFlow(null)
+
+    val rowInfo: StateFlow<EarnRowInfoUM?>
         field = MutableStateFlow(null)
 
     val pullToRefresh: StateFlow<PullToRefreshConfig>
@@ -317,12 +320,12 @@ internal class EarnInfoModel @Inject constructor(
         modelScope.launch(dispatchers.main) { router.pop() }
     }
 
-    private fun onInfoClick(block: EarnTextBlock) {
-        uiMessageSender.send(
-            modalMessage {
-                informer { item(title = block.title, description = block.description) }
-            },
-        )
+    private fun onInfoClick(info: EarnRowInfo) {
+        rowInfo.value = info.toUM()
+    }
+
+    fun onRowInfoDismiss() {
+        rowInfo.value = null
     }
 
     fun onHowItWorksDismiss() {

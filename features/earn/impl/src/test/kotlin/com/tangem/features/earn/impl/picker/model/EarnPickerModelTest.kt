@@ -20,7 +20,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
@@ -31,6 +30,7 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -64,7 +64,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnRow
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -967,13 +967,11 @@ internal class EarnPickerModelTest {
     inner class Misc {
 
         @Test
-        fun `GIVEN a row with info WHEN its onInfoClick THEN a modal message is sent`() = runTest {
+        fun `GIVEN a row with info WHEN its onInfoClick THEN rowInfo holds its sheet`() = runTest {
             // Arrange
-            val info = EarnTextBlock(stringReference("title"), stringReference("description"))
+            val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
             val row = EarnRow(stringReference("label"), EarnValue.Text(stringReference("value")), info)
             lending.stateFlow.value = lending.readyState().copy(details = listOf(row))
-            val sent = slot<ModalMessage>()
-            every { uiMessageSender.send(capture(sent)) } returns Unit
             val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))), preselected = lending.id)
             advanceUntilIdle()
 
@@ -981,8 +979,30 @@ internal class EarnPickerModelTest {
             model.uiState.value.ready().details.single().onInfoClick?.invoke()
 
             // Assert
-            verify(exactly = 1) { uiMessageSender.send(any()) }
-            assertThat(sent.isCaptured).isTrue()
+            val expected = EarnRowInfoUM.Text(title = stringReference("title"), text = stringReference("description"))
+            assertThat(model.rowInfo.value).isEqualTo(expected)
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an open row info WHEN onRowInfoDismiss THEN rowInfo is cleared`() = runTest {
+            // Arrange
+            val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
+            val row = EarnRow(stringReference("label"), EarnValue.Text(stringReference("value")), info)
+            lending.stateFlow.value = lending.readyState().copy(details = listOf(row))
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                preselected = lending.id,
+            )
+            advanceUntilIdle()
+            model.uiState.value.ready().details.single().onInfoClick?.invoke()
+
+            // Act
+            model.onRowInfoDismiss()
+
+            // Assert
+            assertThat(model.rowInfo.value).isNull()
             model.onDestroy()
         }
 

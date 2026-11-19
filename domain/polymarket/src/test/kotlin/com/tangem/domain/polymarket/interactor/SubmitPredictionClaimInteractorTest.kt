@@ -1,5 +1,7 @@
 package com.tangem.domain.polymarket.interactor
 
+import com.tangem.domain.polymarket.sessionkey.FakePolymarketPendingAuthorizationStore
+import com.tangem.domain.polymarket.sessionkey.createPendingAuthorization
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -39,12 +41,13 @@ import kotlin.time.Duration.Companion.minutes
 
 internal class SubmitPredictionClaimInteractorTest {
 
+    private val pendingAuthorizations = FakePolymarketPendingAuthorizationStore()
     private val redeemRepository: PolymarketRedeemRepository = mockk()
     private val polymarketRepository: PolymarketRepository = mockk()
     private val positionsRepository: PolymarketPositionsRepository = mockk()
     private val signer: PolymarketTypedDataSigner = mockk()
     private var nowMillis = NOW_MILLIS
-    private val depositWalletLock = PolymarketDepositWalletLock()
+    private val depositWalletLock = PolymarketDepositWalletLock(pendingAuthorizations)
 
     private val interactor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
@@ -262,6 +265,22 @@ internal class SubmitPredictionClaimInteractorTest {
             coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
             coVerify(exactly = 0) { redeemRepository.submit(any(), any()) }
             operating.complete(Unit)
+        }
+
+    @Test
+    fun `GIVEN an executable pending authorization WHEN claimed THEN WalletBusy and nothing is read or signed`() =
+        runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, createPendingAuthorization())
+
+            // Act
+            val actual = interactor.claim(params())
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionClaimFailure.WalletBusy.left())
+            coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
+            coVerify(exactly = 0) { redeemRepository.submit(any(), any()) }
         }
 
     @Test

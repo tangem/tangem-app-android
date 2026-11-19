@@ -2,6 +2,8 @@ package com.tangem.features.collectibles.impl.inventory.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.inventory.model.converter.CollectiblesInventoryContentConverter
 import com.tangem.features.collectibles.impl.inventory.model.converter.CollectiblesInventoryConverter
 import com.tangem.features.collectibles.impl.inventory.model.converter.CollectiblesInventoryTabsConverter
@@ -26,6 +28,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class CollectiblesInventoryModel @Inject constructor(
     private val inventorySource: CollectiblesInventoryMockSource,
+    private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -126,9 +129,8 @@ internal class CollectiblesInventoryModel @Inject constructor(
         search.update { it.copy(isActive = isActive) }
     }
 
-    @Suppress("EmptyFunctionBlock", "UnusedParameter")
     private fun onCardClick(cardId: String) {
-        // TODO([REDACTED_TASK_KEY]): card details are a separate task
+        router.push(CollectiblesRoute.NftDetails(id = cardId))
     }
 
     /** `null` until the first result arrives: the tab is still loading. */

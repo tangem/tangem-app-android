@@ -55,6 +55,8 @@ import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManag
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.earn.api.overview.EarnOverviewSupplier
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.createLoadedValue
@@ -65,6 +67,7 @@ import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
+import com.tangem.features.foryou.impl.model.converter.earnOpportunities.createEarnOverviews
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.items
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.wallet.WalletFeatureToggles
@@ -88,6 +91,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -109,6 +114,7 @@ internal class ForYouModelTest {
     private val portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory = mockk()
     private val router: Router = mockk(relaxUnitFun = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val earnOverviewSupplier: EarnOverviewSupplier = mockk()
     private val walletFeatureToggles: WalletFeatureToggles = mockk {
         every { isRedesignedTokenRowsEnabled } returns false
     }
@@ -147,6 +153,7 @@ internal class ForYouModelTest {
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
         every { portfolioSelectorBridgeFactory.create(any(), any(), any()) } returns portfolioSelectorBridge
         every { yieldSupplyApyFlowUseCase() } returns flowOf(emptyMap())
+        every { earnOverviewSupplier(any()) } returns flowOf(EarnOverviews.Empty)
         coEvery { stakingAvailabilityListUseCase.invokeSync(any(), any()) } returns emptyMap()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { fetchCoinIndicatorsUseCase(any(), any()) } returns Unit.right()
@@ -721,6 +728,50 @@ internal class ForYouModelTest {
             verify { router.push(route = expected, onComplete = any()) }
         }
 
+        @ParameterizedTest
+        @MethodSource("com.tangem.features.foryou.impl.model.ForYouModelTest#earnProductNavigationModels")
+        fun `GIVEN Earn owns ETH WHEN earn row clicked THEN the active product screen or Earn entry opens`(
+            navigation: EarnProductNavigationModel,
+        ) = runTest {
+            // Arrange — a token that is not earning yet keeps the rows on screen: with every token active the
+            // section shows suggestions instead
+            val currency = createCoin(rawCurrencyId = "eth", symbol = "ETH")
+            val winnerRoute = stakingRoute(currency)
+            every { earnOverviewSupplier(WALLET_ID) } returns flowOf(
+                createEarnOverviews(
+                    currency = currency,
+                    isActive = navigation.isActive,
+                    route = winnerRoute.takeIf { navigation.hasOwnScreen },
+                ),
+            )
+            val idleToken = createYieldToken()
+            every { yieldSupplyApyFlowUseCase() } returns flowOf(mapOf(idleToken.yieldSupplyKey() to BigDecimal("5.5")))
+            stubSelectedWallet(
+                currencies = listOf(
+                    createStatus(currency, loadedValue(BigDecimal("100"))),
+                    createStatus(idleToken, loadedValue(BigDecimal("100"))),
+                ),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val expected = if (navigation.isOwnScreenExpected) {
+                winnerRoute
+            } else {
+                AppRoute.EarnEntry(
+                    userWalletId = WALLET_ID,
+                    cryptoCurrency = currency,
+                    source = AppRoute.EarnEntry.Source.ForYou,
+                    start = AppRoute.EarnEntry.Start.Auto,
+                )
+            }
+
+            // Act
+            model.clickEarnRow(currency.id.value)
+
+            // Assert
+            verify(exactly = 1) { router.push(route = expected, onComplete = any()) }
+        }
+
         @Test
         fun `GIVEN unheld suggestion WHEN earn row clicked THEN add sheet loads multi-currency wallets without joint`() =
             runTest {
@@ -851,7 +902,9 @@ internal class ForYouModelTest {
             model.uiState.value.clickPortfolioFilter()
 
             // Act — this is what the selector's Apply button does
-            portfolioSelectorController.selectAccount(setOf(mockk<AccountId>()))
+            portfolioSelectorController.selectAccount(
+                setOf(MockAccounts.createAccount(derivationIndex = 2, userWalletId = WALLET_ID).accountId),
+            )
             advanceUntilIdle()
 
             // Assert
@@ -974,6 +1027,28 @@ internal class ForYouModelTest {
             }
 
         @Test
+        fun `GIVEN Earn owns ETH without staking offer WHEN earn row clicked THEN event still reports Staking`() =
+            runTest {
+                // Arrange — no staking offer, only Earn
+                val currency = createCoin(rawCurrencyId = "eth", symbol = "ETH")
+                every { earnOverviewSupplier(WALLET_ID) } returns flowOf(createEarnOverviews(currency))
+                stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                val expected = ForYouAnalyticsEvent.EarnTokenOpened(
+                    token = currency.symbol,
+                    blockchain = currency.network.name,
+                    type = "Staking",
+                )
+
+                // Act
+                model.clickFirstEarnRow()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            }
+
+        @Test
         fun `GIVEN held yield-eligible token WHEN earn row clicked THEN earn token opened event reports Yield`() =
             runTest {
                 // Arrange
@@ -1024,6 +1099,18 @@ internal class ForYouModelTest {
 
     private fun PortfolioReviewUM.Content.assetRow(): TangemTokenRowUM.Content =
         tokenList.single().tokenRowUM as TangemTokenRowUM.Content
+
+    private fun stakingRoute(currency: CryptoCurrency) = AppRoute.Staking(
+        userWalletId = WALLET_ID,
+        cryptoCurrency = currency,
+        integrationId = StakingIntegrationID.P2PEthPool,
+    )
+
+    private fun ForYouModel.clickEarnRow(id: String) {
+        val earn = uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
+        val row = earn.items.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
+        row.onItemClick?.invoke()
+    }
 
     private fun ForYouModel.clickFirstEarnRow() {
         val earn = uiState.value.earnOpportunities as EarnOpportunitiesUM.Content
@@ -1168,6 +1255,7 @@ internal class ForYouModelTest {
             walletHeaderConverter = walletHeaderConverter,
             analyticsEventHandler = analyticsEventHandler,
             walletFeatureToggles = walletFeatureToggles,
+            earnOverviewSupplier = earnOverviewSupplier,
         ).also { model = it }
     }
 
@@ -1264,8 +1352,21 @@ internal class ForYouModelTest {
         }
     }
 
+    internal data class EarnProductNavigationModel(
+        val isActive: Boolean,
+        val hasOwnScreen: Boolean,
+        val isOwnScreenExpected: Boolean,
+    )
+
     private companion object {
         val WALLET_ID = UserWalletId("01")
+
+        @JvmStatic
+        fun earnProductNavigationModels() = listOf(
+            EarnProductNavigationModel(isActive = false, hasOwnScreen = true, isOwnScreenExpected = false),
+            EarnProductNavigationModel(isActive = true, hasOwnScreen = true, isOwnScreenExpected = true),
+            EarnProductNavigationModel(isActive = true, hasOwnScreen = false, isOwnScreenExpected = false),
+        )
 
         /** UserWalletId parses its value as hex, so the id must be a valid hex string. */
         val LOCKED_WALLET_ID = UserWalletId("02")

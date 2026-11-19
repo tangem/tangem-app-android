@@ -1,5 +1,7 @@
 package com.tangem.domain.polymarket.interactor
 
+import com.tangem.domain.polymarket.sessionkey.FakePolymarketPendingAuthorizationStore
+import com.tangem.domain.polymarket.sessionkey.createPendingAuthorization
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -38,13 +40,14 @@ import java.math.BigInteger
 
 internal class SubmitPredictionWithdrawalInteractorTest {
 
+    private val pendingAuthorizations = FakePolymarketPendingAuthorizationStore()
     private val bridgeRepository: PolymarketBridgeRepository = mockk()
     private val withdrawRepository: PolymarketWithdrawRepository = mockk()
     private val polymarketRepository: PolymarketRepository = mockk()
     private val signer: PolymarketTypedDataSigner = mockk()
     private val store: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
     private val codec: PredictionTransferCallCodec = mockk()
-    private val depositWalletLock = PolymarketDepositWalletLock()
+    private val depositWalletLock = PolymarketDepositWalletLock(pendingAuthorizations)
 
     private val interactor = SubmitPredictionWithdrawalInteractor(
         bridgeRepository = bridgeRepository,
@@ -289,6 +292,37 @@ internal class SubmitPredictionWithdrawalInteractorTest {
             coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
             operating.complete(Unit)
         }
+
+    @Test
+    fun `GIVEN an executable pending authorization WHEN confirmed THEN WalletBusy and nothing is signed or saved`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            pendingAuthorizations.store(USER_WALLET_ID, createPendingAuthorization())
+
+            // Act
+            val actual = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionWithdrawalFailure.WalletBusy.left())
+            coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
+            coVerify(exactly = 0) { store.save(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an executable pending authorization WHEN resent THEN WalletBusy and nothing is submitted`() = runTest {
+        // Arrange
+        coEvery { store.get(USER_WALLET_ID) } returns record(transactionId = null)
+        pendingAuthorizations.store(USER_WALLET_ID, createPendingAuthorization())
+
+        // Act
+        val actual = interactor.resend(userWalletId = USER_WALLET_ID, walletId = WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.WalletBusy.left())
+        coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
+    }
 
     @Test
     fun `GIVEN an accepted submission WHEN resent THEN the same batch goes out and no nonce is read`() = runTest {

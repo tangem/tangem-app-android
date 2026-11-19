@@ -18,10 +18,13 @@ import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.jointaccount.common.ui.jointAccountAccessLossNote
 import com.tangem.core.ui.R as CoreUiR
 
 @Composable
@@ -52,10 +55,14 @@ private fun ColumnScope.AboutSignaturesContent(threshold: Int, total: Int, onGot
     ) {
         TangemModalStatus(
             variant = TangemModalStatus.Variant.Info,
-            title = resourceReference(CoreUiR.string.joint_account_invite_members_about_signatures_title),
-            description = resourceReference(
-                id = CoreUiR.string.joint_account_invite_members_about_signatures_description,
-                formatArgs = wrappedList(threshold, total),
+            title = resourceReference(CoreUiR.string.joint_account_invite_members_about_approvals_title),
+            description = combinedReference(
+                resourceReference(
+                    id = CoreUiR.string.joint_account_invite_members_about_signatures_description,
+                    formatArgs = wrappedList(threshold, total),
+                ),
+                stringReference("\n\n"),
+                jointAccountAccessLossNote(threshold = threshold, total = total),
             ),
         )
     }

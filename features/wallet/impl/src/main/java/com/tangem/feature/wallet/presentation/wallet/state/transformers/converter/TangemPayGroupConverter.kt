@@ -44,7 +44,6 @@ internal class TangemPayGroupConverter(
         val paymentBalance = paymentStatus.value.availableBalance()
         val moneyBalance = moneyStatus.value.availableBalance()
         val balances = listOfNotNull(paymentBalance, moneyBalance)
-        val issuedAccountsCount = listOf(paymentStatus.value.isIssued(), moneyStatus.value.isIssued()).count { it }
         val isActionRequired = tangemPayMainUM.isActionRequired() || moneyAccountMainUM.isActionRequired()
 
         return TangemPayGroupUM.Content(
@@ -55,8 +54,8 @@ internal class TangemPayGroupConverter(
             } else {
                 pluralReference(
                     id = R.plurals.tangempay_main_group_subtitle,
-                    count = issuedAccountsCount,
-                    formatArgs = wrappedList(issuedAccountsCount),
+                    count = 2,
+                    formatArgs = wrappedList(2),
                 )
             },
             balance = if (balances.isEmpty()) {
@@ -94,11 +93,6 @@ internal class TangemPayGroupConverter(
         is MoneyAccountStatusValue.Account.Active -> balance?.cryptoAmount
         else -> null
     }
-
-    private fun PaymentAccountStatusValue.isIssued(): Boolean =
-        this is PaymentAccountStatusValue.Loaded || this is PaymentAccountStatusValue.Deactivated
-
-    private fun MoneyAccountStatusValue.isIssued(): Boolean = this is MoneyAccountStatusValue.Account
 
     private fun TangemPayMainUM.isActionRequired(): Boolean = this is TangemPayMainUM.Content && isActionRequired
 

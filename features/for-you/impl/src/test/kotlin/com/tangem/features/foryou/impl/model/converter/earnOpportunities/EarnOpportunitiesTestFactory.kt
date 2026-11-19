@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
@@ -19,6 +20,13 @@ import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
+import com.tangem.features.earn.api.overview.EarnBannerOverview
+import com.tangem.features.earn.api.overview.EarnHeadline
+import com.tangem.features.earn.api.overview.EarnOverview
+import com.tangem.features.earn.api.overview.EarnOverviews
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
@@ -253,4 +261,31 @@ internal fun createSelectedPortfolio(
         totalAccountsCount = totalAccountsCount,
         totalFiatBalance = totalFiatBalance,
     )
+}
+
+/** [hasBanner] marks a currency Earn owns; without it the headline is a plain Staking or Yield Mode rate. */
+internal fun createEarnOverviews(
+    currency: CryptoCurrency,
+    rate: BigDecimal = BigDecimal("0.06"),
+    isActive: Boolean = false,
+    route: Route? = null,
+    hasBanner: Boolean = true,
+): EarnOverviews {
+    val productRate = EarnProductRate(fraction = rate, type = EarnRateType.APY)
+    val overview = EarnOverview(
+        headline = EarnHeadline(
+            rate = productRate,
+            isActive = isActive,
+            badge = stringReference("APY"),
+            badgeAccent = EarnBadgeAccent.Info,
+            route = route,
+        ),
+        banner = EarnBannerOverview(
+            rate = productRate,
+            bestProductId = null,
+            activeCount = if (isActive) 1 else 0,
+            totalPosition = null,
+        ).takeIf { hasBanner },
+    )
+    return EarnOverviews(byCurrency = mapOf(currency.id to overview), source = StatusSource.ACTUAL)
 }

@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -28,6 +29,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -70,12 +73,14 @@ internal class JointAccountConfirmAddressModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(
+            analyticsEventHandler,
             router,
             onActivated,
             uiMessageSender,
@@ -396,7 +401,42 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Confirm, errorMessage = "NotMember"))
+        }
         verify(exactly = 0) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN backend refuses the confirmation WHEN confirm clicked THEN error is reported with its cause`() =
+        runTest {
+            // Arrange
+            val cause = IllegalStateException("offline")
+            coEvery { confirmUseCase(account = jointAccount) } returns JointAccountFlowError.Failed(cause).left()
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Confirm, cause = cause))
+            }
+        }
+
+    @Test
+    fun `GIVEN user cancels the signing WHEN confirm clicked THEN no error is reported`() = runTest {
+        // Arrange
+        coEvery { confirmUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
@@ -411,6 +451,9 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Confirm, errorMessage = "No account"))
+        }
         coVerify(exactly = 0) { confirmUseCase(account = any()) }
     }
 
@@ -483,6 +526,7 @@ internal class JointAccountConfirmAddressModelTest {
             getUserWalletUseCase = getUserWalletUseCase,
             ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
             userWalletsListRepository = userWalletsListRepository,
+            analyticsEventHandler = analyticsEventHandler,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             pollingCoordinator = pollingCoordinator,
         )

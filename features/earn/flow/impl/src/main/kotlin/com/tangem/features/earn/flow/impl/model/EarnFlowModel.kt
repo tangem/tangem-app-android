@@ -21,12 +21,13 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.earn.api.ui.EarnHowItWorksUM
+import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
 import com.tangem.features.earn.product.api.session.EarnAmount
@@ -136,6 +137,9 @@ internal class EarnFlowModel @Inject constructor(
     val result: StateFlow<EarnResultUM?> = state.map(::toResultUM).stateIn(modelScope, SharingStarted.Eagerly, null)
 
     val howItWorks: StateFlow<EarnHowItWorksUM?>
+        field = MutableStateFlow(null)
+
+    val rowInfo: StateFlow<EarnRowInfoUM?>
         field = MutableStateFlow(null)
 
     init {
@@ -525,7 +529,11 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun toResultUM(current: EarnFlowState): EarnResultUM? = converter.result(current, screens)
 
-    private fun showInfo(block: EarnTextBlock) {
-        messageSender.send(EarnFlowDialogs.info(block))
+    private fun showInfo(info: EarnRowInfo) {
+        rowInfo.value = info.toUM()
+    }
+
+    fun onRowInfoDismiss() {
+        rowInfo.value = null
     }
 }

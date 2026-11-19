@@ -1,11 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.formatStyled
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -113,13 +111,14 @@ internal class TangemPayMainBlockConverter(
     private fun getBalanceText(balance: PaymentAccountStatusValue.Balance?): TextReference {
         if (balance == null) return stringReference(DASH_SIGN)
         val currency = Currency.getInstance(balance.fiatBalance.currency)
-        return balance.fiatBalance.availableBalance.formatStyled {
-            fiat(
-                fiatCurrencyCode = currency.currencyCode,
-                fiatCurrencySymbol = currency.symbol,
-                spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
-            )
-        }
+        return stringReference(
+            balance.fiatBalance.availableBalance.format {
+                fiat(
+                    fiatCurrencyCode = currency.currencyCode,
+                    fiatCurrencySymbol = currency.symbol,
+                )
+            },
+        )
     }
 
     private companion object {

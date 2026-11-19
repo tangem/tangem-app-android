@@ -7,8 +7,17 @@ import java.math.BigDecimal
 data class EarnRow(
     val label: TextReference,
     val value: EarnValue,
-    val info: EarnTextBlock? = null,
+    val info: EarnRowInfo? = null,
 )
+
+sealed interface EarnRowInfo {
+
+    val title: TextReference
+
+    data class Text(override val title: TextReference, val text: TextReference) : EarnRowInfo
+
+    data class Items(override val title: TextReference, val items: List<EarnTextBlock>) : EarnRowInfo
+}
 
 sealed interface EarnValue {
 

@@ -69,6 +69,7 @@ import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUs
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorizationStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
@@ -484,7 +485,9 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun providePolymarketDepositWalletLock(): PolymarketDepositWalletLock = PolymarketDepositWalletLock()
+    fun providePolymarketDepositWalletLock(
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
+    ): PolymarketDepositWalletLock = PolymarketDepositWalletLock(pendingAuthorizations = pendingAuthorizations)
 
     @Provides
     @Singleton
@@ -513,6 +516,7 @@ internal object PolymarketDomainModule {
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
         deriveApiCredentials: DeriveApiCredentialsUseCase,
         depositWalletLock: PolymarketDepositWalletLock,
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
     ): ManagePolymarketSessionKeyInteractor = ManagePolymarketSessionKeyInteractor(
         signBatches = signBatches,
         sessionKeyRepository = sessionKeyRepository,
@@ -524,6 +528,7 @@ internal object PolymarketDomainModule {
         getApiCredentials = getApiCredentials,
         deriveApiCredentials = deriveApiCredentials,
         depositWalletLock = depositWalletLock,
+        pendingAuthorizations = pendingAuthorizations,
     )
 
     @Provides
@@ -563,12 +568,14 @@ internal object PolymarketDomainModule {
         stateService: PolymarketSessionKeyStateService,
         sessionKeyStore: PolymarketSessionKeyStore,
         bannerStore: PolymarketFastTradingBannerStore,
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
         appCoroutineScope: AppCoroutineScope,
     ): PolymarketSessionKeyOperationRunner = PolymarketSessionKeyOperationRunner(
         manage = manage,
         stateService = stateService,
         sessionKeyStore = sessionKeyStore,
         bannerStore = bannerStore,
+        pendingAuthorizations = pendingAuthorizations,
         appScope = appCoroutineScope,
     )
 
