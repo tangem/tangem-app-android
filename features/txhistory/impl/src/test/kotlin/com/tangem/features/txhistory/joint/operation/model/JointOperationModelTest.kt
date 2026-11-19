@@ -348,7 +348,7 @@ internal class JointOperationModelTest {
 
     private fun provideRejectErrorModels() = listOf(
         RejectErrorModel(ownAddress = OWN, expectedSource = ErrorSource.Decline),
-        RejectErrorModel(ownAddress = INITIATOR, expectedSource = ErrorSource.Delete),
+        RejectErrorModel(ownAddress = INITIATOR, expectedSource = ErrorSource.Cancel),
     )
 
     @Test

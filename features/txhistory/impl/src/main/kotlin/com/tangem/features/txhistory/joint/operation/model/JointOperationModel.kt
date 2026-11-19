@@ -492,7 +492,7 @@ private fun JointOperationSignError.toAnalyticsEvent(): JointAccountError = when
 }
 
 private fun JointOperationRejectError.toAnalyticsEvent(role: Role): JointAccountError {
-    val source = if (role == Role.INITIATOR) ErrorSource.Delete else ErrorSource.Decline
+    val source = if (role == Role.INITIATOR) ErrorSource.Cancel else ErrorSource.Decline
     return when (this) {
         is JointOperationRejectError.Failed -> JointAccountError(source = source, cause = cause)
         else -> JointAccountError(source = source, errorMessage = toString())
