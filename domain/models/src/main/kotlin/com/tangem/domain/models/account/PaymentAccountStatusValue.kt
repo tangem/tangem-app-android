@@ -37,7 +37,11 @@ sealed class PaymentAccountStatusValue {
             is UnderReview,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             is Loading -> TotalFiatBalance.Loading
-            is Loaded -> totalFiatBalanceOf(balance = balance, fiatRate = fiatRate, source = source)
+            is Loaded -> if (isPaymentAccountIssuing && (balance == null || fiatRate == null)) {
+                TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
+            } else {
+                totalFiatBalanceOf(balance = balance, fiatRate = fiatRate, source = source)
+            }
             is Deactivated -> totalFiatBalanceOf(balance = balance, fiatRate = fiatRate, source = source)
         }
 

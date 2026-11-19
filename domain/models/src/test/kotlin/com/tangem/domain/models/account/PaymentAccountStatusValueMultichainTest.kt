@@ -7,10 +7,14 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import io.mockk.every
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PaymentAccountStatusValueMultichainTest {
 
     private val polygon = createNetwork(id = "polygon")
@@ -24,6 +28,8 @@ internal class PaymentAccountStatusValueMultichainTest {
     private fun loaded(
         networks: List<PaymentNetworkStatus>,
         balance: PaymentAccountStatusValue.Balance? = balance(),
+        fiatRate: BigDecimal? = BigDecimal("1.0"),
+        isPaymentAccountIssuing: Boolean = false,
     ) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "c1",
@@ -32,12 +38,12 @@ internal class PaymentAccountStatusValueMultichainTest {
         cryptoCurrency = primaryCurrency,
         networks = networks,
         cards = emptyList(),
-        fiatRate = BigDecimal("1.0"),
+        fiatRate = fiatRate,
         error = null,
         virtualAccount = null,
         isBankOfframpAvailable = null,
         tariffPlan = null,
-        isPaymentAccountIssuing = false,
+        isPaymentAccountIssuing = isPaymentAccountIssuing,
         isKycAdditionalInfoRequired = false,
     )
 
@@ -148,6 +154,64 @@ internal class PaymentAccountStatusValueMultichainTest {
         // Act & Assert
         assertThat(loaded.cryptoCurrencyStatuses).containsExactly(networkStatus)
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN payment account state WHEN read total fiat balance THEN matches expected`(model: TotalFiatBalanceModel) {
+        // Arrange
+        val loaded = loaded(
+            networks = emptyList(),
+            balance = model.balance,
+            fiatRate = model.fiatRate,
+            isPaymentAccountIssuing = model.isPaymentAccountIssuing,
+        )
+
+        // Act
+        val actual = loaded.totalFiatBalance
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        TotalFiatBalanceModel(
+            balance = null,
+            fiatRate = BigDecimal("1.0"),
+            isPaymentAccountIssuing = true,
+            expected = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+        ),
+        TotalFiatBalanceModel(
+            balance = balance(),
+            fiatRate = null,
+            isPaymentAccountIssuing = true,
+            expected = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+        ),
+        TotalFiatBalanceModel(
+            balance = balance(),
+            fiatRate = BigDecimal("2"),
+            isPaymentAccountIssuing = true,
+            expected = TotalFiatBalance.Loaded(amount = BigDecimal("200"), source = StatusSource.ACTUAL),
+        ),
+        TotalFiatBalanceModel(
+            balance = null,
+            fiatRate = BigDecimal("1.0"),
+            isPaymentAccountIssuing = false,
+            expected = TotalFiatBalance.Failed,
+        ),
+        TotalFiatBalanceModel(
+            balance = balance(),
+            fiatRate = null,
+            isPaymentAccountIssuing = false,
+            expected = TotalFiatBalance.Failed,
+        ),
+    )
+
+    data class TotalFiatBalanceModel(
+        val balance: PaymentAccountStatusValue.Balance?,
+        val fiatRate: BigDecimal?,
+        val isPaymentAccountIssuing: Boolean,
+        val expected: TotalFiatBalance,
+    )
 
     private fun available(network: Network, statuses: List<CryptoCurrencyStatus>) = PaymentNetworkStatus.Available(
         network = network,
