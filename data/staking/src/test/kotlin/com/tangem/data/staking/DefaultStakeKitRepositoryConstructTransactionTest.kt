@@ -2,13 +2,11 @@ package com.tangem.data.staking
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonEncodingException
-import com.tangem.blockchain.blockchains.solana.SolanaTransactionExtras
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionData.Compiled.Data.Bytes
 import com.tangem.blockchain.common.TransactionData.Compiled.Data.RawString
-import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.remote.response.ApiResponse
@@ -73,14 +71,12 @@ internal class DefaultStakeKitRepositoryConstructTransactionTest {
         transactionId = "tx-1",
     )
 
-    private fun compiled(value: TransactionData.Compiled.Data, extras: TransactionExtras? = null) =
-        TransactionData.Compiled(
-            value = value,
-            fee = FEE,
-            amount = AMOUNT,
-            status = TransactionStatus.Unconfirmed,
-            extras = extras,
-        )
+    private fun compiled(value: TransactionData.Compiled.Data) = TransactionData.Compiled(
+        value = value,
+        fee = FEE,
+        amount = AMOUNT,
+        status = TransactionStatus.Unconfirmed,
+    )
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -97,9 +93,7 @@ internal class DefaultStakeKitRepositoryConstructTransactionTest {
             // Assert
             assertThat(actual.first).isEqualTo(stakingTransaction("0a0bff"))
             assertThat((actual.second.value as Bytes).data).isEqualTo(byteArrayOf(0x0a, 0x0b, 0xff.toByte()))
-            assertThat(actual.second.copy(value = RawString(""))).isEqualTo(
-                compiled(RawString(""), extras = SolanaTransactionExtras(shouldRefreshRecentBlockhash = true)),
-            )
+            assertThat(actual.second.copy(value = RawString(""))).isEqualTo(compiled(RawString("")))
         }
     }
 

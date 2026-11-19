@@ -12,7 +12,9 @@ import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.isRing
 import com.tangem.operations.sign.SignData
 import com.tangem.tap.domain.tasks.MultiSignHashTask
+import com.tangem.tap.domain.tasks.PreparingSignHashesTask
 import com.tangem.tap.domain.tasks.SignHashesTask
+import com.tangem.tap.domain.tasks.TangemSignHashesResponse
 import com.tangem.tap.domain.tasks.product.RegisterColdWalletRunnable
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -40,8 +42,22 @@ class TangemSigner(
         publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
         val task = SignHashesTask(hashes, publicKey, twinKey?.getPairKey(publicKey.seedKey))
+        return handleSignHashesResult(runTask(task), publicKey)
+    }
 
-        return when (val result = runTask(task)) {
+    override suspend fun sign(
+        publicKey: Wallet.PublicKey,
+        hashesProvider: suspend () -> List<ByteArray>,
+    ): CompletionResult<List<ByteArray>> {
+        val task = PreparingSignHashesTask(hashesProvider, publicKey, twinKey?.getPairKey(publicKey.seedKey))
+        return handleSignHashesResult(runTask(task), publicKey)
+    }
+
+    private fun handleSignHashesResult(
+        result: CompletionResult<TangemSignHashesResponse>,
+        publicKey: Wallet.PublicKey,
+    ): CompletionResult<List<ByteArray>> {
+        return when (result) {
             is CompletionResult.Success -> {
                 signerCallback(
                     TangemSignerResponse(

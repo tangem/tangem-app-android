@@ -14,6 +14,7 @@ import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -40,6 +41,30 @@ class DefaultHotWalletAccessor @Inject constructor(
         hotSdkRequest(hotWalletId) { unlock ->
             tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = dataToSign)
         }
+
+    override suspend fun signHashesPreparing(
+        hotWalletId: HotWalletId,
+        prepare: suspend () -> List<DataToSign>,
+    ): List<SignedData> {
+        return try {
+            hotSdkRequest(hotWalletId) { unlock ->
+                tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = prepareGuarded(prepare))
+            }
+        } catch (e: PreparationException) {
+            hotWalletPasswordRequester.dismiss()
+            throw e.cause
+        }
+    }
+
+    // Keeps a preparation failure out of the wrong-password and biometry-reset handling of hotSdkRequest, which
+    // would otherwise ask for the code again and prepare twice
+    private suspend fun prepareGuarded(prepare: suspend () -> List<DataToSign>): List<DataToSign> = try {
+        prepare()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        throw PreparationException(e)
+    }
 
     override suspend fun signHashesReusingContextualUnlock(
         hotWalletId: HotWalletId,
@@ -288,3 +313,5 @@ class DefaultHotWalletAccessor @Inject constructor(
         is HotWalletPasswordRequester.Result.EnteredPassword -> this.password
     }
 }
+
+private class PreparationException(override val cause: Exception) : Exception(cause)

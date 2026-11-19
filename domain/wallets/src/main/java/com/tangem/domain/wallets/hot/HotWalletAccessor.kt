@@ -7,6 +7,12 @@ interface HotWalletAccessor {
 
     suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData>
 
+    /** Calls [prepare] after the access code is entered; a biometric prompt, if any, comes after it. */
+    suspend fun signHashesPreparing(
+        hotWalletId: HotWalletId,
+        prepare: suspend () -> List<DataToSign>,
+    ): List<SignedData>
+
     /**
      * Signs [dataToSign] reusing an already-established contextual unlock for [hotWalletId] (no auth
      * prompt). Falls back to [signHashes] (which may prompt) when no contextual unlock is held — so a
