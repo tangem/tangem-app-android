@@ -16,9 +16,18 @@ import com.tangem.features.earn.api.overview.EarnOverview
 import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
+import com.tangem.features.earn.impl.fake.FakeEarnPosition
+import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
+import com.tangem.features.earn.impl.fake.FakeForeignRoute
+import com.tangem.features.earn.impl.fake.createFakeEarnProduct
+import com.tangem.features.earn.impl.fake.fakeSummary
+import com.tangem.features.earn.impl.overview.EarnProductSummaries
+import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
+import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.overview.createRate
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetConfig
+import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
@@ -40,6 +49,7 @@ internal class EarnBannerModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val overviewSupplier: EarnOverviewSupplier = mockk()
+    private val summarySupplier: EarnProductSummarySupplier = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val otherCurrency: CryptoCurrency = MockCryptoCurrencyFactory().bitcoin
@@ -47,15 +57,22 @@ internal class EarnBannerModelTest {
     private val lendingId = EarnProductId("lending")
     private val vaultId = EarnProductId("vault")
 
+    private val lending = createFakeEarnProduct(FakeEarnProductPreset.Lending)
+    private val staking = createFakeEarnProduct(FakeEarnProductPreset.Staking)
+    private val registry = EarnProductsRegistry(products = setOf(lending, staking), rateSources = emptySet())
+
     private val frames = MutableStateFlow(EarnOverviews.Empty)
+    private val productFrames = MutableStateFlow(lendingAndStaking())
     private val isBalanceHidden = MutableStateFlow(false)
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, overviewSupplier, getBalanceHidingSettingsUseCase)
+        clearMocks(router, overviewSupplier, summarySupplier, getBalanceHidingSettingsUseCase)
         frames.value = EarnOverviews.Empty
+        productFrames.value = lendingAndStaking()
         isBalanceHidden.value = false
         every { overviewSupplier(USER_WALLET_ID) } returns frames
+        every { summarySupplier(USER_WALLET_ID) } returns productFrames
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
     }
 
@@ -120,6 +137,7 @@ internal class EarnBannerModelTest {
 
             // Act
             model.onBannerClick()
+            advanceUntilIdle()
 
             // Assert
             assertThat(sheetSlot).containsExactly(EarnYieldSheetConfig)
@@ -137,11 +155,82 @@ internal class EarnBannerModelTest {
 
         // Act
         enabled.onClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(sheetSlot).containsExactly(EarnYieldSheetConfig)
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN a single active product WHEN the banner is clicked THEN its Info opens from the banner without the sheet`() =
+        runTest {
+            // Arrange
+            productFrames.value = summariesOf(fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known))
+            frames.value = overviewsOf(activeCount = 1)
+            val model = createModel()
+            val sheetSlot = model.sheetNavigation.trackSlot()
+
+            // Act
+            model.onBannerClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(
+                    AppRoute.EarnEntry(
+                        userWalletId = USER_WALLET_ID,
+                        cryptoCurrency = currency,
+                        source = AppRoute.EarnEntry.Source.EarnBanner,
+                        start = AppRoute.EarnEntry.Start.Info(productId = lending.id),
+                    ),
+                    any(),
+                )
+            }
+            assertThat(sheetSlot).isEmpty()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a single active pooled staking WHEN the banner is clicked THEN the route of the product is pushed`() =
+        runTest {
+            // Arrange
+            productFrames.value = summariesOf(fakeSummary(FakeEarnProductPreset.Staking, FakeEarnPosition.Known))
+            frames.value = overviewsOf(activeCount = 1)
+            val model = createModel()
+            val sheetSlot = model.sheetNavigation.trackSlot()
+
+            // Act
+            model.onBannerClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(FakeForeignRoute, any()) }
+            assertThat(sheetSlot).isEmpty()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a single product while other products are still loading WHEN the banner is clicked THEN the sheet opens`() =
+        runTest {
+            // Arrange
+            productFrames.value = summariesOf(
+                fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known),
+                isAwaitingProducts = true,
+            )
+            frames.value = overviewsOf(activeCount = 1)
+            val model = createModel()
+            val sheetSlot = model.sheetNavigation.trackSlot()
+
+            // Act
+            model.onBannerClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sheetSlot).containsExactly(EarnYieldSheetConfig)
+            verify(exactly = 0) { router.push(any(), any()) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN open sheet slot WHEN onDismiss THEN the slot is dismissed`() = runTest {
@@ -150,6 +239,7 @@ internal class EarnBannerModelTest {
         val model = createModel()
         val sheetSlot = model.sheetNavigation.trackSlot()
         model.onBannerClick()
+        advanceUntilIdle()
 
         // Act
         model.onDismiss()
@@ -312,6 +402,7 @@ internal class EarnBannerModelTest {
         val model = createModel()
         val sheetSlot = model.sheetNavigation.trackSlot()
         model.onBannerClick()
+        advanceUntilIdle()
 
         // Act
         frames.value = EarnOverviews.Empty
@@ -329,6 +420,19 @@ internal class EarnBannerModelTest {
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
         return tracked
     }
+
+    private fun lendingAndStaking() = summariesOf(
+        fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.Known),
+        fakeSummary(FakeEarnProductPreset.Staking, FakeEarnPosition.None),
+    )
+
+    private fun summariesOf(vararg summaries: EarnProductSummary, isAwaitingProducts: Boolean = false) =
+        EarnProductSummaries(
+            products = mapOf(currency.id to summaries.toList()),
+            rateSources = emptyMap(),
+            source = if (isAwaitingProducts) StatusSource.CACHE else StatusSource.ACTUAL,
+            isAwaitingProducts = isAwaitingProducts,
+        )
 
     private fun overviewsOf(
         activeCount: Int,
@@ -354,6 +458,8 @@ internal class EarnBannerModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             paramsContainer = MutableParamsContainer(EarnBannerComponent.Params(USER_WALLET_ID, currency)),
             overviewSupplier = overviewSupplier,
+            summarySupplier = summarySupplier,
+            registry = registry,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             converter = EarnBannerConverter(),
             router = router,
