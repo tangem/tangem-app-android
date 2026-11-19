@@ -1,5 +1,6 @@
 package com.tangem.features.earn.impl.picker.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,6 +17,10 @@ import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.impl.InnerEarnNavigator
+import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
+import com.tangem.features.earn.impl.analytics.EarnNoFundsNoticeAnalytics
+import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.toAnalyticsApy
 import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.di.EarnHeroClip
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
@@ -25,6 +30,7 @@ import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.picker.EarnPickerHeroVideo
 import com.tangem.features.earn.impl.picker.EarnYieldPickerComponent
+import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.redirect
 import com.tangem.features.earn.impl.showReason
@@ -33,11 +39,13 @@ import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnBlock
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnProjection
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -68,7 +76,7 @@ import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @OptIn(ExperimentalCoroutinesApi::class)
 @ModelScoped
 internal class EarnPickerModel @Inject constructor(
@@ -86,6 +94,8 @@ internal class EarnPickerModel @Inject constructor(
     private val urlOpener: UrlOpener,
     videoFactory: LoopingVideoController.Factory,
     @EarnHeroClip heroClipCache: RemoteClipCache,
+    private val cta: EarnPickerCta,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), EarnPickerClickIntents, EarnCalculatorComponent.ModelCallback {
 
     private val params: EarnYieldPickerComponent.Params = paramsContainer.require()
@@ -102,6 +112,12 @@ internal class EarnPickerModel @Inject constructor(
     private val hasSettled = AtomicBoolean(false)
 
     private val selectedId = MutableStateFlow(params.preselected)
+
+    private val noFundsNotice = EarnNoFundsNoticeAnalytics(analyticsEventHandler)
+
+    private var isScreenOpenedSent = false
+
+    private var lastShown: Shown? = null
 
     private val summaries: Flow<EarnProductSummaries> = summarySupplier(params.userWalletId)
 
@@ -178,7 +194,10 @@ internal class EarnPickerModel @Inject constructor(
             transform = ::createUiState,
         )
             .flowOn(dispatchers.default)
-            .onEach { uiState.value = it }
+            .onEach { frame ->
+                uiState.value = frame.um
+                onShown(frame.shown)
+            }
             .launchIn(modelScope)
     }
 
@@ -238,23 +257,36 @@ internal class EarnPickerModel @Inject constructor(
         selection: Selection?,
         ethBalance: BigDecimal?,
         selectedId: EarnProductId?,
-    ): EarnPickerUM {
+    ): Frame {
         val currencySummaries = frame[params.cryptoCurrency.id]
         val isPending = frame.isPending(params.cryptoCurrency.id)
         val chosen = selectedId?.let(registry::find)
 
         return when {
-            isRedirecting(currencySummaries, isPending) -> converter.initial(intents = this)
-            currencySummaries.isEmpty() && !isPending -> converter.unavailable(intents = this)
-            chosen == null || isAwaitingSelection(chosen, currencySummaries) -> converter.initial(intents = this)
-            else -> converter.convert(
-                product = chosen,
-                state = selection?.takeIf { it.product.id == chosen.id }?.state ?: EarnProductState.Loading,
-                summaries = currencySummaries,
-                selectedId = chosen.id,
-                ethBalance = ethBalance,
-                intents = this,
-            )
+            isRedirecting(currencySummaries, isPending) -> Frame(converter.initial(intents = this))
+            currencySummaries.isEmpty() && !isPending -> Frame(converter.unavailable(intents = this))
+            chosen == null || isAwaitingSelection(chosen, currencySummaries) ->
+                Frame(converter.initial(intents = this))
+            else -> {
+                val state = selection?.takeIf { it.product.id == chosen.id }?.state ?: EarnProductState.Loading
+                val um = converter.convert(
+                    product = chosen,
+                    state = state,
+                    summaries = currencySummaries,
+                    selectedId = chosen.id,
+                    ethBalance = ethBalance,
+                    intents = this,
+                )
+                Frame(
+                    um = um,
+                    shown = Shown(
+                        product = chosen,
+                        state = state,
+                        summaries = currencySummaries,
+                        ethBalance = ethBalance,
+                    ),
+                )
+            }
         }
     }
 
@@ -271,11 +303,72 @@ internal class EarnPickerModel @Inject constructor(
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
         currencySummaries.none { it.productId == chosen.id }
 
+    private fun onShown(shown: Shown?) {
+        if (shown == null) {
+            noFundsNotice.onCta(null)
+            return
+        }
+
+        lastShown = shown
+        if (!isScreenOpenedSent) {
+            isScreenOpenedSent = true
+            analyticsEventHandler.send(
+                EarnPickerAnalyticsEvent.ScreenOpened(
+                    source = params.source,
+                    token = params.cryptoCurrency.symbol,
+                    product = shown.product.analytics.product,
+                    currentApy = shown.summaries.apyOf(shown.product.id),
+                    products = shown.summaries.size,
+                ),
+            )
+        }
+
+        val isNoFunds = cta.kind(shown.state, shown.ethBalance) == EarnPickerCta.Kind.AddFunds
+        noFundsNotice.onCta(
+            EarnNoFundsNoticeAnalytics.Notice(
+                token = params.cryptoCurrency.symbol,
+                product = shown.product.analytics.product,
+            ).takeIf { isNoFunds },
+        )
+    }
+
+    private fun List<EarnProductSummary>.apyOf(id: EarnProductId): String? =
+        firstOrNull { it.productId == id }?.rate?.toAnalyticsApy()
+
+    private fun sendForSelectedProduct(event: (product: String) -> EarnPickerAnalyticsEvent) {
+        val product = selectedId.value?.let(registry::find)?.analytics?.product ?: return
+        analyticsEventHandler.send(event(product))
+    }
+
+    private fun sendProductChip(id: EarnProductId) {
+        val summaries = lastShown?.summaries ?: return
+        val position = summaries.indexOfFirst { it.productId == id }
+        val product = registry.find(id)?.analytics?.product
+        if (position < 0 || product == null) return
+
+        analyticsEventHandler.send(
+            EarnPickerAnalyticsEvent.ProductChip(
+                product = product,
+                position = position + 1,
+                currentApy = summaries.apyOf(id),
+            ),
+        )
+    }
+
     override fun onProductClick(id: EarnProductId) {
+        if (id == selectedId.value) return
+
+        sendProductChip(id)
         selectedId.value = id
     }
 
     override fun onActionClick(product: EarnProduct, action: EarnAction) {
+        analyticsEventHandler.send(
+            EarnPickerAnalyticsEvent.StartEarning(
+                product = product.analytics.product,
+                currentApy = lastShown?.summaries?.apyOf(product.id),
+            ),
+        )
         handlers
             .getOrPut(product.id) { product.actionHandler(productParams, navigator) }
             .onActionClick(action)
@@ -322,7 +415,20 @@ internal class EarnPickerModel @Inject constructor(
         }
     }
 
-    override fun onInfoClick(info: EarnRowInfo) {
+    override fun onTabClick(tab: EarnPickerTab) {
+        sendForSelectedProduct { EarnPickerAnalyticsEvent.Tab(product = it, tab = tab) }
+    }
+
+    override fun onHorizonChange(horizon: EarnHorizon) {
+        sendForSelectedProduct { EarnPickerAnalyticsEvent.CalculatorHorizon(product = it, horizon = horizon) }
+    }
+
+    override fun onInputChange(input: EarnCalculatorComponent.Input) {
+        sendForSelectedProduct { EarnPickerAnalyticsEvent.CalculatorInput(product = it, input = input) }
+    }
+
+    override fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?) {
+        sendForSelectedProduct { EarnPickerAnalyticsEvent.DetailRow(product = it, row = row) }
         rowInfo.value = info.toUM()
     }
 
@@ -330,11 +436,18 @@ internal class EarnPickerModel @Inject constructor(
         rowInfo.value = null
     }
 
-    override fun onLinkClick(url: String) {
+    override fun onLinkClick(url: String, row: EarnRowKind?) {
+        sendForSelectedProduct { EarnPickerAnalyticsEvent.DetailRow(product = it, row = row) }
         urlOpener.openUrl(url)
     }
 
     override fun onAddFundsClick() {
+        analyticsEventHandler.send(
+            EarnPickerAnalyticsEvent.AddFunds(
+                token = params.cryptoCurrency.symbol,
+                source = EarnAddFundsSource.YieldPicker,
+            ),
+        )
         getTokenSheetRequests.tryEmit(EarnGetTokenSheetRequest(params.userWalletId, params.cryptoCurrency))
     }
 
@@ -343,4 +456,13 @@ internal class EarnPickerModel @Inject constructor(
     }
 
     private data class Selection(val product: EarnProduct, val state: EarnProductState)
+
+    private data class Shown(
+        val product: EarnProduct,
+        val state: EarnProductState,
+        val summaries: List<EarnProductSummary>,
+        val ethBalance: BigDecimal?,
+    )
+
+    private data class Frame(val um: EarnPickerUM, val shown: Shown? = null)
 }

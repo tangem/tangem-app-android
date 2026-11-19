@@ -84,6 +84,7 @@ import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.session.EarnAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -128,6 +129,7 @@ internal fun EarnPickerContent(
         sections = sections,
         firstSectionIndex = firstSectionIndex,
         headerHeightPx = { barHeightPx + tabsHeightPx },
+        onTabClick = (state.content as? ContentUM.Ready)?.onTabClick ?: {},
     )
 
     Box(
@@ -225,19 +227,22 @@ private fun rememberSectionTabs(
     sections: ImmutableList<EarnPickerTab>,
     firstSectionIndex: Int,
     headerHeightPx: () -> Int,
+    onTabClick: (EarnPickerTab) -> Unit,
 ): ImmutableList<TangemTabItemUM> {
     val scope = rememberCoroutineScope()
-    val active by remember(sections, firstSectionIndex) {
-        derivedStateOf { listState.activeSection(sections, firstSectionIndex, headerHeightPx().toFloat()) }
+    val reached by remember(sections, firstSectionIndex) {
+        derivedStateOf { listState.reachedSection(sections, firstSectionIndex, headerHeightPx().toFloat()) }
     }
 
-    return remember(sections, active, firstSectionIndex) {
+    return remember(sections, reached, firstSectionIndex, onTabClick) {
+        val active = reached ?: sections.firstOrNull()
         sections.mapIndexed { position, section ->
             TangemTabItemUM.Content(
                 id = section.name,
                 label = section.label(),
                 isSelected = section == active,
                 onClick = {
+                    if (section != reached) onTabClick(section)
                     scope.launch {
                         listState.animateScrollToItem(
                             index = firstSectionIndex + position,
@@ -338,8 +343,8 @@ private fun LazyListState.isItemAbove(key: String, index: Int, limitPx: Float): 
     return if (info != null) info.offset <= limitPx else firstVisibleItemIndex > index
 }
 
-/** The last section that has reached the pinned header; the last one when the page cannot scroll further. */
-private fun LazyListState.activeSection(
+/** The last section that has reached the pinned header (the last one at the end of the page), `null` before any. */
+private fun LazyListState.reachedSection(
     sections: List<EarnPickerTab>,
     firstSectionIndex: Int,
     headerBottomPx: Float,
@@ -350,7 +355,6 @@ private fun LazyListState.activeSection(
     return sections.withIndex()
         .lastOrNull { (position, section) -> isItemAbove(section.name, firstSectionIndex + position, headerBottomPx) }
         ?.value
-        ?: sections.first()
 }
 
 @Composable
@@ -557,8 +561,9 @@ private object PreviewData {
         override fun onRetryClick(product: EarnProduct) = Unit
         override fun onOverviewRetryClick() = Unit
         override fun onIncentiveClick() = Unit
-        override fun onInfoClick(info: EarnRowInfo) = Unit
-        override fun onLinkClick(url: String) = Unit
+        override fun onTabClick(tab: EarnPickerTab) = Unit
+        override fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?) = Unit
+        override fun onLinkClick(url: String, row: EarnRowKind?) = Unit
         override fun onCloseClick() = Unit
     }
     private val summaries = listOf(

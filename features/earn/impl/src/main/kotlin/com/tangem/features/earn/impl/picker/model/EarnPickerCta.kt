@@ -15,6 +15,13 @@ import javax.inject.Inject
 
 internal class EarnPickerCta @Inject constructor() {
 
+    fun kind(state: EarnProductState, ethBalance: BigDecimal?): Kind = when {
+        state !is EarnProductState.Ready || ethBalance == null -> Kind.Disabled
+        blockOf(state) != null -> Kind.Blocked
+        state.position == EarnPositionState.None && isBelowDeposit(state, ethBalance) -> Kind.AddFunds
+        else -> Kind.Primary
+    }
+
     fun resolve(
         state: EarnProductState,
         ethBalance: BigDecimal?,
@@ -27,20 +34,21 @@ internal class EarnPickerCta @Inject constructor() {
         }
 
         val primary = state.primary
-        if (ethBalance == null) {
-            return button(primary.label, isEnabled = false)
-        }
-
-        val block = primary.guardedBy(state).block
-        val isStart = state.position == EarnPositionState.None
-        // A product without a minimum deposit still has nothing to deposit from an empty balance
-        val isBelowDeposit = ethBalance.signum() == 0 || ethBalance < state.limits.minDeposit
-        return when {
-            block != null -> button(primary.label, isDimmed = true, onClick = { onBlocked(block) })
-            isStart && isBelowDeposit -> button(resourceReference(R.string.common_add_funds), onClick = onAddFunds)
-            else -> button(primary.label, onClick = { onActionClick(primary.action) })
+        return when (kind(state, ethBalance)) {
+            Kind.Disabled -> button(primary.label, isEnabled = false)
+            Kind.Blocked -> button(primary.label, isDimmed = true, onClick = { blockOf(state)?.let(onBlocked) })
+            Kind.AddFunds -> button(resourceReference(R.string.common_add_funds), onClick = onAddFunds)
+            Kind.Primary -> button(primary.label, onClick = { onActionClick(primary.action) })
         }
     }
+
+    enum class Kind { Disabled, Blocked, AddFunds, Primary }
+
+    private fun blockOf(state: EarnProductState.Ready): EarnBlock? = state.primary.guardedBy(state).block
+
+    // A product without a minimum deposit still has nothing to deposit from an empty balance
+    private fun isBelowDeposit(state: EarnProductState.Ready, ethBalance: BigDecimal): Boolean =
+        ethBalance.signum() == 0 || ethBalance < state.limits.minDeposit
 
     private fun button(
         text: TextReference,

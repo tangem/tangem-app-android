@@ -1,9 +1,11 @@
 package com.tangem.features.earn.impl.picker.model
 
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.session.EarnAction
 
 internal interface EarnPickerClickIntents {
@@ -23,9 +25,11 @@ internal interface EarnPickerClickIntents {
 
     fun onIncentiveClick()
 
-    fun onInfoClick(info: EarnRowInfo)
+    fun onTabClick(tab: EarnPickerTab)
 
-    fun onLinkClick(url: String)
+    fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?)
+
+    fun onLinkClick(url: String, row: EarnRowKind?)
 
     fun onCloseClick()
 }

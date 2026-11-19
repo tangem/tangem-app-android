@@ -16,6 +16,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -93,6 +94,43 @@ internal class EarnPickerCtaTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class KindOf {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN product state and balance WHEN kind THEN button kind`(model: KindModel) {
+            // Act
+            val actual = cta.kind(state = model.state, ethBalance = model.ethBalance)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<KindModel> {
+            val ready = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.None)
+            val minDeposit = ready.limits.minDeposit
+            val productBlocked = ready.copy(primary = ready.primary.copy(block = PRODUCT_BLOCK))
+            val stale = ready.copy(freshness = STALE)
+            val staked = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
+
+            return listOf(
+                KindModel(EarnProductState.Loading, BigDecimal.ONE, EarnPickerCta.Kind.Disabled),
+                KindModel(EarnProductState.Unavailable, BigDecimal.ONE, EarnPickerCta.Kind.Disabled),
+                KindModel(ready, null, EarnPickerCta.Kind.Disabled),
+                KindModel(productBlocked, BigDecimal.ONE, EarnPickerCta.Kind.Blocked),
+                KindModel(productBlocked, BigDecimal.ZERO, EarnPickerCta.Kind.Blocked),
+                KindModel(stale, BigDecimal.ONE, EarnPickerCta.Kind.Blocked),
+                KindModel(ready, BigDecimal.ZERO, EarnPickerCta.Kind.AddFunds),
+                KindModel(ready, BigDecimal("0.005"), EarnPickerCta.Kind.AddFunds),
+                KindModel(ready, minDeposit, EarnPickerCta.Kind.Primary),
+                KindModel(ready, BigDecimal("5"), EarnPickerCta.Kind.Primary),
+                KindModel(staked, BigDecimal.ZERO, EarnPickerCta.Kind.Primary),
+            )
+        }
+    }
+
     private fun idle(state: EarnProductState) = ResolveModel(
         state = state,
         ethBalance = BigDecimal.ONE,
@@ -137,6 +175,12 @@ internal class EarnPickerCtaTest {
         val isEnabled: Boolean,
         val isDimmed: Boolean,
         val expectedCalls: List<Call> = emptyList(),
+    )
+
+    internal data class KindModel(
+        val state: EarnProductState,
+        val ethBalance: BigDecimal?,
+        val expected: EarnPickerCta.Kind,
     )
 
     internal sealed interface Call {
