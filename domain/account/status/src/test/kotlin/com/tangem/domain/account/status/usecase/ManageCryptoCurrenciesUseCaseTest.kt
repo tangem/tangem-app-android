@@ -384,7 +384,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             coEvery {
                 singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
             } returns createJointAccountStatusList(account = account)
-            val addedToken = createToken(derivationPath = ownerPath)
+            val addedToken = createToken(derivationPath = ownerPath).copy(isCustom = false)
             val createdCoin = createCoin(derivationPath = ownerPath)
             coEvery { currenciesRepository.createCoinCurrency(addedToken.network) } returns createdCoin
 
@@ -424,6 +424,26 @@ internal class ManageCryptoCurrenciesUseCaseTest {
 
         // Act
         val actual = useCase(accountId = account.accountId, add = createToken(derivationPath = ownerPath))
+
+        // Assert
+        Truth.assertThat(actual.isLeft()).isTrue()
+        coVerify(inverse = true) { accountsCRUDRepository.saveAccount(any()) }
+    }
+
+    @Test
+    fun `GIVEN active joint account WHEN add custom token THEN refused and nothing is saved`() = runTest {
+        // Arrange
+        val ownerPath = OwnerKeyIndex(value = 0).getOrNull()!!.toNetworkDerivationPath()
+        val account = MockAccounts.createJointAccount(ownerKeyIndex = 0, userWalletId = userWalletId)
+        coEvery {
+            singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+        } returns createJointAccountStatusList(account = account)
+
+        // Act
+        val actual = useCase(
+            accountId = account.accountId,
+            add = createToken(derivationPath = ownerPath).copy(isCustom = true),
+        )
 
         // Assert
         Truth.assertThat(actual.isLeft()).isTrue()
