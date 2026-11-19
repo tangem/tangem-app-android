@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketCryptoPriceRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
@@ -60,6 +61,7 @@ import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationStateUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCryptoPricesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
@@ -96,6 +98,11 @@ internal object PolymarketDomainModule {
     fun provideObservePolymarketLiveQuotesUseCase(
         repository: PolymarketLiveQuotesRepository,
     ): ObservePolymarketLiveQuotesUseCase = ObservePolymarketLiveQuotesUseCase(repository)
+
+    @Provides
+    fun provideObservePolymarketCryptoPricesUseCase(
+        repository: PolymarketCryptoPriceRepository,
+    ): ObservePolymarketCryptoPricesUseCase = ObservePolymarketCryptoPricesUseCase(repository)
 
     @Provides
     @Singleton
