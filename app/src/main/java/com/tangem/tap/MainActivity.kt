@@ -30,15 +30,18 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
+import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
+import com.tangem.core.navigation.impl.deeplink.DeepLinkHandlerRegistry
 import com.tangem.core.ui.extensions.LocalUserInteractionTracker
 import com.tangem.core.ui.extensions.UserInteractionTracker
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
@@ -61,6 +64,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.tap.routing.utils.PromoPageRouter
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -112,6 +116,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var promoPageRouter: PromoPageRouter
+
+    @Inject
+    internal lateinit var deepLinkHandlerRegistry: DeepLinkHandlerRegistry
+
+    @Inject
+    internal lateinit var marketingUidBindingRepository: MarketingUidBindingRepository
+
+    @Inject
+    internal lateinit var appCoroutineScope: AppCoroutineScope
 
     @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
@@ -355,7 +368,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
-        if (isFromPush) {
+        val pushPayload = PayloadToDeeplinkConverter.bundleToPayload(intent.extras)
+        if (isFromPush && !PayloadToDeeplinkConverter.isOpenReportedByTangemPayHandler(pushPayload)) {
             analyticsEventsHandler.send(Push.PushNotificationOpened())
         }
 
@@ -410,8 +424,18 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun handleMarketingParams(intent: Intent) {
         val deepLink = intent.data ?: PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri() ?: return
-        deeplinkFactory.bindMarketingUid(deepLink)
+        bindMarketingUid(deepLink)
         promoPageRouter.savePage(deepLink)
+    }
+
+    private fun bindMarketingUid(deepLink: Uri) {
+        // `wc:` and other opaque links have no query: getQueryParameters throws for them
+        if (deepLink.isOpaque) return
+
+        val uid = deepLink.getQueryParameters(DeeplinkConst.UID_KEY).firstOrNull(String::isNotEmpty) ?: return
+        if (deepLinkHandlerRegistry.find(deepLink) == null) return
+
+        appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {

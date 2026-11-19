@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.earn.model.EarnFilterType
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.analytics.FilterTypeAnalytic
@@ -11,6 +12,7 @@ import com.tangem.features.feed.earn.ui.state.EarnFilterTypeUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,13 +25,15 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class EarnTypeFilterModelTest {
 
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val earnFeatureToggles: EarnFeatureToggles = mockk()
 
     private var selectedFilter: EarnFilterType? = null
     private val appliedType = MutableStateFlow(EarnFilterType.ALL)
 
     @BeforeEach
     fun reset() {
-        clearMocks(analyticsEventHandler)
+        clearMocks(analyticsEventHandler, earnFeatureToggles)
+        every { earnFeatureToggles.isEarnEnabled } returns true
         selectedFilter = null
     }
 
@@ -38,6 +42,7 @@ internal class EarnTypeFilterModelTest {
         return EarnTypeFilterModel(
             dispatchers = TestingCoroutineDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
+            earnFeatureToggles = earnFeatureToggles,
             paramsContainer = MutableParamsContainer(
                 EarnTypeFilterComponent.Params(
                     selectedFilter = appliedType,
@@ -101,6 +106,36 @@ internal class EarnTypeFilterModelTest {
         assertThat(underTest.state.value.selectedOption).isEqualTo(EarnFilterTypeUM.All)
     }
 
+    @Test
+    fun `GIVEN the Earn flow is on WHEN the sheet opens THEN it offers every type including vaults`() {
+        // Act
+        val actual = createModel()
+
+        // Assert
+        assertThat(actual.state.value.options).containsExactly(
+            EarnFilterTypeUM.All,
+            EarnFilterTypeUM.Staking,
+            EarnFilterTypeUM.YieldMode,
+            EarnFilterTypeUM.Vaults,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN the Earn flow is off WHEN the sheet opens THEN vaults are not offered`() {
+        // Arrange
+        every { earnFeatureToggles.isEarnEnabled } returns false
+
+        // Act
+        val actual = createModel()
+
+        // Assert
+        assertThat(actual.state.value.options).containsExactly(
+            EarnFilterTypeUM.All,
+            EarnFilterTypeUM.Staking,
+            EarnFilterTypeUM.YieldMode,
+        ).inOrder()
+    }
+
     private fun provideTestModels() = listOf(
         OptionModel(
             name = "GIVEN all types WHEN the sheet is used THEN the all option is bound to the ALL filter",
@@ -119,6 +154,12 @@ internal class EarnTypeFilterModelTest {
             filter = EarnFilterType.YIELD,
             option = EarnFilterTypeUM.YieldMode,
             analytic = FilterTypeAnalytic.YIELD,
+        ),
+        OptionModel(
+            name = "GIVEN vaults WHEN the sheet is used THEN the vaults option is bound to the VAULT filter",
+            filter = EarnFilterType.VAULT,
+            option = EarnFilterTypeUM.Vaults,
+            analytic = FilterTypeAnalytic.VAULTS,
         ),
     )
 

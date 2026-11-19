@@ -42,6 +42,11 @@ object EarnDomainModule {
     }
 
     @Provides
+    fun provideGetBestEarnOfferUseCase(repository: EarnRepository): GetBestEarnOfferUseCase {
+        return GetBestEarnOfferUseCase(repository)
+    }
+
+    @Provides
     fun provideFetchEarnTokensCatalogUseCase(repository: EarnRepository): FetchEarnTokensCatalogUseCase {
         return FetchEarnTokensCatalogUseCase(repository)
     }

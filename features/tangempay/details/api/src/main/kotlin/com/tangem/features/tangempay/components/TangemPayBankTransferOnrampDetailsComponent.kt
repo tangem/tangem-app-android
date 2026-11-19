@@ -21,16 +21,15 @@ interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentCompone
     }
 
     interface Analytics {
-        fun onDetailsShown()
-        fun onFieldCopied(field: RequisiteField)
-        fun onShareClicked()
+        fun onDetailsShown(credentials: BankCredentials)
+        fun onFieldCopied(field: RequisiteField, credentials: BankCredentials)
+        fun onShareClicked(credentials: BankCredentials)
     }
 
     enum class RequisiteField {
         ACCOUNT_NUMBER,
         ROUTING_NUMBER,
         CLABE,
-        REFERENCE,
         BENEFICIARY_NAME,
         BENEFICIARY_ADDRESS,
         BANK_NAME,

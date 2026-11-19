@@ -25,13 +25,11 @@ import com.tangem.domain.staking.contribution.StakingContributionFetcher
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.FetchingSource
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -65,12 +63,6 @@ internal class WalletBalanceFetcherTest {
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         stakingIdFactory = stakingIdFactory,
     )
-    private val tokensFeatureToggles: TokensFeatureToggles = mockk {
-        every { isPluggableBalanceSourcesEnabled } returns true
-    }
-    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles = mockk {
-        every { isMoneyAccountsEnabled } returns false
-    }
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk {
@@ -86,14 +78,10 @@ internal class WalletBalanceFetcherTest {
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         balanceContributionFetchers = setOf(stakingContributionFetcher),
-        tokensFeatureToggles = tokensFeatureToggles,
-        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-        stakingIdFactory = stakingIdFactory,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -414,128 +402,6 @@ internal class WalletBalanceFetcherTest {
         val expected = IllegalStateException(
             "Failed to fetch next sources for UserWalletId(011...011):\n" +
                 "StakingContributionFetcher – java.lang.IllegalStateException: Error",
-        ).left()
-        assertEither(actual, expected)
-
-        coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
-            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
-            multiWalletBalanceFetcher.fetchingSources
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
-        }
-
-        coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
-            multiNetworkStatusFetcher(params = any())
-            multiQuoteStatusFetcher(params = any())
-        }
-    }
-
-    @Test
-    fun `GIVEN legacy staking fetch WHEN fetchStaking RETURNS LEFT THEN the same STAKING failure`() = runTest {
-        // Arrange
-        val cardTypesResolver = mockk<CardTypesResolver> {
-            every { isMultiwalletAllowed() } returns true
-        }
-
-        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
-        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
-            userWalletId = userWalletId,
-            stakingIds = setOf(ethereumStakingId, stellarStakingId),
-        )
-
-        val exception = IllegalStateException("Error")
-
-        mockColdWallet(cardTypesResolver)
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
-        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
-        )
-        coEvery {
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
-        } returns Either.Right(ethereumStakingId)
-        coEvery {
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-        } returns Either.Right(stellarStakingId)
-        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
-
-        // Act
-        val actual = createFetcher(isPluggableBalanceSourcesEnabled = false)(
-            params = WalletBalanceFetcher.Params(
-                userWalletId = userWalletId,
-            ),
-        )
-
-        // Assert
-        val expected = IllegalStateException(
-            "Failed to fetch next sources for UserWalletId(011...011):\n" +
-                "STAKING – java.lang.IllegalStateException: Error",
-        ).left()
-        assertEither(actual, expected)
-
-        coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
-            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
-            multiWalletBalanceFetcher.fetchingSources
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
-        }
-
-        coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
-            multiNetworkStatusFetcher(params = any())
-            multiQuoteStatusFetcher(params = any())
-        }
-    }
-
-    @Test
-    fun `GIVEN legacy staking fetch WHEN fetchStaking RETURNS LEFT THEN STAKING failure`() = runTest {
-        // Arrange
-        val cardTypesResolver = mockk<CardTypesResolver> {
-            every { isMultiwalletAllowed() } returns true
-        }
-
-        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
-        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
-            userWalletId = userWalletId,
-            stakingIds = setOf(ethereumStakingId, stellarStakingId),
-        )
-
-        val exception = IllegalStateException("Error")
-
-        mockColdWallet(cardTypesResolver)
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
-        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
-        )
-        coEvery {
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
-        } returns Either.Right(ethereumStakingId)
-        coEvery {
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-        } returns Either.Right(stellarStakingId)
-        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
-
-        // Act
-        val actual = createFetcher(isPluggableBalanceSourcesEnabled = false)(
-            params = WalletBalanceFetcher.Params(
-                userWalletId = userWalletId,
-            ),
-        )
-
-        // Assert
-        val expected = IllegalStateException(
-            "Failed to fetch next sources for UserWalletId(011...011):\n" +
-                "STAKING – java.lang.IllegalStateException: Error",
         ).left()
         assertEither(actual, expected)
 
@@ -1212,7 +1078,6 @@ internal class WalletBalanceFetcherTest {
 
     private fun createFetcher(
         isCollectiblesEnabled: Boolean = false,
-        isPluggableBalanceSourcesEnabled: Boolean = true,
     ): WalletBalanceFetcher = WalletBalanceFetcher(
         userWalletsListRepository = userWalletsListRepository,
         expressServiceFetcher = expressServiceFetcher,
@@ -1222,16 +1087,10 @@ internal class WalletBalanceFetcherTest {
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         balanceContributionFetchers = setOf(stakingContributionFetcher),
-        tokensFeatureToggles = mockk {
-            every { this@mockk.isPluggableBalanceSourcesEnabled } returns isPluggableBalanceSourcesEnabled
-        },
-        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-        stakingIdFactory = stakingIdFactory,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         collectiblesFeatureToggles = mockk {
             every { this@mockk.isCollectiblesEnabled } returns isCollectiblesEnabled
         },

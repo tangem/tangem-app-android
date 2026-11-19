@@ -4,7 +4,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
 import com.tangem.screens.onSwapSuccessScreen
@@ -18,10 +17,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountWithdrawSwapTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val userTokensUsdcState = "TangemPayTransferUsdc"
     private val storiesScenario = "stories_first_time_swap_v2"

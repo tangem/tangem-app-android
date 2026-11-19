@@ -4,11 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -23,12 +26,22 @@ import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.AccountConfirmed
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ButtonAddressDoesntMatch
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ConfirmAddressScreenOpened
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -45,6 +58,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -58,15 +72,20 @@ internal class JointAccountConfirmAddressModelTest {
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val confirmUseCase: ConfirmJointAccountUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
+    private val userWallet: UserWallet = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(
+            analyticsEventHandler,
             router,
             onActivated,
             uiMessageSender,
@@ -74,6 +93,8 @@ internal class JointAccountConfirmAddressModelTest {
             supplier,
             singleAccountSupplier,
             confirmUseCase,
+            getUserWalletUseCase,
+            ensureWalletLinkedUseCase,
             userWalletsListRepository,
             getWalletMetaInfoUseCase,
             pollingCoordinator,
@@ -85,6 +106,8 @@ internal class JointAccountConfirmAddressModelTest {
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(coldWallet))
         every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(listOf(confirmingAccount()))
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns userWallet.right()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns true
     }
 
     @Test
@@ -97,18 +120,17 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN no safe address yet WHEN model created THEN no address and confirm does nothing`() = runTest {
+    fun `GIVEN no safe address yet WHEN model created THEN no address and no share message`() = runTest {
         // Arrange
         every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns
             flowOf(listOf(confirmingAccount().copy(safeAddress = null)))
 
         // Act
         val model = createModel()
-        model.uiState.value.onShareClick()
 
         // Assert
         assertThat(model.uiState.value.address).isNull()
-        verify(exactly = 0) { shareManager.shareText(any()) }
+        assertThat(model.uiState.value.shareMessage).isNull()
     }
 
     @Test
@@ -136,15 +158,29 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN address WHEN share clicked THEN the address is shared`() = runTest {
+    fun `GIVEN address WHEN model created THEN share message asks to confirm the address`() = runTest {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.shareMessage).isEqualTo(
+            resourceReference(
+                id = CoreUiR.string.joint_account_confirm_address_share_message,
+                formatArgs = wrappedList(SAFE_ADDRESS),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN address WHEN share clicked THEN the message is shared`() = runTest {
         // Arrange
         val model = createModel()
 
         // Act
-        model.uiState.value.onShareClick()
+        model.uiState.value.onShareClick(SHARE_MESSAGE)
 
         // Assert
-        verify(exactly = 1) { shareManager.shareText(text = SAFE_ADDRESS) }
+        verify(exactly = 1) { shareManager.shareText(text = SHARE_MESSAGE) }
     }
 
     @Test
@@ -181,6 +217,7 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<ButtonAddressDoesntMatch>()) }
         signing.complete(Unit)
     }
 
@@ -231,6 +268,78 @@ internal class JointAccountConfirmAddressModelTest {
             verify(exactly = 0) { uiMessageSender.send(any()) }
             assertThat(model.uiState.value.isConfirming).isFalse()
         }
+
+    @Test
+    fun `GIVEN linked wallet WHEN confirm clicked THEN the link is ensured before confirming`() = runTest {
+        // Arrange
+        coEvery { confirmUseCase(account = jointAccount) } returns confirmingAccount().right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            ensureWalletLinkedUseCase(userWallet)
+            confirmUseCase(account = jointAccount)
+        }
+    }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN confirm clicked THEN nothing is signed and the button stops loading`() =
+        runTest {
+            // Arrange
+            coEvery { ensureWalletLinkedUseCase(userWallet) } returns false
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { confirmUseCase(account = any()) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            verify(exactly = 0) { router.pop() }
+            verify(exactly = 0) { onActivated() }
+            assertThat(model.uiState.value.isConfirming).isFalse()
+        }
+
+    @Test
+    fun `GIVEN wallet link sheet is open WHEN confirm clicked again THEN the button loads and the link is asked once`() =
+        runTest {
+            // Arrange
+            val linking = CompletableDeferred<Boolean>()
+            coEvery { ensureWalletLinkedUseCase(userWallet) } coAnswers { linking.await() }
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.isConfirming).isTrue()
+            coVerify(exactly = 1) { ensureWalletLinkedUseCase(userWallet) }
+            linking.complete(false)
+        }
+
+    @Test
+    fun `GIVEN wallet not found WHEN confirm clicked THEN the account is confirmed without the link check`() = runTest {
+        // Arrange
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        coEvery { confirmUseCase(account = jointAccount) } returns confirmingAccount().right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { confirmUseCase(account = jointAccount) }
+        coVerify(exactly = 0) { ensureWalletLinkedUseCase(any()) }
+    }
 
     @Test
     fun `GIVEN others are still to confirm WHEN confirm clicked THEN the screen pops without a snackbar`() = runTest {
@@ -298,7 +407,43 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Confirm, errorMessage = "NotMember"))
+        }
         verify(exactly = 0) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN backend refuses the confirmation WHEN confirm clicked THEN error is reported with its cause`() =
+        runTest {
+            // Arrange
+            val cause = IllegalStateException("offline")
+            coEvery { confirmUseCase(account = jointAccount) } returns JointAccountFlowError.Failed(cause).left()
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Confirm, cause = cause))
+            }
+        }
+
+    @Test
+    fun `GIVEN user cancels the signing WHEN confirm clicked THEN no error is reported`() = runTest {
+        // Arrange
+        coEvery { confirmUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<AccountConfirmed>()) }
     }
 
     @Test
@@ -313,8 +458,82 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Confirm, errorMessage = "No account"))
+        }
         coVerify(exactly = 0) { confirmUseCase(account = any()) }
     }
+
+    @Test
+    fun `GIVEN confirming account WHEN model created THEN the screen opening is reported once`() = runTest {
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(ConfirmAddressScreenOpened(membersCount = 2, threshold = 2))
+        }
+    }
+
+    @Test
+    fun `GIVEN the account is not read yet WHEN model created THEN the screen opening is not reported`() = runTest {
+        // Arrange
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(emptyList())
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN shown address WHEN mismatch clicked THEN the click is reported`() = runTest {
+        // Arrange
+        coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns WalletMetaInfo(USER_WALLET_ID).right()
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onMismatchClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(ButtonAddressDoesntMatch(membersCount = 2, threshold = 2))
+        }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN backend accepts the confirmation WHEN confirm clicked THEN it is reported with the activation`(
+        model: ConfirmedModel,
+    ) = runTest {
+        // Arrange
+        coEvery { confirmUseCase(account = jointAccount) } returns
+            confirmingAccount().copy(status = model.status).right()
+        val confirmAddressModel = createModel()
+
+        // Act
+        confirmAddressModel.uiState.value.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                AccountConfirmed(membersCount = 2, threshold = 2, isAccountActivated = model.expectedActivated),
+            )
+        }
+    }
+
+    data class ConfirmedModel(val status: JointAccount.Status, val expectedActivated: Boolean)
+
+    private fun provideTestModels() = listOf(
+        ConfirmedModel(status = JointAccount.Status.ACTIVE, expectedActivated = true),
+        ConfirmedModel(status = JointAccount.Status.CONFIRMING, expectedActivated = false),
+    )
 
     @Test
     fun `GIVEN model created WHEN resumed THEN the joint accounts are polled for the wallet`() = runTest {
@@ -382,7 +601,10 @@ internal class JointAccountConfirmAddressModelTest {
             jointAccountListSupplier = supplier,
             singleAccountSupplier = singleAccountSupplier,
             confirmJointAccountUseCase = confirmUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
+            ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
             userWalletsListRepository = userWalletsListRepository,
+            analyticsEventHandler = analyticsEventHandler,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             pollingCoordinator = pollingCoordinator,
         )
@@ -395,5 +617,6 @@ internal class JointAccountConfirmAddressModelTest {
         val USER_WALLET_ID = UserWalletId("011")
         val ACCOUNT_ID = "a1".repeat(n = 32)
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
+        const val SHARE_MESSAGE = "Please confirm shared address: 0xSafe"
     }
 }

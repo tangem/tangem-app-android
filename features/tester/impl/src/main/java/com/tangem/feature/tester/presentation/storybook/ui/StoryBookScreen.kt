@@ -9,6 +9,7 @@ import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.Po
 import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.PolymarketEventChartStory
 import androidx.compose.ui.Modifier
 import com.tangem.feature.tester.presentation.storybook.entity.ButtonsStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemToastStory
 import com.tangem.feature.tester.presentation.storybook.entity.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
@@ -28,6 +29,8 @@ import com.tangem.feature.tester.presentation.storybook.entity.StoryList
 import com.tangem.feature.tester.presentation.storybook.entity.TangemCheckboxStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemHeaderRowStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemLoaderStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemScoreScaleStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemPaginationStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemContextMenuStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStory
@@ -62,9 +65,12 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.filter.TangemFil
 import com.tangem.feature.tester.presentation.storybook.page.ds.footer.TangemFooterStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.TangemGlowRingStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.scorescale.TangemScoreScaleStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.pagination.TangemPaginationStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.TangemSwitchStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.toast.TangemToastStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.menu.TangemMenuStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.TangemMessageBubbleStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.actionmessage.TangemActionMessageStory
@@ -139,6 +145,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 DeviceIconStory -> DeviceIconStory()
                 DsComponentsListStory -> DsComponentsListStory(onStoryClick = state.onStoryClick)
                 is TangemLoaderStory -> TangemLoaderStory(state = storyState)
+                is TangemScoreScaleStory -> TangemScoreScaleStory(state = storyState)
+                is TangemPaginationStory -> TangemPaginationStory(state = storyState)
                 is TangemButtonStory -> TangemButtonStory(state = storyState)
                 is TangemButtonGroupStory -> TangemButtonGroupStory(state = storyState)
                 is TangemButtonStackStory -> TangemButtonStackStory(state = storyState)
@@ -158,6 +166,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemFadeStory -> TangemFadeStory(state = storyState)
                 is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
+                is TangemToastStory -> TangemToastStory(state = storyState)
                 is TangemMessageBubbleStory -> TangemMessageBubbleStory(state = storyState)
                 is TangemMenuStory -> TangemMenuStory(state = storyState)
                 is TangemActionMessageStory -> TangemActionMessageStory(state = storyState)

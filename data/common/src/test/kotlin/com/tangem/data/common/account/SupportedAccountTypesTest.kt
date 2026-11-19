@@ -37,11 +37,13 @@ internal class SupportedAccountTypesTest {
 
         // Act
         val types = supportedAccountTypes.types
+        val query = supportedAccountTypes.query
         val supportedTypes = WalletAccountDTO.Type.entries.filter(supportedAccountTypes::isSupported)
         val supported = recordTypes.filter { type -> supportedAccountTypes.isSupported(createRecord(type)) }
 
         // Assert
         assertThat(types).containsExactlyElementsIn(model.expectedTypes)
+        assertThat(query).isEqualTo(model.expectedQuery)
         assertThat(supportedTypes).containsExactlyElementsIn(model.expectedTypes)
         assertThat(supported).containsExactlyElementsIn(model.expectedSupported)
     }
@@ -59,6 +61,7 @@ internal class SupportedAccountTypesTest {
         val isJointEnabled: Boolean,
         val isCollectiblesEnabled: Boolean,
         val expectedTypes: Set<WalletAccountDTO.Type>,
+        val expectedQuery: String,
         val expectedSupported: List<WalletAccountDTO.Type?>,
     )
 
@@ -69,24 +72,28 @@ internal class SupportedAccountTypesTest {
             isJointEnabled = false,
             isCollectiblesEnabled = false,
             expectedTypes = setOf(WalletAccountDTO.Type.CRYPTO),
+            expectedQuery = "crypto",
             expectedSupported = listOf(null, WalletAccountDTO.Type.CRYPTO),
         ),
         Model(
             isJointEnabled = true,
             isCollectiblesEnabled = false,
             expectedTypes = setOf(WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.JOINT),
+            expectedQuery = "crypto,joint",
             expectedSupported = listOf(null, WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.JOINT),
         ),
         Model(
             isJointEnabled = false,
             isCollectiblesEnabled = true,
             expectedTypes = setOf(WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.COLLECTIBLES),
+            expectedQuery = "crypto,collectibles",
             expectedSupported = listOf(null, WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.COLLECTIBLES),
         ),
         Model(
             isJointEnabled = true,
             isCollectiblesEnabled = true,
             expectedTypes = WalletAccountDTO.Type.entries.toSet(),
+            expectedQuery = "crypto,joint,collectibles",
             expectedSupported = listOf(null) + WalletAccountDTO.Type.entries,
         ),
     )

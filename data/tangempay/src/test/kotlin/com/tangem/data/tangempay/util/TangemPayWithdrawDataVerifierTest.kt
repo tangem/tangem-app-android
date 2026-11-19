@@ -75,6 +75,10 @@ internal class TangemPayWithdrawDataVerifierTest {
             expected = Unit.right(),
         ),
         VerifyModel(
+            structuredData = EXTRA_SIGNED_FIELDS,
+            expected = Unit.right(),
+        ),
+        VerifyModel(
             structuredData = typedData(chainId = "137"),
             expected = Mismatch.NETWORK.left(),
         ),
@@ -95,8 +99,22 @@ internal class TangemPayWithdrawDataVerifierTest {
             expected = Mismatch.AMOUNT.left(),
         ),
         VerifyModel(
+            structuredData = typedData(amount = "\"0x8116e0\""),
+            expected = Mismatch.AMOUNT.left(),
+        ),
+        VerifyModel(
             structuredData = typedData(),
             hash = digestOf(typedData(amount = "8470000")),
+            expected = Mismatch.HASH.left(),
+        ),
+        VerifyModel(
+            structuredData = typedData(),
+            hash = digestOf(typedData()).dropLast(n = 2),
+            expected = Mismatch.HASH.left(),
+        ),
+        VerifyModel(
+            structuredData = typedData(),
+            hash = digestOf(typedData()) + "00",
             expected = Mismatch.HASH.left(),
         ),
         VerifyModel(
@@ -157,6 +175,33 @@ internal class TangemPayWithdrawDataVerifierTest {
               "primaryType": "Withdraw",
               "domain": {"name": "Collateral", "chainId": 8453},
               "message": {"asset": "$ASSET", "recipient": "$RECIPIENT", "to": "$FOREIGN_ADDRESS", "amount": 8460000}
+            }
+        """.trimIndent()
+
+        val EXTRA_SIGNED_FIELDS = """
+            {
+              "types": {
+                "EIP712Domain": [
+                  {"name": "name", "type": "string"},
+                  {"name": "chainId", "type": "uint256"}
+                ],
+                "Withdraw": [
+                  {"name": "asset", "type": "address"},
+                  {"name": "recipient", "type": "address"},
+                  {"name": "amount", "type": "uint256"},
+                  {"name": "nonce", "type": "uint256"},
+                  {"name": "deadline", "type": "uint256"}
+                ]
+              },
+              "primaryType": "Withdraw",
+              "domain": {"name": "Collateral", "chainId": 8453},
+              "message": {
+                "asset": "$ASSET",
+                "recipient": "$RECIPIENT",
+                "amount": 8460000,
+                "nonce": 7,
+                "deadline": 1893456000
+              }
             }
         """.trimIndent()
 

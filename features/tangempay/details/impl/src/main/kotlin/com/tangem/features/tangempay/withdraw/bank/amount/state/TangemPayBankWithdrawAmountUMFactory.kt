@@ -24,6 +24,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFacto
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Currency
 
@@ -31,6 +32,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
     private val step: TangemPayBankWithdrawInnerRoute,
     private val sourceAccount: BankWithdrawSourceAccount,
     private val callbacks: Callbacks,
+    @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED") private val isMxnEnabled: Boolean,
 ) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
@@ -62,9 +64,10 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 currencySymbol = selection.currency.symbol,
                 onBackClick = callbacks.onBackClick,
             )
-            NetworkFeeState.Unreachable -> TangemPayBankWithdrawAmountUM.FeeUnreachable(
+            NetworkFeeState.Unreachable -> TangemPayBankWithdrawAmountUM.Unreachable(
                 header = header,
-                onRetryClick = callbacks.onRetryFeeClick,
+                message = resourceReference(R.string.tangempay_withdraw_bank_network_fee_unreachable),
+                onRetryClick = callbacks.onRetryClick,
                 onBackClick = callbacks.onBackClick,
             )
             NetworkFeeState.NotEnoughFunds,
@@ -147,8 +150,8 @@ internal class TangemPayBankWithdrawAmountUMFactory(
     private fun createRouteRow(selection: AmountSelection, isRailLocked: Boolean): RouteRowUM = RouteRowUM(
         rail = selection.destination.rail,
         title = selection.destination.toTitleReference(),
-        eta = selection.destination.eta.toTextReference(),
-        fee = selection.destination.totalFeeText(selection.networkFee),
+        eta = selection.destination.toEtaReference(),
+        fee = selection.destination.feeText(amount = selection.amount, networkFee = selection.networkFee),
         onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 && !isRailLocked },
     )
 
@@ -174,11 +177,12 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onDismiss = callbacks.onSheetDismiss,
             )
             AmountSheet.ROUTES -> SheetUM.Routes(
+                title = createRoutesTitle(),
                 items = selection.destinations.map { destination ->
                     RouteItemUM(
                         rail = destination.rail,
                         title = destination.toTitleReference(),
-                        eta = destination.eta.toTextReference(),
+                        eta = destination.toEtaReference(),
                         fee = destination.totalFeeText(selection.networkFee),
                         isSelected = destination.rail == selection.destination.rail,
                         onClick = { callbacks.onRouteSelected(destination.rail) },
@@ -188,6 +192,13 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onDismiss = callbacks.onSheetDismiss,
             )
         }
+
+    @RemoveWithToggle(toggleName = "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED")
+    private fun createRoutesTitle(): TextReference = if (isMxnEnabled) {
+        resourceReference(R.string.tangempay_withdraw_bank_choose_transfer_method)
+    } else {
+        resourceReference(R.string.tangempay_withdraw_bank_select_route)
+    }
 
     private fun createNetworkFeeNote(selection: AmountSelection): TextReference? =
         if (isNetworkFeeCharged && selection.isNetworkFeeQuoted) {
@@ -210,6 +221,6 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         val onRouteSelected: (BankRail) -> Unit,
         val onSheetDismiss: () -> Unit,
         val onContinueClick: () -> Unit,
-        val onRetryFeeClick: () -> Unit,
+        val onRetryClick: () -> Unit,
     )
 }

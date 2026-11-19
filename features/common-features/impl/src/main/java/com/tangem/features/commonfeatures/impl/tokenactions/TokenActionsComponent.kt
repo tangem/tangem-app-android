@@ -3,11 +3,12 @@ package com.tangem.features.commonfeatures.impl.tokenactions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.common.ui.markets.action.TokenActionsContext
@@ -44,6 +45,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        LifecycleEventEffect(Lifecycle.Event.ON_START, onEvent = model::onStart)
         val state = model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val tokenActionsUM = state.value ?: return
@@ -61,7 +63,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
         context = childByContext(componentContext),
         params = TokenReceiveComponent.Params(
             config = config,
-            onDismiss = model.bottomSheetNavigation::dismiss,
+            onDismiss = model::dismissReceive,
         ),
     )
 

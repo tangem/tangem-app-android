@@ -17,8 +17,6 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -177,8 +175,8 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route = AppRoute.TangemPayOnboarding(mode = mode))
     }
 
-    override fun openTangemPayEligibility(product: TangemPayProduct, userWalletId: UserWalletId) {
-        router.push(route = AppRoute.TangemPayEligibility(product = product, userWalletId = userWalletId))
+    override fun openTangemPayEligibility(userWalletId: UserWalletId) {
+        router.push(route = AppRoute.TangemPayEligibility(userWalletId = userWalletId))
     }
 
     override fun openTangemPayVerified(userWalletId: UserWalletId) {
@@ -189,16 +187,14 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route = AppRoute.MoneyAccountDetails(userWalletId = userWalletId))
     }
 
-    override fun openTangemPayDetails(status: AccountStatus.Payment) {
-        router.push(AppRoute.TangemPayDetails(status = status))
+    override fun openMoneyAccountActivation(userWalletId: UserWalletId) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.MoneyAccountActivation(userWalletId = userWalletId),
+        )
     }
 
-    override fun openTangemPaySelectPlan(status: AccountStatus.Payment) {
-        val route = AppRoute.TangemPayDetails(
-            status = status,
-            initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
-        )
-        router.push(route)
+    override fun openTangemPayDetails(status: AccountStatus.Payment) {
+        router.push(AppRoute.TangemPayDetails(status = status))
     }
 
     override fun openYieldSupplyBottomSheet(

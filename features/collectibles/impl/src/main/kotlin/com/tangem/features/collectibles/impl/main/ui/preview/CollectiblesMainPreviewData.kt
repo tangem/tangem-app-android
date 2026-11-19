@@ -36,6 +36,7 @@ internal object CollectiblesMainPreviewData {
             title = stringReference("25 cards"),
             onClick = {},
         ),
+        isRegionRestricted = false,
         relink = CollectiblesMainUM.RelinkUM.Hidden,
         pendingPacks = persistentListOf(),
         menu = menu(isShown = false),

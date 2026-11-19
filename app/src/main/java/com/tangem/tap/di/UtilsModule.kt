@@ -6,17 +6,11 @@ import com.tangem.tap.common.deeplink.DefaultDeeplinkLauncher
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.finisher.AppFinisher
-import com.tangem.core.navigation.settings.SettingsManager
-import com.tangem.core.navigation.share.ShareManager
-import com.tangem.core.navigation.url.AppStoreOpener
-import com.tangem.core.navigation.url.DefaultAppStoreOpener
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.tester.api.TestPushEmitter
 import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.finisher.AndroidAppFinisher
-import com.tangem.tap.common.settings.IntentSettingsManager
-import com.tangem.tap.common.share.IntentShareManager
 import com.tangem.tap.common.url.CustomTabsUrlOpener
 import com.tangem.tap.core.DefaultAppCoroutineScope
 import com.tangem.tap.common.pushes.DefaultTestPushEmitter
@@ -43,14 +37,7 @@ internal interface UtilsModule {
 
     @Binds
     @Singleton
-    fun bindAppStoreOpener(impl: DefaultAppStoreOpener): AppStoreOpener
-
-    @Binds
-    @Singleton
     fun bindTestPushEmitter(impl: DefaultTestPushEmitter): TestPushEmitter
-
-    @Binds
-    fun bindShareManager(impl: IntentShareManager): ShareManager
 
     @Binds
     @Singleton
@@ -69,11 +56,6 @@ internal interface UtilsModule {
             @ApplicationContext context: Context,
             foregroundActivityProvider: ForegroundActivityProvider,
         ): AppFinisher = AndroidAppFinisher(context, foregroundActivityProvider)
-
-        @Provides
-        @Singleton
-        fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager =
-            IntentSettingsManager(context)
 
         @Provides
         @Singleton

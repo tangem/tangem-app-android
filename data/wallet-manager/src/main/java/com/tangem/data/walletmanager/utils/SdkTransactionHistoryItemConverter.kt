@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
@@ -48,6 +49,8 @@ internal class SdkTransactionHistoryItemConverter(
         jointRefundReceiver = jointRefundReceiver,
     )
 
+    private val isJointCurrency: Boolean = currency.isJoint
+
     private val ownAddresses: Set<String> = currencyAddresses
         .mapTo(mutableSetOf()) { it.value.lowercase() }
 
@@ -57,11 +60,29 @@ internal class SdkTransactionHistoryItemConverter(
             .map(safeExecutionDecoder::withRefundStatus)
             .groupBy(SdkTransactionHistoryItem::txHash)
             .flatMap { (_, items) ->
-                val transfers = items.map(::convert)
+                val transfers = items.map { it to convert(it) }.withoutForeignInternalTransfers()
 
                 transfers.singleOrNull()?.let { listOf(it) } ?: transfers.toMultiTransfer()
             }
     }
+
+    /**
+     * Outside a joint account the internal transfers are requested only for the Lending payout. Merged into any other
+     * call they would turn it into a plain transfer: a DEX swap paying out the coin would lose its type and its fee.
+     */
+    private fun List<Pair<SdkTransactionHistoryItem, TxInfo.Single>>.withoutForeignInternalTransfers():
+        List<TxInfo.Single> {
+        val transfers = map { (_, transfer) -> transfer }
+        if (isJointCurrency || size < 2 || transfers.any { it.type is TransactionType.Lending }) return transfers
+
+        return filterNot { (item, _) -> item.isInternalTransfer() }
+            .map { (_, transfer) -> transfer }
+            .ifEmpty { transfers }
+    }
+
+    /** The SDK reports an internal CALL as a plain transfer without a fee: the gas belongs to the transaction */
+    private fun SdkTransactionHistoryItem.isInternalTransfer(): Boolean =
+        type == SdkTransactionHistoryItem.TransactionType.Transfer && fee.value?.isZero() == true
 
     private fun List<TxInfo.Single>.toMultiTransfer(): List<TxInfo> {
         val yieldExits = filter { it.type is TransactionType.YieldSupply.Exit }
@@ -85,16 +106,25 @@ internal class SdkTransactionHistoryItemConverter(
 
     private fun List<TxInfo.Single>.mergeTransfers(): TxInfo.MultiTransfer {
         val withoutGaslessFee = filterNot { it.type is TransactionType.GaslessFee }
-        val delta = withoutGaslessFee.fold(BigDecimal.ZERO) { sum, transfer -> sum + transfer.signedAmount() }
+        val lendingCall = withoutGaslessFee.firstOrNull { it.type is TransactionType.Lending }
+        // The payout leg already moves the withdrawn coin, so the call's requested amount must not count again
+        val delta = withoutGaslessFee
+            .filterNot { it.type is TransactionType.Lending.Withdraw }
+            .fold(BigDecimal.ZERO) { sum, transfer -> sum + transfer.signedAmount() }
 
         return TxInfo.MultiTransfer(
             amount = delta.abs(),
-            isOutgoing = delta.isNegative(),
-            type = if (delta.isZero()) TransactionType.UnknownOperation else TransactionType.Transfer,
+            isOutgoing = lendingCall?.isOutgoing ?: delta.isNegative(),
+            type = when {
+                lendingCall != null -> lendingCall.type
+                delta.isZero() -> TransactionType.UnknownOperation
+                else -> TransactionType.Transfer
+            },
             destinationType = withoutGaslessFee.mergeDestinationType(),
             sourceType = withoutGaslessFee.mergeSourceType(),
             interactionAddressType = withoutGaslessFee.mergeInteractionAddressType(),
-            transfers = this,
+            // The row takes its fee from the first transfer, and only the call paid one; the explorer's order is not fixed
+            transfers = sortedByDescending { it.type is TransactionType.Lending },
         )
     }
 
@@ -171,7 +201,9 @@ internal class SdkTransactionHistoryItemConverter(
         interactionAddressType = value.extractInteractionAddressType(),
         status = value.status.toDomain(),
         type = type,
-        amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
+        amount = requireNotNull(type.movedAmount(reported = value.amount.value)) {
+            "Transaction amount value must not be null"
+        },
         fee = value.fee.toDomain(),
     )
 

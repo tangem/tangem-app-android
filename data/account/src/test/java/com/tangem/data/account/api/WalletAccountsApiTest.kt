@@ -102,7 +102,9 @@ internal class WalletAccountsApiTest {
 
         // Assert
         assertThat(actual).isEqualTo(response)
-        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV2(walletId = any(), eTag = any()) }
+        coVerify(exactly = 0) {
+            tangemTechApi.getWalletAccountsV2(walletId = any(), eTag = any(), supportedAccountTypes = any())
+        }
     }
 
     @Test
@@ -110,7 +112,7 @@ internal class WalletAccountsApiTest {
         // Arrange
         toggle(enabled = true)
         coEvery {
-            tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
+            tangemTechApi.getWalletAccountsV2(walletId, eTag, "crypto,joint")
         } returns ApiResponse.Success(data = v2Response, headers = headers)
 
         // Act
@@ -128,7 +130,7 @@ internal class WalletAccountsApiTest {
         val error = ApiResponse.Error(cause = ApiResponseError.NetworkException(), headers = headers)
         @Suppress("UNCHECKED_CAST")
         coEvery {
-            tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
+            tangemTechApi.getWalletAccountsV2(walletId, eTag, "crypto,joint")
         } returns error as ApiResponse<GetWalletAccountsV2Response>
 
         // Act
@@ -169,15 +171,15 @@ internal class WalletAccountsApiTest {
         // Assert
         assertThat(actual).isEqualTo(response)
         coVerify(exactly = 1) { tangemTechApi.saveWalletAccountsV1(walletId, eTag, expectedBody) }
-        coVerify(exactly = 0) { tangemTechApi.saveWalletAccountsV2(walletId = any(), eTag = any(), body = any()) }
+        coVerify(exactly = 0) { tangemTechApi.saveWalletAccountsV2(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN toggle is on WHEN saveAccounts THEN api v2 receives the body as is and answers renamed`() = runTest {
+    fun `GIVEN toggle is on WHEN saveAccounts THEN api v2 receives the body and its types and answers renamed`() = runTest {
         // Arrange
         toggle(enabled = true)
         coEvery {
-            tangemTechApi.saveWalletAccountsV2(walletId, eTag, body)
+            tangemTechApi.saveWalletAccountsV2(walletId, eTag, body, "crypto,joint")
         } returns ApiResponse.Success(data = v2Response, headers = headers)
 
         // Act
@@ -186,6 +188,26 @@ internal class WalletAccountsApiTest {
         // Assert
         assertThat(actual).isEqualTo(ApiResponse.Success(data = mappedV2Response, headers = headers))
         coVerify(exactly = 0) { tangemTechApi.saveWalletAccountsV1(walletId = any(), eTag = any(), body = any()) }
+    }
+
+    @Test
+    fun `GIVEN a row of an unsupported type WHEN saveAccounts THEN api v2 receives the body without it`() = runTest {
+        // Arrange
+        toggle(enabled = true)
+        val collectiblesRow = personalRow.copy(id = "C".repeat(64), type = WalletAccountDTO.Type.COLLECTIBLES)
+        coEvery {
+            tangemTechApi.saveWalletAccountsV2(walletId, eTag, body, "crypto,joint")
+        } returns ApiResponse.Success(data = v2Response, headers = headers)
+
+        // Act
+        walletAccountsApi.saveAccounts(
+            walletId = walletId,
+            eTag = eTag,
+            body = body.copy(accounts = listOf(personalRow, collectiblesRow, jointRow)),
+        )
+
+        // Assert
+        coVerify(exactly = 1) { tangemTechApi.saveWalletAccountsV2(walletId, eTag, body, "crypto,joint") }
     }
 
     @ParameterizedTest
@@ -228,7 +250,12 @@ internal class WalletAccountsApiTest {
         toggle(enabled = true)
         val response = ApiResponse.Success(data = mockk<GetWalletArchivedAccountsResponse>())
         coEvery {
-            tangemTechApi.getWalletArchivedAccounts(version = "api/v2", walletId = walletId, eTag = eTag)
+            tangemTechApi.getWalletArchivedAccounts(
+                version = "api/v2",
+                walletId = walletId,
+                eTag = eTag,
+                supportedAccountTypes = "crypto,joint",
+            )
         } returns response
 
         // Act

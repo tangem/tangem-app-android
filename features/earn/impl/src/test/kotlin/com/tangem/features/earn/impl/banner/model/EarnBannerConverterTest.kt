@@ -2,14 +2,15 @@ package com.tangem.features.earn.impl.banner.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnBannerOverview
 import com.tangem.features.earn.api.overview.EarnOverview
 import com.tangem.features.earn.api.overview.EarnProductRate
-import com.tangem.features.earn.impl.banner.EarnBannerTexts
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
 import com.tangem.features.earn.impl.overview.createRate
 import io.mockk.clearMocks
@@ -80,9 +81,9 @@ internal class EarnBannerConverterTest {
         // Assert
         assertThat(actual).isInstanceOf(EarnBannerUM.Offer::class.java)
         val offer = actual as EarnBannerUM.Offer
-        assertThat(offer.title).isEqualTo(EarnBannerTexts.title)
-        assertThat(offer.description).isEqualTo(stringReference("Up to 5.50% APY"))
-        assertThat(offer.buttonText).isEqualTo(EarnBannerTexts.enable)
+        assertThat(offer.title).isEqualTo(resourceReference(R.string.token_details_earn_title))
+        assertThat(offer.description).isEqualTo(upToApyText("5.50%"))
+        assertThat(offer.buttonText).isEqualTo(resourceReference(R.string.common_enable))
         offer.onEnableClick()
         verify(exactly = 1) { intents.onEnableClick(BEST_PRODUCT_ID) }
     }
@@ -112,9 +113,9 @@ internal class EarnBannerConverterTest {
         // Assert
         assertThat(actual).isInstanceOf(EarnBannerUM.Offer::class.java)
         val offer = actual as EarnBannerUM.Offer
-        assertThat(offer.title).isEqualTo(EarnBannerTexts.title)
+        assertThat(offer.title).isEqualTo(resourceReference(R.string.token_details_earn_title))
         assertThat(offer.description).isNull()
-        assertThat(offer.buttonText).isEqualTo(EarnBannerTexts.enable)
+        assertThat(offer.buttonText).isEqualTo(resourceReference(R.string.common_enable))
     }
 
     @Test
@@ -129,9 +130,9 @@ internal class EarnBannerConverterTest {
         // Assert
         assertThat(actual).isInstanceOf(EarnBannerUM.Enabled::class.java)
         val enabled = actual as EarnBannerUM.Enabled
-        assertThat(enabled.title).isEqualTo(EarnBannerTexts.enabledTitle)
+        assertThat(enabled.title).isEqualTo(resourceReference(R.string.token_details_yield_enabled_title))
         assertThat(enabled.description)
-            .isEqualTo(stringReference("${totalPosition.format { crypto(currency) }} · 1 active"))
+            .isEqualTo(activeCountText(amount = totalPosition.format { crypto(currency) }, count = 1))
         enabled.onClick()
         verify(exactly = 1) { intents.onBannerClick() }
     }
@@ -147,7 +148,7 @@ internal class EarnBannerConverterTest {
         // Assert
         assertThat(actual).isInstanceOf(EarnBannerUM.Enabled::class.java)
         val enabled = actual as EarnBannerUM.Enabled
-        assertThat(enabled.description).isEqualTo(stringReference("*** · 2 active"))
+        assertThat(enabled.description).isEqualTo(activeCountText(amount = "***", count = 2))
     }
 
     @Test
@@ -161,7 +162,20 @@ internal class EarnBannerConverterTest {
         // Assert
         assertThat(actual).isInstanceOf(EarnBannerUM.Offer::class.java)
         val offer = actual as EarnBannerUM.Offer
-        assertThat(offer.description).isEqualTo(stringReference("Up to 5.50% APY"))
+        assertThat(offer.description).isEqualTo(upToApyText("5.50%"))
+    }
+
+    @Test
+    fun `GIVEN an APR rate WHEN convert THEN Offer shows the Up to APR text`() {
+        // Arrange
+        val overview = overviewOf(rate = createRate(fraction = "0.055", type = EarnRateType.APR), activeCount = 0)
+
+        // Act
+        val actual = converter.convert(overview, currency, isBalanceHidden = false, intents = intents)
+
+        // Assert
+        val offer = actual as EarnBannerUM.Offer
+        assertThat(offer.description).isEqualTo(upToAprText("5.50%"))
     }
 
     @Test
@@ -175,8 +189,8 @@ internal class EarnBannerConverterTest {
         // Assert
         assertThat(actual).isInstanceOf(EarnBannerUM.Enabled::class.java)
         val enabled = actual as EarnBannerUM.Enabled
-        assertThat(enabled.title).isEqualTo(EarnBannerTexts.enabledTitle)
-        assertThat(enabled.description).isEqualTo(stringReference("2 active"))
+        assertThat(enabled.title).isEqualTo(resourceReference(R.string.token_details_yield_enabled_title))
+        assertThat(enabled.description).isEqualTo(activeCountText(amount = null, count = 2))
     }
 
     private fun overviewOf(
@@ -191,6 +205,7 @@ internal class EarnBannerConverterTest {
             bestProductId = bestProductId,
             activeCount = activeCount,
             totalPosition = totalPosition,
+            productCount = 1,
         ),
     )
 

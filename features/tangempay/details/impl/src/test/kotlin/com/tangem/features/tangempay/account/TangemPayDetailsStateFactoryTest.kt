@@ -6,9 +6,16 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_error_20
+import com.tangem.core.ui.res.generated.icons.ic_info_20
+import com.tangem.core.ui.res.generated.icons.ic_mail_20
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
@@ -36,6 +43,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 
@@ -54,6 +62,18 @@ internal class TangemPayDetailsStateFactoryTest {
         onBack = {},
         onOpenMenu = {},
         intents = intents,
+        isColdWallet = true,
+        isCardRemovalAnimated = false,
+        isDsMenuEnabled = false,
+    )
+
+    private val dsMenuFactory = TangemPayDetailsStateFactory(
+        onBack = {},
+        onOpenMenu = {},
+        intents = intents,
+        isColdWallet = true,
+        isCardRemovalAnimated = false,
+        isDsMenuEnabled = true,
     )
 
     @BeforeEach
@@ -105,6 +125,46 @@ internal class TangemPayDetailsStateFactoryTest {
         )
         requireNotNull(banner.onClose).invoke()
         verify(exactly = 1) { intents.onBankTransferOnrampFailedBannerDismissed() }
+    }
+
+    @Test
+    fun `GIVEN Loaded with flag WHEN getLoadedState THEN kycAdditionalInfoBanner is set`() {
+        // Arrange
+        val status = loadedStatus(isKycAdditionalInfoRequired = true)
+
+        // Act
+        val banner = factory.getLoadedState(status).kycAdditionalInfoBanner
+
+        // Assert
+        val state = requireNotNull(banner).state
+        assertThat(state.title).isEqualTo(resourceReference(R.string.tangempay_kyc_additional_info_title))
+        assertThat(banner.onClose).isNull()
+    }
+
+    @Test
+    fun `GIVEN Loaded with flag while payment account issuing WHEN getLoadedState THEN kycAdditionalInfoBanner is null`() {
+        // Arrange
+        val status = loadedStatus(isKycAdditionalInfoRequired = true, isPaymentAccountIssuing = true)
+
+        // Act
+        val actual = factory.getLoadedState(status).kycAdditionalInfoBanner
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN Loaded without flag WHEN getLoadedState THEN kycAdditionalInfoBanner is null and other banners unchanged`() {
+        // Arrange
+        val withFlag = factory.getLoadedState(loadedStatus(isKycAdditionalInfoRequired = true))
+
+        // Act
+        val withoutFlag = factory.getLoadedState(loadedStatus(isKycAdditionalInfoRequired = false))
+
+        // Assert
+        assertThat(withoutFlag.kycAdditionalInfoBanner).isNull()
+        assertThat(withoutFlag.messageBanner).isEqualTo(withFlag.messageBanner)
+        assertThat(withoutFlag.bankTransferOnrampBanner).isEqualTo(withFlag.bankTransferOnrampBanner)
     }
 
     @ParameterizedTest
@@ -209,6 +269,7 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(cardsBlockState?.cards?.map { it.copy(onClick = noOpClick) }).containsExactly(
             TangemPayDetailsBalanceBlockState.Card(
+                id = "issuing_placeholder",
                 lastDigits = "",
                 imageUrl = null,
                 cardType = TangemPayCardType.UNDEFINED,
@@ -219,6 +280,42 @@ internal class TangemPayDetailsStateFactoryTest {
             ),
         )
         assertThat(cardsBlockState?.isAddCardEnabled).isFalse()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN card removal animation flag WHEN getLoadedState THEN cards block carries the flag`(
+        isCardRemovalAnimated: Boolean,
+    ) {
+        // Arrange
+        val animatedFactory = TangemPayDetailsStateFactory(
+            onBack = {},
+            onOpenMenu = {},
+            intents = intents,
+            isColdWallet = true,
+            isCardRemovalAnimated = isCardRemovalAnimated,
+            isDsMenuEnabled = false,
+        )
+
+        // Act
+        val cardsBlockState = animatedFactory.getLoadedState(loadedStatus()).balanceBlockState.cardsBlockState
+
+        // Assert
+        assertThat(cardsBlockState?.isCardRemovalAnimated).isEqualTo(isCardRemovalAnimated)
+    }
+
+    @Test
+    fun `GIVEN several cards WHEN getLoadedState THEN each tile is keyed by its card id`() {
+        // Arrange
+        val status = loadedStatus(
+            statusCards = listOf(activeUnfrozenCard, tangemPayCard(id = "card_2", lastDigits = "5678")),
+        )
+
+        // Act
+        val cards = factory.getLoadedState(status).balanceBlockState.cardsBlockState?.cards
+
+        // Assert
+        assertThat(cards?.map { it.id }).containsExactly(activeUnfrozenCard.id, "card_2").inOrder()
     }
 
     @Test
@@ -373,6 +470,114 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN ds menu enabled WHEN getLoadedState THEN menu has current plan and support`() {
+        // Arrange
+        val planState = tariffPlanState()
+
+        // Act
+        val menu = dsMenuFactory.getLoadedState(loadedStatus(statusTariffPlan = planState)).topBarConfig.menu
+
+        // Assert
+        assertThat(menu?.withoutClicks()).isEqualTo(
+            menuOf(
+                DS_CURRENT_PLAN_ITEM.copy(description = stringReference(planState.tariff.plan.name)),
+                DS_SUPPORT_ITEM,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN ds menu enabled and plan transition WHEN getLoadedState THEN current plan shows changing plan`() {
+        // Arrange
+        val planState = tariffPlanState(order = awaitingDepositOrder())
+
+        // Act
+        val menu = dsMenuFactory.getLoadedState(loadedStatus(statusTariffPlan = planState)).topBarConfig.menu
+
+        // Assert
+        assertThat(menu?.withoutClicks()).isEqualTo(
+            menuOf(
+                DS_CURRENT_PLAN_ITEM.copy(
+                    description = resourceReference(R.string.tangempay_changing_plan),
+                    iconStart = Icons.ic_arrow_refresh_20,
+                ),
+                DS_SUPPORT_ITEM,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN ds menu enabled WHEN getDeactivatedState THEN remove account goes red in its own section`() {
+        // Act
+        val menu = dsMenuFactory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO))
+            .topBarConfig.menu
+
+        // Assert
+        assertThat(menu?.withoutClicks()).isEqualTo(
+            menuOf(
+                DS_SUPPORT_ITEM,
+                TangemMenu.UiState.Divider(),
+                TangemMenu.UiState.Item(
+                    label = resourceReference(R.string.tangempay_remove_account),
+                    onClick = NO_OP_CLICK,
+                    iconStart = Icons.ic_trash_bin_20,
+                    variant = TangemMenu.ItemVariant.Error,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN ds menu enabled WHEN loading THEN menu has only support`() {
+        // Act
+        val menu = dsMenuFactory.getLoadingState().topBarConfig.menu
+
+        // Assert
+        assertThat(menu?.withoutClicks()).isEqualTo(menuOf(DS_SUPPORT_ITEM))
+    }
+
+    @Test
+    fun `GIVEN ds menu disabled WHEN building states THEN menu is absent`() {
+        // Act
+        val menus = listOf(
+            factory.getLoadingState(),
+            factory.getLoadedState(loadedStatus(statusTariffPlan = tariffPlanState())),
+            factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO)),
+            factory.getCardIssueFailedState(cardIssueFailedStatus(planState = tariffPlanState()), false),
+        ).map { it.topBarConfig.menu }
+
+        // Assert
+        assertThat(menus).containsExactly(null, null, null, null)
+    }
+
+    @Test
+    fun `GIVEN ds menu enabled WHEN menu items clicked THEN matching intents called`() {
+        // Arrange
+        val planState = tariffPlanState()
+        val loadedMenu = dsMenuFactory.getLoadedState(loadedStatus(statusTariffPlan = planState)).topBarConfig.menu
+        val deactivatedMenu = dsMenuFactory
+            .getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO))
+            .topBarConfig.menu
+
+        // Act
+        (loadedMenu?.entries.orEmpty() + deactivatedMenu?.entries.orEmpty())
+            .filterIsInstance<TangemMenu.UiState.Item>()
+            .forEach { it.onClick() }
+
+        // Assert
+        verify(exactly = 1) { intents.onClickCurrentPlan(planState) }
+        verify(exactly = 2) { intents.onContactSupportClicked() }
+        verify(exactly = 1) { intents.onRemoveAccount() }
+    }
+
+    private fun menuOf(vararg entries: TangemMenu.UiState.Entry) = TangemMenu.UiState(entries = persistentListOf(*entries))
+
+    private fun TangemMenu.UiState.withoutClicks(): TangemMenu.UiState = copy(
+        entries = entries.map { if (it is TangemMenu.UiState.Item) it.copy(onClick = NO_OP_CLICK) else it }
+            .toPersistentList(),
+    )
+
+    @Test
     fun `GIVEN card issue failed WHEN getCardIssueFailedState THEN error banner and add card element are shown`() {
         // Arrange
         val status = cardIssueFailedStatus(planState = tariffPlanState())
@@ -410,7 +615,6 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(balanceBlock).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
         val content = balanceBlock as TangemPayDetailsBalanceBlockState.Content
-        assertThat(content.isInactive).isFalse()
         assertThat(content.fiatBalance).isEqualTo(zeroBalanceText(currency = "EUR"))
     }
 
@@ -427,7 +631,7 @@ internal class TangemPayDetailsStateFactoryTest {
             .isEqualTo(zeroBalanceText(currency = "USD"))
     }
 
-    private fun zeroBalanceText(currency: String) = DetailsBalanceTransformer.getFiatBalanceText(
+    private fun zeroBalanceText(currency: String) = getFiatBalanceText(
         PaymentAccountStatusValue.FiatBalance(availableBalance = BigDecimal.ZERO, currency = currency),
     )
 
@@ -559,6 +763,66 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideInactiveBadgeCases")
+    fun `GIVEN loaded status WHEN getLoadedState THEN inactive badge follows the top up banner`(case: InactiveBadgeCase) {
+        // Arrange
+        val status = loadedStatus(
+            statusTariffPlan = case.tariffPlan,
+            statusError = case.error,
+            statusBalance = case.balance,
+        )
+
+        // Act
+        val balanceBlock = factory.getLoadedState(status).balanceBlockState
+
+        // Assert
+        val isInactive = when (balanceBlock) {
+            is TangemPayDetailsBalanceBlockState.Content -> balanceBlock.isInactive
+            is TangemPayDetailsBalanceBlockState.Error -> balanceBlock.isInactive
+            is TangemPayDetailsBalanceBlockState.Loading -> false
+        }
+        assertThat(isInactive).isEqualTo(case.isInactive)
+    }
+
+    private fun provideInactiveBadgeCases() = listOf(
+        InactiveBadgeCase(
+            name = "awaiting deposit with balance",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+            error = null,
+            balance = balance(),
+            isInactive = true,
+        ),
+        InactiveBadgeCase(
+            name = "awaiting deposit without balance",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+            error = null,
+            balance = null,
+            isInactive = true,
+        ),
+        InactiveBadgeCase(
+            name = "awaiting deposit hidden by error banner",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder()),
+            error = PaymentAccountStatusValue.Error.Unavailable,
+            balance = balance(),
+            isInactive = false,
+        ),
+        InactiveBadgeCase(
+            name = "awaiting deposit without recurring fee",
+            tariffPlan = tariffPlanState(order = awaitingDepositOrder(toPlan = tariffPlan(fees = emptyList()))),
+            error = null,
+            balance = balance(),
+            isInactive = false,
+        ),
+        InactiveBadgeCase(
+            name = "no plan transition without balance",
+            tariffPlan = tariffPlanState(),
+            error = null,
+            balance = null,
+            isInactive = false,
+        ),
+    )
+
+    @ParameterizedTest
     @MethodSource("provideProgressBannerCases")
     fun `GIVEN card states WHEN getLoadedState THEN progress banner resolved`(case: ProgressBannerCase) {
         // Arrange
@@ -656,8 +920,12 @@ internal class TangemPayDetailsStateFactoryTest {
         statusBalance: PaymentAccountStatusValue.Balance? = balance(),
         statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
         virtualAccount: VirtualAccountOnramp? = null,
+        isKycAdditionalInfoRequired: Boolean = false,
+        isPaymentAccountIssuing: Boolean = false,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { this@mockk.virtualAccount } returns virtualAccount
+        every { this@mockk.isKycAdditionalInfoRequired } returns isKycAdditionalInfoRequired
+        every { this@mockk.isPaymentAccountIssuing } returns isPaymentAccountIssuing
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
@@ -734,6 +1002,16 @@ internal class TangemPayDetailsStateFactoryTest {
         ActionButtonsConfigCase(isAddFundsEnabled = true, isWithdrawEnabled = true),
     )
 
+    internal data class InactiveBadgeCase(
+        val name: String,
+        val tariffPlan: TangemPayTariffPlanState,
+        val error: PaymentAccountStatusValue.Error?,
+        val balance: PaymentAccountStatusValue.Balance?,
+        val isInactive: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
     internal data class DeactivatedButtonsCase(
         val name: String,
         val availableForWithdrawal: BigDecimal,
@@ -784,6 +1062,20 @@ internal class TangemPayDetailsStateFactoryTest {
     data class HiddenBankTransferOnrampBannerCase(val virtualAccount: VirtualAccountOnramp?)
 
     private companion object {
+        val NO_OP_CLICK: () -> Unit = {}
+
+        val DS_CURRENT_PLAN_ITEM = TangemMenu.UiState.Item(
+            label = resourceReference(R.string.tangempay_current_plan_title),
+            onClick = NO_OP_CLICK,
+            iconStart = Icons.ic_info_20,
+        )
+
+        val DS_SUPPORT_ITEM = TangemMenu.UiState.Item(
+            label = resourceReference(R.string.tangempay_pay_support),
+            onClick = NO_OP_CLICK,
+            iconStart = Icons.ic_mail_20,
+        )
+
         @JvmStatic
         fun provideHiddenBankTransferOnrampBannerCases() = listOf(
             HiddenBankTransferOnrampBannerCase(virtualAccount = VirtualAccountOnramp.Eligible),

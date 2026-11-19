@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.right
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -15,6 +16,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
+import com.tangem.features.yield.supply.impl.common.portfolioCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -78,6 +80,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
 
     protected fun TestScope.createModel(
         statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
+        account: AccountKind = AccountKind.Portfolio,
     ): YieldSupplyStopEarningModel = YieldSupplyStopEarningModel(
         tangemBlogUrlBuilder = tangemBlogUrlBuilder,
         dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -85,6 +88,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
             YieldSupplyStopEarningComponent.Params(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = statusFlow,
+                account = account,
                 callback = callback,
                 feeSelectorComponentFactory = mockk(),
             ),
@@ -107,7 +111,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
         yieldSupplySmartGas = YieldSupplySmartGas(
             sendTransactionUseCase = sendTransactionUseCase,
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
-            singleAccountStatusListSupplier = accountStatusListSupplier,
+            currencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
             getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,

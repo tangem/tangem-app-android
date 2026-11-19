@@ -12,6 +12,7 @@ internal data class CollectiblesMainUM(
     val balance: BalanceUM,
     val actions: ImmutableList<TangemButtonUM>,
     val collection: CollectionUM?,
+    val isRegionRestricted: Boolean,
     val relink: RelinkUM,
     val pendingPacks: ImmutableList<PendingPackUM>,
     val menu: MenuUM,

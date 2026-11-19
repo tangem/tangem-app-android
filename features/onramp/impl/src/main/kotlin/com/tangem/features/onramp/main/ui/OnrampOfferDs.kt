@@ -1,0 +1,171 @@
+package com.tangem.features.onramp.main.ui
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.tangem.core.ui.components.*
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_lightning_24
+import com.tangem.core.ui.test.OnrampOffersBlockTestTags
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
+import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.main.entity.*
+import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
+import com.tangem.utils.annotations.RemoveWithToggle
+
+@Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+internal fun OnrampAllOffersButtonDs(config: OnrampAllOffersButtonConfig) {
+    TangemButton(
+        modifier = Modifier.fillMaxWidth(),
+        variant = TangemButton.Variant.Secondary,
+        text = config.title,
+        onClick = config.onClick,
+    )
+}
+
+@Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+internal fun OfferDs(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, roundBottom: Boolean = true) {
+    val shape = if (roundBottom) {
+        RoundedCornerShape(24.dp)
+    } else {
+        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    }
+    val isBuyEnabled = onrampOfferUM.isBuyEnabled &&
+        onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
+        onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted
+    TangemSurface(
+        modifier = modifier.fillMaxWidth(),
+        color = TangemTheme.colors3.bg.secondary,
+        shape = shape,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OfferHeaderDs(advantage = onrampOfferUM.advantages)
+                    RateBlock(
+                        rate = onrampOfferUM.rate,
+                        diff = onrampOfferUM.diff
+                            .takeIf { onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted },
+                        isOfferUnavailable = onrampOfferUM.advantages is OnrampOfferAdvantagesUM.Unavailable,
+                    )
+                }
+                SpacerWMax()
+                TangemButton(
+                    variant = TangemButton.Variant.Primary,
+                    size = TangemButton.Size.X10,
+                    text = resourceReference(R.string.common_buy),
+                    onClick = onrampOfferUM.onBuyClicked,
+                    isEnabled = isBuyEnabled,
+                )
+            }
+            SpacerH(28.dp)
+            PaymentBlockInOfferDs(
+                paymentMethod = onrampOfferUM.paymentMethod,
+                providerName = onrampOfferUM.providerName,
+            )
+        }
+    }
+}
+
+@Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Rename over the old file")
+private fun PaymentBlockInOfferDs(paymentMethod: OnrampPaymentMethod, providerName: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            modifier = Modifier
+                .size(16.dp)
+                .testTag(OnrampOffersBlockTestTags.TIMING_ICON),
+            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+            tint = TangemTheme.colors3.icon.secondary,
+            contentDescription = null,
+        )
+
+        SpacerW(2.dp)
+
+        TimingBlock(speed = paymentMethod.type.getProcessingSpeed())
+
+        SpacerW(8.dp)
+
+        Text(
+            text = stringResourceSafe(R.string.onramp_via_provider, providerName),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
+            modifier = Modifier.testTag(OnrampOffersBlockTestTags.PROVIDER_NAME),
+        )
+
+        SpacerWMax()
+
+        Text(
+            text = stringResourceSafe(R.string.onramp_pay_with),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
+            modifier = Modifier.testTag(OnrampOffersBlockTestTags.PAY_WITH),
+        )
+
+        SpacerW(4.dp)
+
+        SubcomposeAsyncImage(
+            modifier = Modifier
+                .size(16.dp)
+                .clip(CircleShape)
+                .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
+            alignment = Alignment.CenterEnd,
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(paymentMethod.themedImageUrl())
+                .crossfade(enable = true)
+                .allowHardware(false)
+                .build(),
+            loading = {
+                TextShimmer(
+                    style = TangemTheme.typography.body1,
+                    modifier = Modifier.width(40.dp),
+                )
+            },
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
+private fun OfferHeaderDs(advantage: OnrampOfferAdvantagesUM) {
+    if (advantage == OnrampOfferAdvantagesUM.Fastest) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.ic_lightning_24,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.accent.yellow,
+                modifier = Modifier.size(12.dp),
+            )
+            SpacerW(4.dp)
+            Text(
+                text = stringResourceSafe(R.string.onramp_offer_type_fastet),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.warning,
+            )
+        }
+    } else {
+        OfferHeader(advantage = advantage)
+    }
+}

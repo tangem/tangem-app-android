@@ -8,6 +8,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.marketing.DismissMarketingBannerUseCase
 import com.tangem.domain.marketing.GetMarketingBannerUseCase
 import com.tangem.domain.marketing.MarketingUidBindingRepository
@@ -18,12 +22,15 @@ import com.tangem.domain.marketing.models.MarketingScreenType
 import com.tangem.domain.quotes.GetFiatUSDRateUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.features.marketing.api.CtaBannerRequest
+import com.tangem.features.marketing.api.MoneyAccountBannerAction
 import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.marketing.api.MarketingFeatureToggles
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
+import com.tangem.features.marketing.impl.ui.state.replacedSlots
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.getEmittedValues
@@ -71,6 +78,7 @@ internal class MarketingBannerModelTest {
     private val quotesRepository: QuotesRepository = mockk()
     private val marketingUidBindingRepository: MarketingUidBindingRepository = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val marketingFeatureToggles: MarketingFeatureToggles = mockk()
 
     @BeforeAll
     fun mockUriParsing() {
@@ -91,8 +99,10 @@ internal class MarketingBannerModelTest {
             quotesRepository,
             marketingUidBindingRepository,
             urlOpener,
+            marketingFeatureToggles,
         )
         every { Uri.parse(any()) } returns uriWithUids()
+        every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns true
     }
 
     private fun TestScope.createModel(
@@ -118,6 +128,7 @@ internal class MarketingBannerModelTest {
             appCoroutineScope = TestAppCoroutineScope(),
             urlOpener = urlOpener,
             clock = clock,
+            marketingFeatureToggles = marketingFeatureToggles,
         )
     }
 
@@ -186,6 +197,38 @@ internal class MarketingBannerModelTest {
         ),
         targets = emptyList(),
     )
+
+    @Test
+    fun `GIVEN replacing banner WHEN amount crosses bounds and banner is dismissed THEN slot follows visibility`() = runTest {
+        // Arrange
+        val slot = MarketingBanner.RecommendedSlot.BEST
+        val original = campaign(1, MarketingBanner.UiType.PSEUDO_PROVIDER, minAmount = java.math.BigDecimal(50))
+        val replacing = original.copy(banner = original.banner.copy(replacesSlot = slot))
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(replacing).right()
+        coEvery { dismissMarketingBanner(1) } returns Unit.right()
+        val requests = MutableStateFlow(ctaRequest(isDemandSurveyCompleted = false, amount = usdAmount(10)))
+        val model = createModel(MarketingBannerComponent.Params.Cta(requests))
+
+        // Act
+        advanceUntilIdle()
+        val before = model.uiState.value.replacedSlots()
+        requests.value = requests.value.copy(amount = usdAmount(100))
+        advanceUntilIdle()
+        val shown = model.uiState.value.replacedSlots()
+        requests.value = requests.value.copy(amount = usdAmount(10))
+        advanceUntilIdle()
+        val hidden = model.uiState.value.replacedSlots()
+        requests.value = requests.value.copy(amount = usdAmount(100))
+        advanceUntilIdle()
+        model.onDismiss(1)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(listOf(before, shown, hidden, model.uiState.value.replacedSlots()))
+            .containsExactlyElementsIn(listOf(emptySet(), setOf(slot), emptySet(), emptySet())).inOrder()
+        coVerify(exactly = 1) { getMarketingBanner(onrampScreen, null) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN amount changes WHEN same pair THEN re-filters locally without re-fetch`() = runTest {
@@ -965,10 +1008,79 @@ internal class MarketingBannerModelTest {
         isDemandSurveyCompleted: Boolean,
         screen: MarketingScreen.Onramp = onrampScreen,
         amount: MarketingBannerAmount? = null,
+        moneyAccountAction: MoneyAccountBannerAction? = null,
     ) = CtaBannerRequest(
         screen = screen,
         amount = amount,
         isDemandSurveyCompleted = isDemandSurveyCompleted,
+        moneyAccountAction = moneyAccountAction,
+    )
+
+    @ParameterizedTest
+    @MethodSource("moneyAccountActionModels")
+    fun `GIVEN account action WHEN banners mapped THEN only the money account banner gets the account label`(
+        model: MoneyAccountActionModel,
+    ) = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+            campaign(
+                id = 1,
+                uiType = MarketingBanner.UiType.PSEUDO_PROVIDER,
+                deeplink = "tangem://onboard-virtual-account?entry=ff1&id=VRTACC01",
+            ).withButtonText("Request"),
+            campaign(id = 2, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "tangem://support")
+                .withButtonText("Request"),
+        ).right()
+        val bannerModel = createModel(
+            MarketingBannerComponent.Params.Cta(
+                flowOf(ctaRequest(isDemandSurveyCompleted = false, moneyAccountAction = model.action)),
+            ),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val banners = (bannerModel.uiState.value as MarketingBannerListUM.Content).banners
+        assertThat(banners.map { it.campaignId to it.buttonText })
+            .containsExactly(1 to model.expectedLabel, 2 to stringReference("Request"))
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN money account banner disabled WHEN it replaces a slot THEN banner hidden and slot kept`() = runTest {
+        // Arrange
+        every { marketingFeatureToggles.isMoneyAccountBannerEnabled } returns false
+        val moneyAccount = campaign(
+            id = 1,
+            uiType = MarketingBanner.UiType.PSEUDO_PROVIDER,
+            deeplink = "tangem://onboard-virtual-account?entry=ff1&id=VRTACC01",
+        )
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+            moneyAccount.copy(banner = moneyAccount.banner.copy(replacesSlot = MarketingBanner.RecommendedSlot.BEST)),
+            campaign(id = 2, uiType = MarketingBanner.UiType.PSEUDO_PROVIDER, deeplink = "tangem://support"),
+        ).right()
+        val request = ctaRequest(isDemandSurveyCompleted = false)
+        val model = createModel(MarketingBannerComponent.Params.Cta(flowOf(request)))
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat((state as MarketingBannerListUM.Content).banners.map { it.campaignId }).containsExactly(2)
+        assertThat(state.replacedSlots()).isEmpty()
+        model.onDestroy()
+    }
+
+    private fun MarketingCampaign.withButtonText(text: String) = copy(banner = banner.copy(buttonText = text))
+
+    internal data class MoneyAccountActionModel(val action: MoneyAccountBannerAction?, val expectedLabel: TextReference)
+
+    private fun moneyAccountActionModels() = listOf(
+        MoneyAccountActionModel(MoneyAccountBannerAction.CONTINUE, resourceReference(R.string.common_continue)),
+        MoneyAccountActionModel(MoneyAccountBannerAction.ACTIVATE, resourceReference(R.string.common_activate)),
+        MoneyAccountActionModel(null, stringReference("Request")),
     )
 
     @Test
@@ -1007,7 +1119,7 @@ internal class MarketingBannerModelTest {
             subtitle = "Pay by bank transfer",
             etaLabel = "up to 4 hours",
             partnerLabel = "via MoonPay",
-            buttonText = "Request",
+            buttonText = stringReference("Request"),
             hasGlow = true,
             style = MarketingBannerUM.Style.PSEUDO_PROVIDER,
         )

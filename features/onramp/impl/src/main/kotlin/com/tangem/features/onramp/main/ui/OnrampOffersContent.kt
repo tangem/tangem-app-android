@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.main.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,73 +33,101 @@ import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.paymentmethod.ui.themedImageUrl
+import com.tangem.utils.annotations.RemoveWithToggle
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBannerComponent: MarketingBannerComponent) {
-    when (state) {
-        is OnrampOffersBlockUM.Content -> {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                state.recentOffer?.let { recentOffer ->
-                    Column {
-                        Text(
-                            modifier = Modifier.padding(start = 12.dp),
-                            text = stringResourceSafe(R.string.onramp_recently_used_title),
-                            style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors3.text.secondary,
-                        )
-
-                        SpacerH(8.dp)
-
-                        OfferWithLinkedBanner(recentOffer, linkedMarketingBannerComponent)
-
-                        SpacerH(16.dp)
-                    }
-                }
-
-                AnimatedVisibility(
-                    visible = state.recommended.isNotEmpty(),
-                ) {
-                    if (state.recommended.isNotEmpty()) {
-                        Text(
-                            modifier = Modifier.padding(start = 12.dp),
-                            text = stringResourceSafe(R.string.onramp_recommended_title),
-                            style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors3.text.secondary,
-                        )
-                        SpacerH(8.dp)
-                    }
-                }
-
-                state.recommended.fastForEach { offer ->
-                    key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
-                        OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)
-                        SpacerH(8.dp)
-                    }
-                }
-
-                if (state.onrampAllOffersButtonConfig != null) {
-                    SpacerH(12.dp)
-                    SecondaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = state.onrampAllOffersButtonConfig.title.resolveReference(),
-                        onClick = state.onrampAllOffersButtonConfig.onClick,
-                    )
-                }
-            }
+internal fun OnrampOffersContent(
+    state: OnrampOffersBlockUM,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    ctaMarketingBannerComponent: MarketingBannerComponent? = null,
+) {
+    val layout = state.layoutFor(ctaMarketingBannerComponent?.replacedSlots().orEmpty())
+    if (state == OnrampOffersBlockUM.Empty && layout.recommendedRows.isEmpty()) return
+    Column(modifier = Modifier.fillMaxWidth()) {
+        layout.recentOffer?.let { recentOffer ->
+            Text(
+                modifier = Modifier.padding(start = 12.dp),
+                text = stringResourceSafe(R.string.onramp_recently_used_title),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors3.text.secondary,
+            )
+            SpacerH(8.dp)
+            OfferWithLinkedBanner(recentOffer, linkedMarketingBannerComponent)
+            SpacerH(16.dp)
         }
-        OnrampOffersBlockUM.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
+
+        RecommendedOffersContent(layout.recommendedRows, linkedMarketingBannerComponent, ctaMarketingBannerComponent)
+
+        if (state == OnrampOffersBlockUM.Loading) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 LoadingBlock()
             }
         }
-        OnrampOffersBlockUM.Empty -> Unit
+
+        layout.allOffersButton?.let { button ->
+            if (LocalOnrampDesignSystemEnabled.current) {
+                OnrampAllOffersButtonDs(config = button)
+            } else {
+                SpacerH(12.dp)
+                SecondaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = button.title.resolveReference(),
+                    onClick = button.onClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecommendedOffersContent(
+    rows: ImmutableList<OnrampRecommendedRowUM>,
+    linkedMarketingBannerComponent: MarketingBannerComponent,
+    ctaMarketingBannerComponent: MarketingBannerComponent?,
+) {
+    if (rows.isEmpty()) return
+    RecommendedTitle()
+    SpacerH(8.dp)
+    rows.fastForEach { row ->
+        when (row) {
+            is OnrampRecommendedRowUM.Offer -> {
+                val offer = row.offer
+                key("${offer.paymentMethod.id} ${offer.providerName}") {
+                    OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)
+                }
+            }
+            is OnrampRecommendedRowUM.Banner -> key(row.slot) {
+                TangemThemeRedesign {
+                    ctaMarketingBannerComponent?.CtaContent(row.slot, Modifier.fillMaxWidth())
+                }
+            }
+        }
+        SpacerH(8.dp)
+    }
+}
+
+@Composable
+private fun RecommendedTitle() {
+    if (LocalOnrampDesignSystemEnabled.current) {
+        Text(
+            modifier = Modifier.padding(vertical = 12.dp),
+            text = stringResourceSafe(R.string.onramp_recommended_title),
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.primary,
+        )
+    } else {
+        Text(
+            modifier = Modifier.padding(start = 12.dp),
+            text = stringResourceSafe(R.string.onramp_recommended_title),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors3.text.secondary,
+        )
     }
 }
 
@@ -108,7 +135,11 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
 internal fun OfferWithLinkedBanner(offer: OnrampOfferUM, linkedMarketingBannerComponent: MarketingBannerComponent) {
     val hasBanner = linkedMarketingBannerComponent.hasLinkedBanner(offer.providerId)
     // Square the offer's bottom corners so the bottom-rounded banner glues to it as one card.
-    Offer(offer, roundBottom = !hasBanner)
+    if (LocalOnrampDesignSystemEnabled.current) {
+        OfferDs(offer, roundBottom = !hasBanner)
+    } else {
+        Offer(offer, roundBottom = !hasBanner)
+    }
     if (hasBanner) {
         TangemThemeRedesign {
             linkedMarketingBannerComponent.LinkedContent(
@@ -120,6 +151,7 @@ internal fun OfferWithLinkedBanner(offer: OnrampOfferUM, linkedMarketingBannerCo
 }
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, roundBottom: Boolean = true) {
     // Square the bottom corners when a linked marketing banner is glued below, so they read as one card.
     val shape = if (roundBottom) {
@@ -154,7 +186,8 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
                 size = TangemButtonSize.RoundedAction,
                 text = stringResourceSafe(R.string.common_buy),
                 onClick = onrampOfferUM.onBuyClicked,
-                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
+                enabled = onrampOfferUM.isBuyEnabled &&
+                    onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
                     onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted,
             )
         }
@@ -169,7 +202,7 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
 }
 
 @Composable
-private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
+internal fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
     when (advantage) {
         OnrampOfferAdvantagesUM.GreatRate -> {
             Text(
@@ -240,7 +273,7 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
 }
 
 @Composable
-private fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Boolean) {
+internal fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Boolean) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -366,7 +399,7 @@ internal fun TimingBlock(speed: PaymentMethodType.PaymentSpeed) {
 }
 
 @Composable
-private fun DrawDot(color: Color) {
+internal fun DrawDot(color: Color) {
     Spacer(
         modifier = Modifier
             .size(4.dp)

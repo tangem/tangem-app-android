@@ -27,7 +27,6 @@ import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
 import com.tangem.domain.transaction.models.tron.TronGaslessSwap
 import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -40,7 +39,6 @@ import com.tangem.utils.logging.TangemLogger
  */
 class CreateAndSendTronGaslessTransactionUseCase(
     private val transactionRepository: TransactionRepository,
-    private val walletManagersFacade: WalletManagersFacade,
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val gaslessSignerProvider: GaslessSignerProvider,
@@ -181,7 +179,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
         network: Network,
         legs: List<TransactionData.Uncompiled>,
     ): List<String> {
-        val signed = walletManagersFacade.signTronGaslessTransactions(
+        val signed = tronGaslessTransactionRepository.sign(
             userWalletId = userWallet.walletId,
             network = network,
             transactionDataList = legs,

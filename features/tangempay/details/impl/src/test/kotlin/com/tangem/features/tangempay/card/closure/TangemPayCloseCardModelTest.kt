@@ -61,7 +61,7 @@ internal class TangemPayCloseCardModelTest : TangemPayModelTestBase() {
 
         // Assert
         verify(exactly = 1) { listener.onDismissCloseCard() }
-        coVerify(exactly = 0) { closeCardUseCase(any(), any()) }
+        coVerify(exactly = 0) { closeCardUseCase(any(), any(), any()) }
     }
 
     @Nested
@@ -70,21 +70,21 @@ internal class TangemPayCloseCardModelTest : TangemPayModelTestBase() {
         @Test
         fun `GIVEN close succeeds WHEN onCloseClick THEN use case invoked and dialog dismissed`() {
             // Arrange
-            coEvery { closeCardUseCase(userWalletId, cardId) } returns Unit.right()
+            coEvery { closeCardUseCase(userWalletId, cardId, any()) } returns Unit.right()
             val model = createModel()
 
             // Act
             model.state.value.onCloseClick()
 
             // Assert
-            coVerify(exactly = 1) { closeCardUseCase(userWalletId, cardId) }
+            coVerify(exactly = 1) { closeCardUseCase(userWalletId, cardId, any()) }
             verify(exactly = 1) { listener.onDismissCloseCard() }
         }
 
         @Test
         fun `GIVEN close succeeds WHEN onCloseClick THEN CloseCardConfirmed is sent`() {
             // Arrange
-            coEvery { closeCardUseCase(userWalletId, cardId) } returns Unit.right()
+            coEvery { closeCardUseCase(userWalletId, cardId, any()) } returns Unit.right()
             val model = createModel()
 
             // Act
@@ -97,7 +97,7 @@ internal class TangemPayCloseCardModelTest : TangemPayModelTestBase() {
         @Test
         fun `GIVEN close fails WHEN onCloseClick THEN snackbar shown and dialog dismissed`() {
             // Arrange
-            coEvery { closeCardUseCase(userWalletId, cardId) } returns TangemPayApiError.Unspecified.left()
+            coEvery { closeCardUseCase(userWalletId, cardId, any()) } returns TangemPayApiError.Unspecified.left()
             val model = createModel()
 
             // Act
@@ -111,7 +111,7 @@ internal class TangemPayCloseCardModelTest : TangemPayModelTestBase() {
         @Test
         fun `GIVEN close fails WHEN onCloseClick THEN progress is reset`() {
             // Arrange
-            coEvery { closeCardUseCase(userWalletId, cardId) } returns TangemPayApiError.Unspecified.left()
+            coEvery { closeCardUseCase(userWalletId, cardId, any()) } returns TangemPayApiError.Unspecified.left()
             val model = createModel()
 
             // Act

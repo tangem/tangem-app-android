@@ -23,10 +23,7 @@ internal val PaymentAccountStatusValue.typeName: String
         PaymentAccountStatusValue.NotCreated -> "NotCreated"
         is PaymentAccountStatusValue.KycRequired -> "KycRequired"
         is PaymentAccountStatusValue.UnderReview -> "UnderReview"
-        is PaymentAccountStatusValue.IssuingCard -> "IssuingCard"
         is PaymentAccountStatusValue.Verified -> "Verified"
-        is PaymentAccountStatusValue.AwaitingPlanSelection -> "AwaitingPlanSelection"
-        is PaymentAccountStatusValue.Inactive -> "Inactive"
         is PaymentAccountStatusValue.Deactivated -> "Deactivated"
         is PaymentAccountStatusValue.Loaded -> "Loaded"
         PaymentAccountStatusValue.Error.ExposedDevice -> "Error.ExposedDevice"
@@ -37,7 +34,6 @@ internal val PaymentAccountStatusValue.typeName: String
 
 internal val AccountStatus.Payment.tariffPlanState: TangemPayTariffPlanState?
     get() = when (val v = value) {
-        is PaymentAccountStatusValue.Inactive -> v.tariffPlan
         is PaymentAccountStatusValue.Loaded -> v.tariffPlan
         is PaymentAccountStatusValue.Error.CardIssueFailed -> v.tariffPlan
         else -> null

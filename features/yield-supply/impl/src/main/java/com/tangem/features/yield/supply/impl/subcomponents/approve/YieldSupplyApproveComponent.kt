@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -51,6 +52,7 @@ internal class YieldSupplyApproveComponent(
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
             feeCryptoCurrencyStatusFlow = model.feeCryptoCurrencyStatusFlow,
+            account = params.account,
             callback = model,
         ),
     )
@@ -128,6 +130,7 @@ internal class YieldSupplyApproveComponent(
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val account: AccountKind,
         val callback: ModelCallback,
     )
 

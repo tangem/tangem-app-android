@@ -145,3 +145,14 @@ fun BaseTestCase.openBuyScreenFromMarkets(tokenName: String, fiatAmount: String)
         onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
     }
 }
+
+fun BaseTestCase.openProviderPageByBuyButton(providerPageUrl: String) {
+    step("Stub opening of the provider page") {
+        stubUrlOpening(providerPageUrl)
+    }
+    step("Click on 'Buy' button and assert provider page is opened") {
+        onBuyTokenDetailsScreen {
+            buyButton.clickAndWaitFor(composeTestRule) { assertUrlOpened(providerPageUrl, times = 1) }
+        }
+    }
+}

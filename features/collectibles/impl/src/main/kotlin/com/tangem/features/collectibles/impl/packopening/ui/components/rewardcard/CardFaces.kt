@@ -30,7 +30,6 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import kotlin.math.cos
 
 /** Undoes the mirroring of the back face drawn inside the turning layer. */
@@ -48,7 +47,8 @@ private fun isBackFacing(angle: Float): Boolean = cos(Math.toRadians(angle.toDou
 internal fun CardFaces(
     angle: Float,
     cameraDistance: Float,
-    um: RewardCardUM,
+    frontImageUrl: String?,
+    backImageUrl: String?,
     isFlipEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -82,7 +82,7 @@ internal fun CardFaces(
         if (isBackFacing(shownAngle)) {
             CardFace(
                 label = "BACK",
-                imageUrl = um.backImageUrl,
+                imageUrl = backImageUrl,
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { rotationY = BACK_FACE_COUNTER_ROTATION },
@@ -90,7 +90,7 @@ internal fun CardFaces(
         } else {
             CardFace(
                 label = "FRONT",
-                imageUrl = um.frontImageUrl,
+                imageUrl = frontImageUrl,
                 modifier = Modifier.fillMaxSize(),
             )
         }

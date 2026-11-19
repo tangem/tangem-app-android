@@ -8,4 +8,5 @@ internal enum class EarnFilterTypeUM(val text: TextReference) {
     All(resourceReference(R.string.earn_filter_all_types)),
     Staking(resourceReference(R.string.common_staking)),
     YieldMode(resourceReference(R.string.markets_sort_by_yield_mode_title)),
+    Vaults(resourceReference(R.string.common_vaults)),
 }

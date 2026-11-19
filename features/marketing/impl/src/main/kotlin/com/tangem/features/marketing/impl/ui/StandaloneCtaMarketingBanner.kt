@@ -27,6 +27,8 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -54,12 +56,11 @@ internal fun StandaloneCtaMarketingBanner(
                 .padding(12.dp),
         ) {
             StandaloneCtaHeader(banner = banner, onDismiss = onDismiss)
-            val buttonText = banner.buttonText
-            if (!buttonText.isNullOrBlank()) {
+            banner.buttonText?.let { buttonText ->
                 SpacerH(12.dp)
                 PrimaryButton(
                     modifier = Modifier.fillMaxWidth(),
-                    text = buttonText,
+                    text = buttonText.resolveReference(),
                     onClick = onClick,
                 )
             }
@@ -151,7 +152,7 @@ private class StandaloneCtaMarketingBannerPreviewProvider : PreviewParameterProv
         isDismissible = false,
         deeplink = "tangem://survey",
         subtitle = "USD and EUR, no on-ramp fees",
-        buttonText = "Join waitlist",
+        buttonText = stringReference("Join waitlist"),
         hasGlow = true,
     )
 

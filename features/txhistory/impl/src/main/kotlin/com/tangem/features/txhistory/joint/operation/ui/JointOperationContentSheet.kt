@@ -16,6 +16,7 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.common.ui.blockaid.BlockaidSheetContent
 import com.tangem.common.ui.blockaid.BlockaidSheetUM
 import com.tangem.common.ui.blockaid.BlockaidTopNavigation
+import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.features.txhistory.joint.operation.signers.ui.JointOperationSignersTopNavigation
 import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
@@ -54,6 +55,7 @@ internal fun JointOperationContentSheet(
             }
         },
         content = {
+            DisableScreenshotsDisposableEffect()
             if (blockaid != null) {
                 BlockaidSheetContent(state = blockaid)
             } else {

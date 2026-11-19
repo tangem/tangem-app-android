@@ -11,11 +11,13 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.EarnResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.model.EarnTokensListConfig
+import com.tangem.domain.earn.model.withVaultsIf
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
+import com.tangem.pagination.fetcher.DistinctPagesFilter
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -28,6 +30,9 @@ internal class EarnTokensBatchFetcher(
 ) : BatchFetcher<EarnTokensListConfig, List<EarnTokenWithCurrency>> {
 
     private val state: MutableStateFlow<EarnTokensPaginationState?> = MutableStateFlow(null)
+    private val distinctPages = DistinctPagesFilter { item: EarnTokenWithCurrency ->
+        Triple(item.earnToken.tokenId, item.earnToken.networkId, item.earnToken.type)
+    }
 
     override suspend fun fetchFirst(
         requestParams: EarnTokensListConfig,
@@ -79,8 +84,10 @@ internal class EarnTokensBatchFetcher(
     }
 
     private suspend fun loadPage(page: Int, params: EarnTokensListConfig, limit: Int): PageLoadResult {
+        val distinctPage = distinctPages.startPage(isFirstPage = page == FIRST_PAGE)
+
         fun createEarnTokenWithCurrency(userWallet: UserWallet, dto: EarnResponse): EarnTokenWithCurrency? {
-            val earnToken = EarnTokenConverter.convert(dto)
+            val earnToken = EarnTokenConverter.convert(dto) ?: return null
             val cryptoCurrency = createCryptoCurrencyForEarnToken(
                 cryptoCurrencyFactory = cryptoCurrencyFactory,
                 userWallet = userWallet,
@@ -100,7 +107,7 @@ internal class EarnTokensBatchFetcher(
             isForEarn = params.isForEarn,
             page = page.toString(),
             limit = limit,
-            type = params.type,
+            type = params.type?.name?.lowercase(),
             networks = params.networks,
             apyType = apyType,
         ).getOrThrow()
@@ -110,9 +117,11 @@ internal class EarnTokensBatchFetcher(
         val items = if (userWallet == null) {
             emptyList()
         } else {
-            response.items.mapNotNull { dto ->
-                createEarnTokenWithCurrency(userWallet, dto)
-            }
+            distinctPage.distinct(
+                response.items
+                    .mapNotNull { dto -> createEarnTokenWithCurrency(userWallet, dto) }
+                    .withVaultsIf(params.isVaultsIncluded),
+            )
         }
 
         val isLast = response.meta.hasNext?.not() ?: (response.items.size < response.meta.limit)

@@ -6,6 +6,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -21,6 +22,7 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSigningPreference
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
@@ -158,21 +160,22 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         val outcome = PlaceResultUMConverter.convert(
             result = submitted.result,
             side = params.side,
-            quotedShares = frozen.quote.shares,
-            quotedAmount = frozen.quote.notional,
+            quote = frozen.quote,
             placedAt = System.currentTimeMillis(),
         )
         return onPlaceOutcome(
             outcome = outcome,
             addresses = addresses,
-            quotedAmount = frozen.quote.notional,
+            quote = frozen.quote,
             route = submitted.route,
         )
     }
 
     private fun onSessionKeyLost(onKeyLost: () -> Unit): PlaceResultUM? {
+        logger.i("The session key could not sign an order confirmed for it, the owner has to confirm it")
         onKeyLost()
-        showPlaceFailure(reason = "The session key could not sign an order confirmed for it")
+        returnToIdle()
+        messageSender.send(SnackbarMessage(resourceReference(R.string.prediction_session_key_toast_order_fallback)))
         return null
     }
 
@@ -271,7 +274,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private suspend fun onPlaceOutcome(
         outcome: PlaceOutcome,
         addresses: PolymarketAddresses,
-        quotedAmount: BigDecimal,
+        quote: PredictionOrderQuote,
         route: PredictionOrderSigningRoute,
     ): PlaceResultUM? = when (outcome) {
         is PlaceOutcome.Reportable -> showResult(result = outcome.result)
@@ -282,7 +285,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         is PlaceOutcome.Delayed -> awaitDelayedFill(
             addresses = addresses,
             orderId = outcome.orderId,
-            quotedAmount = quotedAmount,
+            quote = quote,
             placedAt = outcome.placedAt,
             route = route,
         )
@@ -297,7 +300,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private suspend fun awaitDelayedFill(
         addresses: PolymarketAddresses,
         orderId: String,
-        quotedAmount: BigDecimal,
+        quote: PredictionOrderQuote,
         placedAt: Long,
         route: PredictionOrderSigningRoute,
     ): PlaceResultUM? {
@@ -311,11 +314,11 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
             is DelayedPredictionOrderOutcome.Matched -> return onPlaceOutcome(
                 outcome = PlaceResultUMConverter.convert(
                     order = outcome.order,
-                    quotedAmount = quotedAmount,
+                    quote = quote,
                     placedAt = placedAt,
                 ),
                 addresses = addresses,
-                quotedAmount = quotedAmount,
+                quote = quote,
                 route = route,
             )
             is DelayedPredictionOrderOutcome.Failed -> {
@@ -368,11 +371,10 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     )
                 },
                 secondActionBuilder = {
-                    if (closesOrder) {
-                        EventMessageAction(title = resourceReference(R.string.common_close), onClick = closeOrder)
-                    } else {
-                        cancelAction()
-                    }
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_close),
+                        onClick = if (closesOrder) closeOrder else onDismissRequest,
+                    )
                 },
             ),
         )

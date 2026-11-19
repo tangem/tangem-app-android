@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
@@ -13,7 +14,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountSheet
 import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountState
 import com.tangem.features.tangempay.withdraw.bank.amount.model.NetworkFeeState
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.Content
-import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.FeeUnreachable
+import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.Unreachable
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.Loading
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
@@ -21,11 +22,15 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.bank.speiDestination
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,7 +46,7 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
     private val onCloseClick: () -> Unit = {}
     private val onSourceClick: () -> Unit = {}
     private val onRouteClick: () -> Unit = {}
-    private val onRetryFeeClick: () -> Unit = {}
+    private val onRetryClick: () -> Unit = {}
     private val callbacks = TangemPayBankWithdrawAmountUMFactory.Callbacks(
         onBackClick = onBackClick,
         onCloseClick = onCloseClick,
@@ -53,7 +58,7 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         onRouteSelected = {},
         onSheetDismiss = {},
         onContinueClick = {},
-        onRetryFeeClick = onRetryFeeClick,
+        onRetryClick = onRetryClick,
     )
     private val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
     private val header = BankWithdrawHeaderFactory.create(
@@ -128,6 +133,27 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         assertThat(sheet.networkFeeNote).isEqualTo(model.expectedNote)
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN route sheet WHEN create THEN the transfer method title only with MXN`(isMxnEnabled: Boolean) {
+        // Arrange
+        val factory = createFactory(account = moneyAccount, isMxnEnabled = isMxnEnabled)
+
+        // Act
+        val actual = factory.createWith(
+            networkFee = NetworkFeeState.Loaded(BigDecimal.ZERO),
+            sheet = AmountSheet.ROUTES,
+        ) as Content
+
+        // Assert
+        val expectedTitle = if (isMxnEnabled) {
+            R.string.tangempay_withdraw_bank_choose_transfer_method
+        } else {
+            R.string.tangempay_withdraw_bank_select_route
+        }
+        assertThat((actual.sheet as SheetUM.Routes).title).isEqualTo(resourceReference(expectedTitle))
+    }
+
     private fun provideRailFeeModels() = listOf(
         RailFeeModel(
             account = BankWithdrawSourceAccount.Payment(userWalletId),
@@ -157,20 +183,68 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
     )
 
     @ParameterizedTest
-    @MethodSource("provideNetworkFeeModels")
-    fun `GIVEN network fee not loaded WHEN create THEN placeholder screen instead of the form`(model: NetworkFeeModel) {
+    @MethodSource("provideSpeiRouteModels")
+    fun `GIVEN SPEI picked WHEN amount entered THEN the rail row shows one fee and the sheet keeps the formula`(
+        model: SpeiRouteModel,
+    ) {
+        // Arrange
+        val factory = createFactory(moneyAccount)
+        val networkFee = NetworkFeeState.Loaded(BigDecimal("0.03"))
+        val options = bankWithdrawOptions(destinations = listOf(offrampDestination(), SPEI_DESTINATION))
+        val state = AmountState(value = model.value, selectedRail = BankRail.SPEI, networkFee = networkFee)
+
+        // Act
+        val actual = factory.create(
+            draft = draft,
+            selection = state.resolve(draft = draft, options = options, isEditing = false),
+            sheet = AmountSheet.ROUTES,
+            networkFee = networkFee,
+            isBalanceHidden = false,
+        ) as Content
+
+        // Assert
+        val speiItem = (actual.sheet as SheetUM.Routes).items.single { it.rail == BankRail.SPEI }
+        assertThat(actual.route.eta).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_eta_within_minutes))
+        assertThat(actual.route.fee).isEqualTo(model.expectedRouteFee)
+        assertThat(speiItem.fee).isEqualTo("$0.53 + 1%")
+    }
+
+    private fun provideSpeiRouteModels() = listOf(
+        SpeiRouteModel(value = "", expectedRouteFee = "$0.53 + 1%"),
+        SpeiRouteModel(value = "0", expectedRouteFee = "$0.53 + 1%"),
+        SpeiRouteModel(value = "500", expectedRouteFee = "$5.53"),
+    )
+
+    internal data class SpeiRouteModel(val value: String, val expectedRouteFee: String)
+
+    @ParameterizedTest
+    @MethodSource("providePlaceholderModels")
+    fun `GIVEN fee not loaded WHEN create THEN placeholder screen instead of the form`(model: PlaceholderModel) {
         // Arrange
         val factory = createFactory(moneyAccount)
 
         // Act
-        val actual = factory.createWith(networkFee = model.networkFee)
+        val actual = factory.createWith(networkFee = model.networkFee, rail = BankRail.SPEI)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    private fun provideNetworkFeeModels() = listOf(
-        NetworkFeeModel(
+    @ParameterizedTest
+    @EnumSource(value = BankRail::class, names = ["ACH", "SPEI"])
+    fun `GIVEN rail picked WHEN fee loaded THEN the form shows`(rail: BankRail) {
+        // Arrange
+        val factory = createFactory(moneyAccount)
+
+        // Act
+        val actual = factory.createWith(networkFee = NetworkFeeState.Loaded(BigDecimal("0.03")), rail = rail)
+
+        // Assert
+        assertThat(actual).isInstanceOf(Content::class.java)
+    }
+
+    private fun providePlaceholderModels() = listOf(
+        PlaceholderModel(
             networkFee = NetworkFeeState.Loading,
             expected = Loading(
                 header = header,
@@ -179,35 +253,55 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
                 onBackClick = onBackClick,
             ),
         ),
-        NetworkFeeModel(
+        PlaceholderModel(
             networkFee = NetworkFeeState.Unreachable,
-            expected = FeeUnreachable(header = header, onRetryClick = onRetryFeeClick, onBackClick = onBackClick),
+            expected = unreachable(R.string.tangempay_withdraw_bank_network_fee_unreachable),
         ),
     )
 
-    internal data class NetworkFeeModel(
+    internal data class PlaceholderModel(
         val networkFee: NetworkFeeState,
         val expected: TangemPayBankWithdrawAmountUM,
     )
 
-    private fun createFactory(account: BankWithdrawSourceAccount) = TangemPayBankWithdrawAmountUMFactory(
+    private fun unreachable(messageRes: Int) = Unreachable(
+        header = header,
+        message = resourceReference(messageRes),
+        onRetryClick = onRetryClick,
+        onBackClick = onBackClick,
+    )
+
+    private fun createFactory(
+        account: BankWithdrawSourceAccount,
+        isMxnEnabled: Boolean = true,
+    ) = TangemPayBankWithdrawAmountUMFactory(
         step = TangemPayBankWithdrawInnerRoute.Amount,
         sourceAccount = account,
         callbacks = callbacks,
+        isMxnEnabled = isMxnEnabled,
     )
 
     private fun TangemPayBankWithdrawAmountUMFactory.createWith(
         networkFee: NetworkFeeState,
         sheet: AmountSheet? = null,
+        rail: BankRail? = null,
     ) = create(
         draft = draft,
-        selection = AmountState(networkFee = networkFee).resolve(
+        selection = AmountState(networkFee = networkFee, selectedRail = rail).resolve(
             draft = draft,
-            options = bankWithdrawOptions(),
+            options = if (rail == null) {
+                bankWithdrawOptions()
+            } else {
+                bankWithdrawOptions(destinations = listOf(offrampDestination(), SPEI_DESTINATION))
+            },
             isEditing = false,
         ),
         sheet = sheet,
         networkFee = networkFee,
         isBalanceHidden = false,
     )
+
+    private companion object {
+        val SPEI_DESTINATION = speiDestination()
+    }
 }

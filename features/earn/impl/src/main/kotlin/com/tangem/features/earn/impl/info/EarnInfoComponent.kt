@@ -16,9 +16,12 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.ui.EarnHowItWorksModal
+import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.impl.info.model.EarnInfoModel
 import com.tangem.features.earn.impl.info.ui.EarnInfoContent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetComponent
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import dagger.assisted.Assisted
@@ -43,6 +46,10 @@ internal class EarnInfoComponent @AssistedInject constructor(
             // The Info screen does not open the incentive sheet yet.
             callback = object : EarnCalculatorComponent.ModelCallback {
                 override fun onIncentiveClick() = Unit
+
+                override fun onHorizonChange(horizon: EarnHorizon) = Unit
+
+                override fun onInputChange(input: EarnCalculatorComponent.Input) = Unit
             },
         ),
     )
@@ -80,6 +87,7 @@ internal class EarnInfoComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val pullToRefresh by model.pullToRefresh.collectAsStateWithLifecycle()
         val chart = chartSlot.subscribeAsState().value.child?.instance
         val calculatorSheet = calculatorSheetSlot.subscribeAsState().value.child?.instance
 
@@ -87,11 +95,18 @@ internal class EarnInfoComponent @AssistedInject constructor(
             EarnInfoContent(
                 state = state,
                 chart = chart?.let { component -> { component.Content(modifier = Modifier) } },
+                pullToRefresh = pullToRefresh,
                 modifier = Modifier.fillMaxSize(),
             )
 
             calculatorSheet?.BottomSheet()
         }
+
+        val howItWorks by model.howItWorks.collectAsStateWithLifecycle()
+        howItWorks?.let { um -> EarnHowItWorksModal(state = um, onDismiss = model::onHowItWorksDismiss) }
+
+        val rowInfo by model.rowInfo.collectAsStateWithLifecycle()
+        rowInfo?.let { um -> EarnRowInfoModal(state = um, onDismiss = model::onRowInfoDismiss) }
     }
 
     data class Params(

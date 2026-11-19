@@ -1,9 +1,11 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth
+import com.tangem.grow.datasource.polymarket.models.PolymarketCryptoUpDownDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketMarketDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
+import com.tangem.domain.polymarket.model.PolymarketCryptoWindow
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketEventConverterTest {
@@ -43,7 +46,7 @@ internal class PolymarketEventConverterTest {
                         version = "v2",
                     ),
                 ),
-            )
+            ).copy(eventType = "soccer")
 
             // Act
             val actual = converter.convert(value = dto)
@@ -51,6 +54,7 @@ internal class PolymarketEventConverterTest {
             // Assert
             val expected = PolymarketEvent(
                 id = "event-id",
+                eventType = "soccer",
                 slug = "event-slug",
                 title = "Event title",
                 description = "Event description",
@@ -102,6 +106,29 @@ internal class PolymarketEventConverterTest {
                 ),
             )
             Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN crypto up down block WHEN convert THEN the event carries its window`() {
+            // Arrange
+            val dto = createEventDto(endDate = "2026-01-01T10:05:00Z").copy(
+                cryptoUpDown = PolymarketCryptoUpDownDto(windowStart = "2026-01-01T10:00:00Z"),
+            )
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            val expected = PolymarketCryptoWindow(
+                start = Instant.parse("2026-01-01T10:00:00Z"),
+                end = Instant.parse("2026-01-01T10:05:00Z"),
+                priceFeed = null,
+                priceToBeat = null,
+                finalPrice = null,
+                nextWindows = emptyList(),
+                liveEventId = null,
+            )
+            Truth.assertThat(actual.cryptoWindow).isEqualTo(expected)
         }
 
         @Test

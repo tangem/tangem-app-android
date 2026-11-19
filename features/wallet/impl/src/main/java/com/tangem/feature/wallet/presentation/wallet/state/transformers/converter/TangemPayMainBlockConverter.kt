@@ -1,17 +1,17 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.formatStyled
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.utils.StringsSigns.ASTERISK
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import java.util.Currency
@@ -35,15 +35,6 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.Error.ExposedDevice -> TangemPayMainUM.ExposedDevice
             is PaymentAccountStatusValue.Error.NotSynced -> TangemPayMainUM.SyncNeeded
             is PaymentAccountStatusValue.Error.Unavailable -> TangemPayMainUM.TemporaryUnavailable
-            is PaymentAccountStatusValue.IssuingCard -> TangemPayMainUM.IssuingCard(
-                onClick = { tangemPayClickIntents.onIssuingCardClicked() },
-            )
-            is PaymentAccountStatusValue.AwaitingPlanSelection -> TangemPayMainUM.SelectPlan(
-                onClick = { tangemPayClickIntents.onSelectPlanClicked(value) },
-            )
-            is PaymentAccountStatusValue.Inactive -> TangemPayMainUM.IssuingCard(
-                onClick = { tangemPayClickIntents.openDetails(value) },
-            )
             is PaymentAccountStatusValue.KycRequired -> TangemPayMainUM.ActionRequired(
                 onClick = {
                     tangemPayClickIntents.onKycRequiredClicked(
@@ -80,27 +71,39 @@ internal class TangemPayMainBlockConverter(
                 balance = getBalanceText(statusValue.balance),
                 balanceSubtitle = balanceSubtitle,
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
+                isActionRequired = false,
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Loaded -> {
                 if (statusValue.isPaymentAccountIssuing) {
                     return TangemPayMainUM.IssuingCard(onClick = { tangemPayClickIntents.openDetails(value) })
                 }
-                val cardsCount = statusValue.cards.count()
-                val subtitle = pluralReference(
-                    id = R.plurals.tangempay_cards_count,
-                    count = cardsCount,
-                    formatArgs = wrappedList(cardsCount),
-                )
                 TangemPayMainUM.Content(
-                    subtitle = subtitle,
+                    subtitle = getLoadedSubtitle(statusValue),
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(statusValue.balance),
                     balanceSubtitle = balanceSubtitle,
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
+                    isActionRequired = statusValue.isKycAdditionalInfoActionRequired,
                     onClick = { tangemPayClickIntents.openDetails(value) },
                 )
             }
+        }
+    }
+
+    private fun getLoadedSubtitle(statusValue: PaymentAccountStatusValue.Loaded): TextReference {
+        val singleCardLastDigits = statusValue.cards.singleOrNull()?.lastDigits
+        return if (statusValue.isKycAdditionalInfoRequired) {
+            TextReference.Res(R.string.tangempay_action_required_title)
+        } else if (!singleCardLastDigits.isNullOrBlank()) {
+            stringReference("$ASTERISK$singleCardLastDigits")
+        } else {
+            val cardsCount = statusValue.cards.count()
+            pluralReference(
+                id = R.plurals.tangempay_cards_count,
+                count = cardsCount,
+                formatArgs = wrappedList(cardsCount),
+            )
         }
     }
 
@@ -108,13 +111,14 @@ internal class TangemPayMainBlockConverter(
     private fun getBalanceText(balance: PaymentAccountStatusValue.Balance?): TextReference {
         if (balance == null) return stringReference(DASH_SIGN)
         val currency = Currency.getInstance(balance.fiatBalance.currency)
-        return balance.fiatBalance.availableBalance.formatStyled {
-            fiat(
-                fiatCurrencyCode = currency.currencyCode,
-                fiatCurrencySymbol = currency.symbol,
-                spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
-            )
-        }
+        return stringReference(
+            balance.fiatBalance.availableBalance.format {
+                fiat(
+                    fiatCurrencyCode = currency.currencyCode,
+                    fiatCurrencySymbol = currency.symbol,
+                )
+            },
+        )
     }
 
     private companion object {

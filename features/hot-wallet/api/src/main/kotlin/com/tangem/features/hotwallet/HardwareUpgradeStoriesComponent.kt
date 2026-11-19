@@ -10,7 +10,7 @@ interface HardwareUpgradeStoriesComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
-        val source: AppRoute.HardwareUpgradeStories.Source,
+        val source: AppRoute.WalletHardwareBackup.Source,
     )
 
     interface Factory : ComponentFactory<Params, HardwareUpgradeStoriesComponent>

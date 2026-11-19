@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.creation.config.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import kotlinx.collections.immutable.ImmutableList
@@ -27,6 +28,7 @@ internal data class JointAccountConfigUM(
     /** Row showing the currently chosen wallet */
     data class WalletUM(
         val name: String,
+        val deviceIcon: DeviceIconUM,
         val onClick: () -> Unit,
     )
 }

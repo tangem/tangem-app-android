@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -24,6 +26,11 @@ internal class TangemPayBankWithdrawAmountComponent(
 
     private val model: TangemPayBankWithdrawAmountModel = getOrCreateModel(params = params)
 
+    init {
+        lifecycle.doOnResume { model.onScreenVisibilityChanged(isVisible = true) }
+        lifecycle.doOnPause { model.onScreenVisibilityChanged(isVisible = false) }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -35,6 +42,7 @@ internal class TangemPayBankWithdrawAmountComponent(
         val sourceAccount: BankWithdrawSourceAccount,
         val draft: StateFlow<BankWithdrawDraft>,
         val options: StateFlow<BankWithdrawOptions>,
+        val isSavedAccountsLoaded: StateFlow<Boolean>,
         val step: TangemPayBankWithdrawInnerRoute,
         val onContinue: (BankWithdrawAmountResult) -> Unit,
         val onCloseFlow: () -> Unit,

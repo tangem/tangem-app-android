@@ -1,9 +1,5 @@
 [
     {
-        "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
-        "version": "6.8"
-    },
-    {
         "name": "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED",
         "version": "undefined"
     },
@@ -17,10 +13,18 @@
     },
     {
         "name": "AND_15342_ORDER_FRAMEWORK_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "TWI_1525_MONEY_ACCOUNT_YIELD_MODE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1525_TANGEM_PAY_GROUP_ENABLED",
+        "version": "6.10"
+    },
+    {
+        "name": "AND_19693_PAY_CARD_ACTIONS_ENABLED",
         "version": "undefined"
     }
 ]

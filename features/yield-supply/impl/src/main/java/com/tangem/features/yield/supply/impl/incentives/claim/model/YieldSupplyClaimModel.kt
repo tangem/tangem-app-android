@@ -395,6 +395,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
         val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = params.account.isHeldOutsidePortfolio,
         ).getOrElse { error ->
             TangemLogger.e("Yield claim fee currency status could not be read: $error")
             return null

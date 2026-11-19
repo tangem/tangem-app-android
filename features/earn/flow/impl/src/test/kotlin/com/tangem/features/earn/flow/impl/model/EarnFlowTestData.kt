@@ -12,6 +12,7 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -27,6 +28,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.session.EarnActionInput
+import com.tangem.features.earn.product.api.session.EarnFeeSelection
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnPlan
 import com.tangem.features.earn.product.api.session.EarnResult
@@ -62,10 +64,15 @@ internal fun testStatus(
 internal fun testFee(value: String): Fee =
     Fee.Common(Amount(currencySymbol = "ETH", value = BigDecimal(value), decimals = 18))
 
+/** [testFeeContent] offers a single fee, so the selector reports it as Fixed */
+internal fun testFeeSelection(value: String, extended: TransactionFeeExtended? = null) =
+    EarnFeeSelection(fee = testFee(value), extended = extended, feeType = AnalyticsParam.FeeType.Fixed)
+
 internal fun testFeeContent(
     value: String,
     isPrimaryButtonEnabled: Boolean = true,
     extended: TransactionFeeExtended? = null,
+    feeCryptoCurrencyStatus: CryptoCurrencyStatus = testStatus(),
 ): FeeSelectorUM.Content {
     val fee = testFee(value)
     return FeeSelectorUM.Content(
@@ -77,7 +84,7 @@ internal fun testFeeContent(
             isFeeApproximate = false,
             isFeeConvertibleToFiat = true,
             isTronToken = false,
-            feeCryptoCurrencyStatus = testStatus(),
+            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             transactionFeeExtended = extended,
         ),
         feeFiatRateUM = null,

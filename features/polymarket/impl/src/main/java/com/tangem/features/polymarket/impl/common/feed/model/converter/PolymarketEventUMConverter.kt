@@ -28,11 +28,10 @@ import java.math.BigDecimal
 /**
  * Converts a [PolymarketEvent] into the card shown in the Discovery feed.
  *
- * @property onEventClick called with the event id
  * @property onOutcomeClick called with the event id, the market id and the outcome asset id
  */
 internal class PolymarketEventUMConverter(
-    private val onEventClick: (String) -> Unit,
+    private val onEventClick: (PolymarketEvent) -> Unit,
     private val onOutcomeClick: (eventId: String, marketId: String, assetId: String) -> Unit,
     private val isPhaseTwoEnabled: Boolean,
 ) : Converter<PolymarketEvent, PolymarketEventUM> {
@@ -59,7 +58,7 @@ internal class PolymarketEventUMConverter(
                 .map { convertRow(event = value, market = it, quotes = liveQuotes) }
                 .toImmutableList(),
             hiddenMarketsCount = (value.totalMarketsCount - value.markets.size).coerceAtLeast(minimumValue = 0),
-            onClick = { onEventClick(value.id) },
+            onClick = { onEventClick(value) },
         )
     }
 

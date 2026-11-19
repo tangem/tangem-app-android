@@ -5,7 +5,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
 import io.mockk.every
@@ -22,7 +21,9 @@ internal class MoneyAccountStatusValueDMConverterTest {
         every { create(USER_WALLET_ID) } returns cryptoCurrency
     }
 
-    private val converter = MoneyAccountStatusValueDMConverter(moneyAccountCurrencyFactory)
+    private val converter = MoneyAccountStatusValueDMConverter(
+        moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
+    )
 
     @Test
     fun `GIVEN active account WHEN cached and restored THEN product instance kept and bank off-ramp unknown`() {
@@ -40,6 +41,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             productInstanceId = "instance-1",
             isBankOfframpAvailable = true,
             error = null,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act
@@ -47,36 +49,6 @@ internal class MoneyAccountStatusValueDMConverterTest {
 
         // Assert
         assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, isBankOfframpAvailable = null))
-    }
-
-    @Test
-    fun `GIVEN balance with yield status WHEN cached and restored THEN yield status kept`() {
-        // Arrange
-        val active = MoneyAccountStatusValue.Account.Active(
-            source = StatusSource.ACTUAL,
-            cryptoCurrency = cryptoCurrency,
-            balance = MoneyAccountStatusValue.Balance(
-                cryptoAmount = BigDecimal.TEN,
-                depositAddress = "0xdeposit",
-                currencyCode = "USD",
-                fiatRate = BigDecimal.ONE,
-                yieldSupplyStatus = YieldSupplyStatus(
-                    isActive = true,
-                    isInitialized = true,
-                    isAllowedToSpend = false,
-                    effectiveProtocolBalance = BigDecimal("7"),
-                ),
-            ),
-            customerId = "customer-1",
-            productInstanceId = "instance-1",
-            error = null,
-        )
-
-        // Act
-        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
-
-        // Assert
-        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE))
     }
 
     @Test
@@ -106,6 +78,23 @@ internal class MoneyAccountStatusValueDMConverterTest {
         // Assert
         assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
         assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN not started onboarding WHEN cached and restored THEN empty from cache`() {
+        // Arrange
+        val notStarted = MoneyAccountStatusValue.Onboarding.NotStarted(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(notStarted)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Empty)
+        assertThat(restored).isEqualTo(MoneyAccountStatusValue.Empty)
     }
 
     @ParameterizedTest
@@ -138,6 +127,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             customerId = "customer-1",
             productInstanceId = "instance-1",
             error = MoneyAccountStatusValue.Error.NotSynced,
+            isKycAdditionalInfoRequired = false,
         )
 
         // Act
@@ -146,6 +136,28 @@ internal class MoneyAccountStatusValueDMConverterTest {
         // Assert
         assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, error = null))
     }
+
+    @Test
+    fun `GIVEN active account with flag WHEN cached and restored THEN flag kept`() {
+        // Arrange
+        val active = activeWithKycAdditionalInfoRequired()
+
+        // Act
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
+
+        // Assert
+        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE))
+    }
+
+    private fun activeWithKycAdditionalInfoRequired() = MoneyAccountStatusValue.Account.Active(
+        source = StatusSource.ACTUAL,
+        cryptoCurrency = cryptoCurrency,
+        balance = null,
+        customerId = "customer-1",
+        productInstanceId = "instance-1",
+        error = null,
+        isKycAdditionalInfoRequired = true,
+    )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")

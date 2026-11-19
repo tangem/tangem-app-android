@@ -22,6 +22,7 @@ import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRateEntry
 import com.tangem.features.earn.product.api.product.EarnRateSource
 import com.tangem.features.earn.product.api.product.EarnRisk
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.ProductAvailability
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.hot.sdk.model.HotWalletId
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
 internal val ETH_ID: CryptoCurrency.ID = CryptoCurrency.ID.fromValue("coin⟨ETH⟩ethereum")
@@ -82,10 +84,10 @@ internal fun createRateEntry(
 internal class TestEarnProduct(
     override val id: EarnProductId,
     override val rank: Int = 0,
-    override val hasLegacyBlock: Boolean = false,
     private val summariesFlow: Flow<Map<CryptoCurrency.ID, EarnProductSummary>> = emptyFlow(),
     private val refreshResult: Either<Throwable, Unit> = Unit.right(),
     override val badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,
+    private val loadingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
     delegate: EarnProduct = createFakeEarnProduct(FakeEarnProductPreset.Lending),
 ) : EarnProduct by delegate {
 
@@ -108,12 +110,12 @@ internal class TestEarnProduct(
     /** The params of every call of `refresh`. */
     val refreshParams: List<EarnProduct.Params> get() = refreshParamsLog
 
-    override fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> {
+    override fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries> {
         summariesCalls++
         summariesWalletIdsLog += userWalletId
         return flow {
             collectCount++
-            emitAll(summariesFlow)
+            emitAll(summariesFlow.map { EarnSummaries(byCurrency = it, loadingCurrencies = loadingCurrencies) })
         }
     }
 

@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.connection.NetworkConnectionManager
+import com.tangem.data.moneyaccount.contribution.MoneyAccountContributionsFetcher
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -28,12 +29,17 @@ import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -54,6 +60,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val summary: CustomerSummary = mockk()
     private val networkConnectionManager: NetworkConnectionManager = mockk()
+    private val contributionsFetcher: MoneyAccountContributionsFetcher = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
@@ -65,6 +72,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         resolveMoneyAccountStatusFromSummaryUseCase = resolveMoneyAccountStatusFromSummaryUseCase,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         networkConnectionManager = networkConnectionManager,
+        contributionsFetcher = contributionsFetcher,
     )
 
     @BeforeEach
@@ -76,9 +84,14 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             moneyAccountCurrencyFactory,
             resolveMoneyAccountStatusFromSummaryUseCase,
             getCustomerSummaryUseCase,
+            summary,
             networkConnectionManager,
+            contributionsFetcher,
         )
         every { networkConnectionManager.isOnlineSync } returns true
+        every { summary.customerStatus } returns CustomerSummary.CustomerStatus.ACTIVE
+        every { summary.kycStatus } returns CustomerSummary.KycStatus.APPROVED
+        coEvery { contributionsFetcher.fetch(USER_WALLET_ID, cryptoCurrency) } returns Unit
         every { deviceSecurity.isRooted } returns false
         coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns null
         every { moneyAccountCurrencyFactory.create(USER_WALLET_ID) } returns cryptoCurrency
@@ -89,6 +102,11 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         coEvery {
             onboardingRepository.fetchCustomerEligibility(USER_WALLET_ID)
         } returns TangemPayApiError.ServerUnavailable.left()
+    }
+
+    @AfterEach
+    fun unmockLogger() {
+        unmockkObject(TangemLogger)
     }
 
     @Test
@@ -258,8 +276,23 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 customerId = CUSTOMER_ID,
                 productInstanceId = PRODUCT_INSTANCE_ID,
                 error = null,
+                isKycAdditionalInfoRequired = false,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN active product instance WHEN invoke THEN contributions of the account currency are fetched`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+        ).right()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        coVerify(exactly = 1) { contributionsFetcher.fetch(USER_WALLET_ID, cryptoCurrency) }
     }
 
     @Test
@@ -282,6 +315,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                     customerId = CUSTOMER_ID,
                     productInstanceId = PRODUCT_INSTANCE_ID,
                     error = null,
+                    isKycAdditionalInfoRequired = false,
                 ),
             )
         }
@@ -317,8 +351,101 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 productInstanceId = PRODUCT_INSTANCE_ID,
                 isBankOfframpAvailable = model.expected,
                 error = null,
+                isKycAdditionalInfoRequired = false,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN active instance AND active customer with kyc in progress WHEN invoke THEN active account with kyc additional info flag`() =
+        runTest {
+            // Arrange
+            stubSummaryKycInProgress()
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+                accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+                kycStatus = KycStatus.PENDING,
+            ).right()
+
+            // Act
+            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            verifyStored(active(isKycAdditionalInfoRequired = true))
+        }
+
+    @Test
+    fun `GIVEN summary kyc in progress AND customer info kyc approved WHEN invoke THEN customer info wins and account has no flag`() =
+        runTest {
+            // Arrange
+            stubSummaryKycInProgress()
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+                accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+                kycStatus = KycStatus.APPROVED,
+            ).right()
+
+            // Act
+            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            verifyStored(active(isKycAdditionalInfoRequired = false))
+        }
+
+    @Test
+    fun `GIVEN summary kyc in progress AND customer info kyc required WHEN invoke THEN customer info wins and account has no flag`() =
+        runTest {
+            // Arrange
+            stubSummaryKycInProgress()
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+                accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+                kycStatus = KycStatus.REQUIRED,
+            ).right()
+
+            // Act
+            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            verifyStored(active(isKycAdditionalInfoRequired = false))
+        }
+
+    @Test
+    fun `GIVEN only customer info has kyc request WHEN invoke THEN disagreement logged AND customer info wins`() =
+        runTest {
+            // Arrange
+            mockkObject(TangemLogger)
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+                accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+                kycStatus = KycStatus.PENDING,
+            ).right()
+
+            // Act
+            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            verifyStored(active(isKycAdditionalInfoRequired = true))
+            verify(exactly = 1) {
+                TangemLogger.e(
+                    "Money account status $USER_WALLET_ID: summary and customer info disagree on KYC additional info",
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN summary and customer info agree on kyc request WHEN invoke THEN nothing is logged`() = runTest {
+        // Arrange
+        mockkObject(TangemLogger)
+        stubSummaryKycInProgress()
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+            kycStatus = KycStatus.PENDING,
+        ).right()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verify(exactly = 0) { TangemLogger.e(any(), any(), any()) }
     }
 
     @Test
@@ -404,13 +531,19 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         )
     }
 
-    private fun active() = MoneyAccountStatusValue.Account.Active(
+    private fun stubSummaryKycInProgress() {
+        every { summary.customerStatus } returns CustomerSummary.CustomerStatus.ACTIVE
+        every { summary.kycStatus } returns CustomerSummary.KycStatus.IN_PROGRESS
+    }
+
+    private fun active(isKycAdditionalInfoRequired: Boolean = false) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
         cryptoCurrency = cryptoCurrency,
         balance = null,
         customerId = CUSTOMER_ID,
         productInstanceId = PRODUCT_INSTANCE_ID,
         error = null,
+        isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
     )
 
     private fun activating() = MoneyAccountStatusValue.Onboarding.Activating(
@@ -422,12 +555,13 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private fun createCustomerInfo(
         accountStatus: CustomerInfo.ProductInstance.Status? = null,
         state: CustomerInfo.State = CustomerInfo.State.ACTIVE,
+        kycStatus: KycStatus = KycStatus.APPROVED,
     ) = CustomerInfo(
         customerId = CUSTOMER_ID,
         paymentAccount = null,
         productInstances = listOfNotNull(accountStatus?.let(::createAccountInstance)),
         cards = emptyList(),
-        kycStatus = KycStatus.APPROVED,
+        kycStatus = kycStatus,
         state = state,
         fiatBalance = null,
         tariffPlan = null,
@@ -487,6 +621,14 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             cached = active(),
             error = TangemPayApiError.Unspecified,
             expected = active().copy(
+                source = StatusSource.ONLY_CACHE,
+                error = MoneyAccountStatusValue.Error.Unavailable,
+            ),
+        ),
+        CachedAccountErrorModel(
+            cached = active(isKycAdditionalInfoRequired = true),
+            error = TangemPayApiError.ServerUnavailable,
+            expected = active(isKycAdditionalInfoRequired = true).copy(
                 source = StatusSource.ONLY_CACHE,
                 error = MoneyAccountStatusValue.Error.Unavailable,
             ),

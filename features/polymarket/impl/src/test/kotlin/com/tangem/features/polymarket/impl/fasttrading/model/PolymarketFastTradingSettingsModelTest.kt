@@ -9,16 +9,12 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.modal.TangemModalActionScope
-import com.tangem.core.ui.ds2.modal.TangemModalContentUM
-import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.EventMessage
-import com.tangem.core.ui.message.ModalMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.PolymarketSessionKeyOverview
 import com.tangem.domain.polymarket.model.PolymarketFastTradingState
@@ -38,9 +34,13 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.RefreshPolymarketFastTradingUseCase
 import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUseCase
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingActivationComponent
 import com.tangem.features.polymarket.impl.fasttrading.PolymarketFastTradingSettingsComponent
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.FastTradingKeyActionUM
 import com.tangem.features.polymarket.impl.fasttrading.ui.state.PolymarketFastTradingSettingsUM
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -59,6 +59,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.Duration
 import java.time.Instant
 
@@ -71,18 +72,20 @@ internal class PolymarketFastTradingSettingsModelTest {
     private val deviceIdProvider: PolymarketDeviceIdProvider = mockk()
     private val startOperation: StartPolymarketSessionKeyOperationUseCase = mockk()
     private val messageSender: UiMessageSender = mockk()
+    private val getUserWallet: GetUserWalletUseCase = mockk()
     private val sentMessages = mutableListOf<EventMessage>()
     private val states = MutableSharedFlow<PolymarketFastTradingState>(replay = 1)
     private var model: PolymarketFastTradingSettingsModel? = null
 
     @BeforeEach
     fun setup() {
-        clearMocks(router, observeFastTrading, refreshFastTrading, deviceIdProvider, startOperation, messageSender)
+        clearMocks(router, observeFastTrading, refreshFastTrading, deviceIdProvider, startOperation, messageSender, getUserWallet)
         states.resetReplayCache()
         every { observeFastTrading(USER_WALLET_ID) } returns states
         every { deviceIdProvider.deviceName } returns "Pixel 9"
         coEvery { refreshFastTrading(USER_WALLET_ID) } returns Unit
         every { startOperation(USER_WALLET_ID, REVOKE) } returns PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        every { getUserWallet(USER_WALLET_ID) } returns HOT_WALLET.right()
         sentMessages.clear()
         every { messageSender.send(capture(sentMessages)) } returns Unit
     }
@@ -155,32 +158,25 @@ internal class PolymarketFastTradingSettingsModelTest {
     }
 
     @Test
-    fun `GIVEN device key WHEN revoke clicked THEN confirmation names the device and nothing starts`() = runTest {
-        // Arrange
-        val model = createContentModel()
+    fun `GIVEN hot wallet and device key WHEN revoke clicked THEN confirmation names the device and nothing starts`() =
+        runTest {
+            // Arrange
+            val model = createContentModel()
 
-        // Act
-        content(model).onActionClick(DEVICE_REVOKE)
-        advanceUntilIdle()
+            // Act
+            content(model).onActionClick(DEVICE_REVOKE)
+            advanceUntilIdle()
 
-        // Assert
-        val modal = sentModal()
-        assertThat(modal.content).isEqualTo(
-            TangemModalContentUM.Status(
-                variant = TangemModalStatus.Variant.Warning,
-                title = resourceReference(R.string.prediction_session_key_revoke_confirm_title),
-                description = resourceReference(
+            // Assert
+            val confirmation = content(model).revokeConfirmation
+            assertThat(confirmation?.description).isEqualTo(
+                resourceReference(
                     id = R.string.prediction_session_key_revoke_confirm_text,
                     formatArgs = wrappedList(DEVICE_NAME),
                 ),
-            ),
-        )
-        assertThat(modal.buttons.map { it.text to it.variant }).containsExactly(
-            resourceReference(R.string.prediction_session_key_revoke) to TangemButton.Variant.Primary,
-            resourceReference(R.string.common_cancel) to TangemButton.Variant.Secondary,
-        ).inOrder()
-        verify(exactly = 0) { startOperation(any(), any()) }
-    }
+            )
+            verify(exactly = 0) { startOperation(any(), any()) }
+        }
 
     @Test
     fun `GIVEN unknown signer WHEN revoke clicked THEN confirmation names the signer address`() = runTest {
@@ -188,14 +184,11 @@ internal class PolymarketFastTradingSettingsModelTest {
         val model = createContentModel()
 
         // Act
-        content(model).onActionClick(
-            FastTradingKeyActionUM.Revoke(KEY_ADDRESS, FastTradingKeyActionUM.RevokeSubject.UnknownSigner),
-        )
+        content(model).onActionClick(UNKNOWN_SIGNER_REVOKE)
         advanceUntilIdle()
 
         // Assert
-        val status = sentModal().content as TangemModalContentUM.Status
-        assertThat(status.description).isEqualTo(
+        assertThat(content(model).revokeConfirmation?.description).isEqualTo(
             resourceReference(
                 id = R.string.prediction_session_key_revoke_confirm_unknown_signer_text,
                 formatArgs = wrappedList(KEY_ADDRESS),
@@ -205,36 +198,126 @@ internal class PolymarketFastTradingSettingsModelTest {
     }
 
     @Test
-    fun `GIVEN revoke confirmation WHEN confirmed THEN revocation of that key starts and the modal closes`() = runTest {
+    fun `GIVEN revoke confirmation WHEN confirmed THEN revocation of that key starts and confirmation clears`() =
+        runTest {
+            // Arrange
+            val model = createContentModel()
+            content(model).onActionClick(DEVICE_REVOKE)
+            advanceUntilIdle()
+
+            // Act
+            content(model).revokeConfirmation?.onConfirm?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
+            assertThat(content(model).revokeConfirmation).isNull()
+            assertThat(sentMessages).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN dismissed THEN confirmation clears and nothing starts`() = runTest {
         // Arrange
         val model = createContentModel()
         content(model).onActionClick(DEVICE_REVOKE)
         advanceUntilIdle()
-        var isDismissed = false
 
         // Act
-        sentModal().buttons.first().onClick(TangemModalActionScope { isDismissed = true })
+        content(model).revokeConfirmation?.onDismiss?.invoke()
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
-        assertThat(isDismissed).isTrue()
-        assertThat(sentMessages).hasSize(1)
+        assertThat(content(model).revokeConfirmation).isNull()
+        verify(exactly = 0) { startOperation(any(), any()) }
     }
 
     @Test
-    fun `GIVEN revoke confirmation WHEN cancelled THEN nothing starts`() = runTest {
+    fun `GIVEN a dismissed revoke confirmation WHEN its hold completes late THEN nothing starts`() = runTest {
         // Arrange
         val model = createContentModel()
-        content(model).onActionClick(DEVICE_REVOKE)
+        content(model).onActionClick(UNKNOWN_SIGNER_REVOKE)
+        advanceUntilIdle()
+        val confirmation = content(model).revokeConfirmation
+        confirmation?.onDismiss?.invoke()
         advanceUntilIdle()
 
         // Act
-        sentModal().buttons.last().onClick(TangemModalActionScope {})
+        confirmation?.onConfirm?.invoke()
         advanceUntilIdle()
 
         // Assert
         verify(exactly = 0) { startOperation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a second confirmation opened WHEN the first one dismisses late THEN the second one stays`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+        val firstOnDismiss = content(model).revokeConfirmation?.onDismiss
+        content(model).onActionClick(UNKNOWN_SIGNER_REVOKE)
+        advanceUntilIdle()
+        val second = content(model).revokeConfirmation
+
+        // Act
+        firstOnDismiss?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(model).revokeConfirmation).isSameInstanceAs(second)
+    }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN an operation starts and finishes THEN confirmation does not reappear`() =
+        runTest {
+            // Arrange
+            val model = createContentModel()
+            content(model).onActionClick(DEVICE_REVOKE)
+            advanceUntilIdle()
+
+            // Act
+            states.emit(createState(OVERVIEW.right(), runningOperation(PolymarketSessionKeyOperationRequest.Extend)))
+            advanceUntilIdle()
+            val whileRunning = content(model).revokeConfirmation
+            states.emit(createState(OVERVIEW.right()))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(whileRunning).isNull()
+            assertThat(content(model).revokeConfirmation).isNull()
+        }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN the key is revoked elsewhere THEN confirmation clears`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+
+        // Act
+        states.emit(createState(OVERVIEW.copy(wallet = OVERVIEW.wallet.copy(sessionKeys = emptyList())).right()))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(model).revokeConfirmation).isNull()
+    }
+
+    @Test
+    fun `GIVEN revoke confirmation WHEN overview fails and recovers THEN confirmation does not reappear`() = runTest {
+        // Arrange
+        val model = createContentModel()
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+
+        // Act
+        states.emit(createState(PolymarketWalletError.Network.left()))
+        advanceUntilIdle()
+        states.emit(createState(OVERVIEW.right()))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(model).revokeConfirmation).isNull()
     }
 
     @Test
@@ -246,12 +329,12 @@ internal class PolymarketFastTradingSettingsModelTest {
         advanceUntilIdle()
 
         // Act
-        sentModal().buttons.first().onClick(TangemModalActionScope {})
+        content(model).revokeConfirmation?.onConfirm?.invoke()
         advanceUntilIdle()
 
         // Assert
         verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
-        val toast = sentMessages.last() as SnackbarMessage
+        val toast = sentMessages.single() as SnackbarMessage
         assertThat(toast.message).isEqualTo(resourceReference(R.string.prediction_session_key_toast_busy))
     }
 
@@ -261,22 +344,17 @@ internal class PolymarketFastTradingSettingsModelTest {
         val model = createContentModel()
         content(model).onActionClick(DEVICE_REVOKE)
         advanceUntilIdle()
-        val operation = PolymarketSessionKeyOperation(
-            id = OPERATION_ID,
-            request = PolymarketSessionKeyOperationRequest.Extend,
-            targetAddress = null,
-            stage = PolymarketSessionKeyOperationStage.SIGNING,
-        )
-        states.emit(createState(OVERVIEW.right(), operation))
+        val onConfirm = content(model).revokeConfirmation?.onConfirm
+        states.emit(createState(OVERVIEW.right(), runningOperation(PolymarketSessionKeyOperationRequest.Extend)))
         advanceUntilIdle()
 
         // Act
-        sentModal().buttons.first().onClick(TangemModalActionScope {})
+        onConfirm?.invoke()
         advanceUntilIdle()
 
         // Assert
         verify(exactly = 0) { startOperation(any(), any()) }
-        assertThat(sentMessages).hasSize(1)
+        assertThat(sentMessages).isEmpty()
     }
 
     @Test
@@ -285,11 +363,12 @@ internal class PolymarketFastTradingSettingsModelTest {
         val model = createContentModel()
         content(model).onActionClick(DEVICE_REVOKE)
         advanceUntilIdle()
+        val onConfirm = content(model).revokeConfirmation?.onConfirm
         states.emit(createState(OVERVIEW.copy(wallet = OVERVIEW.wallet.copy(sessionKeys = emptyList())).right()))
         advanceUntilIdle()
 
         // Act
-        sentModal().buttons.first().onClick(TangemModalActionScope {})
+        onConfirm?.invoke()
         advanceUntilIdle()
 
         // Assert
@@ -303,23 +382,95 @@ internal class PolymarketFastTradingSettingsModelTest {
             val model = createContentModel()
             content(model).onActionClick(DEVICE_REVOKE)
             advanceUntilIdle()
-            val recasedKeys = OVERVIEW.wallet.sessionKeys.map { it.copy(address = "0x" + KEY_ADDRESS.removePrefix("0x").uppercase()) }
+            val onConfirm = content(model).revokeConfirmation?.onConfirm
+            val recasedKeys = OVERVIEW.wallet.sessionKeys.map {
+                it.copy(address = "0x" + KEY_ADDRESS.removePrefix("0x").uppercase())
+            }
             states.emit(createState(OVERVIEW.copy(wallet = OVERVIEW.wallet.copy(sessionKeys = recasedKeys)).right()))
             advanceUntilIdle()
 
             // Act
-            sentModal().buttons.first().onClick(TangemModalActionScope {})
+            onConfirm?.invoke()
             advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
         }
 
-    @Test
-    fun `GIVEN activation offered WHEN activate clicked THEN activation starts without a toast`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideRevokePathModels")
+    fun `GIVEN wallet type and signer WHEN revoke clicked THEN it starts directly or asks confirmation`(
+        model: RevokePathModel,
+    ) = runTest {
         // Arrange
-        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
-            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        every { getUserWallet(USER_WALLET_ID) } returns model.wallet.right()
+        val settingsModel = createContentModel()
+
+        // Act
+        content(settingsModel).onActionClick(model.action)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(content(settingsModel).revokeConfirmation?.isHoldToConfirm).isEqualTo(model.expectedHoldToConfirm)
+        verify(exactly = if (model.expectedHoldToConfirm == null) 1 else 0) { startOperation(USER_WALLET_ID, REVOKE) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRevokePathModels")
+    fun `GIVEN wallet type and signer WHEN revoke is confirmed or direct THEN revocation starts once and clears`(
+        model: RevokePathModel,
+    ) = runTest {
+        // Arrange
+        every { getUserWallet(USER_WALLET_ID) } returns model.wallet.right()
+        val settingsModel = createContentModel()
+        content(settingsModel).onActionClick(model.action)
+        advanceUntilIdle()
+
+        // Act
+        content(settingsModel).revokeConfirmation?.onConfirm?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { startOperation(USER_WALLET_ID, REVOKE) }
+        assertThat(content(settingsModel).revokeConfirmation).isNull()
+    }
+
+    @Test
+    fun `GIVEN card wallet and device key and revoke not offered WHEN revoke clicked THEN nothing starts`() =
+        runTest {
+            // Arrange
+            every { getUserWallet(USER_WALLET_ID) } returns COLD_WALLET.right()
+            val model = createModel()
+            states.emit(createState(OVERVIEW.right(), runningOperation(PolymarketSessionKeyOperationRequest.Extend)))
+            advanceUntilIdle()
+
+            // Act
+            content(model).onActionClick(DEVICE_REVOKE)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { startOperation(any(), any()) }
+            assertThat(content(model).revokeConfirmation).isNull()
+        }
+
+    @Test
+    fun `GIVEN wallet lookup fails WHEN revoke clicked THEN nothing happens`() = runTest {
+        // Arrange
+        every { getUserWallet(USER_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        val model = createContentModel()
+
+        // Act
+        content(model).onActionClick(DEVICE_REVOKE)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { startOperation(any(), any()) }
+        assertThat(content(model).revokeConfirmation).isNull()
+    }
+
+    @Test
+    fun `GIVEN activation offered WHEN activate clicked THEN activation screen opens without starting`() = runTest {
+        // Arrange
         val model = createContentModel()
 
         // Act
@@ -327,7 +478,16 @@ internal class PolymarketFastTradingSettingsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) }
+        verify(exactly = 1) {
+            router.push(
+                PolymarketRoute.FastTradingActivation(
+                    userWalletId = USER_WALLET_ID,
+                    action = PolymarketFastTradingActivationComponent.Action.Activate,
+                ),
+                any(),
+            )
+        }
+        verify(exactly = 0) { startOperation(any(), any()) }
         assertThat(sentMessages).isEmpty()
     }
 
@@ -349,18 +509,72 @@ internal class PolymarketFastTradingSettingsModelTest {
 
             // Assert
             verify(exactly = 0) { startOperation(any(), any()) }
+            verify(exactly = 0) { router.push(any(), any()) }
             assertThat(sentMessages).isEmpty()
         }
 
-    @Test
-    fun `GIVEN another operation running WHEN activate clicked THEN busy toast is shown`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideThisDeviceActionModels")
+    fun `GIVEN this device action offered WHEN clicked THEN its operation starts without a toast`(
+        model: ThisDeviceActionModel,
+    ) = runTest {
         // Arrange
-        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate) } returns
-            PolymarketSessionKeyOperationStart.Busy
-        val model = createContentModel()
+        every { startOperation(USER_WALLET_ID, model.request) } returns
+            PolymarketSessionKeyOperationStart.Started(OPERATION_ID)
+        val settingsModel = createModel()
+        states.emit(createState(model.overview.right()))
+        advanceUntilIdle()
 
         // Act
-        content(model).onActivateClick()
+        content(settingsModel).onActionClick(model.action)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { startOperation(USER_WALLET_ID, model.request) }
+        assertThat(sentMessages).isEmpty()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideThisDeviceActionModels")
+    fun `GIVEN this device action not offered WHEN clicked THEN nothing starts`(model: ThisDeviceActionModel) =
+        runTest {
+            // Arrange
+            val settingsModel = createContentModel()
+
+            // Act
+            content(settingsModel).onActionClick(model.action)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { startOperation(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN extend offered and an operation running WHEN extend clicked THEN nothing starts`() = runTest {
+        // Arrange
+        val settingsModel = createModel()
+        states.emit(createState(EXPIRING_OVERVIEW.right(), runningOperation(REVOKE)))
+        advanceUntilIdle()
+
+        // Act
+        content(settingsModel).onActionClick(FastTradingKeyActionUM.Extend)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { startOperation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN another operation started meanwhile WHEN extend clicked THEN busy toast is shown`() = runTest {
+        // Arrange
+        every { startOperation(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Extend) } returns
+            PolymarketSessionKeyOperationStart.Busy
+        val settingsModel = createModel()
+        states.emit(createState(EXPIRING_OVERVIEW.right()))
+        advanceUntilIdle()
+
+        // Act
+        content(settingsModel).onActionClick(FastTradingKeyActionUM.Extend)
         advanceUntilIdle()
 
         // Assert
@@ -375,8 +589,6 @@ internal class PolymarketFastTradingSettingsModelTest {
         return model
     }
 
-    private fun sentModal() = (sentMessages.first() as ModalMessage).messageModalUM
-
     private fun content(model: PolymarketFastTradingSettingsModel) =
         model.uiState.value as PolymarketFastTradingSettingsUM.Content
 
@@ -389,17 +601,37 @@ internal class PolymarketFastTradingSettingsModelTest {
         startOperation = startOperation,
         messageSender = messageSender,
         deviceIdProvider = deviceIdProvider,
+        getUserWallet = getUserWallet,
     ).also { model = it }
+
+    data class ThisDeviceActionModel(
+        val overview: PolymarketSessionKeyOverview,
+        val action: FastTradingKeyActionUM,
+        val request: PolymarketSessionKeyOperationRequest,
+    )
+
+    data class RevokePathModel(
+        val wallet: UserWallet,
+        val action: FastTradingKeyActionUM.Revoke,
+        val expectedHoldToConfirm: Boolean?,
+    )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
+        val HOT_WALLET: UserWallet = mockk<UserWallet.Hot>()
+        val COLD_WALLET: UserWallet = mockk<UserWallet.Cold>()
         const val KEY_ADDRESS = "0x5e55000000000000000000000000000000000002"
+        const val OWN_ADDRESS = "0x5e55000000000000000000000000000000000001"
         const val OPERATION_ID = 5L
         val REVOKE = PolymarketSessionKeyOperationRequest.Revoke(KEY_ADDRESS)
         val DEVICE_NAME = stringReference("Galaxy S24")
         val DEVICE_REVOKE = FastTradingKeyActionUM.Revoke(
             address = KEY_ADDRESS,
             subject = FastTradingKeyActionUM.RevokeSubject.Device(DEVICE_NAME),
+        )
+        val UNKNOWN_SIGNER_REVOKE = FastTradingKeyActionUM.Revoke(
+            address = KEY_ADDRESS,
+            subject = FastTradingKeyActionUM.RevokeSubject.UnknownSigner,
         )
         val OVERVIEW = PolymarketSessionKeyOverview(
             wallet = PolymarketWalletState(
@@ -428,6 +660,52 @@ internal class PolymarketFastTradingSettingsModelTest {
                 nextChangeAt = null,
             ),
             isTradable = false,
+        )
+
+        val OWN_KEY = OVERVIEW.wallet.sessionKeys.single().copy(
+            address = OWN_ADDRESS,
+            deviceId = "this-device",
+            deviceName = "Pixel 9",
+            validUntil = Instant.now().plus(Duration.ofDays(10)),
+        )
+        val EXPIRING_OVERVIEW = OVERVIEW.copy(
+            wallet = OVERVIEW.wallet.copy(sessionKeys = listOf(OWN_KEY)),
+            localKeyAddress = OWN_ADDRESS,
+            assessment = OVERVIEW.assessment.copy(
+                deviceState = PolymarketSessionKeyDeviceState.Active(OWN_KEY, isRenewDue = true),
+            ),
+        )
+        val EXPIRED_OWN_KEY = OWN_KEY.copy(
+            status = PolymarketSessionKeyStatus.EXPIRED,
+            validUntil = Instant.now().minus(Duration.ofDays(1)),
+        )
+        val EXPIRED_OVERVIEW = EXPIRING_OVERVIEW.copy(
+            wallet = OVERVIEW.wallet.copy(sessionKeys = listOf(EXPIRED_OWN_KEY)),
+            assessment = OVERVIEW.assessment.copy(
+                deviceState = PolymarketSessionKeyDeviceState.Reenable(EXPIRED_OWN_KEY),
+            ),
+        )
+
+        @JvmStatic
+        fun provideRevokePathModels() = listOf(
+            RevokePathModel(COLD_WALLET, DEVICE_REVOKE, expectedHoldToConfirm = null),
+            RevokePathModel(COLD_WALLET, UNKNOWN_SIGNER_REVOKE, expectedHoldToConfirm = false),
+            RevokePathModel(HOT_WALLET, DEVICE_REVOKE, expectedHoldToConfirm = true),
+            RevokePathModel(HOT_WALLET, UNKNOWN_SIGNER_REVOKE, expectedHoldToConfirm = true),
+        )
+
+        @JvmStatic
+        fun provideThisDeviceActionModels() = listOf(
+            ThisDeviceActionModel(
+                overview = EXPIRING_OVERVIEW,
+                action = FastTradingKeyActionUM.Extend,
+                request = PolymarketSessionKeyOperationRequest.Extend,
+            ),
+            ThisDeviceActionModel(
+                overview = EXPIRED_OVERVIEW,
+                action = FastTradingKeyActionUM.Reactivate,
+                request = PolymarketSessionKeyOperationRequest.Reactivate,
+            ),
         )
 
         @JvmStatic

@@ -5,11 +5,13 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import arrow.core.raise.either
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
 import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
+import com.tangem.data.polymarket.converter.PolymarketSoccerEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.builder.PolymarketPlaceOrderBodyBuilder
@@ -29,6 +31,7 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobPriceFormat
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceRequest
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
@@ -47,12 +50,14 @@ import com.tangem.data.polymarket.converter.PolymarketCategoryConverter
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketSoccerEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
@@ -78,6 +83,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.toHexString
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.math.BigDecimal
@@ -87,7 +93,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 internal class DefaultPolymarketRepository @Inject constructor(
     private val polymarketApi: PolymarketApi,
     private val geoApi: PolymarketGeoApi,
@@ -98,6 +104,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val eventErrorResolver: PolymarketEventErrorResolver,
     private val placeOrderErrorResolver: PredictionPlaceOrderErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
+    private val serverClock: DefaultPolymarketServerClock,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
 
@@ -192,6 +199,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
             limit = limit,
             cursor = cursor,
         )
+        serverClock.record(response)
         return when (response) {
             is ApiResponse.Success -> PolymarketEventsPage(
                 events = response.data.events.map(PolymarketEventConverter::convert),
@@ -208,8 +216,30 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketEventError, PolymarketEvent> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId).bind()
+                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId)
+                    .also(serverClock::record)
+                    .bind()
                 PolymarketEventConverter.convert(response.event).right()
+            },
+            onError = { eventErrorResolver.resolve(it).left() },
+        )
+    }
+
+    override suspend fun getSoccerEvent(
+        userWalletId: UserWalletId,
+        eventId: String,
+    ): Either<PolymarketEventError, PolymarketSoccerEvent> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val response = polymarketApi.getSoccerEvent(
+                    walletId = userWalletId.stringValue,
+                    eventId = eventId,
+                ).bind()
+                Either.catch { PolymarketSoccerEventConverter.convert(response.event) }
+                    .mapLeft { error ->
+                        TangemLogger.e("Unable to convert soccer event", error)
+                        PolymarketEventError.Unknown(httpCode = null, detail = error.message)
+                    }
             },
             onError = { eventErrorResolver.resolve(it).left() },
         )
@@ -315,6 +345,48 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
+    override suspend fun getPrices(
+        assetIds: List<String>,
+        side: PredictionOrderSide,
+    ): Either<PredictionPriceError, Map<String, BigDecimal?>> = withContext(dispatchers.io) {
+        if (assetIds.any(String::isBlank)) return@withContext PredictionPriceError.InvalidAsset.left()
+        either {
+            buildMap {
+                assetIds.distinct().chunked(PRICE_BATCH_LIMIT).forEach { batch ->
+                    putAll(getPriceBatch(batch, side).bind())
+                }
+            }
+        }
+    }
+
+    private suspend fun getPriceBatch(
+        assetIds: List<String>,
+        side: PredictionOrderSide,
+    ): Either<PredictionPriceError, Map<String, BigDecimal?>> = safeApiCall(
+        call = {
+            val response = clobApi.getPrices(assetIds.map { PolymarketPriceRequest(it, side.name) }).bind()
+            Either.catch {
+                assetIds.associateWith { assetId ->
+                    response[assetId]?.get(side.name)?.let { raw ->
+                        val price = BigDecimal(raw)
+                        require(price >= BigDecimal.ZERO && price <= BigDecimal.ONE) { "Price outside [0, 1]" }
+                        price.takeUnless { it.compareTo(side.emptyBookSentinel()) == 0 }
+                    }
+                }
+            }.mapLeft { error ->
+                TangemLogger.e("Unreadable batch book price", error)
+                PredictionPriceError.Unknown(httpCode = null, detail = error.message)
+            }
+        },
+        onError = { error ->
+            when (error) {
+                is ApiResponseError.HttpException ->
+                    PredictionPriceError.Unknown(httpCode = error.code.numericCode, detail = error.errorBody)
+                else -> error.toPriceError()
+            }.left()
+        },
+    )
+
     private fun PredictionOrderSide.emptyBookSentinel(): BigDecimal = when (this) {
         PredictionOrderSide.BUY -> PolymarketClobPriceFormat.EMPTY_BID_PRICE
         PredictionOrderSide.SELL -> PolymarketClobPriceFormat.EMPTY_ASK_PRICE
@@ -419,10 +491,27 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
-    override suspend fun checkGeoblock(): Either<DataError, Boolean> = withContext(dispatchers.io) {
+    override suspend fun checkGeoblock(): Either<DataError, PolymarketGeoblock> = withContext(dispatchers.io) {
         safeApiCall(
-            call = { geoApi.getGeoblock().bind().blocked.right() },
-            onError = { DataError.NetworkError.NoInternetConnection().left() },
+            call = {
+                val geoblock = if (geoApi.getGeoblock().bind().blocked) {
+                    PolymarketGeoblock.BLOCKED
+                } else {
+                    PolymarketGeoblock.ALLOWED
+                }
+                TangemLogger.i("Geoblock: $geoblock")
+
+                geoblock.right()
+            },
+            onError = { error ->
+                when {
+                    error is ApiResponseError.NetworkException ||
+                        error is ApiResponseError.TimeoutException -> PolymarketGeoblock.NO_RESPONSE.right()
+                    error is ApiResponseError.UnknownException && error.cause is SerializationException ->
+                        PolymarketGeoblock.UNRECOGNIZED_RESPONSE.right()
+                    else -> DataError.NetworkError.NoInternetConnection().left()
+                }
+            },
         )
     }
 
@@ -599,6 +688,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     private companion object {
+        const val PRICE_BATCH_LIMIT = 500
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"

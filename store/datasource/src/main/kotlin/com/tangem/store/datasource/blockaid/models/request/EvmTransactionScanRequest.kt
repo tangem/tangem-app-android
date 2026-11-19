@@ -39,4 +39,5 @@ data class Data(
     @Json(name = "from") val from: String,
     @Json(name = "to") val to: String,
     @Json(name = "data") val data: String,
+    @Json(name = "value") val value: String? = null,
 )

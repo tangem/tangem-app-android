@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,52 +12,99 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.EarnBannerComponent
+import com.tangem.features.earn.api.overview.EarnBannerOverview
 import com.tangem.features.earn.api.overview.EarnOverviewSupplier
+import com.tangem.features.earn.impl.HostEarnNavigator
+import com.tangem.features.earn.impl.analytics.EarnBannerAnalyticsEvent
+import com.tangem.features.earn.impl.analytics.EarnUsdValuation
+import com.tangem.features.earn.impl.analytics.toAnalyticsApy
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
+import com.tangem.features.earn.impl.overview.EarnProductSummaries
+import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
+import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetComponent
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetConfig
+import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class EarnBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     overviewSupplier: EarnOverviewSupplier,
+    private val summarySupplier: EarnProductSummarySupplier,
+    private val registry: EarnProductsRegistry,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val converter: EarnBannerConverter,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val usdValuation: EarnUsdValuation,
 ) : Model(), EarnBannerClickIntents, EarnYieldSheetComponent.ModelCallback {
 
     private val params: EarnBannerComponent.Params = paramsContainer.require()
+
+    private val productParams = EarnProduct.Params(params.userWalletId, params.cryptoCurrency)
+
+    private val navigator = HostEarnNavigator(
+        router = router,
+        userWalletId = params.userWalletId,
+        cryptoCurrency = params.cryptoCurrency,
+        source = AppRoute.EarnEntry.Source.EarnBanner,
+    )
 
     val sheetNavigation = SlotNavigation<EarnYieldSheetConfig>()
 
     val uiState: StateFlow<EarnBannerUM>
         field = MutableStateFlow<EarnBannerUM>(EarnBannerUM.Hidden)
 
+    private var lastBanner: EarnBannerOverview? = null
+    private var isBannerShownSent = false
+    private var isRowShownSent = false
+
     init {
         combine(
             flow = overviewSupplier(params.userWalletId),
             flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         ) { overviews, isBalanceHidden ->
-            converter.convert(
-                overview = overviews[params.cryptoCurrency.id],
+            val overview = overviews[params.cryptoCurrency.id]
+            val state = converter.convert(
+                overview = overview,
                 currency = params.cryptoCurrency,
                 isBalanceHidden = isBalanceHidden,
                 intents = this,
             )
+            overview?.banner to state
         }
-            .onEach { uiState.value = it }
+            .onEach { (banner, state) ->
+                if (banner != null) lastBanner = banner
+                uiState.value = state
+            }
             .launchIn(modelScope)
     }
 
+    /** The token page creates this model before its lazy list composes the banner, so the UI reports the impression. */
+    fun onShown() {
+        val banner = lastBanner ?: return
+        sendShown(uiState.value, banner)
+    }
+
     override fun onEnableClick(preselected: EarnProductId?) {
+        analyticsEventHandler.send(
+            EarnBannerAnalyticsEvent.BannerEnable(
+                token = params.cryptoCurrency.symbol,
+                bestApy = lastBanner?.rate?.toAnalyticsApy(),
+            ),
+        )
         router.push(
             AppRoute.EarnEntry(
                 userWalletId = params.userWalletId,
@@ -67,11 +115,75 @@ internal class EarnBannerModel @Inject constructor(
         )
     }
 
+    // PRD 3.1, callout 5: a sheet with a single row is skipped, the banner does what the row would do
     override fun onBannerClick() {
-        sheetNavigation.activate(EarnYieldSheetConfig)
+        lastBanner?.let { banner ->
+            analyticsEventHandler.send(
+                EarnBannerAnalyticsEvent.YieldRow(
+                    token = params.cryptoCurrency.symbol,
+                    activeCount = banner.activeCount,
+                ),
+            )
+        }
+        modelScope.launch {
+            val single = summarySupplier(params.userWalletId).first().singleProduct()
+            if (single == null) {
+                sheetNavigation.activate(EarnYieldSheetConfig)
+            } else {
+                val (product, summary) = single
+                product.actionHandler(productParams, navigator).onActionClick(summary.onClickAction)
+            }
+        }
     }
 
     override fun onDismiss() {
         sheetNavigation.dismiss()
+    }
+
+    /** `null` while products are loading: the sheet may still get more rows. */
+    private fun EarnProductSummaries.singleProduct(): Pair<EarnProduct, EarnProductSummary>? {
+        val currencyId = params.cryptoCurrency.id
+        if (isPending(currencyId)) return null
+
+        return this[currencyId]
+            .mapNotNull { summary -> registry.find(summary.productId)?.let { product -> product to summary } }
+            .singleOrNull()
+    }
+
+    private fun sendShown(state: EarnBannerUM, banner: EarnBannerOverview) {
+        when (state) {
+            is EarnBannerUM.Offer -> sendBannerShown(banner)
+            is EarnBannerUM.Enabled -> sendRowShown(banner)
+            EarnBannerUM.Hidden -> Unit
+        }
+    }
+
+    private fun sendBannerShown(banner: EarnBannerOverview) {
+        if (isBannerShownSent) return
+
+        isBannerShownSent = true
+        analyticsEventHandler.send(
+            EarnBannerAnalyticsEvent.BannerShown(
+                token = params.cryptoCurrency.symbol,
+                blockchain = params.cryptoCurrency.network.name,
+                bestApy = banner.rate?.toAnalyticsApy(),
+                products = banner.productCount,
+            ),
+        )
+    }
+
+    private fun sendRowShown(banner: EarnBannerOverview) {
+        if (isRowShownSent) return
+
+        isRowShownSent = true
+        modelScope.launch {
+            analyticsEventHandler.send(
+                EarnBannerAnalyticsEvent.YieldRowShown(
+                    token = params.cryptoCurrency.symbol,
+                    activeCount = banner.activeCount,
+                    positionBucket = usdValuation.bucket(params.cryptoCurrency, banner.totalPosition),
+                ),
+            )
+        }
     }
 }

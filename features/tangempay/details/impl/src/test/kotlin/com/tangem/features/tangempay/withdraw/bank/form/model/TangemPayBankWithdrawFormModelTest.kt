@@ -8,7 +8,9 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.tangempay.TangemPayCountry
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayModelTestBase
@@ -22,10 +24,12 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -43,10 +47,14 @@ import kotlin.reflect.KClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
 
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk {
+        every { isMxnEnabled } returns true
+    }
     private val onBack: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onContinue: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onOpenSelector: (CountrySelectorConfig) -> Unit = mockk(relaxed = true)
     private val onSavedRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
+    private val onRecipientFormOpened: () -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
@@ -64,6 +72,7 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
     fun resetMocks() {
         clearMocks(
             analytics,
+            onRecipientFormOpened,
             router,
             uiMessageSender,
             onBack,
@@ -296,7 +305,83 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
                 value = "Москва",
                 expectedError = resourceReference(R.string.tangempay_order_data_field_latin_only),
             ),
+            FormatErrorModel(
+                formFields = persistentListOf(BankWithdrawFormField.Clabe),
+                field = BankWithdrawFormField.Clabe,
+                value = "002010077777777772",
+                expectedError = resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe),
+            ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SpeiRecipient {
+
+        @Test
+        fun `GIVEN SPEI form WHEN shown THEN names are typed in after the CLABE that explains itself`() {
+            // Act
+            val model = createModel(formFields = speiFields)
+
+            // Assert
+            val imeActions = model.uiState.value.fields
+                .filterIsInstance<FieldUM.Text>()
+                .map { it.field to it.keyboardOptions.imeAction.toString() }
+            assertThat(imeActions).containsExactly(
+                BankWithdrawFormField.Clabe to "Next",
+                BankWithdrawFormField.FirstName to "Next",
+                BankWithdrawFormField.LastName to "Done",
+            ).inOrder()
+            assertThat(textField(model, BankWithdrawFormField.Clabe).helperText)
+                .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_field_clabe_hint))
+        }
+
+        @Test
+        fun `GIVEN CLABE one digit short WHEN focus moves to the first name THEN CLABE error shown before continue`() {
+            // Arrange
+            val model = createModel(formFields = speiFields)
+            focus(model, BankWithdrawFormField.Clabe)
+            fill(model, BankWithdrawFormField.Clabe, "00201007777777777")
+
+            // Act
+            focus(model, BankWithdrawFormField.FirstName)
+            textField(model, BankWithdrawFormField.Clabe).onFocusChange(false)
+
+            // Assert
+            assertThat(textField(model, BankWithdrawFormField.Clabe).error)
+                .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe))
+        }
+
+        @Test
+        fun `GIVEN typed names with accents WHEN valid CLABE continued THEN typed names reported`() {
+            // Arrange
+            val model = createModel(formFields = speiFields)
+            fill(model, BankWithdrawFormField.Clabe, "002010077777777771")
+            fill(model, BankWithdrawFormField.FirstName, "José")
+            fill(model, BankWithdrawFormField.LastName, "Hernández")
+
+            // Act
+            model.uiState.value.onContinueClick()
+
+            // Assert
+            verify(exactly = 1) {
+                onContinue(
+                    BankWithdrawFormResult(
+                        values = mapOf(
+                            BankWithdrawFormField.Clabe to "002010077777777771",
+                            BankWithdrawFormField.FirstName to "José",
+                            BankWithdrawFormField.LastName to "Hernández",
+                        ),
+                        displayNames = mapOf(
+                            BankWithdrawFormField.Clabe to "",
+                            BankWithdrawFormField.FirstName to "",
+                            BankWithdrawFormField.LastName to "",
+                        ),
+                    ),
+                )
+            }
+            assertThat(model.uiState.value.fields.mapNotNull { it.error }).isEmpty()
+        }
     }
 
     @Nested
@@ -1064,6 +1149,44 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         }
 
         @Test
+        fun `GIVEN CLABE focused and typed WHEN saved recipients match THEN only SPEI recipients suggested`() {
+            // Arrange
+            savedAccounts.value = listOf(clabeAchTwin, hanako, didenko)
+            val model = createModel(formFields = speiFields)
+
+            // Act
+            focus(model, BankWithdrawFormField.Clabe)
+            fill(model, BankWithdrawFormField.Clabe, "082")
+
+            // Assert
+            assertThat(suggestions(model)).containsExactly(
+                Suggestion(
+                    id = "acc-4",
+                    matchedPrefix = "082",
+                    accountNumberSuffix = "520000821400017",
+                    name = "Hanako A.",
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN CLABE suggestion WHEN clicked THEN SPEI recipient reported`() {
+            // Arrange
+            savedAccounts.value = listOf(hanako)
+            val model = createModel(formFields = speiFields)
+            focus(model, BankWithdrawFormField.Clabe)
+            fill(model, BankWithdrawFormField.Clabe, "082")
+
+            // Act
+            model.uiState.value.suggestions.single().onClick()
+
+            // Assert
+            verify(exactly = 1) { onSavedRecipientSelected(hanako) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN fields without account number WHEN typed THEN no suggestions`() {
             // Arrange
             savedAccounts.value = listOf(didenko, arasakaCorp)
@@ -1316,9 +1439,30 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             model.onDestroy()
         }
 
+        @ParameterizedTest
+        @MethodSource("recipientFormOpenedCases")
+        fun `GIVEN form step WHEN model created THEN the wizard is told only when a new recipient form opens`(
+            model: RecipientFormOpenedModel,
+        ) {
+            // Arrange
+            draft.value = model.draft
+
+            // Act
+            val formModel = createModel(step = model.step, sourceAccount = model.sourceAccount)
+
+            // Assert
+            verify(exactly = model.expectedCalls) { onRecipientFormOpened() }
+            formModel.onDestroy()
+        }
+
         @Test
         fun `GIVEN money account WHEN recipient details filled and continued THEN no event is sent`() {
             // Arrange
+            draft.value = BankWithdrawDraft(
+                entry = BankWithdrawEntry.NewPersonal,
+                newRecipient = NewRecipientDraft(isThirdParty = false),
+                destination = offrampDestination(rail = BankRail.ACH),
+            )
             val model = createModel(sourceAccount = moneyAccount)
             fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
             fill(model, BankWithdrawFormField.RoutingNumber, "021000021")
@@ -1333,6 +1477,57 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             verify(exactly = 1) { onContinue(any()) }
             model.onDestroy()
         }
+
+        private fun recipientFormOpenedCases() = listOf(
+            RecipientFormOpenedModel(
+                name = "money account, SPEI recipient details",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.SPEI),
+                expectedCalls = 1,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, ACH recipient details for someone else",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.ACH, isThirdParty = true),
+                expectedCalls = 1,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, recipient details reopened from the confirmation",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+                draft = newDraft(rail = BankRail.SPEI),
+                expectedCalls = 0,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, bank details",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.BankDetails,
+                draft = newDraft(rail = BankRail.ACH, isThirdParty = false),
+                expectedCalls = 0,
+            ),
+            RecipientFormOpenedModel(
+                name = "money account, saved recipient picked",
+                sourceAccount = moneyAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.ACH).copy(recipient = bankAccount()),
+                expectedCalls = 0,
+            ),
+            RecipientFormOpenedModel(
+                name = "payment account, recipient details",
+                sourceAccount = paymentAccount,
+                step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+                draft = newDraft(rail = BankRail.ACH),
+                expectedCalls = 1,
+            ),
+        )
+
+        private fun newDraft(rail: BankRail, isThirdParty: Boolean? = null) = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            newRecipient = NewRecipientDraft(isThirdParty = isThirdParty),
+            destination = offrampDestination(rail = rail),
+        )
 
         private fun provideTestModels() = listOf(
             ScreenOpenedModel(
@@ -1460,6 +1655,7 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
                     onBack = onBack,
                     onContinue = onContinue,
                     onSavedRecipientSelected = onSavedRecipientSelected,
+                    onRecipientFormOpened = onRecipientFormOpened,
                     onCloseFlow = onCloseFlow,
                 ),
                 onOpenSelector = onOpenSelector,
@@ -1467,10 +1663,25 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
         ),
         dispatchers = dispatchers,
         router = router,
-        analytics = analytics,
+        withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
     ).destroyAfterTest()
 
+    data class RecipientFormOpenedModel(
+        val name: String,
+        val sourceAccount: BankWithdrawSourceAccount,
+        val step: TangemPayBankWithdrawInnerRoute,
+        val draft: BankWithdrawDraft,
+        val expectedCalls: Int,
+    ) {
+        override fun toString(): String = name
+    }
+
     private companion object {
+        val speiFields = persistentListOf(
+            BankWithdrawFormField.Clabe,
+            BankWithdrawFormField.FirstName,
+            BankWithdrawFormField.LastName,
+        )
         val addressFields = persistentListOf(BankWithdrawFormField.Country, BankWithdrawFormField.Region)
         val usAddressFields = persistentListOf(
             BankWithdrawFormField.Country,
@@ -1497,7 +1708,14 @@ internal class TangemPayBankWithdrawFormModelTest : TangemPayModelTestBase() {
             beneficiary = Beneficiary.Individual(firstName = "Saburo", lastName = "Arasaka"),
             accountNumber = "7719004432",
         )
-        val california = TangemPayRegion(code = "CA", name = "California", isSuggested = true)
+        val hanako = bankAccount(
+            id = "acc-4",
+            beneficiary = Beneficiary.Individual(firstName = "Hanako", lastName = "Arasaka"),
+            accountNumber = "082520000821400017",
+            rail = BankRail.SPEI,
+        )
+        val clabeAchTwin = bankAccount(id = "acc-5", accountNumber = "0825200008", rail = BankRail.ACH)
+        val california =TangemPayRegion(code = "CA", name = "California", isSuggested = true)
         val texas = TangemPayRegion(code = "TX", name = "Texas", isSuggested = false)
         val newYork = TangemPayRegion(code = "NY", name = "New York", isSuggested = false)
         val californiaIso = TangemPayRegion(code = "US-CA", name = "California", isSuggested = true)

@@ -59,6 +59,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     userWalletId = params.userWalletId,
                     shouldShowOnlySpeedOption = model.shouldShowOnlySpeedOption,
                     isTronGaslessSupported = params.isTronGaslessSupported,
+                    isGaslessForCoinAllowed = params.isGaslessForCoinAllowed,
                     onLoadSponsoredFee = params.onLoadSponsoredFee,
                 ),
                 onDismiss = {

@@ -14,7 +14,6 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.CustomerInfo
@@ -314,7 +313,6 @@ internal class TangemPayOnboardingStarterTest {
                     router.replaceAll(
                         AppRoute.Wallet,
                         AppRoute.TangemPayEligibility(
-                            product = TangemPayProduct.PAYMENT_ACCOUNT,
                             userWalletId = USER_WALLET_ID,
                         ),
                         onComplete = any(),
@@ -418,7 +416,6 @@ internal class TangemPayOnboardingStarterTest {
                     router.replaceAll(
                         AppRoute.Wallet,
                         AppRoute.TangemPayEligibility(
-                            product = TangemPayProduct.PAYMENT_ACCOUNT,
                             userWalletId = USER_WALLET_ID,
                         ),
                         onComplete = any(),
@@ -609,7 +606,6 @@ internal class TangemPayOnboardingStarterTest {
             verify(exactly = 1) {
                 router.replaceCurrent(
                     AppRoute.TangemPayEligibility(
-                        product = TangemPayProduct.PAYMENT_ACCOUNT,
                         userWalletId = USER_WALLET_ID,
                     ),
                     onComplete = any(),
@@ -640,7 +636,6 @@ internal class TangemPayOnboardingStarterTest {
                     router.replaceAll(
                         AppRoute.Wallet,
                         AppRoute.TangemPayEligibility(
-                            product = TangemPayProduct.PAYMENT_ACCOUNT,
                             userWalletId = USER_WALLET_ID,
                         ),
                         onComplete = any(),

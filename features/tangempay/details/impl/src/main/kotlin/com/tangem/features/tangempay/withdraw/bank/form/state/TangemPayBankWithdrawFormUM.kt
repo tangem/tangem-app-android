@@ -18,7 +18,7 @@ internal data class TangemPayBankWithdrawFormUM(
     val onContinueClick: () -> Unit,
 ) {
 
-    /** A saved recipient whose account number starts with what the user has typed into the account-number field. */
+    /** A saved recipient whose number starts with what the user has typed into the account-number or CLABE field. */
     @Immutable
     data class SuggestionUM(
         val id: String,
@@ -41,6 +41,7 @@ internal data class TangemPayBankWithdrawFormUM(
             override val value: String,
             override val placeholder: TextReference,
             override val error: TextReference?,
+            val helperText: TextReference?,
             val keyboardOptions: KeyboardOptions,
             val contentType: ContentType?,
             val onValueChange: (String) -> Unit,

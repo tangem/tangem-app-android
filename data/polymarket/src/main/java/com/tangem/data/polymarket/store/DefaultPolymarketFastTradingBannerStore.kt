@@ -47,5 +47,6 @@ internal class DefaultPolymarketFastTradingBannerStore(
 
 private fun PolymarketFastTradingBannerKind.storageKey(): String = when (this) {
     PolymarketFastTradingBannerKind.ACTIVATE -> "activate_banner"
+    PolymarketFastTradingBannerKind.REACTIVATE -> "reactivate_banner"
     PolymarketFastTradingBannerKind.EXTEND -> "extend_banner"
 }

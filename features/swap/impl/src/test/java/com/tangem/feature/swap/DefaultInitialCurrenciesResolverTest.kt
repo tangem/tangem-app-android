@@ -2457,6 +2457,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         customerId = "customer",
         productInstanceId = "instance",
         error = null,
+        isKycAdditionalInfoRequired = false,
     )
 
     private fun createCollectiblesAccountStatus(vaultStatus: CryptoCurrencyStatus?): AccountStatus.Collectibles {

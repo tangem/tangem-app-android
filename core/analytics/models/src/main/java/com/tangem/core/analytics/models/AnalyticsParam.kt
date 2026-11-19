@@ -98,6 +98,8 @@ sealed class AnalyticsParam {
         TangemPay("Tangem Pay"),
         WalletSettings("Wallet Settings"),
         Upgrade("Upgrade"),
+        UpgradeBanner("Upgrade Banner"),
+        PermanentBanner("Permanent Banner"),
         SocialLogin("Social Login"),
         HardwareWallet("Hardware Wallet"),
         ImportWallet("Import Wallet"),
@@ -121,6 +123,7 @@ sealed class AnalyticsParam {
         Deeplink("Deeplink"),
         UnsupportedDevice("Unsupported Device"),
         CritUpdate("Crit Update"),
+        JointAccount("Joint Account"),
     }
 
     sealed class TxSentFrom(val value: String) {

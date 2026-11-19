@@ -233,7 +233,9 @@ fun BaseTestCase.openSendSuccessScreenViaLongClickOnSendButton() {
         }
     }
     step("Assert 'Transaction sent' screen is displayed") {
-        onSendSuccessScreen { container.assertIsDisplayed() }
+        // A real on-chain broadcast (E2E send tests) can take longer than the default flaky-safety window to be
+        // accepted and render the success screen, so wait the long timeout rather than the default ~10 s.
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { onSendSuccessScreen { container.assertIsDisplayed() } }
     }
 }
 

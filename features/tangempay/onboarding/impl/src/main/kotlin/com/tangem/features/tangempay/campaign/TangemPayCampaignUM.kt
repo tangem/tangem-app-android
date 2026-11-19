@@ -16,6 +16,7 @@ internal sealed interface TangemPayCampaignUM {
         val cardArtUrl: String?,
         val mode: Mode,
         val isCtaLoading: Boolean,
+        val isCtaIconShown: Boolean,
         val onGetCardClick: () -> Unit,
         val onCloseClick: () -> Unit,
     ) : TangemPayCampaignUM {

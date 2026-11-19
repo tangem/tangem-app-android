@@ -16,14 +16,18 @@ import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.transaction.usecase.GetReverseResolvedEnsAddressUseCase
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.tokenreceive.TokenReceiveFeatureToggles
 import com.tangem.features.tokenreceive.component.TokenReceiveModelCallback
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.entity.TokenReceiveStateFactory
+import com.tangem.features.tokenreceive.experiment.AddFundsUpdateVariant
+import com.tangem.features.tokenreceive.experiment.GetAddFundsUpdateVariantUseCase
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -41,9 +45,15 @@ internal class TokenReceiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    featureToggles: TokenReceiveFeatureToggles,
+    getAddFundsUpdateVariant: GetAddFundsUpdateVariantUseCase,
 ) : Model(), TokenReceiveModelCallback {
 
     val params = paramsContainer.require<TokenReceiveComponent.Params>()
+
+    val isNewScreenShown = featureToggles.isNewReceiveScreenEnabled &&
+        params.isNewScreenAllowed &&
+        getAddFundsUpdateVariant() == AddFundsUpdateVariant.TREATMENT
 
     private val tokenReceiveStateFactory = TokenReceiveStateFactory(
         cryptoCurrency = params.config.cryptoCurrency,
@@ -53,6 +63,8 @@ internal class TokenReceiveModel @Inject constructor(
     )
 
     val stackNavigation = StackNavigation<TokenReceiveRoutes>()
+
+    val warnings = tokenReceiveStateFactory.getWarnings().toImmutableList()
 
     internal val state: StateFlow<TokenReceiveUM>
         field = MutableStateFlow<TokenReceiveUM>(tokenReceiveStateFactory.getInitialState(getTokenName()))

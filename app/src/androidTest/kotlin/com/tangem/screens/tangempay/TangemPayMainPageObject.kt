@@ -1,14 +1,17 @@
 package com.tangem.screens.tangempay
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.performSemanticsAction
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.ContextMenuItemIconResKey
 import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -170,6 +173,22 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    fun currentPlanMenuItemIcon(@DrawableRes iconRes: Int): KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM_ICON)
+        addSemanticsMatcher(SemanticsMatcher.expectValue(ContextMenuItemIconResKey, iconRes))
+        hasAnyAncestor(
+            withTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM) and
+                withAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_current_plan_title))),
+        )
+        useUnmergedTree = true
+    }
+
+    val inactiveBadge: KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_INACTIVE_BADGE)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_status_inactive)))
+        useUnmergedTree = true
+    }
+
     val paySupportMenuItem: KNode = child {
         hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_pay_support)))
@@ -224,6 +243,12 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val awaitingDepositBannerAddFundsButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_card_details_add_funds)))
+        useUnmergedTree = true
+    }
+
+    val awaitingDepositBannerSubtitle: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_subtitle))
         useUnmergedTree = true
     }
 
@@ -293,7 +318,7 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val emptyHistoryText: KNode = child {
         hasTestTag(EmptyTransactionBlockTestTags.TEXT)
-        hasText(getResourceString(CoreResR.string.transaction_history_empty_transactions))
+        hasText(getResourceString(CoreResR.string.tangempay_transaction_history_empty))
         useUnmergedTree = true
     }
 

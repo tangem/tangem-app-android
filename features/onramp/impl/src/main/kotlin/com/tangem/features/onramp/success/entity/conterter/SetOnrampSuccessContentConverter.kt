@@ -4,8 +4,10 @@ import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
+import com.tangem.common.ui.expressStatus.toActiveStatusText
 import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -52,8 +54,24 @@ internal class SetOnrampSuccessContentConverter(
                 externalTxId = value.externalTxId,
             ),
             activeStatus = value.status,
+            statusVariant = value.status.toScreenVariant(),
+            statusTitle = value.status.toActiveStatusText(currencyName = cryptoCurrency.name),
+            externalTxId = value.externalTxId,
             notification = getNotification(status = value.status, externalTxUrl = value.externalTxUrl),
         )
+    }
+
+    private fun OnrampStatus.Status.toScreenVariant(): TangemStatusScreen.Variant = when (this) {
+        OnrampStatus.Status.Finished -> TangemStatusScreen.Variant.Success
+        OnrampStatus.Status.Failed,
+        OnrampStatus.Status.Expired,
+        OnrampStatus.Status.Refunded,
+        -> TangemStatusScreen.Variant.Error
+        OnrampStatus.Status.Verifying,
+        OnrampStatus.Status.RefundInProgress,
+        OnrampStatus.Status.Paused,
+        -> TangemStatusScreen.Variant.Warning
+        else -> TangemStatusScreen.Variant.Info
     }
 
     private fun getNotification(status: OnrampStatus.Status, externalTxUrl: String?): NotificationUM? {

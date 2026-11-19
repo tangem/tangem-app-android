@@ -2,6 +2,7 @@ package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.R
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -23,13 +24,17 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -380,9 +385,125 @@ internal class ForYouEarnOpportunitiesConverterTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EarnOverviewResolution {
+
+        private val currency = createEarnCurrency()
+        private val stakingOnlyRate = mapOf(currency to stakingAvailable(apy = BigDecimal("0.03")))
+
+        @Test
+        fun `GIVEN Earn owns the currency with nothing active WHEN convert THEN row shows the headline rate`() {
+            // Arrange — staking alone offers 3%, the headline (best rate across products) is 6%
+            val status = createStatus(currency, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            val converter = createConverter(
+                yieldStakingAvailability = stakingOnlyRate,
+                earnOverviews = mapOf(MockAccounts.userWalletId to createEarnOverviews(currency)),
+            )
+
+            // Act
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
+
+            // Assert
+            assertThat((result as EarnOpportunitiesUM.Content).rateOfRow(currency.id.value))
+                .isEqualTo("APY " + BigDecimal("0.06").format { percent() })
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN Earn owns the currency WHEN row clicked THEN Earn type carries the route only when active`(
+            model: ActiveRouteModel,
+        ) {
+            // Arrange — the winner always has a route: with nothing active it is the old staking screen, which must
+            // not open. An idle token keeps the rows on screen: with every token active they turn into suggestions
+            val status = createStatus(currency, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            val idle = createEarnCurrency(tokenId = "solana", currencyId = "coin-idle")
+            val idleStatus = createStatus(idle, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            var clickedType: ForYouEarnOpportunitiesType? = null
+            val converter = createConverter(
+                yieldStakingAvailability = mapOf(idle to stakingAvailable(apy = BigDecimal("0.05"))),
+                earnOverviews = mapOf(
+                    MockAccounts.userWalletId to createEarnOverviews(
+                        currency = currency,
+                        isActive = model.isActive,
+                        route = TestRoute,
+                    ),
+                ),
+                onTokenClick = { _, _, type -> clickedType = type },
+            )
+            val result = converter.convert(
+                createSelectedPortfolio(createPortfolioStatus(listOf(status, idleStatus))),
+            )
+
+            // Act
+            result.clickRow(currency.id.value)
+
+            // Assert
+            assertThat(clickedType).isEqualTo(
+                ForYouEarnOpportunitiesType.Earn(activeRoute = model.expectedRoute, rewardType = EarnRewardType.APY),
+            )
+        }
+
+        private fun provideTestModels() = listOf(
+            ActiveRouteModel(isActive = false, expectedRoute = null),
+            ActiveRouteModel(isActive = true, expectedRoute = TestRoute),
+        )
+
+        @Test
+        fun `GIVEN active Earn product and zero balance WHEN convert THEN token stays visible as active`() {
+            // Arrange — an Aave deposit leaves no free ETH, the position still earns
+            val status = createStatus(currency, createEarnStatusValue(fiatAmount = BigDecimal.ZERO))
+            val converter = createConverter(
+                earnOverviews = mapOf(MockAccounts.userWalletId to createEarnOverviews(currency, isActive = true)),
+            )
+
+            // Act
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
+
+            // Assert
+            assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
+                .isEqualTo(R.string.for_you_earn_opportunities_all_tokens_active)
+        }
+
+        @Test
+        fun `GIVEN headline without Earn products WHEN convert THEN the staking rate is kept`() {
+            // Arrange — no banner: Earn has no products for the currency (or the Earn toggle is off)
+            val status = createStatus(currency, createEarnStatusValue(fiatAmount = BigDecimal("100")))
+            val converter = createConverter(
+                yieldStakingAvailability = stakingOnlyRate,
+                earnOverviews = mapOf(
+                    MockAccounts.userWalletId to createEarnOverviews(currency, hasBanner = false),
+                ),
+            )
+
+            // Act
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
+
+            // Assert
+            assertThat((result as EarnOpportunitiesUM.Content).rateOfRow(currency.id.value))
+                .isEqualTo("APY " + BigDecimal("0.03").format { percent() })
+        }
+
+        private fun EarnOpportunitiesUM.clickRow(id: String) {
+            val row = items.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
+            row.onItemClick?.invoke()
+        }
+
+        private fun EarnOpportunitiesUM.Content.rateOfRow(id: String): String {
+            val row = items.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
+            val bottomEnd = row.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            return (bottomEnd.text as TextReference.StyledStr).value
+        }
+    }
+
+    private object TestRoute : Route
+
+    data class ActiveRouteModel(val isActive: Boolean, val expectedRoute: Route?)
+
     private fun createConverter(
         yieldSupplyAvailability: Map<String, BigDecimal> = emptyMap(),
         yieldStakingAvailability: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+        earnOverviews: Map<UserWalletId, EarnOverviews> = emptyMap(),
         topEarnTokens: EarnTopToken? = null,
         isAccountsModeEnabled: Boolean = false,
         onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
@@ -392,6 +513,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
         expandClick = {},
         yieldSupplyAvailability = yieldSupplyAvailability,
         yieldStakingAvailability = yieldStakingAvailability,
+        earnOverviews = earnOverviews,
         topEarnTokens = topEarnTokens,
         onTokenClick = onTokenClick,
         onAllEarnTokensClick = {},

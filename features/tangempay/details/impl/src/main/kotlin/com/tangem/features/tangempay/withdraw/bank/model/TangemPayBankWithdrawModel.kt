@@ -1,11 +1,11 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
@@ -18,6 +18,7 @@ import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponen
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.preview.completion.NewRecipientListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,12 +38,12 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
     private val speiAvailability: BankWithdrawSpeiAvailability,
-    analytics: AnalyticsEventHandler,
+    withdrawAnalyticsFactory: BankWithdrawAnalytics.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawComponent.Params>()
 
-    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
+    private val withdrawAnalytics = withdrawAnalyticsFactory.create(sourceAccount = params.sourceAccount)
 
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
@@ -50,6 +51,27 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     /** Every saved account the withdrawal can pay: the recipient forms suggest from it as a number is typed. */
     val savedAccounts: StateFlow<List<BankAccount>>
         field = MutableStateFlow(emptyList<BankAccount>())
+
+    val isSavedAccountsLoaded: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
+    private val savedNewRecipients = mutableSetOf<BankAccountDetails>()
+
+    private val quotedAmounts = mutableSetOf<BigDecimal>()
+
+    private var isRecipientFormReported = false
+
+    val newRecipientListener: NewRecipientListener = object : NewRecipientListener {
+        override fun onSaved(recipient: BankAccountDetails) {
+            val rail = recipient.rail ?: return
+            if (savedNewRecipients.add(recipient)) withdrawAnalytics.onRecipientSaved(rail = rail, draft = draft.value)
+        }
+
+        override fun onRejected(recipient: BankAccountDetails, errorCode: Int?) {
+            val rail = recipient.rail ?: return
+            withdrawAnalytics.onRecipientSaveFailed(rail = rail, errorCode = errorCode)
+        }
+    }
 
     init {
         loadSavedAccounts()
@@ -65,6 +87,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
      * values and picked names go too: the preview would otherwise show them next to the saved account's details.
      */
     fun onSavedRecipientSelected(account: BankAccount) {
+        withdrawAnalytics.onSavedRecipientPicked(rail = account.details.rail)
         draft.update { it.withSavedRecipient(account).copy(newRecipient = NewRecipientDraft.forEntry(it.entry)) }
     }
 
@@ -94,7 +117,6 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
                 source = result.source,
                 destination = result.destination,
                 networkFee = result.networkFee,
-                quote = null,
             )
         }
     }
@@ -111,8 +133,16 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         draft.update { it.copy(networkFee = networkFee) }
     }
 
-    fun onQuoteChanged(quote: BankOfframpQuote) {
-        draft.update { it.copy(quote = quote) }
+    fun onRecipientFormOpened() {
+        if (isRecipientFormReported || draft.value.destination == null) return
+        isRecipientFormReported = true
+        withdrawAnalytics.onRecipientFormOpened(draft.value)
+    }
+
+    fun onQuoteShown(quote: BankOfframpQuote) {
+        val destination = draft.value.destination ?: return
+        if (!quotedAmounts.add(quote.sourceAmount.stripTrailingZeros())) return
+        withdrawAnalytics.onQuoteShown(rail = destination.rail, amount = quote.sourceAmount)
     }
 
     fun onOrderSigned() {
@@ -143,12 +173,15 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
                     selectEntryRecipient(payable)
                 },
             )
+            isSavedAccountsLoaded.value = true
         }
     }
 
     private fun selectEntryRecipient(accounts: List<BankAccount>) {
         val entry = params.entry as? BankWithdrawEntry.Saved ?: return
-        accounts.firstOrNull { it.id == entry.bankAccountId }?.let(::onRecipientSelected)
+        val account = accounts.firstOrNull { it.id == entry.bankAccountId } ?: return
+        withdrawAnalytics.onSavedRecipientPicked(rail = account.details.rail)
+        onRecipientSelected(account)
     }
 
     private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft {
@@ -156,7 +189,6 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         if (allowed.isEmpty()) return this
         return copy(
             recipient = account,
-            quote = null,
             destination = destination?.let { current ->
                 allowed.firstOrNull { it.rail == account.details.rail }
                     ?: current.takeIf { it in allowed }

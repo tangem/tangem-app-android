@@ -106,6 +106,7 @@ internal class EarnOverviewsTest {
             bestProductId = EarnProductId("lending"),
             activeCount = 1,
             totalPosition = BigDecimal("1.5"),
+            productCount = 1,
         ),
     ) = EarnOverview(headline = headline, banner = banner)
 

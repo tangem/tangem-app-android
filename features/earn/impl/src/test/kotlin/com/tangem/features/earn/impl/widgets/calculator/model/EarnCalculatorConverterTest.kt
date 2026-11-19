@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -17,7 +18,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnCalculatorUM
 import com.tangem.features.earn.impl.widgets.calculator.ui.state.EarnProjectionBarUM
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
@@ -63,7 +63,22 @@ internal class EarnCalculatorConverterTest {
             // Assert
             assertThat(actual.total).isEqualTo(stringReference("$22,124.34"))
             assertThat(actual.earned).isEqualTo(stringReference("+$1,624.34"))
-            assertThat(actual.earnedLabel).isEqualTo(EarnCalculatorTexts.earnedIn)
+            assertThat(actual.earnedLabel).isEqualTo(resourceReference(R.string.earn_calculator_earned_in_label))
+        }
+
+        @Test
+        fun `GIVEN the design example WHEN convert THEN total and earned match the design`() {
+            // Arrange
+            val input = CalculatorInput.Default
+            val designProjection = DefaultEarnProjection(netRate = BigDecimal("0.012155"))
+            val result = designProjection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+
+            // Act
+            val actual = convert(input = input, result = result)
+
+            // Assert
+            assertThat(actual.total).isEqualTo(stringReference("$20,913.23"))
+            assertThat(actual.earned).isEqualTo(stringReference("+$413.23"))
         }
 
         @Test
@@ -93,9 +108,9 @@ internal class EarnCalculatorConverterTest {
             val actual = convert().horizon
 
             // Assert
-            assertThat(actual.selected).isEqualTo(EarnCalculatorTexts.horizon(EarnHorizon.Year3))
+            assertThat(actual.selected).isEqualTo(years(3))
             assertThat(actual.items.map { it.label })
-                .containsExactlyElementsIn(EarnHorizon.entries.map(EarnCalculatorTexts::horizon))
+                .containsExactly(months(6), years(1), years(3), years(5), years(10))
                 .inOrder()
             assertThat(actual.items.map { it.isSelected })
                 .containsExactlyElementsIn(EarnHorizon.entries.map { it == EarnHorizon.Year3 })
@@ -137,44 +152,119 @@ internal class EarnCalculatorConverterTest {
             AxisModel(
                 horizon = EarnHorizon.Months6,
                 expected = listOf(
-                    EarnCalculatorTexts.axisMonths(2),
-                    EarnCalculatorTexts.axisMonths(4),
-                    EarnCalculatorTexts.axisMonths(6),
+                    axisMonths(2),
+                    axisMonths(4),
+                    axisMonths(6),
                 ),
             ),
             AxisModel(
                 horizon = EarnHorizon.Year1,
                 expected = listOf(
-                    EarnCalculatorTexts.axisMonths(4),
-                    EarnCalculatorTexts.axisMonths(8),
-                    EarnCalculatorTexts.axisYears(1),
+                    axisMonths(4),
+                    axisMonths(8),
+                    axisYears(1),
                 ),
             ),
             AxisModel(
                 horizon = EarnHorizon.Year3,
                 expected = listOf(
-                    EarnCalculatorTexts.axisYears(1),
-                    EarnCalculatorTexts.axisYears(2),
-                    EarnCalculatorTexts.axisYears(3),
+                    axisYears(1),
+                    axisYears(2),
+                    axisYears(3),
                 ),
             ),
             AxisModel(
                 horizon = EarnHorizon.Year5,
                 expected = listOf(
-                    EarnCalculatorTexts.axisMonths(20),
-                    EarnCalculatorTexts.axisMonths(40),
-                    EarnCalculatorTexts.axisYears(5),
+                    axisMonths(20),
+                    axisMonths(40),
+                    axisYears(5),
                 ),
             ),
             AxisModel(
                 horizon = EarnHorizon.Year10,
                 expected = listOf(
-                    EarnCalculatorTexts.axisMonths(40),
-                    EarnCalculatorTexts.axisMonths(80),
-                    EarnCalculatorTexts.axisYears(10),
+                    axisMonths(40),
+                    axisMonths(80),
+                    axisYears(10),
                 ),
             ),
         )
+    }
+
+    @Nested
+    inner class BarTexts {
+
+        @Test
+        fun `GIVEN default input WHEN convert THEN the last bar shows the header total and earned`() {
+            // Act
+            val actual = convert().bars.last()
+
+            // Assert
+            val expected = EarnProjectionBarUM(
+                height = 1f,
+                balance = stringReference("$22,124.34"),
+                earned = stringReference("+$1,624.34"),
+            )
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN 120 points WHEN convert THEN the first bar shows month 5`() {
+            // Arrange
+            val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
+            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val month5 = result.points[4]
+
+            // Act
+            val actual = convert(input = input, result = result).bars.first()
+
+            // Assert
+            val usd = AppCurrency.Default
+            assertThat(actual.balance).isEqualTo(stringReference(month5.capital.format { fiat(usd.code, usd.symbol) }))
+            assertThat(actual.earned)
+                .isEqualTo(stringReference("+" + month5.income.format { fiat(usd.code, usd.symbol) }))
+        }
+
+        @Test
+        fun `GIVEN second currency WHEN convert THEN bar texts use its symbol`() {
+            // Arrange
+            val euro = AppCurrency.Default.copy(code = "EUR", symbol = "€")
+
+            // Act
+            val actual = convert(appCurrency = euro).bars.last()
+
+            // Assert
+            assertThat((actual.balance as TextReference.Str).value).contains("€")
+            assertThat((actual.earned as TextReference.Str).value).contains("€")
+        }
+    }
+
+    @Nested
+    inner class BarSelection {
+
+        @Test
+        fun `GIVEN any input WHEN convert THEN nothing is selected`() {
+            // Act
+            val actual = convert()
+
+            // Assert
+            assertThat(actual.selectedBar).isNull()
+        }
+
+        @Test
+        fun `GIVEN callback WHEN onBarSelected is invoked THEN the callback receives the index`() {
+            // Arrange
+            val selected = mutableListOf<Int?>()
+            val actual = convert(onBarSelected = { selected += it })
+
+            // Act
+            actual.onBarSelected(5)
+            actual.onBarSelected(null)
+
+            // Assert
+            assertThat(selected).containsExactly(5, null).inOrder()
+        }
     }
 
     @Nested
@@ -195,88 +285,68 @@ internal class EarnCalculatorConverterTest {
         }
 
         @Test
-        fun `GIVEN amounts above the visible minimum WHEN convert THEN layers follow initial total and top-up`() {
-            // Arrange
-            val input = CalculatorInput.Default.copy(
-                initialFiat = BigDecimal(5_000),
-                monthlyTopUpFiat = BigDecimal(5_000),
-                horizon = EarnHorizon.Year1,
-            )
-            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
-            val tallest = input.initialFiat + result.points.last().capital + input.monthlyTopUpFiat
-
-            // Act
-            val actual = convert(input = input, result = result).bars
-
-            // Assert
-            val expected = result.points.map { point ->
-                EarnProjectionBarUM(
-                    initial = input.initialFiat.share(of = tallest),
-                    total = point.capital.share(of = tallest),
-                    topUp = input.monthlyTopUpFiat.share(of = tallest),
-                )
-            }
-            assertThat(actual).hasSize(expected.size)
-            actual.zip(expected).forEach { (bar, expectedBar) ->
-                assertThat(bar.initial).isWithin(TOLERANCE).of(expectedBar.initial)
-                assertThat(bar.total).isWithin(TOLERANCE).of(expectedBar.total)
-                assertThat(bar.topUp).isWithin(TOLERANCE).of(expectedBar.topUp)
-            }
-        }
-
-        @Test
-        fun `GIVEN 120 points WHEN convert THEN bar k shows the total of month 5 times k`() {
+        fun `GIVEN 120 points WHEN convert THEN bar k is the income of month 5 times k as a share of the largest income`() {
             // Arrange
             val input = CalculatorInput.Default.copy(horizon = EarnHorizon.Year10)
-            val result = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val result = projectionOf("0.0553").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+            val largest = result.points.maxOf { it.income }
 
             // Act
             val actual = convert(input = input, result = result).bars
 
             // Assert
-            actual.forEachIndexed { index, bar ->
+            val checked = actual.withIndex().filter { (index, _) ->
+                result.points[5 * (index + 1) - 1].income.share(of = largest) > ABOVE_MINIMUM_SHARE
+            }
+            assertThat(checked.size).isAtLeast(12)
+            checked.forEach { (index, bar) ->
                 val point = result.points[5 * (index + 1) - 1]
-                assertThat(bar.total / actual.last().total)
-                    .isWithin(TOLERANCE)
-                    .of(point.capital.share(of = result.total))
+                assertThat(bar.height).isWithin(TOLERANCE).of(point.income.share(of = largest))
             }
         }
 
         @Test
-        fun `GIVEN a tiny monthly top-up WHEN convert THEN its layer stays visible`() {
+        fun `GIVEN the design example WHEN convert THEN bars never shrink and the last one is full height`() {
             // Arrange
-            val input = CalculatorInput.Default.copy(monthlyTopUpFiat = BigDecimal.ONE)
+            val input = CalculatorInput.Default
+            val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
 
             // Act
-            val actual = convert(input = input).bars
+            val actual = convert(input = input, result = result).bars.map { it.height }
 
             // Assert
-            assertThat(actual.map { it.topUp }.min()).isAtLeast(MIN_VISIBLE_SHARE)
+            assertThat(actual).isInOrder()
+            assertThat(actual.last()).isEqualTo(1f)
         }
 
         @Test
-        fun `GIVEN a visible minimum WHEN convert THEN the tallest bar is exactly one`() {
-            // Act
-            val actual = convert().bars
-
-            // Assert
-            assertThat(actual.maxOf { it.initial + it.total + it.topUp }).isWithin(TOLERANCE).of(1f)
-        }
-
-        @Test
-        fun `GIVEN zero monthly top-up WHEN convert THEN the top-up layer is empty`() {
+        fun `GIVEN a small earned amount WHEN convert THEN every bar stays visible`() {
             // Arrange
-            val input = CalculatorInput.Default.copy(monthlyTopUpFiat = BigDecimal.ZERO)
+            val input = CalculatorInput.Default
+            val result = projectionOf("0.012155").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
 
             // Act
-            val actual = convert(input = input).bars
+            val actual = convert(input = input, result = result).bars
 
             // Assert
-            assertThat(actual.map { it.topUp }.toSet()).containsExactly(0f)
+            assertThat(actual.map { it.height }.min()).isAtLeast(MIN_VISIBLE_SHARE)
         }
 
         @Test
-        fun `GIVEN zero inputs WHEN convert THEN all bar fractions are zero`() {
+        fun `GIVEN a zero rate WHEN convert THEN every bar is empty`() {
+            // Arrange
+            val input = CalculatorInput.Default
+            val result = projectionOf("0").project(input.initialFiat, input.monthlyTopUpFiat, input.horizon)
+
+            // Act
+            val actual = convert(input = input, result = result).bars
+
+            // Assert
+            assertThat(actual.map { it.height }.toSet()).containsExactly(0f)
+        }
+
+        @Test
+        fun `GIVEN zero inputs WHEN convert THEN every bar is empty`() {
             // Arrange
             val input = CalculatorInput.Default.copy(initialFiat = BigDecimal.ZERO, monthlyTopUpFiat = BigDecimal.ZERO)
 
@@ -285,7 +355,7 @@ internal class EarnCalculatorConverterTest {
 
             // Assert
             assertThat(actual.bars).hasSize(24)
-            assertThat(actual.bars.map { listOf(it.initial, it.total, it.topUp) }.flatten().toSet()).containsExactly(0f)
+            assertThat(actual.bars.map { it.height }.toSet()).containsExactly(0f)
             assertThat(actual.total).isEqualTo(stringReference("$0.00"))
         }
 
@@ -298,6 +368,8 @@ internal class EarnCalculatorConverterTest {
         )
 
         private fun BigDecimal.share(of: BigDecimal): Float = divide(of, MathContext.DECIMAL64).toFloat()
+
+        private fun projectionOf(netRate: String) = DefaultEarnProjection(netRate = BigDecimal(netRate))
     }
 
     @Nested
@@ -378,18 +450,18 @@ internal class EarnCalculatorConverterTest {
             val actual = convert()
 
             // Assert
-            assertThat(actual.initialBalance.label).isEqualTo(EarnCalculatorTexts.initialBalance)
+            assertThat(actual.initialBalance.label).isEqualTo(initialBalance)
             assertThat(actual.initialBalance.value).isEqualTo(stringReference("$2,500"))
             assertThat(actual.initialBalance.minusDescription)
-                .isEqualTo(EarnCalculatorTexts.decrease(EarnCalculatorTexts.initialBalance))
+                .isEqualTo(decrease(initialBalance))
             assertThat(actual.initialBalance.plusDescription)
-                .isEqualTo(EarnCalculatorTexts.increase(EarnCalculatorTexts.initialBalance))
-            assertThat(actual.monthlyTopUp.label).isEqualTo(EarnCalculatorTexts.monthlyTopUp)
+                .isEqualTo(increase(initialBalance))
+            assertThat(actual.monthlyTopUp.label).isEqualTo(monthlyTopUp)
             assertThat(actual.monthlyTopUp.value).isEqualTo(stringReference("$500"))
             assertThat(actual.monthlyTopUp.minusDescription)
-                .isEqualTo(EarnCalculatorTexts.decrease(EarnCalculatorTexts.monthlyTopUp))
+                .isEqualTo(decrease(monthlyTopUp))
             assertThat(actual.monthlyTopUp.plusDescription)
-                .isEqualTo(EarnCalculatorTexts.increase(EarnCalculatorTexts.monthlyTopUp))
+                .isEqualTo(increase(monthlyTopUp))
             assertThat(listOf(actual.initialBalance, actual.monthlyTopUp).flatMap { listOf(it.isMinusEnabled, it.isPlusEnabled) })
                 .containsExactly(true, true, true, true)
         }
@@ -449,6 +521,28 @@ internal class EarnCalculatorConverterTest {
         override fun toString(): String = "$fraction -> $expectedPercent"
     }
 
+    private val initialBalance = resourceReference(R.string.earn_calculator_initial_balance)
+
+    private val monthlyTopUp = resourceReference(R.string.earn_calculator_monthly_top_up)
+
+    private fun months(count: Int) =
+        pluralReference(R.plurals.earn_calculator_months, count = count, formatArgs = wrappedList(count))
+
+    private fun years(count: Int) =
+        pluralReference(R.plurals.earn_calculator_years, count = count, formatArgs = wrappedList(count))
+
+    private fun axisMonths(count: Int) =
+        resourceReference(R.string.earn_calculator_axis_months, wrappedList(count))
+
+    private fun axisYears(count: Int) =
+        resourceReference(R.string.earn_calculator_axis_years, wrappedList(count))
+
+    private fun decrease(label: TextReference) =
+        resourceReference(R.string.earn_calculator_decrease_accessibility, wrappedList(label))
+
+    private fun increase(label: TextReference) =
+        resourceReference(R.string.earn_calculator_increase_accessibility, wrappedList(label))
+
     @Suppress("LongParameterList")
     private fun convert(
         input: CalculatorInput = CalculatorInput.Default,
@@ -459,6 +553,7 @@ internal class EarnCalculatorConverterTest {
         onInitialStep: (Int) -> Unit = {},
         onTopUpStep: (Int) -> Unit = {},
         onHorizonSelect: (EarnHorizon) -> Unit = {},
+        onBarSelected: (Int?) -> Unit = {},
     ): EarnCalculatorUM = converter.convert(
         result = result,
         input = input,
@@ -468,10 +563,12 @@ internal class EarnCalculatorConverterTest {
         onInitialStep = onInitialStep,
         onTopUpStep = onTopUpStep,
         onHorizonSelect = onHorizonSelect,
+        onBarSelected = onBarSelected,
     )
 
     private companion object {
         const val TOLERANCE = 1e-5f
         const val MIN_VISIBLE_SHARE = 0.04f
+        const val ABOVE_MINIMUM_SHARE = 0.06f
     }
 }

@@ -24,6 +24,7 @@ import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
@@ -110,18 +111,16 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                     .mapLeft { it.toVaultFailure(userWallet) }
                     .bind()
 
-            // TODO find out the right way to get vault balance
-            val balances = walletManagersFacade.getTokenBalances(
-                userWalletId = userWallet.walletId,
-                network = network,
-                address = vaultAddress,
-            )
+            val amount = walletManager.getCollectiblesVaultTokenBalance(mint = token.contractAddress).toEither()
+                .onLeft { error ->
+                    TangemLogger.e("GachaVaultRepository: vault balance read failed: ${error.customMessage}")
+                }
+                .mapLeft { it.toVaultFailure(userWallet) }
+                .bind()
 
             CollectiblesVaultBalance(
                 usdcToken = token,
-                // The provider lists only the accounts holding something, so an absent entry is an empty one
-                usdcAmount = balances.firstOrNull { it.contractAddress == token.contractAddress }?.amount
-                    ?: BigDecimal.ZERO,
+                usdcAmount = amount,
                 vaultAddress = vaultAddress,
                 ataAddress = ata,
             )
@@ -224,6 +223,28 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 }
                 .mapLeft { error -> error.toVaultFailure(userWallet) }
                 .bind()
+        }
+    }
+
+    override suspend fun withdraw(
+        userWallet: UserWallet,
+        token: CryptoCurrency.Token,
+        recipientWallet: String,
+        amount: BigDecimal,
+    ): Either<CollectiblesAccountError, String> = withContext(dispatchers.io) {
+        either {
+            val baseUnits = Either.catch {
+                amount.movePointRight(token.decimals).longValueExact()
+            }
+                .mapLeft { GachaVaultError.Unexpected(it).asFailure() }
+                .bind()
+
+            transactionSender(userWallet).withdraw(
+                userWallet = userWallet,
+                mint = token.contractAddress,
+                recipient = recipientWallet,
+                amount = baseUnits,
+            ).bind()
         }
     }
 

@@ -11,7 +11,7 @@ android {
 dependencies {
 
     // region Core modules
-    implementation(projects.core.utils)
+    api(projects.core.decompose)
     // endregion
 
     // region Kotlin
@@ -19,11 +19,6 @@ dependencies {
     // endregion
 
     // region DI
-    implementation(deps.hilt.android)
-    // endregion
-
-    // region AndroidX
-    implementation(deps.androidx.core)
-    implementation(deps.androidx.core.ktx)
+    implementation(deps.hilt.core)
     // endregion
 }

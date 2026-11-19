@@ -34,6 +34,7 @@ internal class UpdateStakingNotificationTransformerRegionTest {
             stakingEntryInfo = null,
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
+            isEarnBannerShown = false,
             clickIntents = clickIntents,
         )
 
@@ -48,6 +49,29 @@ internal class UpdateStakingNotificationTransformerRegionTest {
     }
 
     @Test
+    fun `GIVEN region unavailable AND staked AND Earn banner shown WHEN transform THEN region block stays`() {
+        // Arrange
+        val status = buildStatusWithStake(stakedAmount = BigDecimal("5"))
+        val transformer = UpdateStakingNotificationTransformer(
+            cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.RegionUnavailable,
+            stakingEntryInfo = null,
+            appCurrency = AppCurrency.Default,
+            isBalanceHidden = false,
+            isEarnBannerShown = true,
+            clickIntents = clickIntents,
+        )
+
+        // Act
+        val result = transformer.transform(initialState()).earnBlockState
+
+        // Assert
+        val content = result as EarnBlockUM.Content
+        assertThat(content.onClick).isNotNull()
+        assertThat(content.subtitleUM).isInstanceOf(EarnBlockUM.SubtitleUM.Text::class.java)
+    }
+
+    @Test
     fun `GIVEN region unavailable AND not staked WHEN transform THEN no block`() {
         // Arrange
         val status = buildStatus()
@@ -57,6 +81,7 @@ internal class UpdateStakingNotificationTransformerRegionTest {
             stakingEntryInfo = null,
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
+            isEarnBannerShown = false,
             clickIntents = clickIntents,
         )
 

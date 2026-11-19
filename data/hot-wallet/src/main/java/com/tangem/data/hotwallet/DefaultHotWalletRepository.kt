@@ -105,4 +105,29 @@ internal class DefaultHotWalletRepository(
     override fun markFirstTopUpDetectedThisSession(userWalletId: UserWalletId) {
         firstTopUpDetectedThisSession[userWalletId.stringValue] = Unit
     }
+
+    override fun isBalanceThresholdReached(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
+        .getObjectMap<Boolean>(storePreferencesKeys.upgradeBalanceThresholdReachedKey)
+        .map { it[userWalletId.stringValue] == true }
+
+    override suspend fun setBalanceThresholdReached(userWalletId: UserWalletId, isReached: Boolean) {
+        appPreferencesStore.editData { mutablePreferences ->
+            val reachedStates = mutablePreferences.getObjectMap<Boolean>(
+                storePreferencesKeys.upgradeBalanceThresholdReachedKey,
+            )
+            val updatedStates = if (isReached) {
+                reachedStates.plus(userWalletId.stringValue to true)
+            } else {
+                reachedStates.minus(userWalletId.stringValue)
+            }
+
+            // Wallet deletion resets the flag even when it was never set; an unchanged store is not written
+            if (updatedStates != reachedStates) {
+                mutablePreferences.setObjectMap(
+                    key = storePreferencesKeys.upgradeBalanceThresholdReachedKey,
+                    value = updatedStates,
+                )
+            }
+        }
+    }
 }

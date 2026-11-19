@@ -88,7 +88,11 @@ internal class EarnFeedTabModel @Inject constructor(
     )
 
     private val earnListConfigProvider = Provider {
-        createEarnTokensListConfig(filter = appliedFilter.value, earnNetworks = earnNetworks.value)
+        createEarnTokensListConfig(
+            filter = appliedFilter.value,
+            earnNetworks = earnNetworks.value,
+            isVaultsIncluded = earnFeatureToggles.isEarnEnabled,
+        )
     }
 
     val bottomSheetNavigation: SlotNavigation<EarnBottomSheetRoute> = SlotNavigation()
@@ -223,7 +227,7 @@ internal class EarnFeedTabModel @Inject constructor(
 
     private fun subscribeToMostlyUsed() {
         modelScope.launch(dispatchers.default) {
-            getTopEarnTokensUseCase().collect { earnResult ->
+            getTopEarnTokensUseCase(isVaultsIncluded = earnFeatureToggles.isEarnEnabled).collect { earnResult ->
                 stateController.update(
                     UpdateOpportunitiesStateTransformer(
                         earnResult = earnResult,

@@ -38,9 +38,16 @@ internal object BankOfframpErrorConverter : Converter<BankOfframpErrorConverter.
             TangemPayApiError.BankOfframpConflict -> BankOfframpError.Conflict
             TangemPayApiError.BankOfframpAmountOutOfLimits -> BankOfframpError.AmountOutOfLimits
             TangemPayApiError.BankOfframpRejected -> BankOfframpError.Rejected
-            else -> unknown(value)
+            else -> badRequestOrUnknown(value)
         }
     }
+
+    private fun badRequestOrUnknown(value: Input): BankOfframpError =
+        if (value.isMxnEnabled && value.error.errorCode == BankOfframpError.BadRequest.errorCode) {
+            BankOfframpError.BadRequest
+        } else {
+            unknown(value)
+        }
 
     private fun unknown(value: Input) = BankOfframpError.Unknown(
         cause = IllegalStateException("Bank off-ramp ${value.operation} failed: ${value.error}"),

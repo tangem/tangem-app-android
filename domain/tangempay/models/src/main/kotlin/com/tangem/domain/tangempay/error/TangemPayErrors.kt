@@ -57,6 +57,8 @@ sealed class TangemPayApiError(
     data object CustomerIdUnavailable : TangemPayApiError(104004007)
     data object OrderNotFound : TangemPayApiError(104004008)
 
+    data object CardCloseLastCard : TangemPayApiError(104140120)
+
     data object CardActivationInvalidCardData : TangemPayApiError(104140127)
     data object CardActivationCardNotPhysical : TangemPayApiError(104140128)
     data object CardActivationCardAlreadyActive : TangemPayApiError(104140129)
@@ -104,6 +106,7 @@ sealed class TangemPayApiError(
                 CardIssueInsufficientBalance.errorCode -> CardIssueInsufficientBalance
                 CardIssueInvalidShippingAddress.errorCode -> CardIssueInvalidShippingAddress
                 CardIssueInvalidEmbossName.errorCode -> CardIssueInvalidEmbossName
+                CardCloseLastCard.errorCode -> CardCloseLastCard
                 CardActivationInvalidCardData.errorCode -> CardActivationInvalidCardData
                 CardActivationCardNotPhysical.errorCode -> CardActivationCardNotPhysical
                 CardActivationCardAlreadyActive.errorCode -> CardActivationCardAlreadyActive

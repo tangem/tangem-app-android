@@ -17,10 +17,11 @@ import com.tangem.utils.transformer.Transformer
  * A failed or empty featured request drops the rail rather than the screen — the full list is the
  * filter, the rail is only a shortcut into it.
  *
- * A search drops the rail too: the list is then a result set, and an unfiltered shortcut strip is not
- * one of the results.
+ * A search narrows the rail to the featured categories whose name matches; with no match the rail is
+ * dropped. The featured request takes no search text, so the rail is narrowed here, not by the backend.
  *
- * @property isSearching a query is applied to the listing on screen — not merely typed into the field
+ * @property query the query applied to the listing on screen — not merely typed into the field; `null`
+ *   when there is no search
  */
 @Suppress("LongParameterList")
 internal class MarketCategorySelectorTransformer(
@@ -28,7 +29,7 @@ internal class MarketCategorySelectorTransformer(
     private val categories: List<MarketCategory>,
     private val selection: MarketCategorySelection,
     private val appCurrency: AppCurrency,
-    private val isSearching: Boolean,
+    private val query: String?,
     private val isLoadingMore: Boolean,
     private val onLoadMore: () -> Unit,
     private val onSelectionChange: (MarketCategorySelection) -> Unit,
@@ -38,7 +39,8 @@ internal class MarketCategorySelectorTransformer(
         return prevState.copy(
             content = MarketCategorySelectorUM.ContentUM.Content(
                 featured = featured
-                    .takeIf { !isSearching && it.isNotEmpty() }
+                    .filter { category -> query == null || category.name.contains(query, ignoreCase = true) }
+                    .takeIf { it.isNotEmpty() }
                     ?.let { FeaturedCategoryConverter(selection, onSelectionChange).convert(it) },
                 categories = MarketCategoryListUM(
                     title = resourceReference(R.string.market_categories),

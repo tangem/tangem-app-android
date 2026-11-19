@@ -1,7 +1,10 @@
 package com.tangem.features.yield.supply.impl.main.model
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -12,8 +15,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
@@ -62,8 +63,9 @@ internal class YieldSupplyModel @Inject constructor(
     private val router: Router,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher,
     private val yieldModuleStatusFetcher: YieldModuleStatusFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
@@ -109,6 +111,14 @@ internal class YieldSupplyModel @Inject constructor(
             val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
             if (isAvailable) {
                 loadUserWalletData()
+                fetchOriginAccount()
+            }
+        }
+    }
+
+    private suspend fun fetchOriginAccount() {
+        when (params.account) {
+            AccountKind.Portfolio -> {
                 singleNetworkStatusFetcher(
                     params = SingleNetworkStatusFetcher.Params(
                         userWalletId = params.userWalletId,
@@ -117,6 +127,10 @@ internal class YieldSupplyModel @Inject constructor(
                 )
                 fetchYieldModuleStatus()
             }
+            AccountKind.Money -> nonPortfolioCurrenciesFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = cryptoCurrency.network,
+            )
         }
     }
 
@@ -146,9 +160,11 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         combine(
-            flow = singleAccountStatusListSupplier(params.userWalletId).map {
-                it.getCryptoCurrencyStatus(currency = cryptoCurrency)
-            },
+            flow = currencyStatusResolver.observe(
+                userWalletId = params.userWalletId,
+                currency = cryptoCurrency,
+                account = params.account,
+            ),
             flow2 = yieldSupplyEnterStatusFlowUseCase(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = cryptoCurrency,
@@ -231,6 +247,7 @@ internal class YieldSupplyModel @Inject constructor(
             userWalletId = params.userWalletId,
             cryptoCurrency = cryptoCurrencyStatus.currency,
             apy = apy,
+            account = params.account,
         )
     }
 
@@ -340,8 +357,11 @@ internal class YieldSupplyModel @Inject constructor(
     private fun computeAndApplyShowInfoIcon(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.default) {
             val isShowInfoIcon = if (cryptoCurrencyStatus.hasNotSuppliedAmount()) {
-                val minAmount = yieldSupplyMinAmountUseCase(userWalletId = userWallet.walletId, cryptoCurrencyStatus)
-                    .getOrNull()
+                val minAmount = yieldSupplyMinAmountUseCase(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    isHeldOutsidePortfolio = params.account.isHeldOutsidePortfolio,
+                ).getOrNull()
                 if (minAmount != null) {
                     val dustAmount = yieldSupplyGetDustMinAmountUseCase(
                         minAmountTokenCurrency = minAmount,

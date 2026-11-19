@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProvider
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,10 @@ import java.math.BigDecimal
 internal interface LendingProvider {
 
     val info: EarnProvider
+
+    val websiteUrl: String
+
+    val legal: EarnLegal
 
     /** Chart periods: the depth of the provider's rate history defines them */
     val apyPeriods: List<EarnPeriod>
@@ -37,8 +42,6 @@ internal interface LendingProvider {
 
     /** Re-reads only the user's position, cheap enough to run with every balance update */
     suspend fun refreshPosition(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, Unit>
-
-    suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal>
 
     /** An empty history means "no data"; a backend or network failure goes to `Left` */
     suspend fun apyHistory(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory>
@@ -67,6 +70,8 @@ internal data class LendingMarket(
     val maxWithdraw: BigDecimal?,
     val providerState: LendingProviderState?,
     val source: StatusSource,
+    val rateSource: StatusSource = StatusSource.ACTUAL,
+    val isPositionLoading: Boolean = false,
 )
 
 internal data class LendingPosition(val cryptoAmount: BigDecimal)
@@ -75,6 +80,9 @@ internal interface LendingProviderState {
 
     /** Fingerprint of what the transactions depend on: when it changes, a prepared plan is stale */
     val planKey: String
+
+    /** The provider contract is outdated: the next transaction also upgrades it */
+    val isUpgradeRequired: Boolean
 }
 
 internal sealed interface LendingDepositGate {
@@ -85,7 +93,7 @@ internal sealed interface LendingDepositGate {
 
     data object Open : LendingDepositGate
 
-    /** The provider takes no new money; withdrawals stay available */
+    /** The provider's contracts need a newer app: no transaction to them can be built, a withdrawal included */
     data object Unavailable : LendingDepositGate
 
     val isDepositBlocked: Boolean

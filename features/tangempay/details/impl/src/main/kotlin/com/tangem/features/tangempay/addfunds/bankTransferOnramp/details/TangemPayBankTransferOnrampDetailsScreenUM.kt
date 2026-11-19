@@ -10,8 +10,8 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class TangemPayBankTransferOnrampDetailsScreenUM(
     val tabs: ImmutableList<TangemTabItemUM>,
     val requisites: ImmutableList<RequisiteUM>,
-    val referenceWarning: TextReference?,
     val fees: TangemPayOnrampFeesUM,
+    val isSwiftWarningShown: Boolean,
     val minimumDeposit: TextReference?,
     val dailyDepositLimit: DailyDepositLimitUM?,
     val onShareClick: () -> Unit,

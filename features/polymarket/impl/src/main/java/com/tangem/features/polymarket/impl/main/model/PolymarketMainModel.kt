@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -35,6 +36,8 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
@@ -44,7 +47,6 @@ import com.tangem.features.polymarket.impl.common.feed.model.converter.Polymarke
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFastTradingBannerUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
@@ -54,8 +56,6 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -123,11 +123,6 @@ internal class PolymarketMainModel @Inject constructor(
     )
 
     private val refreshJobHolder = JobHolder()
-
-    private val fastTradingBannerRechecks = MutableSharedFlow<Unit>(
-        replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    ).apply { tryEmit(Unit) }
 
     val blocksRefresh = PolymarketMainBlocksRefresh()
 
@@ -229,12 +224,21 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val balancePollJobHolder = JobHolder()
 
-    private val fastTradingBannerJobHolder = JobHolder()
+    private val fastTradingBanner = PolymarketFastTradingBannerController(
+        scope = modelScope,
+        dispatchers = dispatchers,
+        userWalletId = params.userWalletId,
+        source = fastTradingBannerSource,
+        router = router,
+        onUnknownSignersReview = ::onFastTradingSettingsClick,
+    )
 
     private var isWalletLinked = false
 
     init {
         feedController.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
+        fastTradingBanner.banner.onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner) } }
+            .launchIn(modelScope)
         modelScope.launch { regionAccess.refresh() }
         loadCategoriesOnceLinked()
     }
@@ -281,11 +285,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onResume() {
-        fastTradingBannerRechecks.tryEmit(Unit)
-        if (isWalletLinked) {
-            observeFastTradingBanner()
-            modelScope.launch { fastTradingBannerSource.refresh(params.userWalletId) }
-        }
+        if (isWalletLinked) fastTradingBanner.resume()
         feedController.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -298,7 +298,7 @@ internal class PolymarketMainModel @Inject constructor(
         modelScope.launch {
             if (walletLinkGate.ensureLinked(params.userWalletId)) {
                 isWalletLinked = true
-                observeFastTradingBanner()
+                fastTradingBanner.subscribe()
                 loadCategories()
             } else {
                 TangemLogger.i("Main: wallet ${params.userWalletId} not linked; closing the feature")
@@ -307,30 +307,8 @@ internal class PolymarketMainModel @Inject constructor(
         }
     }
 
-    private fun observeFastTradingBanner() {
-        fastTradingBannerSource.observe(userWalletId = params.userWalletId, rechecks = fastTradingBannerRechecks)
-            .onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner?.toUM()) } }
-            .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-            .saveIn(fastTradingBannerJobHolder)
-    }
-
     private suspend fun refreshFastTradingBannerIfLinked() {
-        if (isWalletLinked) fastTradingBannerSource.refresh(params.userWalletId)
-    }
-
-    private fun PolymarketFastTradingBanner.toUM(): PolymarketFastTradingBannerUM = when (this) {
-        PolymarketFastTradingBanner.UnknownSigners -> PolymarketFastTradingBannerUM.UnknownSigners(
-            onActionClick = ::onFastTradingSettingsClick,
-        )
-        PolymarketFastTradingBanner.Activate -> PolymarketFastTradingBannerUM.Activate(
-            onActionClick = ::onFastTradingSettingsClick,
-            onCloseClick = ::dismissFastTradingActivation,
-        )
-    }
-
-    private fun dismissFastTradingActivation() {
-        modelScope.launch { fastTradingBannerSource.dismissActivation(userWalletId = params.userWalletId) }
+        if (isWalletLinked) fastTradingBanner.refresh()
     }
 
     private fun returnToGate() {
@@ -341,7 +319,7 @@ internal class PolymarketMainModel @Inject constructor(
     fun onPause() {
         feedController.pause()
         balancePollJobHolder.cancel()
-        fastTradingBannerJobHolder.cancel()
+        fastTradingBanner.pause()
     }
 
     private fun loadCategories() {
@@ -428,10 +406,11 @@ internal class PolymarketMainModel @Inject constructor(
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
 
-    private fun onEventClick(eventId: String) {
+    private fun onEventClick(event: PolymarketEvent) {
         router.push(
             PolymarketRoute.EventDetails(
-                eventId = eventId,
+                eventId = event.id,
+                eventType = event.eventType,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedFeedCategory()?.label,
             ),
@@ -441,7 +420,6 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onRefresh() {
         if (uiState.value.pullToRefreshConfig.isRefreshing) return
         setRefreshing(isRefreshing = true)
-        fastTradingBannerRechecks.tryEmit(Unit)
 
         modelScope.launch {
             runSuspendCatching {

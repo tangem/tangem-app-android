@@ -12,6 +12,7 @@ import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.tangempay.TangemPayProduct
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
@@ -28,6 +29,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
@@ -91,6 +93,9 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             uiMessageSender = uiMessageSender,
             analytics = analytics,
             urlOpener = urlOpener,
+            getUserWalletUseCase = mockk {
+                every { this@mockk(USER_WALLET_ID) } returns mockk<UserWallet.Cold>().right()
+            },
         ).destroyAfterTest()
     }
 
@@ -214,11 +219,6 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
                 expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN,
             ),
             AnalyticsModel(
-                mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding,
-                expectedProducts = null,
-                expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING,
-            ),
-            AnalyticsModel(
                 mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
                     availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
                 ),
@@ -321,20 +321,6 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
         }
 
         @Test
-        fun `GIVEN onboarding mode AND submit succeeds WHEN onSelectClick THEN replaces to account details`() {
-            // Arrange
-            coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
-            val model = createModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding)
-
-            // Act
-            selectContent(model).onSelectClick()
-
-            // Assert
-            coVerify(exactly = 1) { submitTariffTransitionUseCase(USER_WALLET_ID, UPGRADE_TRANSITION) }
-            verify(exactly = 1) { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) }
-        }
-
-        @Test
         fun `GIVEN create onboarding order mode WHEN onSelectClick THEN starts onboarding with selected plan`() {
             // Arrange
             coEvery { startTangemPayOnboardingUseCase(any(), any(), any()) } returns Unit.right()
@@ -353,7 +339,7 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             }
             coVerify(exactly = 0) { submitTariffTransitionUseCase(any(), any()) }
             verify(exactly = 0) { uiMessageSender.send(any()) }
-            verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess) }
+            verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, TANGEM_PAY_SUCCESS_ROUTE) }
         }
 
         @Test
@@ -371,7 +357,7 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             assertThat(selectContent(model).isProcessing).isFalse()
             verify(exactly = 1) { uiMessageSender.send(any()) }
             verify(exactly = 0) { router.pop() }
-            verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess) }
+            verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, TANGEM_PAY_SUCCESS_ROUTE) }
         }
 
         @Test
@@ -623,8 +609,9 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
             // Arrange
             val pending = CompletableDeferred<arrow.core.Either<TangemPayApiError, Unit>>()
             coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } coAnswers { pending.await() }
-            val model = createModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding)
+            val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
             selectContent(model).onSelectClick()
+            confirmContent(model).onConfirmClick()
 
             // Act
             model.state.value.onCloseClick()
@@ -657,6 +644,9 @@ internal class TangemPaySelectPlanModelTest : TangemPayModelTestBase() {
     }
 
     private companion object {
+        val TANGEM_PAY_SUCCESS_ROUTE = AppRoute.TangemPayOnboardingSuccess(
+            product = AppRoute.TangemPayOnboardingSuccess.Product.TANGEM_PAY,
+        )
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
 
         val AVAILABLE_PRODUCTS = setOf(TangemPayProduct.BANKING_ACCOUNT, TangemPayProduct.PAYMENT_ACCOUNT)

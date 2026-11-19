@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -14,6 +16,7 @@ import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.preview.completion.NewRecipientListener
 import com.tangem.features.tangempay.withdraw.bank.preview.model.TangemPayBankWithdrawPreviewModel
 import com.tangem.features.tangempay.withdraw.bank.preview.ui.TangemPayBankWithdrawPreviewScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +28,11 @@ internal class TangemPayBankWithdrawPreviewComponent(
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayBankWithdrawPreviewModel = getOrCreateModel(params = params)
+
+    init {
+        lifecycle.doOnResume { model.onScreenVisibilityChanged(isVisible = true) }
+        lifecycle.doOnPause { model.onScreenVisibilityChanged(isVisible = false) }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -39,7 +47,8 @@ internal class TangemPayBankWithdrawPreviewComponent(
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
         val onDestinationChanged: (OfframpDestination) -> Unit,
         val onNetworkFeeChanged: (BigDecimal) -> Unit,
-        val onQuoteChanged: (BankOfframpQuote) -> Unit,
+        val newRecipientListener: NewRecipientListener,
+        val onQuoteShown: (BankOfframpQuote) -> Unit,
         val onCompleted: () -> Unit,
         val onTransferOutcomeUnknown: () -> Unit,
         val onCloseFlow: () -> Unit,

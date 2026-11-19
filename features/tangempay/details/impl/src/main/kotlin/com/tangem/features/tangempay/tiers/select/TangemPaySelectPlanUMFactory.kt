@@ -22,6 +22,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal class TangemPaySelectPlanUMFactory(
     private val mode: TangemPaySelectPlanComponent.Mode,
     private val clicks: TangemPaySelectPlanClickIntents,
+    private val isColdWallet: Boolean,
 ) {
     fun createLoading(data: TangemPaySelectPlanData): TangemPaySelectPlanUM {
         return build(
@@ -67,7 +68,7 @@ internal class TangemPaySelectPlanUMFactory(
     private fun buildSelectContent(data: TangemPaySelectPlanData) = TangemPaySelectPlanUM.Content.Select(
         isProcessing = data.isProcessing,
         selectButtonIconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
-            .takeIf { isMoneyAccountActivationRequired() },
+            .takeIf { isColdWallet && isMoneyAccountActivationRequired() },
         onComparePlansClick = clicks::onComparePlansClick,
         onSelectClick = clicks::onSelectClick,
     )

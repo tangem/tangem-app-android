@@ -5,6 +5,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import java.math.BigDecimal
@@ -42,6 +43,18 @@ sealed class SwapTransactionState {
             val txExternalId: String?,
             val averageDuration: Int?,
         )
+    }
+
+    /** A swap out of the collectibles vault: the vault sends [amount] to the CEX deposit address of [swapData]. */
+    data class CollectiblesWithdrawalData(
+        val amount: SwapAmount,
+        val swapData: SwapDataModel,
+        val fromAmount: String,
+        val toAmount: String,
+    ) : SwapTransactionState() {
+
+        val cexTransaction: ExpressTransactionModel.CEX
+            get() = swapData.transaction as ExpressTransactionModel.CEX
     }
 
     data object DemoMode : SwapTransactionState()

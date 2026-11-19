@@ -8,6 +8,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -26,6 +27,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -118,6 +120,31 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyStartEarningModelTe
         verify(exactly = 1) { txHistoryUpdater.scheduleUpdates(userWalletId, any(), any()) }
         verify { callback.onTransactionSent() }
     }
+
+    @Test
+    fun `GIVEN currency held outside the portfolio WHEN loaded and onClick THEN fees and pending use its holder`() =
+        runTest {
+            // Arrange
+            every { currencyStatusResolver.observe(userWalletId, token, any()) } returns
+                flowOf(cryptoCurrencyStatus.some())
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
+                cryptoCurrencyStatus.right()
+            val model = createModel(account = AccountKind.Money, statusResolver = currencyStatusResolver)
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify { getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+            coVerify { minAmountUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+            coVerify { getMaxFeeUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+            coVerify { getCurrentFeeUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+            coVerify(exactly = 1) {
+                pendingTracker.addPending(userWalletId, token, any(), any(), isHeldOutsidePortfolio = true)
+            }
+        }
 
     @Test
     fun `GIVEN upgrade-wrapped enter in batch WHEN onClick THEN deposit context carries the enter hash`() = runTest {

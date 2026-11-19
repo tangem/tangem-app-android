@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.userWalletList.di
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -9,6 +10,7 @@ import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
+import com.tangem.core.local.moshi.PersistedModelGuard
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
@@ -23,6 +25,7 @@ import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -34,9 +37,11 @@ import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysStoreDecor
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
+import com.tangem.tap.domain.userWalletList.utils.HotWalletIdMoshiAdapter
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.wallet.BuildConfig
 import dagger.Lazy
 import dagger.Module
 import dagger.Provides
@@ -135,12 +140,17 @@ internal object UserWalletsListRepositoryModule {
     // hex-encodes ByteArrays and lowercases enum names. This Moshi persists wallet info to secure storage in
     // the reflection format (byte arrays as int lists, exact enum names), so switching would make every
     // existing user's stored wallet list unreadable after an update.
-    private fun buildMoshi(): Moshi {
+    @VisibleForTesting
+    internal fun buildMoshi(
+        persistedModelGuard: PersistedModelGuard = PersistedModelGuard(isStrict = BuildConfig.LOG_ENABLED),
+    ): Moshi {
         return Moshi.Builder()
             .addScanResponseAdapters()
             .add(TangemSdkAdapter.DateAdapter())
             .add(TangemSdkAdapter.DerivationNodeAdapter())
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
+            .add(HotWalletId::class.java, HotWalletIdMoshiAdapter.nullSafe())
+            .add(persistedModelGuard)
             .addLast(KotlinJsonAdapterFactory())
             .build()
     }

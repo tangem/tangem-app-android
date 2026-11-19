@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.widgets.calculator.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -14,10 +15,10 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.DefaultEarnProjection
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjection
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
@@ -33,8 +34,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -169,7 +172,7 @@ internal class EarnCalculatorModelTest {
             val actual = requireNotNull(model.uiState.value)
             assertThat(actual.total).isEqualTo(stringReference("$79,881.12"))
             assertThat(actual.horizon.items.single { it.isSelected }.label)
-                .isEqualTo(EarnCalculatorTexts.horizon(EarnHorizon.Year10))
+                .isEqualTo(pluralReference(R.plurals.earn_calculator_years, count = 10, formatArgs = wrappedList(10)))
             model.onDestroy()
         }
 
@@ -186,6 +189,129 @@ internal class EarnCalculatorModelTest {
         // Assert
         val actual = requireNotNull(model.uiState.value)
         assertThat(actual.monthlyTopUp.value).isEqualTo(stringReference("$400"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 3Y bars WHEN onBarSelected 5 THEN selectedBar is 5`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isEqualTo(5)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar selected WHEN onBarSelected null THEN selectedBar is null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = null)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 24 bars WHEN onBarSelected 24 THEN selectedBar stays null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+
+        // Act
+        model.onBarSelected(index = 24)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 23 selected on 3Y WHEN horizon becomes Months6 THEN selectedBar is null and onBarSelected 23 is ignored`() =
+        runTest {
+            // Arrange
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+            advanceUntilIdle()
+            model.onBarSelected(index = 23)
+            advanceUntilIdle()
+
+            // Act
+            model.onHorizonSelect(EarnHorizon.Months6)
+            advanceUntilIdle()
+            val afterHorizonChange = requireNotNull(model.uiState.value)
+            model.onBarSelected(index = 23)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(afterHorizonChange.bars).hasSize(6)
+            assertThat(afterHorizonChange.selectedBar).isNull()
+            assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN bar selected WHEN onInitialStep 1 THEN selectedBar is null`() = runTest {
+        // Arrange
+        val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        model.onInitialStep(direction = 1)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 5 selected WHEN projection re-emits an equal projection THEN selectedBar stays 5`() = runTest {
+        // Arrange
+        val projection = MutableStateFlow<EarnProjection?>(projectionOf("0.0468"))
+        val model = createModel(projection = projection)
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        projection.value = projectionOf("0.0468")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isEqualTo(5)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bar 5 selected WHEN projection emits another rate THEN selectedBar is null`() = runTest {
+        // Arrange
+        val projection = MutableStateFlow<EarnProjection?>(projectionOf("0.0468"))
+        val model = createModel(projection = projection)
+        advanceUntilIdle()
+        model.onBarSelected(index = 5)
+        advanceUntilIdle()
+
+        // Act
+        projection.value = projectionOf("0.032")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requireNotNull(model.uiState.value).selectedBar).isNull()
         model.onDestroy()
     }
 
@@ -252,6 +378,122 @@ internal class EarnCalculatorModelTest {
 
         // Assert
         assertThat(actual).isNull()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Callback {
+
+        private val callback: EarnCalculatorComponent.ModelCallback = mockk(relaxed = true)
+
+        @BeforeEach
+        fun resetCallback() {
+            clearMocks(callback)
+        }
+
+        @Test
+        fun `GIVEN default horizon WHEN selecting another horizon THEN onHorizonChange with it once`() = runTest {
+            // Arrange
+            val other = EarnHorizon.entries.first { it != CalculatorInput.Default.horizon }
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")), callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.onHorizonSelect(other)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { callback.onHorizonChange(other) }
+            verify(exactly = 0) { callback.onInputChange(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN default horizon WHEN selecting the same horizon THEN no callback`() = runTest {
+            // Arrange
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")), callback = callback)
+            advanceUntilIdle()
+
+            // Act
+            model.onHorizonSelect(CalculatorInput.Default.horizon)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { callback.onHorizonChange(any()) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN default input WHEN stepping up THEN onInputChange with the stepped input`(model: StepModel) =
+            runTest {
+                // Arrange
+                val earnModel = createModel(projection = MutableStateFlow(projectionOf("0.0468")), callback = callback)
+                advanceUntilIdle()
+
+                // Act
+                model.step(earnModel)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { callback.onInputChange(model.expected) }
+                verify(exactly = 0) { callback.onHorizonChange(any()) }
+                earnModel.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN initial at its lower bound WHEN step down THEN no callback`() = runTest {
+            // Arrange
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")), callback = callback)
+            advanceUntilIdle()
+            while (requireNotNull(model.uiState.value).initialBalance.isMinusEnabled) {
+                model.onInitialStep(direction = -1)
+                advanceUntilIdle()
+            }
+            clearMocks(callback)
+
+            // Act
+            model.onInitialStep(direction = -1)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { callback.onInputChange(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no callback in params WHEN input changed THEN uiState is updated`() = runTest {
+            // Arrange
+            val model = createModel(projection = MutableStateFlow(projectionOf("0.0468")))
+            advanceUntilIdle()
+
+            // Act
+            model.onInitialStep(direction = 1)
+            advanceUntilIdle()
+
+            // Assert
+            val actual = requireNotNull(model.uiState.value)
+            assertThat(actual.initialBalance.value).isEqualTo(stringReference("$3,500"))
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            StepModel(
+                step = { it.onInitialStep(direction = 1) },
+                expected = EarnCalculatorComponent.Input.InitialBalance,
+            ),
+            StepModel(
+                step = { it.onTopUpStep(direction = 1) },
+                expected = EarnCalculatorComponent.Input.MonthlyTopUp,
+            ),
+        )
+    }
+
+    internal data class StepModel(
+        val step: (EarnCalculatorModel) -> Unit,
+        val expected: EarnCalculatorComponent.Input,
+    ) {
+        override fun toString() = expected.name
     }
 
     private fun incentiveOf(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)

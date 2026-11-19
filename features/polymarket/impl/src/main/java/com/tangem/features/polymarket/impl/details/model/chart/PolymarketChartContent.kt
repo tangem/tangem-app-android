@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.details.model.chart
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketMarketLifetime
@@ -23,6 +24,7 @@ data class PolymarketChartContent internal constructor(
     val isComplementaryPair: Boolean,
     private val candidateKeys: Set<PolymarketChartOutcome.Key>,
     private val moneylineConditions: Set<String>?,
+    val localizedTitles: Map<String, TextReference> = emptyMap(),
 ) {
     val isClosed: Boolean get() = lifetime.isClosed
 
@@ -65,7 +67,12 @@ data class PolymarketChartContent internal constructor(
                 ?.map { byKey.getValue(it.key) }
                 ?: candidates.sortedByDescending { it.outcome.probability }.take(MAX_SERIES)
             val selectedMarkets = selected.map { it.market }.distinctBy { it.id }
-            val lifetime = marketLifetime(event, selectedMarkets)
+            val lifetime = marketLifetime(
+                status = event.status,
+                startDate = event.startDate,
+                endDate = event.endDate,
+                markets = selectedMarkets,
+            )
             val available = PolymarketPriceInterval.available(lifetime, Instant.ofEpochMilli(nowMillis))
             val outcomes = mapOutcomes(
                 selected = selected,
@@ -85,18 +92,23 @@ data class PolymarketChartContent internal constructor(
             )
         }
 
-        private fun marketLifetime(event: PolymarketEvent, markets: List<PolymarketMarket>): PolymarketMarketLifetime {
-            val isClosed = event.status == PolymarketStatus.CLOSED ||
+        internal fun marketLifetime(
+            status: PolymarketStatus,
+            startDate: String?,
+            endDate: String?,
+            markets: List<PolymarketMarket>,
+        ): PolymarketMarketLifetime {
+            val isClosed = status == PolymarketStatus.CLOSED ||
                 markets.isNotEmpty() && markets.all { it.status == PolymarketStatus.CLOSED }
             val start = markets.mapNotNull { parseDate(it.startDateIso) ?: parseDate(it.startDate) }.minOrNull()
-                ?: parseDate(event.startDate)
+                ?: parseDate(startDate)
             return PolymarketMarketLifetime(
                 start = start,
                 status = if (isClosed) {
                     PolymarketMarketLifetime.Status.Closed(
                         closedAt = null,
                         scheduledEnd = markets.mapNotNull { parseDate(it.endDateIso) ?: parseDate(it.endDate) }
-                            .maxOrNull() ?: parseDate(event.endDate),
+                            .maxOrNull() ?: parseDate(endDate),
                     )
                 } else {
                     PolymarketMarketLifetime.Status.Open

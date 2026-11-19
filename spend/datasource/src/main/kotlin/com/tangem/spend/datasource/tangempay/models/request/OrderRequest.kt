@@ -3,8 +3,6 @@ package com.tangem.spend.datasource.tangempay.models.request
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-private const val ACCOUNT_SPECIFICATION_NAME = "SP_000006"
-
 @Serializable
 data class OrderRequest(
     @SerialName("data") val data: Data,
@@ -90,7 +88,15 @@ data class OrderRequest(
     @SerialName("ACCOUNT_ISSUE_VIRTUAL_RAIN")
     data class VirtualAccountIssue(
         @SerialName("deposit_address") val depositAddress: String,
-        @SerialName("specification_name") val specificationName: String = ACCOUNT_SPECIFICATION_NAME,
+        @SerialName("specification_name") val specificationName: String = "SP_000006",
+    ) : Data
+
+    @Serializable
+    @SerialName("ACCOUNT_ISSUE_BANKING_RAIN")
+    data class BankingAccountIssue(
+        @SerialName("deposit_address") val depositAddress: String,
+        @SerialName("signature") val signature: String,
+        @SerialName("specification_name") val specificationName: String = "SP_000012",
     ) : Data
 
     @Serializable

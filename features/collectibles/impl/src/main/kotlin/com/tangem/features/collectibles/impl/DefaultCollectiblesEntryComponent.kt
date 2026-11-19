@@ -16,6 +16,8 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
+import com.tangem.features.collectibles.impl.nftdetails.CollectiblesNftDetailsComponent
+import com.tangem.features.collectibles.impl.inventory.CollectiblesInventoryComponent
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
@@ -35,6 +37,8 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
     private val machineDetailsComponentFactory: CollectiblesMachineDetailsComponent.Factory,
     private val packOpeningComponentFactory: CollectiblesPackOpeningComponent.Factory,
+    private val inventoryComponentFactory: CollectiblesInventoryComponent.Factory,
+    private val nftDetailsComponentFactory: CollectiblesNftDetailsComponent.Factory,
 ) : CollectiblesEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<CollectiblesRoute>()
@@ -92,7 +96,10 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             )
             is CollectiblesRoute.MachineDetails -> machineDetailsComponentFactory.create(
                 context = childContext,
-                params = CollectiblesMachineDetailsComponent.Params(externalId = route.externalId),
+                params = CollectiblesMachineDetailsComponent.Params(
+                    userWalletId = params.userWalletId,
+                    externalId = route.externalId,
+                ),
             )
             is CollectiblesRoute.ConfirmOrder -> packOpeningComponentFactory.create(
                 context = childContext,
@@ -106,6 +113,15 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             CollectiblesRoute.PackOpenFailed -> CollectiblesPackOpenFailedComponent(
                 context = childContext,
                 params = CollectiblesPackOpenFailedComponent.Params(userWalletId = params.userWalletId),
+            )
+            CollectiblesRoute.Inventory -> inventoryComponentFactory.create(context = childContext)
+            is CollectiblesRoute.NftDetails -> nftDetailsComponentFactory.create(
+                context = childContext,
+                params = CollectiblesNftDetailsComponent.Params(
+                    userWalletId = params.userWalletId,
+                    id = route.id,
+                    ownership = route.ownership,
+                ),
             )
         }
     }

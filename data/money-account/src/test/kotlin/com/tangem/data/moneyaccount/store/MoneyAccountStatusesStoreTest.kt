@@ -171,7 +171,7 @@ internal class MoneyAccountStatusesStoreTest {
     ) = MoneyAccountStatusesStore(
         runtimeStore = RuntimeSharedStore<WalletIdWithMoneyAccountStatus>(),
         persistenceDataStore = persistenceDataStore,
-        converter = MoneyAccountStatusValueDMConverter(currencyFactory),
+        converter = MoneyAccountStatusValueDMConverter(moneyAccountCurrencyFactory = currencyFactory),
         userWalletsListRepository = mockk<UserWalletsListRepository> {
             every { this@mockk.userWallets } returns userWallets
         },
@@ -193,6 +193,7 @@ internal class MoneyAccountStatusesStoreTest {
             customerId = CUSTOMER_ID,
             productInstanceId = PRODUCT_INSTANCE_ID,
             error = null,
+            isKycAdditionalInfoRequired = false,
         ),
     )
 

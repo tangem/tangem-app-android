@@ -8,6 +8,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.product.api.product.EarnApyHistory
+import com.tangem.features.earn.product.api.product.EarnLegal
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.features.earn.product.api.product.EarnProvider
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,11 @@ internal class FakeLendingProvider(
     val refreshPositionCalls = mutableListOf<Pair<UserWalletId, LendingAsset>>()
 
     override val info = EarnProvider(title = stringReference("Fake"), icon = ImageReference.Res(0))
+    override val websiteUrl: String = "https://fake.example"
+    override val legal = EarnLegal(
+        termsOfUseUrl = "https://fake.example/terms",
+        privacyPolicyUrl = "https://fake.example/privacy",
+    )
     override val apyPeriods: List<EarnPeriod> = emptyList()
     override val performanceFee: BigDecimal = BigDecimal.ZERO
 
@@ -43,9 +49,6 @@ internal class FakeLendingProvider(
         refreshPositionCalls += userWalletId to asset
         return refreshPositionResult
     }
-
-    override suspend fun minDeposit(userWalletId: UserWalletId, asset: LendingAsset): Either<Throwable, BigDecimal> =
-        BigDecimal.ZERO.right()
 
     override suspend fun apyHistory(asset: LendingAsset, period: EarnPeriod): Either<Throwable, EarnApyHistory> =
         EarnApyHistory(points = emptyList(), average = null).right()

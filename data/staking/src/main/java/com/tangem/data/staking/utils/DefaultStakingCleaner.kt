@@ -7,7 +7,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -32,7 +31,7 @@ internal class DefaultStakingCleaner @Inject constructor(
     private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val p2pEthPoolBalancesStore: P2PEthPoolBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : CryptoCurrencyDataCleaner, StakingCleaner {
+) : CryptoCurrencyDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
         if (userWalletIds.isEmpty()) return
@@ -69,7 +68,7 @@ internal class DefaultStakingCleaner @Inject constructor(
         invoke(userWalletId = userWalletId, stakingIds = stakingIds)
     }
 
-    override suspend fun invoke(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+    suspend operator fun invoke(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
         if (stakingIds.isEmpty()) {
             TangemLogger.d("No stakingIds to clear for wallet: $userWalletId")
             return

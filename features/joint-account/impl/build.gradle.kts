@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
+    implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
@@ -59,6 +60,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.decompose)

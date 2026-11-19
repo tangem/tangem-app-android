@@ -20,9 +20,9 @@ internal class TronFeeExtensionsTest {
 
     @ParameterizedTest
     @MethodSource("provideCoverageModels")
-    fun isCoveredByOwnTronEnergy(model: CoverageModel) {
+    fun spendsOwnTronEnergy(model: CoverageModel) {
         // Act
-        val actual = TransactionFee.Single(normal = model.fee).isCoveredByOwnTronEnergy()
+        val actual = TransactionFee.Single(normal = model.fee).spendsOwnTronEnergy()
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
@@ -33,7 +33,8 @@ internal class TronFeeExtensionsTest {
     private fun provideCoverageModels() = listOf(
         CoverageModel(fee = tronFee(remainingEnergy = 70_000, feeEnergy = 65_000), expected = true),
         CoverageModel(fee = tronFee(remainingEnergy = 65_000, feeEnergy = 65_000), expected = true),
-        CoverageModel(fee = tronFee(remainingEnergy = 10_000, feeEnergy = 65_000), expected = false),
+        CoverageModel(fee = tronFee(remainingEnergy = 10_000, feeEnergy = 65_000), expected = true),
+        CoverageModel(fee = tronFee(remainingEnergy = 1, feeEnergy = 65_000), expected = true),
         CoverageModel(fee = tronFee(remainingEnergy = 0, feeEnergy = 65_000), expected = false),
         CoverageModel(fee = tronFee(remainingEnergy = 0, feeEnergy = 0), expected = false),
         CoverageModel(fee = tronFee(remainingEnergy = 70_000, feeEnergy = 0), expected = false),
@@ -101,12 +102,12 @@ internal class TronFeeExtensionsTest {
 
     @ParameterizedTest
     @MethodSource("provideOwnEnergyModels")
-    fun isPaidByOwnTronEnergy(model: OwnEnergyModel) {
+    fun isLoweredByOwnTronEnergy(model: OwnEnergyModel) {
         // Arrange
         val fee = TransactionFee.Single(normal = tronFee(remainingEnergy = 70_000, feeEnergy = 65_000))
 
         // Act
-        val actual = fee.isPaidByOwnTronEnergy(status(balance = model.nativeBalance, rate = model.nativeRate))
+        val actual = fee.isLoweredByOwnTronEnergy(status(balance = model.nativeBalance, rate = model.nativeRate))
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)

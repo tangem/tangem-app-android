@@ -307,9 +307,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         state.update { it.copy(status = PaginationStatus.NextBatchLoading) }
 
-        val res = runSuspendCatching {
-            batchFetcher.fetchNext(action.requestParams, lastResult)
-        }.getOrElse { BatchFetchResult.Error(it) }
+        val res = fetchNextNonEmpty(action.requestParams, lastResult)
 
         currentCoroutineContext().ensureActive()
         lastRequestResult.value = res
@@ -343,6 +341,35 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             }
         }
     }
+
+    /**
+     * Goes on past pages that came back empty but not last — a fetcher drops repeats or rows it cannot map.
+     * Such a page adds no rows, and list UIs only ask for more once the row count changes, so stopping on it
+     * would leave the rest of the list unreachable.
+     */
+    private suspend fun fetchNextNonEmpty(
+        requestParams: TRequestParams?,
+        lastResult: BatchFetchResult<TData>,
+    ): BatchFetchResult<TData> {
+        var res = fetchNextOrError(requestParams, lastResult)
+        var skippedPages = 0
+        while (res.isEmptyNonFinal() && skippedPages < MAX_SKIPPED_EMPTY_PAGES) {
+            currentCoroutineContext().ensureActive()
+            res = fetchNextOrError(requestParams = null, lastResult = res)
+            skippedPages++
+        }
+        return res
+    }
+
+    private fun BatchFetchResult<TData>.isEmptyNonFinal(): Boolean =
+        this is BatchFetchResult.Success && isEmpty && !isLast
+
+    private suspend fun fetchNextOrError(
+        requestParams: TRequestParams?,
+        lastResult: BatchFetchResult<TData>,
+    ): BatchFetchResult<TData> = runSuspendCatching {
+        batchFetcher.fetchNext(requestParams, lastResult)
+    }.getOrElse { BatchFetchResult.Error(it) }
 
     private suspend fun updateBatchesTask(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
         if (updateFetcher == null) return
@@ -506,5 +533,9 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         block: suspend CoroutineScope.() -> Unit,
     ): Job {
         return launch(context = fetchDispatcher + SupervisorJob(), start = start, block = block)
+    }
+
+    private companion object {
+        const val MAX_SKIPPED_EMPTY_PAGES = 5
     }
 }

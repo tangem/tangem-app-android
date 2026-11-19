@@ -8,7 +8,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
@@ -21,8 +21,13 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import java.util.concurrent.TimeUnit
@@ -38,7 +43,6 @@ internal class LockUserWalletsTimer @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase,
     private val passwordRequester: HotWalletPasswordRequester,
-    private val appRouter: AppRouter,
     appScope: AppCoroutineScope,
     dispatchers: CoroutineDispatcherProvider,
 ) : DefaultLifecycleObserver {
@@ -51,6 +55,8 @@ internal class LockUserWalletsTimer @Inject constructor(
     private val delayJobHolder = JobHolder()
 
     private var attachedLifecycle: Lifecycle? = null
+
+    private val isLockScreenRequested = MutableStateFlow(false)
 
     /**
 
@@ -93,6 +99,20 @@ internal class LockUserWalletsTimer @Inject constructor(
     override fun onDestroy(owner: LifecycleOwner) {
         owner.lifecycle.removeObserver(this)
         if (attachedLifecycle === owner.lifecycle) attachedLifecycle = null
+    }
+
+    /**
+     * Resets [router] to the lock screen on every lock. A lock that happens while no root observes waits for one.
+     */
+    fun observe(scope: CoroutineScope, router: Router) {
+        isLockScreenRequested
+            .filter { it }
+            .onEach {
+                if (isLockScreenRequested.compareAndSet(expect = true, update = false)) {
+                    router.replaceAll(AppRoute.Welcome())
+                }
+            }
+            .launchIn(scope)
     }
 
     fun restart() {
@@ -148,7 +168,7 @@ internal class LockUserWalletsTimer @Inject constructor(
     private suspend fun resetToLockScreen() {
         passwordRequester.dismiss()
         clearAllHotWalletContextualUnlockUseCase.invoke()
-        appRouter.replaceAll(AppRoute.Welcome())
+        isLockScreenRequested.value = true
     }
 
     private companion object {

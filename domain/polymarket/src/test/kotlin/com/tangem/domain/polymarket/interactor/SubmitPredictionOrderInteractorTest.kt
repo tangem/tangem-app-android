@@ -30,12 +30,12 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SubmitPredictionOrderInteractorTest {
@@ -92,23 +92,7 @@ internal class SubmitPredictionOrderInteractorTest {
     }
 
     @Test
-    fun `GIVEN the router chooses the owner key WHEN invoke THEN signs and places on the owner route`() = runTest {
-        // Arrange
-        coEvery { router.route(ADDRESSES) } returns PredictionOrderSigningRoute.Owner
-
-        // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
-
-        // Assert
-        assertThat(actual).isEqualTo(
-            PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
-        )
-        coVerify(exactly = 0) { signOrder(sessionRequest) }
-    }
-
-    @Test
-    fun `GIVEN the router chooses the session key WHEN invoke THEN signs and places on the session route`() =
-        runTest {
+    fun `GIVEN the router chooses the session key WHEN invoke THEN signs and places on the session route`() = runTest {
             // Arrange
             coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
             val steps = mutableListOf<PredictionOrderSubmitStep>()
@@ -116,7 +100,7 @@ internal class SubmitPredictionOrderInteractorTest {
             // Act
             val actual = interactor(
                 request = request,
-                preference = PredictionOrderSigningPreference.AUTOMATIC,
+                preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY,
                 onStep = steps::add,
             )
 
@@ -129,102 +113,53 @@ internal class SubmitPredictionOrderInteractorTest {
         }
 
     @Test
-    fun `GIVEN the exchange refuses the session key WHEN invoke THEN signs the order with the owner key`() =
-        runTest {
-            // Arrange
-            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-            coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-                UNAUTHORIZED.left()
-            val steps = mutableListOf<PredictionOrderSubmitStep>()
-
-            // Act
-            val actual = interactor(
-                request = request,
-                preference = PredictionOrderSigningPreference.AUTOMATIC,
-                onStep = steps::add,
-            )
-
-            // Assert
-            assertThat(actual).isEqualTo(
-                PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
-            )
-            assertThat(steps).containsExactly(
-                PredictionOrderSubmitStep.SIGNING,
-                PredictionOrderSubmitStep.POSTING,
-                PredictionOrderSubmitStep.SIGNING,
-                PredictionOrderSubmitStep.POSTING,
-            ).inOrder()
-            coVerifyOrder {
-                placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE)
-                router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = UNAUTHORIZED)
-                signOrder(ownerRequest)
-                placeOrder(ADDRESSES, ownerOrder, PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner)
-            }
-            coVerifyOrder {
-                router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = UNAUTHORIZED)
-                stateService.refresh(ADDRESSES.userWalletId)
-            }
-            verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
-        }
-
-    @Test
-    fun `GIVEN the session order could not be sent WHEN invoke THEN signs the order with the owner key`() = runTest {
+    fun `GIVEN the router chooses the owner key WHEN invoke THEN nothing is signed`() = runTest {
         // Arrange
-        val notSent = PredictionPlaceOrderError.NotSent(detail = "headers")
-        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-        coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-            notSent.left()
+        coEvery { router.route(ADDRESSES) } returns PredictionOrderSigningRoute.Owner
 
         // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
 
         // Assert
-        assertThat(actual).isEqualTo(
-            PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
+        assertThat(actual).isEqualTo(PredictionSubmitOrderError.SessionKeyUnavailable.left())
+        coVerify(exactly = 0) { signOrder(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRefusals")
+    fun `GIVEN the exchange refuses the session key WHEN invoke THEN reports it and the owner key never signs`(
+        model: PlacementModel,
+    ) = runTest {
+        // Arrange
+        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
+        coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
+            model.error.left()
+        val steps = mutableListOf<PredictionOrderSubmitStep>()
+
+        // Act
+        val actual = interactor(
+            request = request,
+            preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY,
+            onStep = steps::add,
         )
-        coVerify(exactly = 1) {
-            router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = notSent)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionSubmitOrderError.SessionKeyUnavailable.left())
+        assertThat(steps).containsExactly(PredictionOrderSubmitStep.SIGNING, PredictionOrderSubmitStep.POSTING)
+            .inOrder()
+        coVerify(exactly = 0) { signOrder(ownerRequest) }
+        coVerifyOrder {
+            router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = model.error)
+            stateService.refresh(ADDRESSES.userWalletId)
         }
         verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
     }
 
-    @Test
-    fun `GIVEN the exchange refuses the session signature WHEN invoke THEN signs the order with the owner key`() =
-        runTest {
-            // Arrange
-            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-            coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-                SESSION_KEY_REFUSED.left()
-
-            // Act
-            val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
-
-            // Assert
-            assertThat(actual).isEqualTo(
-                PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
-            )
-            coVerify(exactly = 1) {
-                router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = SESSION_KEY_REFUSED)
-            }
-            verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
-        }
-
-    @Test
-    fun `GIVEN the owner key fails after a refusal WHEN invoke THEN returns the owner placement error`() = runTest {
-        // Arrange
-        val rejected = PredictionPlaceOrderError.Rejected(detail = "not enough balance")
-        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-        coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-            UNAUTHORIZED.left()
-        coEvery { placeOrder(ADDRESSES, ownerOrder, PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner) } returns
-            rejected.left()
-
-        // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
-
-        // Assert
-        assertThat(actual).isEqualTo(PredictionSubmitOrderError.NotPlaced(error = rejected).left())
-    }
+    private fun provideRefusals() = listOf(
+        PlacementModel(error = UNAUTHORIZED),
+        PlacementModel(error = PredictionPlaceOrderError.NotSent(detail = "headers")),
+        PlacementModel(error = SESSION_KEY_REFUSED),
+    )
 
     @ParameterizedTest
     @ProvideTestModels
@@ -237,7 +172,7 @@ internal class SubmitPredictionOrderInteractorTest {
             model.error.left()
 
         // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
 
         // Assert
         assertThat(actual).isEqualTo(PredictionSubmitOrderError.NotPlaced(error = model.error).left())
@@ -252,51 +187,27 @@ internal class SubmitPredictionOrderInteractorTest {
     )
 
     @Test
-    fun `GIVEN the session key cannot sign WHEN invoke THEN signs with the owner key and refreshes the state`() =
-        runTest {
-            // Arrange
-            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-            val failure = PredictionOrderFailure.Signing(
-                error = PolymarketSigningError.SessionKey(error = PolymarketSessionKeyError.KeyMissing),
-            )
-            coEvery { signOrder(sessionRequest) } returns failure.left()
+    fun `GIVEN the session key cannot sign WHEN invoke THEN reports it and the owner key never signs`() = runTest {
+        // Arrange
+        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
+        val failure = PredictionOrderFailure.Signing(
+            error = PolymarketSigningError.SessionKey(error = PolymarketSessionKeyError.KeyMissing),
+        )
+        coEvery { signOrder(sessionRequest) } returns failure.left()
 
-            // Act
-            val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+        // Act
+        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
 
-            // Assert
-            assertThat(actual).isEqualTo(
-                PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
-            )
-            coVerify(exactly = 0) { placeOrder(any(), sessionOrder, any(), any()) }
-            coVerifyOrder {
-                router.reportSigningFailed(addresses = ADDRESSES, identity = SESSION_IDENTITY, failure = failure)
-                stateService.refresh(ADDRESSES.userWalletId)
-                signOrder(ownerRequest)
-            }
-            coVerify(exactly = 0) { router.reportRefused(any(), any(), any()) }
+        // Assert
+        assertThat(actual).isEqualTo(PredictionSubmitOrderError.SessionKeyUnavailable.left())
+        coVerify(exactly = 0) { signOrder(ownerRequest) }
+        coVerify(exactly = 0) { placeOrder(any(), any(), any(), any()) }
+        coVerifyOrder {
+            router.reportSigningFailed(addresses = ADDRESSES, identity = SESSION_IDENTITY, failure = failure)
+            stateService.refresh(ADDRESSES.userWalletId)
         }
-
-    @Test
-    fun `GIVEN the owner signing is cancelled after a signing failure WHEN invoke THEN the state is still refreshed`() =
-        runTest {
-            // Arrange
-            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-            val failure = PredictionOrderFailure.Signing(
-                error = PolymarketSigningError.SessionKey(error = PolymarketSessionKeyError.KeyMissing),
-            )
-            coEvery { signOrder(sessionRequest) } returns failure.left()
-            coEvery { signOrder(ownerRequest) } throws CancellationException("left the screen")
-
-            // Act
-            val actual = runCatching {
-                interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
-            }.exceptionOrNull()
-
-            // Assert
-            assertThat(actual).isInstanceOf(CancellationException::class.java)
-            verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
-        }
+        coVerify(exactly = 0) { router.reportRefused(any(), any(), any()) }
+    }
 
     @Test
     fun `GIVEN the session key signing is cancelled WHEN invoke THEN returns it without the owner key`() = runTest {
@@ -306,7 +217,7 @@ internal class SubmitPredictionOrderInteractorTest {
         coEvery { signOrder(sessionRequest) } returns failure.left()
 
         // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
 
         // Assert
         assertThat(actual).isEqualTo(PredictionSubmitOrderError.NotSigned(failure = failure).left())
@@ -324,78 +235,12 @@ internal class SubmitPredictionOrderInteractorTest {
             coEvery { signOrder(sessionRequest) } returns failure.left()
 
             // Act
-            val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+            val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
 
             // Assert
             assertThat(actual).isEqualTo(PredictionSubmitOrderError.NotSigned(failure = failure).left())
             coVerify(exactly = 0) { signOrder(ownerRequest) }
         }
-
-    @Test
-    fun `GIVEN session key only and the router chooses the owner key WHEN invoke THEN nothing is signed`() = runTest {
-        // Arrange
-        coEvery { router.route(ADDRESSES) } returns PredictionOrderSigningRoute.Owner
-
-        // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
-
-        // Assert
-        assertThat(actual).isEqualTo(PredictionSubmitOrderError.SessionKeyUnavailable.left())
-        coVerify(exactly = 0) { signOrder(any()) }
-    }
-
-    @Test
-    fun `GIVEN session key only and the router chooses the session key WHEN invoke THEN places on the session route`() =
-        runTest {
-            // Arrange
-            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-
-            // Act
-            val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
-
-            // Assert
-            assertThat(actual).isEqualTo(PredictionSubmittedOrder(result = RESULT, route = SESSION_ROUTE).right())
-        }
-
-    @Test
-    fun `GIVEN session key only WHEN the exchange refuses the session key THEN the owner key never signs`() = runTest {
-        // Arrange
-        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-        coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-            UNAUTHORIZED.left()
-
-        // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
-
-        // Assert
-        assertThat(actual).isEqualTo(PredictionSubmitOrderError.SessionKeyUnavailable.left())
-        coVerify(exactly = 0) { signOrder(ownerRequest) }
-        coVerifyOrder {
-            router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = UNAUTHORIZED)
-            stateService.refresh(ADDRESSES.userWalletId)
-        }
-    }
-
-    @Test
-    fun `GIVEN session key only WHEN the session key cannot sign THEN the owner key never signs`() = runTest {
-        // Arrange
-        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-        val failure = PredictionOrderFailure.Signing(
-            error = PolymarketSigningError.SessionKey(error = PolymarketSessionKeyError.KeyMissing),
-        )
-        coEvery { signOrder(sessionRequest) } returns failure.left()
-
-        // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.SESSION_KEY_ONLY)
-
-        // Assert
-        assertThat(actual).isEqualTo(PredictionSubmitOrderError.SessionKeyUnavailable.left())
-        coVerify(exactly = 0) { signOrder(ownerRequest) }
-        coVerifyOrder {
-            router.reportSigningFailed(addresses = ADDRESSES, identity = SESSION_IDENTITY, failure = failure)
-            stateService.refresh(ADDRESSES.userWalletId)
-        }
-    }
 
     data class PlacementModel(val error: PredictionPlaceOrderError)
 

@@ -2,7 +2,12 @@ package com.tangem.features.earn.staking.impl
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.staking.model.StakingAvailability
@@ -16,9 +21,13 @@ import com.tangem.features.earn.product.api.product.EarnLimits
 import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
+import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.staking.impl.fixtures.coin
 import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
 import com.tangem.test.core.ProvideTestModels
@@ -28,11 +37,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import com.tangem.core.ui.R as CoreUiR
 
 internal class PooledStakingMapperStateTest {
 
     private val mapper = PooledStakingMapper()
     private val ethereum = coin(Blockchain.Ethereum)
+
+    private val startEarningLabel = resourceReference(R.string.eth_yield_start_earning)
+    private val manageLabel = resourceReference(R.string.eth_yield_manage)
 
     @Test
     fun `GIVEN several vaults WHEN state THEN rate and fee come from the vault with the highest apy`() {
@@ -66,42 +79,61 @@ internal class PooledStakingMapperStateTest {
         // Assert
         val expected = EarnProductState.Ready(
             rate = EarnProductRate(BigDecimal("0.03"), EarnRateType.APY),
-            description = stringReference(
-                "Earn variable yield on ETH by staking with P2P, a professional validator that helps secure " +
-                    "Ethereum. Withdrawals take up to 5 days, and a small risk of loss applies if the validator is " +
-                    "penalised by the network.",
-            ),
+            description = resourceReference(R.string.earn_yield_picker_pooled_staking_description),
             projection = null,
             benefits = listOf(
-                textBlock(
-                    title = "Yield from Ethereum itself.",
-                    description = "You earn from securing the network, not from lending.",
+                EarnTextBlock(
+                    title = resourceReference(R.string.earn_product_details_staking_benefit_title),
+                    description = resourceReference(R.string.earn_product_details_staking_benefit_subtitle),
+                    icon = TangemIconUM.Icon(CoreUiR.drawable.ic_staking_24),
                 ),
             ),
-            howItWorks = null,
             details = listOf(
-                row("Risk", "Low"),
-                row("Validator", "P2P"),
+                EarnRisk.Low.detailsRow(),
                 row(
-                    label = "Withdrawals",
-                    value = "Up to 5 days",
-                    info = textBlock(
-                        title = "Withdrawals",
-                        description = "Withdrawals take up to 5 days, because Ethereum releases staked ETH through " +
-                            "an exit queue.",
+                    label = resourceReference(R.string.staking_validator),
+                    value = stringReference("P2P"),
+                    kind = EarnRowKind.Protocol,
+                ),
+                row(
+                    label = resourceReference(R.string.earn_product_details_withdrawals),
+                    value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
+                    kind = EarnRowKind.Withdrawals,
+                    info = EarnRowInfo.Text(
+                        title = resourceReference(R.string.earn_product_details_withdrawals),
+                        text = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
                     ),
                 ),
                 feeRow(percent = "10"),
             ),
             limits = EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null),
             apyPeriods = emptyList(),
-            primary = EarnActionItem(PooledStakingAction(stringReference("Start earning"))),
+            primary = EarnActionItem(PooledStakingAction(startEarningLabel)),
             secondary = emptyList(),
             freshness = null,
             position = EarnPositionState.None,
         )
         assertThat(actual.copy(projection = null)).isEqualTo(expected)
         assertThat(actual.projection).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN pooled staking ready WHEN mapping details THEN rows carry Risk, Protocol, Withdrawals and PerformanceFee kinds`() {
+        // Arrange
+        val availability = StakingAvailability.Available(option())
+
+        // Act
+        val actual = mapper.state(status(), availability) as EarnProductState.Ready
+
+        // Assert
+        assertThat(actual.details.map { it.kind })
+            .containsExactly(
+                EarnRowKind.Risk,
+                EarnRowKind.Protocol,
+                EarnRowKind.Withdrawals,
+                EarnRowKind.PerformanceFee,
+            )
+            .inOrder()
     }
 
     @Test
@@ -215,9 +247,7 @@ internal class PooledStakingMapperStateTest {
 
             // Assert
             assertThat(actual.position).isEqualTo(model.expectedPosition)
-            assertThat(actual.primary).isEqualTo(
-                EarnActionItem(PooledStakingAction(stringReference(model.expectedLabel))),
-            )
+            assertThat(actual.primary).isEqualTo(EarnActionItem(PooledStakingAction(model.expectedLabel)))
         }
 
         @Test
@@ -249,17 +279,23 @@ internal class PooledStakingMapperStateTest {
                 ),
             )
             return listOf(
-                PositionModel("P2P staking balance", staked, isBalanceFailed = false, known, "Manage"),
-                PositionModel("P2P staking balance, refresh failed", staked, isBalanceFailed = true, known, "Manage"),
-                PositionModel("Failed balance", null, isBalanceFailed = true, EarnPositionState.Unknown, "Manage"),
+                PositionModel("P2P staking balance", staked, isBalanceFailed = false, known, manageLabel),
+                PositionModel("P2P staking balance, refresh failed", staked, isBalanceFailed = true, known, manageLabel),
+                PositionModel("Failed balance", null, isBalanceFailed = true, EarnPositionState.Unknown, manageLabel),
                 PositionModel(
                     name = "Empty balance",
                     contribution = StakingBalance.Empty(stakingId, StatusSource.ACTUAL),
                     isBalanceFailed = false,
                     expectedPosition = EarnPositionState.None,
-                    expectedLabel = "Start earning",
+                    expectedLabel = startEarningLabel,
                 ),
-                PositionModel("No balance", null, isBalanceFailed = false, EarnPositionState.None, "Start earning"),
+                PositionModel(
+                    name = "No balance",
+                    contribution = null,
+                    isBalanceFailed = false,
+                    expectedPosition = EarnPositionState.None,
+                    expectedLabel = startEarningLabel,
+                ),
             )
         }
     }
@@ -326,23 +362,33 @@ internal class PooledStakingMapperStateTest {
             vaults = listOf(MockStaking.vault(apy = BigDecimal(apy)).copy(feePercent = BigDecimal(feePercent))),
         )
 
-    private fun row(label: String, value: String, info: EarnTextBlock? = null): EarnRow = EarnRow(
-        label = stringReference(label),
-        value = EarnValue.Text(stringReference(value)),
+    private fun row(
+        label: TextReference,
+        value: TextReference,
+        kind: EarnRowKind,
+        info: EarnRowInfo? = null,
+    ): EarnRow = EarnRow(
+        label = label,
+        value = EarnValue.Text(value),
         info = info,
+        kind = kind,
     )
 
-    private fun textBlock(title: String, description: String): EarnTextBlock = EarnTextBlock(
-        title = stringReference(title),
-        description = stringReference(description),
+    private fun textBlock(title: TextReference, description: TextReference): EarnTextBlock = EarnTextBlock(
+        title = title,
+        description = description,
     )
 
     private fun feeRow(percent: String): EarnRow = row(
-        label = "Performance fee",
-        value = "$percent% of yield",
-        info = textBlock(
-            title = "Performance fee",
-            description = "$percent% of the yield you earn. It is not charged on the amount you deposit.",
+        label = resourceReference(R.string.earn_product_details_performance_fee),
+        value = resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList("$percent%")),
+        kind = EarnRowKind.PerformanceFee,
+        info = EarnRowInfo.Text(
+            title = resourceReference(R.string.earn_product_details_performance_fee),
+            text = resourceReference(
+                R.string.earn_product_details_performance_fee_info,
+                wrappedList("$percent%"),
+            ),
         ),
     )
 
@@ -367,7 +413,7 @@ internal class PooledStakingMapperStateTest {
         val contribution: StakingBalance?,
         val isBalanceFailed: Boolean,
         val expectedPosition: EarnPositionState,
-        val expectedLabel: String,
+        val expectedLabel: TextReference,
     ) {
         override fun toString(): String = name
     }

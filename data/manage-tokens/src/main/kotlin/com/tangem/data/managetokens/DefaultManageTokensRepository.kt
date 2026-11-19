@@ -36,6 +36,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.fetcher.DistinctPagesFilter
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher.Request
 import com.tangem.pagination.toBatchFlow
@@ -78,30 +79,37 @@ internal class DefaultManageTokensRepository(
     private fun createFetcher(
         batchSize: Int,
         loadUserTokensFromRemote: Boolean,
-    ): LimitOffsetBatchFetcher<ManageTokensListConfig, List<ManagedCryptoCurrency>> = LimitOffsetBatchFetcher(
-        prefetchDistance = batchSize,
-        batchSize = batchSize,
-        subFetcher = { request, _, isFirstBatchFetching ->
-            val userWallet = request.params.userWalletId?.let(userWalletsListRepository::getSyncStrict)
+    ): LimitOffsetBatchFetcher<ManageTokensListConfig, List<ManagedCryptoCurrency>> {
+        val distinctPages = DistinctPagesFilter(ManagedCryptoCurrency::id)
 
-            if (userWallet is UserWallet.Cold && userWallet.scanResponse.card.isTestCard) {
-                fetchTestnetCurrencies(userWallet, request.params)
-            } else {
-                fetchCurrencies(
-                    userWallet = userWallet,
-                    request = request,
-                    isFirstBatchFetching = isFirstBatchFetching,
-                    loadUserTokensFromRemote = loadUserTokensFromRemote,
-                )
-            }
-        },
-    )
+        return LimitOffsetBatchFetcher(
+            prefetchDistance = batchSize,
+            batchSize = batchSize,
+            subFetcher = { request, _, isFirstBatchFetching ->
+                val page = distinctPages.startPage(isFirstPage = isFirstBatchFetching)
+                val userWallet = request.params.userWalletId?.let(userWalletsListRepository::getSyncStrict)
+
+                if (userWallet is UserWallet.Cold && userWallet.scanResponse.card.isTestCard) {
+                    fetchTestnetCurrencies(userWallet, request.params)
+                } else {
+                    fetchCurrencies(
+                        userWallet = userWallet,
+                        request = request,
+                        isFirstBatchFetching = isFirstBatchFetching,
+                        loadUserTokensFromRemote = loadUserTokensFromRemote,
+                        page = page,
+                    )
+                }
+            },
+        )
+    }
 
     private suspend fun fetchCurrencies(
         userWallet: UserWallet?,
         request: Request<ManageTokensListConfig>,
         isFirstBatchFetching: Boolean,
         loadUserTokensFromRemote: Boolean,
+        page: DistinctPagesFilter.Page<ManagedCryptoCurrency, ManagedCryptoCurrency.ID>,
     ): BatchFetchResult.Success<List<ManagedCryptoCurrency>> {
         val supportedBlockchains = getSupportedBlockchains(userWallet)
         val query = request.params.searchText.takeUnless(String?::isNullOrBlank)
@@ -138,9 +146,12 @@ internal class DefaultManageTokensRepository(
             updatedCoinsResponse = updatedCoinsResponse,
         )
 
+        val distinctItems = page.distinct(items)
+
         return BatchFetchResult.Success(
-            data = items,
-            isEmpty = items.isEmpty(),
+            data = distinctItems,
+            isEmpty = distinctItems.isEmpty(),
+            // the raw page size: a page shortened by dropped repeats is not the last one
             isLast = items.size < request.limit,
         )
     }

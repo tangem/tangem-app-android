@@ -176,11 +176,16 @@ internal class YieldSupplyApproveModel @Inject constructor(
         params.callback.onTransactionProgress(false)
     }
 
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
+    }
+
     private suspend fun onTransactionSuccess(txHash: String) {
         yieldSupplyPendingTracker.addPending(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
             txIds = listOf(txHash),
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
         )
         val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
             AnalyticsParam.FeeAssetType.Coin
@@ -218,6 +223,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 getFeePaidCryptoCurrencyStatusSyncUseCase(
                     userWalletId = userWallet.walletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
                 ).getOrNull() ?: cryptoCurrencyStatus
             }
             onLoadFee()

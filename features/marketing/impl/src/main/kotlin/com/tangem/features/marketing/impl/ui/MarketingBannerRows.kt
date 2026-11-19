@@ -1,5 +1,6 @@
 package com.tangem.features.marketing.impl.ui
 
+import com.tangem.core.ui.extensions.stringReference
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -59,7 +60,7 @@ private fun Preview_CtaMarketingBannerRows() {
         subtitle = "Pay by bank transfer",
         etaLabel = "up to 4 hours",
         partnerLabel = "via MoonPay",
-        buttonText = "Request",
+        buttonText = stringReference("Request"),
         hasGlow = true,
         style = MarketingBannerUM.Style.PSEUDO_PROVIDER,
     )
@@ -71,7 +72,7 @@ private fun Preview_CtaMarketingBannerRows() {
         isDismissible = false,
         deeplink = "tangem://onramp?type=concierge_waitlist",
         subtitle = "USD and EUR, no on-ramp fees",
-        buttonText = "Join waitlist",
+        buttonText = stringReference("Join waitlist"),
         style = MarketingBannerUM.Style.STANDALONE_CTA,
     )
 

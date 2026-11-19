@@ -17,6 +17,7 @@ dependencies {
 
     /** Core */
     implementation(projects.core.decompose)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 

@@ -81,10 +81,7 @@ internal class TangemPayDetailsComponent(
 
     init {
         promoBannersBlockComponent.setVisibleOnScreen(true)
-        lifecycle.subscribe(
-            onStart = model::onStart,
-            onStop = model::onStop,
-        )
+        lifecycle.subscribe(onStart = model::onStart)
     }
 
     fun openAddFunds() {
@@ -125,6 +122,7 @@ internal class TangemPayDetailsComponent(
                 params = TokenReceiveComponent.Params(
                     config = navigation.config,
                     onDismiss = model.bottomSheetNavigation::dismiss,
+                    isNewScreenAllowed = false,
                 ),
             )
             is TangemPayDetailsNavigation.TransactionDetails -> TangemPayTxHistoryDetailsComponent(

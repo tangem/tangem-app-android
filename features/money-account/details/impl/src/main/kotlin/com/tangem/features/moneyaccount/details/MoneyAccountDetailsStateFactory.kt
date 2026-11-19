@@ -16,6 +16,7 @@ import com.tangem.core.ui.res.generated.icons.ic_mail_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.features.moneyaccount.details.impl.R
+import com.tangem.features.tangempay.common.kyc.createKycAdditionalInfoBannerState
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongParameterList")
@@ -30,6 +31,8 @@ internal class MoneyAccountDetailsStateFactory(
     private val onTxHistoryReload: () -> Unit,
     private val onRenewSession: () -> Unit,
     private val isYieldModeEnabled: Boolean,
+    private val onProvideKycInformationClick: () -> Unit,
+    private val isColdWallet: Boolean,
 ) {
     fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
         title = resourceReference(R.string.virtual_account_title),
@@ -38,6 +41,7 @@ internal class MoneyAccountDetailsStateFactory(
         isBalanceHidden = false,
         isBalanceUnavailable = false,
         messageBanner = null,
+        kycAdditionalInfoBanner = null,
         menuItems = persistentListOf(
             MoneyAccountMenuItemUM(
                 title = stringReference("Terms and Limits"),
@@ -100,6 +104,8 @@ internal class MoneyAccountDetailsStateFactory(
                 account.hasBalanceUnavailableBanner -> createBalanceUnavailableBanner()
                 else -> null
             },
+            kycAdditionalInfoBanner = createKycAdditionalInfoBannerState(onProvideKycInformationClick)
+                .takeIf { account.isKycAdditionalInfoRequired },
         )
     }
 
@@ -113,7 +119,7 @@ internal class MoneyAccountDetailsStateFactory(
             iconEnd = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_tangem_24,
                 tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            ).takeIf { isColdWallet },
         ),
     )
 
@@ -136,3 +142,8 @@ internal val MoneyAccountStatusValue.Account.isBalanceUnavailable: Boolean
 
 internal val MoneyAccountStatusValue.Account.hasBalanceUnavailableBanner: Boolean
     get() = isBalanceUnavailable && error != MoneyAccountStatusValue.Error.NotSynced
+
+internal val MoneyAccountStatusValue.Account.isKycAdditionalInfoRequired: Boolean
+    get() = when (this) {
+        is MoneyAccountStatusValue.Account.Active -> isKycAdditionalInfoRequired
+    }

@@ -24,25 +24,25 @@ val Icons.il_account_family: ImageVector
         if (_il_account_family != null) return _il_account_family!!
         _il_account_family = ImageVector.Builder(
             name = "il_account_family",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f,
+            defaultWidth = 48.dp,
+            defaultHeight = 48.dp,
+            viewportWidth = 48f,
+            viewportHeight = 48f,
         ).apply {
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M8.37598 4.53271C10.6202 4.53271 12.5039 6.29516 12.5039 8.54639C12.5037 10.7974 10.6201 12.5601 8.37598 12.5601C6.13216 12.5597 4.24924 10.7972 4.24902 8.54639C4.24902 6.29537 6.13203 4.53304 8.37598 4.53271Z"),
+                pathData = addPathNodes("M20.3756 17C22.6201 17 24.504 18.7702 24.504 21.0313C24.5037 23.2922 22.6199 25.0625 20.3756 25.0625C18.1316 25.0622 16.2485 23.2919 16.2483 21.0313C16.2483 18.7704 18.1315 17.0003 20.3756 17Z"),
             )
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M16.4424 6.2417C18.1965 6.24191 19.6826 7.62192 19.6826 9.40088C19.6824 11.1796 18.1964 12.5589 16.4424 12.5591C14.6882 12.5591 13.2024 11.1798 13.2021 9.40088C13.2021 7.62179 14.6881 6.2417 16.4424 6.2417Z"),
+                pathData = addPathNodes("M28.4428 18.7165C30.1971 18.7167 31.6834 20.1027 31.6834 21.8895C31.6831 23.676 30.197 25.0613 28.4428 25.0615C26.6885 25.0615 25.2025 23.6762 25.2023 21.8895C25.2023 20.1026 26.6884 18.7165 28.4428 18.7165Z"),
             )
             addPath(
                 fill = SolidColor(Color(0xFF0F0F0F)),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M3.00098 19.4673C2.44888 19.4671 2.00098 19.0194 2.00098 18.4673V17.5894C2.00102 15.103 4.0821 13.1501 6.57031 13.1499H10.1846C11.1562 13.1499 12.0658 13.4477 12.8135 13.9587C13.5613 13.4477 14.4708 13.1499 15.4424 13.1499H16.4424H17.4297C19.918 13.15 21.999 15.1029 21.999 17.5894V18.4673C21.999 19.0194 21.5511 19.4671 20.999 19.4673H3.00098Z"),
+                pathData = addPathNodes("M15.0001 32C14.4479 31.9998 14 31.5502 14 30.9956V30.1138C14 27.6166 16.0813 25.6552 18.5698 25.6549H22.1844C23.1561 25.6549 24.0658 25.954 24.8136 26.4673C25.5614 25.954 26.471 25.655 27.4427 25.6549H28.4428H29.4302C31.9188 25.655 34 27.6165 34 30.1138V30.9956C34 31.5502 33.5521 31.9998 32.9999 32H15.0001Z"),
             )
         }.build()
         return _il_account_family!!

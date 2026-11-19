@@ -27,12 +27,10 @@ import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
 import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -159,10 +157,6 @@ internal object StakingDataModule {
     @Provides
     @IntoSet
     fun provideStakingCryptoCurrencyDataCleaner(impl: DefaultStakingCleaner): CryptoCurrencyDataCleaner = impl
-
-    @Provides
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    fun provideStakingCleaner(impl: DefaultStakingCleaner): StakingCleaner = impl
 
     @Provides
     @Singleton

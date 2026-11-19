@@ -88,7 +88,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     val uiState = MutableStateFlow(params.state)
 
     val isGaslessEnabled = params.onLoadFeeExtended != null &&
-        params.cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
+        (params.cryptoCurrencyStatus.currency is CryptoCurrency.Token || params.isGaslessForCoinAllowed) &&
         (
             isEvmGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
                 params.isTronGaslessSupported &&

@@ -19,17 +19,80 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.THREE_STARS
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import com.tangem.core.res.R as CoreResR
 
 class UpdateStakingNotificationTransformerTest {
 
     private val clickIntents: TokenDetailsClickIntents = mockk(relaxed = true)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EarnBannerShown {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN Earn banner shown WHEN transform THEN no staking block`(model: StakingCase) {
+            // Arrange
+            val transformer = createTransformer(
+                availability = model.availability,
+                entryInfo = model.entryInfo,
+                status = model.status,
+                isEarnBannerShown = true,
+            )
+
+            // Act
+            val result = transformer.transform(initialState())
+
+            // Assert
+            assertThat(result.earnBlockState).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            StakingCase(
+                name = "stake offer",
+                availability = availableOption(BigDecimal("4.2")),
+                entryInfo = StakingEntryInfo(tokenSymbol = "ETH"),
+                status = buildStatus(),
+            ),
+            StakingCase(
+                name = "active stake",
+                availability = availableOption(BigDecimal("4.2")),
+                entryInfo = StakingEntryInfo(tokenSymbol = "ETH"),
+                status = buildStatusWithStake(stakedAmount = BigDecimal("5")),
+            ),
+            StakingCase(
+                name = "active stake in full pools",
+                availability = fullOption(BigDecimal("4.2")),
+                entryInfo = null,
+                status = buildStatusWithStake(stakedAmount = BigDecimal("5")),
+            ),
+            StakingCase(
+                name = "staking temporarily unavailable",
+                availability = StakingAvailability.TemporaryUnavailable,
+                entryInfo = null,
+                status = buildStatus(),
+            ),
+        )
+    }
+
+    data class StakingCase(
+        val name: String,
+        val availability: StakingAvailability,
+        val entryInfo: StakingEntryInfo?,
+        val status: CryptoCurrencyStatus,
+    ) {
+        override fun toString(): String = name
+    }
 
     @Test
     fun `GIVEN Unavailable WHEN transform THEN earnBlockState is null`() {
@@ -254,12 +317,14 @@ class UpdateStakingNotificationTransformerTest {
         entryInfo: StakingEntryInfo?,
         status: CryptoCurrencyStatus = buildStatus(),
         isBalanceHidden: Boolean = false,
+        isEarnBannerShown: Boolean = false,
     ) = UpdateStakingNotificationTransformer(
         cryptoCurrencyStatus = status,
         stakingAvailability = availability,
         stakingEntryInfo = entryInfo,
         appCurrency = AppCurrency.Default,
         isBalanceHidden = isBalanceHidden,
+        isEarnBannerShown = isEarnBannerShown,
         clickIntents = clickIntents,
     )
 

@@ -77,7 +77,6 @@ internal class CryptoCurrencyStatusSerializationTest {
 
     private data class FakeContribution(override val source: StatusSource) : BalanceContribution {
 
-        override val kind: String = "fake"
 
         override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal.ONE
     }

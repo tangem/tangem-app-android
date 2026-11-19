@@ -45,6 +45,7 @@ import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceProvider
+import com.tangem.tap.LockUserWalletsTimer
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeeplinkRouter
 import com.tangem.tap.features.hot.TangemHotSDKProxy
@@ -56,8 +57,8 @@ import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.startup.AppStartupGateComponent
 import com.tangem.tap.routing.utils.ChildFactory
-import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.PromoPageRouter
+import com.tangem.tap.routing.utils.RootDeepLinkDispatcher
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.assisted.Assisted
@@ -76,7 +77,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
     private val campaignsComponentFactory: CampaignsComponent.Factory,
-    private val deeplinkFactory: DeepLinkFactory,
+    private val rootDeepLinkDispatcher: RootDeepLinkDispatcher,
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
     private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
@@ -86,6 +87,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val appsFlyerDeeplinkRouter: AppsFlyerDeeplinkRouter,
     private val promoPageRouter: PromoPageRouter,
+    private val lockUserWalletsTimer: LockUserWalletsTimer,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -164,7 +166,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
             currentRoute.value = stack.active.configuration
             wcRoutingComponent.onAppRouteChange(stack.active.configuration)
-            deeplinkFactory.checkRoutingReadiness(stack.active.configuration)
 
             if (appRouterConfig.stack != stackItems) {
                 appRouterConfig.stack = stackItems
@@ -173,8 +174,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         configureProxies()
         initializeInitialNavigation()
-        appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute)
-        promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute)
+        rootDeepLinkDispatcher.observe(scope = componentScope, currentRoute = currentRoute, router = router)
+        appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute, router = router)
+        promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute, router = router)
+        lockUserWalletsTimer.observe(scope = componentScope, router = router)
     }
 
     private fun initializeInitialNavigation() {

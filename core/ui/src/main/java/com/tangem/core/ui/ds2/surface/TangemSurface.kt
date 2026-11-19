@@ -74,7 +74,9 @@ import dev.chrisbanes.haze.HazeTint
  *   are present.
  * @param shape Shape used for clipping, background, and borders.
  * @param onClick Click handler. `null` makes the surface non-interactive.
- * @param enabled Forwarded to the click handler.
+ * @param onLongClick Long-press handler. Only takes effect while [onClick] is non-null; `null` leaves
+ *   long presses unhandled.
+ * @param enabled Forwarded to the click handlers.
 
  * @param shadowRadius Blur size of the material drop shadow, expressed as a Figma `box-shadow`
  *   blur. Ignored when [isMaterial] is `false`. Provide [LocalMaterialShadowEnabled] as `false` to
@@ -94,6 +96,7 @@ fun TangemSurface(
     border: BorderStroke? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
     shadowRadius: Dp = 40.dp,
@@ -121,10 +124,11 @@ fun TangemSurface(
                 .background(if (isMaterial) Color.Transparent else color, shape)
                 .conditionalCompose(isMaterialDrawn) { materialFill(materialStyle, materialOpacity) }
                 .conditionalCompose(onClick != null) {
-                    clickable(
+                    combinedClickable(
                         interactionSource = resolvedInteractionSource,
                         indication = LocalIndication.current,
                         enabled = enabled,
+                        onLongClick = onLongClick,
                         onClick = onClick!!,
                     )
                 },

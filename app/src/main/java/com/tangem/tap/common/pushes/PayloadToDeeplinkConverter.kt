@@ -2,7 +2,6 @@ package com.tangem.tap.common.pushes
 
 import android.os.Bundle
 import com.tangem.common.routing.deeplink.DeepLinkBuilder
-import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
@@ -15,6 +14,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.core.navigation.deeplink.DeepLinkHandler
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tangempay.model.TangemPayPushNotificationType
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
@@ -57,6 +57,11 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
 
     fun convertBundle(bundle: Bundle?): String? {
         if (bundle == null) return null
+        return convert(bundleToPayload(bundle))
+    }
+
+    fun bundleToPayload(bundle: Bundle?): Map<String, String> {
+        if (bundle == null) return emptyMap()
         val bundleDataMap = mutableMapOf<String, String>()
         for (key in bundle.keySet()) {
             val value = bundle.getString(key)
@@ -64,7 +69,12 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
                 bundleDataMap[key] = value
             }
         }
-        return convert(bundleDataMap)
+        return bundleDataMap
+    }
+
+    fun isOpenReportedByTangemPayHandler(payload: Map<String, String>): Boolean {
+        val type = payload[TYPE_KEY]?.let(TangemPayPushNotificationType::fromValue)
+        return type == TangemPayPushNotificationType.KYC_ADDITIONAL_INFO && isConvertedToTangemPayDeeplink(payload)
     }
 
     @Suppress("ReturnCount")
@@ -136,6 +146,11 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
     private fun isTangemPayPushNotificationPayload(payload: Map<String, String>): Boolean {
         return payload.containsKey(CUSTOMER_WALLET_ID_KEY) &&
             payload[TYPE_KEY]?.let(TangemPayPushNotificationType::fromValue) != null
+    }
+
+    private fun isConvertedToTangemPayDeeplink(payload: Map<String, String>): Boolean {
+        val tangemPayDeeplink = buildTangemPayNotificationDeeplink(payload) ?: return false
+        return convert(payload) == tangemPayDeeplink
     }
 
     private fun buildTangemPayNotificationDeeplink(payload: Map<String, String>): String? {

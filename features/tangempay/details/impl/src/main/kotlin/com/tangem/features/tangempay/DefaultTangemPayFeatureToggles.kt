@@ -19,4 +19,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isOrderFrameworkEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15342_ORDER_FRAMEWORK_ENABLED)
+
+    override val isCardActionsEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19693_PAY_CARD_ACTIONS_ENABLED)
 }

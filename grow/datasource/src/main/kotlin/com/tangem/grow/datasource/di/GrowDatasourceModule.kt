@@ -1,6 +1,7 @@
 package com.tangem.grow.datasource.di
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.ApiSerialization
@@ -24,7 +25,6 @@ import com.tangem.grow.datasource.config.*
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.express.DefaultExpressAuthProvider
 import com.tangem.grow.datasource.express.ExpressAuthProvider
-import com.tangem.grow.datasource.express.ExpressFeatureToggles
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
@@ -113,13 +113,13 @@ internal object GrowDatasourceModule {
     @Provides
     @Singleton
     fun provideGaslessTxServiceApi(factory: RetrofitFactory): GaslessTxServiceApi {
-        return factory.build(gaslessApiSpec())
+        return factory.build(evmGaslessApiSpec())
     }
 
     @Provides
     @Singleton
     fun provideGaslessTxServiceApiV2(factory: RetrofitFactory): GaslessTxServiceApiV2 {
-        return factory.build(gaslessApiSpec())
+        return factory.build(evmGaslessApiSpec())
     }
 
     @Provides
@@ -128,10 +128,15 @@ internal object GrowDatasourceModule {
         return factory.build(tronGaslessApiSpec())
     }
 
-    private fun gaslessApiSpec() = RetrofitApiSpec(
-        apiConfigId = GaslessTxService.ID,
+    @Provides
+    @Singleton
+    fun provideSolanaGaslessApi(factory: RetrofitFactory): SolanaGaslessApi {
+        return factory.build(solanaGaslessApiSpec())
+    }
+
+    @VisibleForTesting
+    internal fun evmGaslessApiSpec() = gaslessApiSpec(
         shouldApplyTimeoutAnnotations = false,
-        shouldUseSessionAuth = false,
         timeouts = Timeouts(
             callTimeoutSeconds = TIMEOUT_60_SECONDS,
             connectTimeoutSeconds = TIMEOUT_60_SECONDS,
@@ -140,22 +145,9 @@ internal object GrowDatasourceModule {
         ),
     )
 
-    @Provides
-    @Singleton
-    fun provideSolanaGaslessApi(factory: RetrofitFactory): SolanaGaslessApi {
-        return factory.build(
-            RetrofitApiSpec(
-                apiConfigId = GaslessTxService.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    private fun tronGaslessApiSpec() = RetrofitApiSpec(
-        apiConfigId = GaslessTxService.ID,
+    @VisibleForTesting
+    internal fun tronGaslessApiSpec() = gaslessApiSpec(
         shouldApplyTimeoutAnnotations = true,
-        shouldUseSessionAuth = false,
         timeouts = Timeouts(
             callTimeoutSeconds = TIMEOUT_120_SECONDS,
             connectTimeoutSeconds = TIMEOUT_60_SECONDS,
@@ -164,40 +156,44 @@ internal object GrowDatasourceModule {
         ),
     )
 
+    @VisibleForTesting
+    internal fun solanaGaslessApiSpec() = gaslessApiSpec(shouldApplyTimeoutAnnotations = true)
+
+    /**
+     * Session auth is on for every gasless client, but it only acts on methods annotated with
+     * [com.tangem.lib.auth.api.RequiresSessionAuth]; the rest keep the static Bearer from [GaslessTxService].
+     * Moving a network to DPoP is therefore just annotating its API methods.
+     */
+    private fun gaslessApiSpec(shouldApplyTimeoutAnnotations: Boolean, timeouts: Timeouts? = null) = RetrofitApiSpec(
+        apiConfigId = GaslessTxService.ID,
+        shouldApplyTimeoutAnnotations = shouldApplyTimeoutAnnotations,
+        shouldUseSessionAuth = true,
+        timeouts = timeouts,
+    )
+
     @Provides
     @IntoMap
     @StringKey(Express.KEY)
-    fun provideExpressConfig(
-        growEnvironmentConfig: GrowEnvironmentConfig,
-        expressAuthProvider: ExpressAuthProvider,
-        appInfoProvider: AppInfoProvider,
-        expressFeatureToggles: ExpressFeatureToggles,
-    ): ApiConfig {
-        return Express(
-            growEnvironmentConfig = growEnvironmentConfig,
-            expressAuthProvider = expressAuthProvider,
-            appInfoProvider = appInfoProvider,
-            isV2Enabled = expressFeatureToggles.isExpressV2Enabled,
-        )
+    fun provideExpressConfig(expressAuthProvider: ExpressAuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
+        return Express(expressAuthProvider = expressAuthProvider, appInfoProvider = appInfoProvider)
     }
 
     @Provides
     @Singleton
-    fun provideExpressApi(factory: RetrofitFactory, expressFeatureToggles: ExpressFeatureToggles): TangemExpressApi {
-        return factory.build(expressApiSpec(isV2Enabled = expressFeatureToggles.isExpressV2Enabled))
+    fun provideExpressApi(factory: RetrofitFactory): TangemExpressApi {
+        return factory.build(expressApiSpec())
     }
 
     @Provides
     @Singleton
-    fun provideOnrampApi(factory: RetrofitFactory, expressFeatureToggles: ExpressFeatureToggles): OnrampApi {
-        return factory.build(expressApiSpec(isV2Enabled = expressFeatureToggles.isExpressV2Enabled))
+    fun provideOnrampApi(factory: RetrofitFactory): OnrampApi {
+        return factory.build(expressApiSpec())
     }
 
-    // Express /v2 requires the session JWT; /v1 must keep going out without it
-    private fun expressApiSpec(isV2Enabled: Boolean) = RetrofitApiSpec(
+    private fun expressApiSpec() = RetrofitApiSpec(
         apiConfigId = Express.ID,
         shouldApplyTimeoutAnnotations = false,
-        shouldUseSessionAuth = isV2Enabled,
+        shouldUseSessionAuth = true,
     )
 
     @Provides
@@ -391,6 +387,7 @@ internal object GrowDatasourceModule {
                 apiConfigId = PolymarketWeb.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
+                serialization = ApiSerialization.KOTLINX,
             ),
         )
     }

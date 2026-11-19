@@ -19,7 +19,6 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
@@ -54,7 +53,11 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getCustomerSummaryUseCase, paymentAccountStatusFetcher, moneyAccountStatusFetcher)
+        clearMocks(
+            getCustomerSummaryUseCase,
+            paymentAccountStatusFetcher,
+            moneyAccountStatusFetcher,
+        )
         coEvery { paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(USER_WALLET_ID)) } returns
             Unit.right()
         coEvery { moneyAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
@@ -206,7 +209,11 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             verifyFetched(times = if (model.isTerminal) 1 else 2)
         }
 
-    data class StateModel(val name: String, val summary: CustomerSummary, val isTerminal: Boolean) {
+    data class StateModel(
+        val name: String,
+        val summary: CustomerSummary,
+        val isTerminal: Boolean,
+    ) {
         override fun toString(): String = name
     }
 
@@ -285,6 +292,18 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             ),
             isTerminal = true,
         ),
+        StateModel(
+            name = "cdd customer with money account completed and payment account not started",
+            summary = cddSummaryWithMoneyAccountCompleted(),
+            isTerminal = true,
+        ),
+    )
+
+    private fun cddSummaryWithMoneyAccountCompleted() = summary(
+        customerStatus = CustomerStatus.ACTIVE,
+        kycStatus = KycStatus.IN_PROGRESS,
+        paymentStatus = PaymentStatus.NOT_STARTED,
+        moneyStatus = MoneyStatus.COMPLETED,
     )
 
     private fun verifyFetched(times: Int) {

@@ -9,6 +9,7 @@ interface TangemPayDetailsContainerComponent : ComposableContentComponent {
     data class Params(
         val initialStatus: AccountStatus.Payment,
         val initialRoute: TangemPayDetailsInitialRoute,
+        val isOpenedFromKycPush: Boolean = false,
     )
     interface Factory : ComponentFactory<Params, TangemPayDetailsContainerComponent>
 }

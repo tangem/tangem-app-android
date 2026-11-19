@@ -184,7 +184,7 @@ internal fun TangemAvatar.FillColor.toColor(): Color {
 internal fun TangemAvatar.AccountKind.fillColor(): Color = when (this) {
     TangemAvatar.AccountKind.Prediction -> TangemTheme.colors3.bg.accent.violet
     TangemAvatar.AccountKind.Gacha -> TangemTheme.colors3.bg.accent.yellow
-    TangemAvatar.AccountKind.Visa -> TangemTheme.colors3.account.visa
+    TangemAvatar.AccountKind.Visa -> TangemTheme.colors3.account.azureBlue
     TangemAvatar.AccountKind.Money -> TangemTheme.colors3.bg.accent.green
 }
 

@@ -3,10 +3,13 @@ package com.tangem.features.earn.impl.fake
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.res.R as ResR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnBadgeAccent
@@ -34,6 +37,8 @@ import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.product.EarnRewards
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -41,6 +46,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.product.detailsRow
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.Withdraw
@@ -48,6 +54,7 @@ import java.math.BigDecimal
 import kotlin.time.Duration.Companion.days
 
 private val FAKE_PRODUCT_POSITION = BigDecimal("1.482")
+private const val FAKE_FEE_PERCENT = "15%"
 private const val FAKE_APY_POINTS = 3
 
 internal data class FakeEarnProductSpec(
@@ -57,7 +64,6 @@ internal data class FakeEarnProductSpec(
     val title: TextReference,
     val provider: EarnProvider,
     val analytics: EarnProductAnalytics,
-    val hasLegacyBlock: Boolean,
 )
 
 internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
@@ -65,22 +71,25 @@ internal val FakeEarnProductPreset.spec: FakeEarnProductSpec
         FakeEarnProductPreset.Lending -> fakeSpec(
             id = "lending",
             rank = 0,
-            title = "Lending on Aave",
-            provider = fakeProvider(name = "Aave", logo = R.drawable.ic_aave_36),
+            title = resourceReference(ResR.string.earn_product_lending_on_aave),
+            provider = fakeProvider(
+                title = resourceReference(ResR.string.yield_module_provider),
+                logo = R.drawable.ic_aave_36,
+            ),
             product = "Lending",
         )
         FakeEarnProductPreset.Staking -> fakeSpec(
             id = "staking",
             rank = 1,
-            title = "Pooled staking",
-            provider = fakeProvider(name = "P2P", logo = R.drawable.ic_p2p_logo),
+            title = resourceReference(ResR.string.earn_product_pooled_staking),
+            provider = fakeProvider(title = stringReference("P2P"), logo = R.drawable.ic_p2p_logo),
             product = "Staking",
-        ).copy(badgeAccent = EarnBadgeAccent.Info, hasLegacyBlock = true)
+        ).copy(badgeAccent = EarnBadgeAccent.Info)
         FakeEarnProductPreset.Vault -> fakeSpec(
             id = "vault",
             rank = 2,
-            title = "Vault",
-            provider = fakeProvider(name = "Vault", logo = R.drawable.ic_p2p_logo),
+            title = stringReference("Vault"),
+            provider = fakeProvider(title = stringReference("Vault"), logo = R.drawable.ic_p2p_logo),
             product = "Vault",
         )
     }
@@ -134,7 +143,7 @@ internal fun fakeSummary(preset: FakeEarnProductPreset, position: FakeEarnPositi
     return EarnProductSummary(
         productId = preset.spec.id,
         // Written by the product, unlike the overview badge built from the rate: the formats differ by design
-        rateText = stringReference("5.5% APY"),
+        rateText = resourceReference(ResR.string.earn_apy_value, wrappedList("5.5%")),
         risk = EarnRisk.Low,
         availability = ProductAvailability.Available,
         rate = fakeRate(),
@@ -149,37 +158,25 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
     val isStaking = preset == FakeEarnProductPreset.Staking
     return EarnProductState.Ready(
         rate = fakeRate(),
-        description = stringReference(
-            if (preset == FakeEarnProductPreset.Lending) {
-                "Earn variable yield on ETH by lending it directly on Aave, an on-chain self-custodial lending " +
-                    "protocol. Withdrawals are usually instant."
-            } else {
-                "Earn interest on your ETH while keeping it liquid"
-            },
-        ),
+        description = if (preset == FakeEarnProductPreset.Lending) {
+            resourceReference(ResR.string.earn_yield_picker_lending_description)
+        } else {
+            stringReference("Earn interest on your ETH while keeping it liquid")
+        },
         projection = FakeEarnProjection().takeUnless { isStaking },
         benefits = listOf(
             EarnTextBlock(
-                title = stringReference("No lock-ups."),
-                description = stringReference("Send, swap, or sell your funds anytime"),
+                title = resourceReference(ResR.string.yield_module_promo_screen_cash_out_title),
+                description = resourceReference(ResR.string.yield_module_promo_screen_cash_out_subtitle),
                 icon = TangemIconUM.Icon(Icons.ic_lightning_20),
             ),
             EarnTextBlock(
-                title = stringReference("Withdraw anytime."),
-                description = stringReference("Subject to protocol liquidity"),
+                title = resourceReference(ResR.string.earn_product_details_lending_withdraw_anytime_title),
+                description = resourceReference(ResR.string.earn_product_details_lending_withdraw_anytime_subtitle),
                 icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
             ),
         ),
-        howItWorks = fakeHowItWorks().takeUnless { isStaking },
-        details = listOf(
-            fakeRow("Risk", "Low", info = "How risky the product is"),
-            EarnRow(
-                label = stringReference("Protocol"),
-                value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com"),
-            ),
-            fakeRow("Withdrawals", "Usually instant", info = "How fast you can withdraw"),
-            fakeRow("Performance fee", "15% of yield", info = "Taken from the earned yield"),
-        ),
+        details = fakeDetails(),
         limits = EarnLimits(
             minDeposit = BigDecimal("0.01"),
             remainingCap = BigDecimal("1000").takeIf { preset == FakeEarnProductPreset.Vault },
@@ -206,43 +203,89 @@ internal fun fakeApyHistory(period: EarnPeriod): Either<Throwable, EarnApyHistor
     ).right()
 }
 
-private fun fakeProvider(name: String, logo: Int) = EarnProvider(
-    title = stringReference(name),
+private fun fakeProvider(title: TextReference, logo: Int) = EarnProvider(
+    title = title,
     icon = ImageReference.Res(logo),
 )
 
-private fun fakeSpec(id: String, rank: Int, title: String, provider: EarnProvider, product: String) =
+private fun fakeSpec(id: String, rank: Int, title: TextReference, provider: EarnProvider, product: String) =
     FakeEarnProductSpec(
         id = EarnProductId(id),
         rank = rank,
         badgeAccent = EarnBadgeAccent.Success,
-        title = stringReference(title),
+        title = title,
         provider = provider,
         analytics = EarnProductAnalytics(category = "Earn", product = product),
-        hasLegacyBlock = false,
     )
 
-private fun fakeHowItWorks() = EarnHowItWorks(
+internal fun fakeHowItWorks(preset: FakeEarnProductPreset): EarnHowItWorks? = EarnHowItWorks(
     title = stringReference("How it works"),
     entries = listOf(
         EarnTextBlock(stringReference("Supply"), stringReference("Your ETH is supplied to the protocol")),
         EarnTextBlock(stringReference("Earn"), stringReference("Interest accrues automatically")),
     ),
+).takeUnless { preset == FakeEarnProductPreset.Staking }
+
+private fun fakeRow(
+    label: TextReference,
+    value: TextReference,
+    info: TextReference? = null,
+    kind: EarnRowKind? = null,
+) = EarnRow(
+    label = label,
+    value = EarnValue.Text(value),
+    info = info?.let { EarnRowInfo.Text(title = label, text = it) },
+    kind = kind,
 )
 
-private fun fakeRow(label: String, value: String, info: String? = null) = EarnRow(
-    label = stringReference(label),
-    value = EarnValue.Text(stringReference(value)),
-    info = info?.let { EarnTextBlock(stringReference(label), stringReference(it)) },
+private fun fakeAmountRow(label: TextReference, amount: BigDecimal, info: TextReference? = null) = EarnRow(
+    label = label,
+    value = EarnValue.Amount(amount),
+    info = info?.let { EarnRowInfo.Text(title = label, text = it) },
 )
+
+private fun fakeDetails(): List<EarnRow> {
+    val withdrawals = resourceReference(ResR.string.earn_product_details_withdrawals)
+    val fee = resourceReference(ResR.string.earn_product_details_performance_fee)
+    val percent = wrappedList<Any>(FAKE_FEE_PERCENT)
+    return listOf(
+        EarnRisk.Low.detailsRow(),
+        EarnRow(
+            label = resourceReference(ResR.string.earn_product_details_protocol),
+            value = EarnValue.Link(
+                text = resourceReference(ResR.string.yield_module_provider),
+                url = "https://aave.com",
+            ),
+            kind = EarnRowKind.Protocol,
+        ),
+        fakeRow(
+            label = withdrawals,
+            value = resourceReference(ResR.string.earn_product_details_usually_instant),
+            info = resourceReference(ResR.string.earn_product_details_lending_withdrawals_info),
+            kind = EarnRowKind.Withdrawals,
+        ),
+        fakeRow(
+            label = fee,
+            value = resourceReference(ResR.string.earn_product_details_performance_fee_value, percent),
+            info = resourceReference(ResR.string.earn_product_details_performance_fee_info, percent),
+            kind = EarnRowKind.PerformanceFee,
+        ),
+    )
+}
 
 private fun fakePrimary(position: FakeEarnPosition): EarnActionItem = when (position) {
-    FakeEarnPosition.None -> EarnActionItem(action = Deposit(), label = stringReference("Start earning"))
-    FakeEarnPosition.Known -> EarnActionItem(action = Deposit(), label = stringReference("Add funds"))
+    FakeEarnPosition.None -> EarnActionItem(
+        action = Deposit(),
+        label = resourceReference(ResR.string.eth_yield_start_earning),
+    )
+    FakeEarnPosition.Known -> EarnActionItem(
+        action = Deposit(),
+        label = resourceReference(ResR.string.common_add_funds),
+    )
     FakeEarnPosition.Unknown -> EarnActionItem(
         action = Deposit(),
         block = EarnBlock(reason = stringReference("Position is not loaded"), action = EarnBlockAction.Retry),
-        label = stringReference("Start earning"),
+        label = resourceReference(ResR.string.eth_yield_start_earning),
     )
 }
 
@@ -261,10 +304,21 @@ private fun fakePositionState(preset: FakeEarnProductPreset, position: FakeEarnP
             EarnPosition(
                 cryptoAmount = FAKE_PRODUCT_POSITION,
                 earned = BigDecimal("0.03"),
-                description = stringReference("Your ETH is supplied and is earning interest"),
+                description = resourceReference(ResR.string.lending_position_about),
                 rows = listOf(
-                    fakeRow("Total balance", "ETH 1.482", info = "Everything you have in the product"),
-                    fakeRow("Available balance", "ETH 1.482", info = "What you can withdraw now"),
+                    fakeAmountRow(
+                        label = resourceReference(ResR.string.token_details_balance_total),
+                        amount = FAKE_PRODUCT_POSITION,
+                        info = resourceReference(
+                            ResR.string.lending_position_total_balance_info,
+                            wrappedList<Any>(FAKE_FEE_PERCENT),
+                        ),
+                    ),
+                    fakeAmountRow(
+                        label = resourceReference(ResR.string.token_details_balance_available),
+                        amount = FAKE_PRODUCT_POSITION,
+                        info = resourceReference(ResR.string.lending_position_available_balance_info),
+                    ),
                 ),
                 rewards = EarnRewards(amount = BigDecimal("0.02"), claimAction = fakeClaimAction())
                     .takeIf { preset == FakeEarnProductPreset.Lending },

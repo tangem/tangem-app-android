@@ -63,13 +63,11 @@ dependencies {
     implementation(projects.domain.tangempay)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
-    implementation(projects.domain.yieldSupply)
     // endregion
 
     // region Project - Domain models
     implementation(projects.domain.moneyAccount.models)
     implementation(projects.domain.tangempay.models)
-    implementation(projects.domain.yieldSupply.models)
     // endregion
 
     // region Test

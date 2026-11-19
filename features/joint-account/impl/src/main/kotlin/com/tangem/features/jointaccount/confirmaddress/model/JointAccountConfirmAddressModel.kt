@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.confirmaddress.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -24,20 +26,29 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.features.jointaccount.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -59,8 +70,11 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val confirmJointAccountUseCase: ConfirmJointAccountUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val pollingCoordinator: JointAccountPollingCoordinator,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountConfirmAddressComponent.Params>()
@@ -69,6 +83,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         field = MutableStateFlow(
             JointAccountConfirmAddressUM(
                 address = null,
+                shareMessage = null,
                 buttonIcon = userWalletsListRepository
                     .getSyncOrNull(id = params.userWalletId)
                     ?.let(::walletInterationIcon)
@@ -83,9 +98,14 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
 
     private val isResumed = MutableStateFlow(false)
 
+    private val jointAccount: StateFlow<JointAccount?> = jointAccountListSupplier(userWalletId = params.userWalletId)
+        .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId } }
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
+
     init {
         observeAddress()
         subscribePolling()
+        sendScreenOpened()
     }
 
     fun onResume() {
@@ -97,11 +117,26 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     }
 
     private fun observeAddress() {
-        jointAccountListSupplier(userWalletId = params.userWalletId)
-            .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId }?.safeAddress }
+        jointAccount
+            .map { account -> account?.safeAddress }
             .distinctUntilChanged()
-            .onEach { address -> uiState.update { it.copy(address = address) } }
+            .onEach { address ->
+                uiState.update { it.copy(address = address, shareMessage = address?.let(::shareMessage)) }
+            }
             .launchIn(modelScope)
+    }
+
+    /** The event carries the account's size, so it waits for the account to be read */
+    private fun sendScreenOpened() {
+        modelScope.launch {
+            val account = jointAccount.filterNotNull().first()
+            analyticsEventHandler.send(
+                JointAccountAnalyticsEvent.ConfirmAddressScreenOpened(
+                    membersCount = account.membersCount,
+                    threshold = account.threshold,
+                ),
+            )
+        }
     }
 
     private fun subscribePolling() {
@@ -112,15 +147,26 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onShareClick() {
-        val address = uiState.value.address ?: return
+    private fun shareMessage(address: String) = resourceReference(
+        id = CoreUiR.string.joint_account_confirm_address_share_message,
+        formatArgs = wrappedList(address),
+    )
 
-        shareManager.shareText(text = address)
+    private fun onShareClick(message: String) {
+        shareManager.shareText(text = message)
     }
 
     private fun onMismatchClick() {
         if (uiState.value.isConfirming) return
 
+        jointAccount.value?.let { account ->
+            analyticsEventHandler.send(
+                JointAccountAnalyticsEvent.ButtonAddressDoesntMatch(
+                    membersCount = account.membersCount,
+                    threshold = account.threshold,
+                ),
+            )
+        }
         modelScope.launch { openSupportChat() }
     }
 
@@ -149,13 +195,21 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
 
         if (account == null) {
             TangemLogger.e("Joint account confirmation failed: no account behind the shown address")
-            showError()
+            showError(JointAccountError(source = ErrorSource.Confirm, errorMessage = "No account"))
             return
         }
+
+        if (!ensureWalletLinked()) return
 
         confirmJointAccountUseCase(account = account)
             .onLeft(::onConfirmError)
             .onRight(::onConfirmed)
+    }
+
+    private suspend fun ensureWalletLinked(): Boolean {
+        val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull() ?: return true
+
+        return ensureWalletLinkedUseCase(userWallet)
     }
 
     private suspend fun findAccount(): Account.Joint? {
@@ -171,7 +225,15 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
 
     /** Only the last signature activates the account; until then the members screen shows who is still due */
     private fun onConfirmed(account: JointAccount) {
-        if (account.status == JointAccount.Status.ACTIVE) {
+        val isActivated = account.status == JointAccount.Status.ACTIVE
+        analyticsEventHandler.send(
+            JointAccountAnalyticsEvent.AccountConfirmed(
+                membersCount = account.membersCount,
+                threshold = account.threshold,
+                isAccountActivated = isActivated,
+            ),
+        )
+        if (isActivated) {
             params.onActivated()
         } else {
             router.pop()
@@ -185,12 +247,15 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             JointAccountConfirmationError.NotReadyForConfirmation,
             JointAccountConfirmationError.AddressMismatch,
             JointAccountConfirmationError.NotMember,
-            is JointAccountFlowError.Failed,
-            -> showError()
+            -> showError(JointAccountError(source = ErrorSource.Confirm, errorMessage = error.toString()))
+            is JointAccountFlowError.Failed -> {
+                showError(JointAccountError(source = ErrorSource.Confirm, cause = error.cause))
+            }
         }
     }
 
-    private fun showError() {
+    private fun showError(event: JointAccountError) {
+        analyticsEventHandler.send(event)
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.common_error),

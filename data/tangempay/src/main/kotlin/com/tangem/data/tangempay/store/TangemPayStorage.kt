@@ -22,8 +22,6 @@ interface TangemPayStorage {
 
     suspend fun isCampaignOrder(customerWalletAddress: String): Boolean
 
-    suspend fun clearOrderId(customerWalletAddress: String)
-
     suspend fun storeVirtualAccountOrderId(customerWalletAddress: String, vaOrderId: String)
 
     suspend fun getVirtualAccountOrderId(customerWalletAddress: String): String?

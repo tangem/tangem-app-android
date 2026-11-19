@@ -328,6 +328,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
     @Test
     fun `GIVEN money account WHEN recipient picked after search THEN only list opened and selected sent`() {
         // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
         val model = createModel(sourceAccount = moneyAccount)
 
         // Act
@@ -337,7 +338,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
         // Assert
         verifySequence {
             analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientListOpened())
-            analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientSelected())
+            analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientSelected(rail = BankRail.ACH))
         }
         verify(exactly = 1) { onRecipientSelected(basit) }
         model.onDestroy()
@@ -359,6 +360,6 @@ internal class TangemPayBankWithdrawRecipientsModelTest : TangemPayModelTestBase
         uiMessageSender = uiMessageSender,
         getBankAccountsUseCase = getBankAccountsUseCase,
         speiAvailability = speiAvailability,
-        analytics = analytics,
+        withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
     )
 }

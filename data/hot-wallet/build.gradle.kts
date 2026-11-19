@@ -37,4 +37,8 @@ dependencies {
     api(projects.domain.hotWallet)
     implementation(projects.domain.models)
     // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    // endregion
 }

@@ -6,11 +6,15 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 
 class ObservePolymarketSessionKeyOutcomeUseCase(
     private val runner: PolymarketSessionKeyOperationRunner,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketSessionKeyOperationOutcome?> =
-        runner.observe(userWalletId).map { it.finished }.distinctUntilChanged()
+        runner.observe(userWalletId)
+            .onStart { runner.resume(userWalletId) }
+            .map { it.finished }
+            .distinctUntilChanged()
 }

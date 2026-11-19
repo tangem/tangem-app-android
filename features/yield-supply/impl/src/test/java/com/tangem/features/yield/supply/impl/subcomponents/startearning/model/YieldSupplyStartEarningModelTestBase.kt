@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.Option
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import arrow.core.right
 import arrow.core.some
@@ -26,8 +27,10 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
+import com.tangem.features.yield.supply.impl.common.portfolioCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -70,9 +73,9 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
         every { accountStatusListSupplier(userWalletId) } returns flowOf(accountStatusList)
         coEvery { accountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList
         stubCurrencyStatusLookup(cryptoCurrencyStatus.some())
-        coEvery { minAmountUseCase(any(), any()) } returns BigDecimal("5").right()
-        coEvery { getMaxFeeUseCase(any(), any()) } returns maxFee().right()
-        coEvery { getCurrentFeeUseCase(any(), any()) } returns YieldSupplyFee(BigDecimal("0.001")).right()
+        coEvery { minAmountUseCase(any(), any(), any()) } returns BigDecimal("5").right()
+        coEvery { getMaxFeeUseCase(any(), any(), any()) } returns maxFee().right()
+        coEvery { getCurrentFeeUseCase(any(), any(), any()) } returns YieldSupplyFee(BigDecimal("0.001")).right()
         coEvery { startEarningUseCase(any(), any(), any()) } returns listOf(uncompiledTx()).right()
         coEvery { estimateEnterFeeUseCase(any(), any(), any()) } returns listOf(uncompiledTx()).right()
         coEvery {
@@ -112,12 +115,16 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
         fiatMaxFee = BigDecimal("4"),
     )
 
-    protected fun TestScope.createModel(): YieldSupplyStartEarningModel = YieldSupplyStartEarningModel(
+    protected fun TestScope.createModel(
+        account: AccountKind = AccountKind.Portfolio,
+        statusResolver: YieldSupplyCurrencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
+    ): YieldSupplyStartEarningModel = YieldSupplyStartEarningModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
             YieldSupplyStartEarningComponent.Params(
                 userWalletId = userWalletId,
                 cryptoCurrency = token,
+                account = account,
                 yieldSupplyActionUM = actionUM(),
                 callback = callback,
                 feeSelectorComponentFactory = mockk(),
@@ -125,7 +132,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
         ),
         analytics = analytics,
         getUserWalletUseCase = getUserWalletUseCase,
-        singleAccountStatusListSupplier = accountStatusListSupplier,
+        currencyStatusResolver = statusResolver,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
         yieldSupplyStartEarningUseCase = startEarningUseCase,
         yieldSupplyEstimateEnterFeeUseCase = estimateEnterFeeUseCase,
@@ -143,7 +150,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
         yieldSupplySmartGas = YieldSupplySmartGas(
             sendTransactionUseCase = sendTransactionUseCase,
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
-            singleAccountStatusListSupplier = accountStatusListSupplier,
+            currencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
             getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,

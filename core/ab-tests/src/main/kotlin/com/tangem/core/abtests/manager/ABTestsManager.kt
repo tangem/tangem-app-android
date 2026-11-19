@@ -12,4 +12,10 @@ interface ABTestsManager {
 
     /** The value already on the device: never waits for a fetch and tracks no exposure. Null if there is none yet. */
     fun peekValue(key: String): String?
+
+    /**
+     * The value already on the device: never waits for a fetch. An assigned value tracks an exposure; null, with no
+     * exposure, if there is none yet.
+     */
+    fun getCachedValue(key: String): String?
 }

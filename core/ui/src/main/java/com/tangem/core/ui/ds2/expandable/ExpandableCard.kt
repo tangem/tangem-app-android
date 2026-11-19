@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.Layout
@@ -89,6 +90,7 @@ private val InlineIds = listOf(
  * always uses 8dp. The account row uses 12dp, the expandable row 8dp.
  * @param shape Card background and clip. Defaults to the standalone 24dp card; a host that continues
  * the card with sibling items passes a shape whose bottom corners are square.
+ * @param backgroundColor Card background color.
  */
 @Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 @Composable
@@ -99,6 +101,7 @@ internal fun ExpandableCard(
     contentGap: Dp = 12.dp,
     avatarGap: Dp = 8.dp,
     shape: Shape = ExpandableCardShape,
+    backgroundColor: Color = TangemTheme.colors3.bg.secondary,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
@@ -109,7 +112,7 @@ internal fun ExpandableCard(
     val cardModifier = modifier
         .fillMaxWidth()
         .clip(shape)
-        .background(TangemTheme.colors3.bg.secondary)
+        .background(backgroundColor)
         .conditionalCompose(isFocused) {
             border(
                 width = 2.dp,

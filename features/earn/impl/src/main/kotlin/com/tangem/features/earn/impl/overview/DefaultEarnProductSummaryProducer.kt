@@ -11,7 +11,9 @@ import com.tangem.domain.models.getResultStatusSource
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRateEntry
+import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -69,7 +71,7 @@ internal class DefaultEarnProductSummaryProducer @AssistedInject constructor(
                 id = source.id,
                 isProduct = false,
                 summaries = source.rates(params.userWalletId).map { rates ->
-                    rates.mapValues { (_, entry) -> entry.toSummary(source.id) }
+                    EarnSummaries(byCurrency = rates.mapValues { (_, entry) -> entry.toSummary(source.id) })
                 },
             )
         }
@@ -104,29 +106,38 @@ internal class DefaultEarnProductSummaryProducer @AssistedInject constructor(
         var isFailing = false
         var lastLoaded: ProductFrame.Loaded? = null
         val loadedFrames = feed.summaries
-            .map<Map<CryptoCurrency.ID, EarnProductSummary>, ProductFrame> { summaries ->
+            .map<EarnSummaries, ProductFrame> { answer ->
                 isFailing = false
-                ProductFrame.Loaded(summaries, feed.isProduct).also { lastLoaded = it }
+                ProductFrame.Loaded(
+                    summaries = answer.byCurrency,
+                    isProduct = feed.isProduct,
+                    loadingCurrencies = answer.loadingCurrencies,
+                ).also { lastLoaded = it }
             }
             .onEmpty { emit(ProductFrame.Loaded(summaries = emptyMap(), isProduct = feed.isProduct)) }
             .retryWhen { cause, _ ->
                 // Only `e` reaches the log file: once per series of failures, not on every retry
                 if (!isFailing) TangemLogger.e("Earn summaries failed: ${feed.id.value}", cause)
                 isFailing = true
-                emit(lastLoaded?.asCached() ?: ProductFrame.Failed)
+                emit(lastLoaded?.asCached() ?: ProductFrame.Failed(feed.isProduct))
                 delay(RETRY_DELAY)
                 true
             }
         emitAll(loadedFrames)
-    }.onStart { emit(ProductFrame.Loading) }
+    }.onStart { emit(ProductFrame.Loading(feed.isProduct)) }
 
     private fun List<ProductFrame>.merge(): EarnProductSummaries {
         val loaded = filterIsInstance<ProductFrame.Loaded>()
+        val productFrames = filter { it.isProduct }
 
         return EarnProductSummaries(
             products = loaded.filter { it.isProduct }.byCurrency(),
             rateSources = loaded.filterNot { it.isProduct }.byCurrency(),
             source = map(ProductFrame::source).getResultStatusSource(),
+            isAwaitingProducts = productFrames.any { it is ProductFrame.Loading },
+            pendingCurrencies = productFrames
+                .filterIsInstance<ProductFrame.Loaded>()
+                .flatMapTo(hashSetOf()) { it.pendingCurrencies },
         )
     }
 
@@ -139,12 +150,13 @@ internal class DefaultEarnProductSummaryProducer @AssistedInject constructor(
     private fun ProductFrame.Loaded.asCached() = copy(
         summaries = summaries.mapValues { (_, summary) -> summary.copy(source = StatusSource.ONLY_CACHE) },
         isCached = true,
+        loadingCurrencies = emptySet(),
     )
 
     private data class Feed(
         val id: EarnProductId,
         val isProduct: Boolean,
-        val summaries: Flow<Map<CryptoCurrency.ID, EarnProductSummary>>,
+        val summaries: Flow<EarnSummaries>,
     )
 
     /** A rate source has no screens: its summary is not shown anywhere, so there is nothing to click. */
@@ -157,25 +169,32 @@ internal class DefaultEarnProductSummaryProducer @AssistedInject constructor(
 
         val source: StatusSource
 
-        data object Loading : ProductFrame {
+        val isProduct: Boolean
+
+        data class Loading(override val isProduct: Boolean) : ProductFrame {
             override val source: StatusSource = StatusSource.CACHE
         }
 
-        data object Failed : ProductFrame {
+        data class Failed(override val isProduct: Boolean) : ProductFrame {
             override val source: StatusSource = StatusSource.ONLY_CACHE
         }
 
         data class Loaded(
             val summaries: Map<CryptoCurrency.ID, EarnProductSummary>,
-            val isProduct: Boolean,
+            override val isProduct: Boolean,
             val isCached: Boolean = false,
+            val loadingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
         ) : ProductFrame {
 
             override val source: StatusSource = if (isCached) {
                 StatusSource.ONLY_CACHE
             } else {
-                summaries.values.map { it.source }.getResultStatusSource()
+                val loading = listOfNotNull(StatusSource.CACHE.takeIf { loadingCurrencies.isNotEmpty() })
+                (summaries.values.map { it.source } + loading).getResultStatusSource()
             }
+
+            val pendingCurrencies: Set<CryptoCurrency.ID> =
+                loadingCurrencies + summaries.filterValues { it.source == StatusSource.CACHE }.keys
         }
     }
 

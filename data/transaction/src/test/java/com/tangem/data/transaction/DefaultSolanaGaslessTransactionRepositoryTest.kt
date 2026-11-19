@@ -4,10 +4,20 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessInstructionRule
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessTransactionSigner
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.Result
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.SolanaGaslessError
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.gasless.SolanaGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
@@ -22,6 +32,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -32,17 +43,24 @@ import java.util.Base64
 internal class DefaultSolanaGaslessTransactionRepositoryTest {
 
     private val api: SolanaGaslessApi = mockk()
+    private val walletManagersFacade: WalletManagersFacade = mockk()
+    private val walletManager: WalletManager = mockk(moreInterfaces = arrayOf(SolanaGaslessTransactionSigner::class))
+    private val gaslessSigner = walletManager as SolanaGaslessTransactionSigner
+    private val network: Network = mockk()
+    private val transactionData: TransactionData = mockk()
+    private val signer: TransactionSigner = mockk()
     private var nowMillis = 0L
     private lateinit var repository: DefaultSolanaGaslessTransactionRepository
     private val userWalletId = UserWalletId("011")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(api)
+        clearMocks(api, walletManagersFacade, walletManager)
         nowMillis = 0L
         // A fresh instance per test: the fee-payer cache is instance state and must not leak between tests.
         repository = DefaultSolanaGaslessTransactionRepository(
             api = api,
+            walletManagersFacade = walletManagersFacade,
             errorAdapter = Moshi.Builder().build().adapter(GaslessErrorResponse::class.java),
             dispatchers = TestingCoroutineDispatcherProvider(),
             elapsedRealtimeMillis = { nowMillis },
@@ -188,6 +206,31 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
         coVerify(exactly = 2) { api.getFeePayer() }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideSubmitUnauthorizedCodes")
+    fun `GIVEN cached fee payer WHEN submit gets 401 or 403 THEN returns Unauthorized and resets fee payer cache`(
+        code: ApiResponseError.HttpException.Code,
+    ) = runTest {
+        // Arrange
+        coEvery { api.getFeePayer() } returns ApiResponse.Success(envelope(SolanaFeePayerResponse("FeePayer111")))
+        coEvery { api.submit(any(), any()) } returns
+            ApiResponse.Error(httpError(code)) as ApiResponse<GaslessServiceResponse<SolanaSubmitResponse>>
+
+        // Act
+        repository.getFeePayer()
+        val submitResult = repository.submit(userWalletId, ByteArray(1), lastValidBlockHeight = 1)
+        repository.getFeePayer()
+
+        // Assert
+        assertThat(submitResult).isEqualTo(SolanaGaslessError.Unauthorized.left())
+        coVerify(exactly = 2) { api.getFeePayer() }
+    }
+
+    private fun provideSubmitUnauthorizedCodes() = listOf(
+        ApiResponseError.HttpException.Code.UNAUTHORIZED,
+        ApiResponseError.HttpException.Code.FORBIDDEN,
+    )
+
     @Test
     fun `GIVEN 502 without body WHEN getFeePayer THEN returns ServiceUnavailable`() = runTest {
         // Arrange
@@ -256,6 +299,7 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
 
     private fun provideTestModels() = listOf(
         ErrorModel(httpError(ApiResponseError.HttpException.Code.UNAUTHORIZED), SolanaGaslessError.Unauthorized),
+        ErrorModel(httpError(ApiResponseError.HttpException.Code.FORBIDDEN), SolanaGaslessError.Unauthorized),
         ErrorModel(httpError(ApiResponseError.HttpException.Code.BAD_REQUEST, err("UNSUPPORTED_CHAIN")), SolanaGaslessError.Disabled),
         ErrorModel(
             httpError(ApiResponseError.HttpException.Code.GONE, err("SOLANA_BLOCKHASH_EXPIRED")),
@@ -356,4 +400,129 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
         """{"error":{"code":"$code","message":"m","details":$details}}"""
 
     private fun <T> envelope(result: T) = GaslessServiceResponse(result = result, isSuccess = true, timestamp = "t")
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Sign {
+
+        @ParameterizedTest
+        @MethodSource("provideRulesModels")
+        fun `GIVEN rent sponsorship flag WHEN sign THEN SDK gets the matching rules`(model: RulesModel) = runTest {
+            // Arrange
+            val signed: Result<SolanaGaslessSignedTransaction> = mockk()
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns walletManager
+            coEvery { gaslessSigner.signGaslessTransaction(transactionData, FEE_PAYER, signer, any()) } returns signed
+
+            // Act
+            val actual = sign(sponsorsRent = model.sponsorsRent)
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(signed)
+            coVerify(exactly = 1) {
+                gaslessSigner.signGaslessTransaction(transactionData, FEE_PAYER, signer, model.expectedRules)
+            }
+        }
+
+        @Test
+        fun `GIVEN non-Solana wallet manager WHEN sign THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns mockk()
+
+            // Act
+            val actual = sign(sponsorsRent = false)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
+        fun `GIVEN no wallet manager WHEN sign THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns null
+
+            // Act
+            val actual = sign(sponsorsRent = false)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        private suspend fun sign(sponsorsRent: Boolean) = repository.sign(
+            userWalletId = userWalletId,
+            network = network,
+            transactionData = transactionData,
+            feePayer = FEE_PAYER,
+            signer = signer,
+            sponsorsRent = sponsorsRent,
+        )
+
+        private fun provideRulesModels() = rulesModels()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Simulate {
+
+        @ParameterizedTest
+        @MethodSource("provideRulesModels")
+        fun `GIVEN rent sponsorship flag WHEN simulate THEN SDK gets the matching rules`(model: RulesModel) = runTest {
+            // Arrange
+            val simulation = Result.Success(SolanaGaslessSimulation.Succeeded)
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns walletManager
+            coEvery { gaslessSigner.simulateGaslessTransaction(transactionData, FEE_PAYER, any()) } returns simulation
+
+            // Act
+            val actual = simulate(sponsorsRent = model.sponsorsRent)
+
+            // Assert
+            assertThat(actual).isEqualTo(simulation)
+            coVerify(exactly = 1) {
+                gaslessSigner.simulateGaslessTransaction(transactionData, FEE_PAYER, model.expectedRules)
+            }
+        }
+
+        @Test
+        fun `GIVEN non-Solana wallet manager WHEN simulate THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns mockk()
+
+            // Act
+            val actual = simulate(sponsorsRent = false)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
+        fun `GIVEN no wallet manager WHEN simulate THEN returns null`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns null
+
+            // Act
+            val actual = simulate(sponsorsRent = false)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        private suspend fun simulate(sponsorsRent: Boolean) = repository.simulate(
+            userWalletId = userWalletId,
+            network = network,
+            transactionData = transactionData,
+            feePayer = FEE_PAYER,
+            sponsorsRent = sponsorsRent,
+        )
+
+        private fun provideRulesModels() = rulesModels()
+    }
+
+    data class RulesModel(val sponsorsRent: Boolean, val expectedRules: List<SolanaGaslessInstructionRule>)
+
+    private fun rulesModels() = listOf(
+        RulesModel(sponsorsRent = true, expectedRules = SolanaGaslessInstructionRule.ASSOCIATED_TOKEN_ACCOUNT),
+        RulesModel(sponsorsRent = false, expectedRules = emptyList()),
+    )
+
+    private companion object {
+        const val FEE_PAYER = "FeePayer111"
+    }
 }

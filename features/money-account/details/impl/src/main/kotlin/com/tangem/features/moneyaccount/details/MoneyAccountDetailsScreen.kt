@@ -144,6 +144,7 @@ private fun LazyListScope.body(
             ActionBlock(state = state, modifier = Modifier.alpha(balanceAlpha))
         }
     }
+    state.kycAdditionalInfoBanner?.let { banner -> messageBannerItem(key = "kycAdditionalInfoBanner", state = banner) }
     if (yieldSupplyComponent != null) {
         item("yieldSupplyBlock") {
             SpacerH24()
@@ -154,17 +155,7 @@ private fun LazyListScope.body(
             )
         }
     }
-    if (state.messageBanner != null) {
-        item("messageBanner") {
-            SpacerH24()
-            TangemMessageBanner(
-                state = state.messageBanner,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-        }
-    }
+    state.messageBanner?.let { banner -> messageBannerItem(key = "messageBanner", state = banner) }
     if (txHistory != null) {
         item("transactionsSpacer") {
             SpacerH24()
@@ -182,6 +173,18 @@ private fun LazyListScope.body(
                 txHistoryContent(listState = listState, state = txHistory.state)
             }
         }
+    }
+}
+
+private fun LazyListScope.messageBannerItem(key: String, state: TangemMessageBanner.State) {
+    item(key) {
+        SpacerH24()
+        TangemMessageBanner(
+            state = state,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        )
     }
 }
 
@@ -330,6 +333,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                 isBalanceHidden = false,
                 isBalanceUnavailable = false,
                 messageBanner = null,
+                kycAdditionalInfoBanner = null,
                 menuItems = persistentListOf(),
                 onMenuClick = {},
                 onBackClick = {},
@@ -365,6 +369,7 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                     variant = TangemMessageBanner.Variant.Error,
                     description = resourceReference(R.string.money_account_balance_unavailable_description),
                 ),
+                kycAdditionalInfoBanner = null,
                 menuItems = persistentListOf(),
                 onMenuClick = {},
                 onBackClick = {},

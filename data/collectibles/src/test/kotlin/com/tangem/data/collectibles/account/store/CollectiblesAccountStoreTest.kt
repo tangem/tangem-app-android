@@ -219,7 +219,10 @@ internal class CollectiblesAccountStoreTest {
         assertThat(store.getSessionKey(WALLET_A)).isEqualTo(SESSION_KEY)
         assertThat(persisted.data.first()).containsExactly(
             WALLET_A.stringValue,
-            CollectiblesAccountDTO(status = CollectiblesAccountStatusValueDTO.Onboarded(), sessionKeyHotWalletId = SESSION_KEY),
+            CollectiblesAccountDTO(
+                status = CollectiblesAccountStatusValueDTO.Onboarded(),
+                sessionKeyHotWalletId = SESSION_KEY,
+            ),
         )
     }
 

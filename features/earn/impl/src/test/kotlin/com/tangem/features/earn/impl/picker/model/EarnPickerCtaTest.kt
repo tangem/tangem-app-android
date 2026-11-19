@@ -10,13 +10,13 @@ import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.fakeReadyState
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnFreshness
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -40,20 +40,17 @@ internal class EarnPickerCtaTest {
             onBlocked = { calls += Call.Blocked(it) },
             onAddFunds = { calls += Call.AddFunds },
         )
-        result.button.onClick()
+        result.onClick()
 
         // Assert
-        val expected = EarnPickerCta.Result(
-            button = TangemButtonUM(
-                text = model.text,
-                isEnabled = model.isEnabled,
-                isDimmed = model.isDimmed,
-                type = TangemButtonType.Primary,
-                onClick = NoOp,
-            ),
-            hint = model.hint,
+        val expected = TangemButtonUM(
+            text = model.text,
+            isEnabled = model.isEnabled,
+            isDimmed = model.isDimmed,
+            type = TangemButtonType.Primary,
+            onClick = NoOp,
         )
-        assertThat(result.copy(button = result.button.copy(onClick = NoOp))).isEqualTo(expected)
+        assertThat(result.copy(onClick = NoOp)).isEqualTo(expected)
         assertThat(calls).containsExactlyElementsIn(model.expectedCalls).inOrder()
     }
 
@@ -66,6 +63,7 @@ internal class EarnPickerCtaTest {
         val stale = ready.copy(freshness = STALE)
         val staleAndProductBlocked = productBlocked.copy(freshness = STALE)
         val staked = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
+        val noMinimum = ready.copy(limits = ready.limits.copy(minDeposit = BigDecimal.ZERO))
 
         return listOf(
             idle(state = EarnProductState.Loading),
@@ -81,8 +79,10 @@ internal class EarnPickerCtaTest {
             blocked(state = stale, ethBalance = BigDecimal.ONE, block = OUT_OF_DATE_BLOCK, label = label),
             blocked(state = staleAndProductBlocked, ethBalance = BigDecimal.ONE, block = OUT_OF_DATE_BLOCK, label = label),
             blocked(state = productBlocked, ethBalance = BigDecimal.ZERO, block = PRODUCT_BLOCK, label = label),
-            addFunds(state = ready, ethBalance = BigDecimal.ZERO, minDeposit = minDeposit),
-            addFunds(state = ready, ethBalance = BigDecimal("0.005"), minDeposit = minDeposit),
+            addFunds(state = ready, ethBalance = BigDecimal.ZERO),
+            addFunds(state = ready, ethBalance = BigDecimal("0.005")),
+            addFunds(state = noMinimum, ethBalance = BigDecimal.ZERO),
+            start(state = noMinimum, ethBalance = BigDecimal("0.001"), label = label, action = action),
             start(state = ready, ethBalance = minDeposit, label = label, action = action),
             start(state = ready, ethBalance = BigDecimal("5"), label = label, action = action),
             start(
@@ -94,10 +94,47 @@ internal class EarnPickerCtaTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class KindOf {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN product state and balance WHEN kind THEN button kind`(model: KindModel) {
+            // Act
+            val actual = cta.kind(state = model.state, ethBalance = model.ethBalance)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<KindModel> {
+            val ready = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.None)
+            val minDeposit = ready.limits.minDeposit
+            val productBlocked = ready.copy(primary = ready.primary.copy(block = PRODUCT_BLOCK))
+            val stale = ready.copy(freshness = STALE)
+            val staked = fakeReadyState(FakeEarnProductPreset.Lending, FakeEarnPosition.Known)
+
+            return listOf(
+                KindModel(EarnProductState.Loading, BigDecimal.ONE, EarnPickerCta.Kind.Disabled),
+                KindModel(EarnProductState.Unavailable, BigDecimal.ONE, EarnPickerCta.Kind.Disabled),
+                KindModel(ready, null, EarnPickerCta.Kind.Disabled),
+                KindModel(productBlocked, BigDecimal.ONE, EarnPickerCta.Kind.Blocked),
+                KindModel(productBlocked, BigDecimal.ZERO, EarnPickerCta.Kind.Blocked),
+                KindModel(stale, BigDecimal.ONE, EarnPickerCta.Kind.Blocked),
+                KindModel(ready, BigDecimal.ZERO, EarnPickerCta.Kind.AddFunds),
+                KindModel(ready, BigDecimal("0.005"), EarnPickerCta.Kind.AddFunds),
+                KindModel(ready, minDeposit, EarnPickerCta.Kind.Primary),
+                KindModel(ready, BigDecimal("5"), EarnPickerCta.Kind.Primary),
+                KindModel(staked, BigDecimal.ZERO, EarnPickerCta.Kind.Primary),
+            )
+        }
+    }
+
     private fun idle(state: EarnProductState) = ResolveModel(
         state = state,
         ethBalance = BigDecimal.ONE,
-        text = EarnPickerTexts.startEarning,
+        text = resourceReference(R.string.eth_yield_start_earning),
         isEnabled = false,
         isDimmed = false,
     )
@@ -112,13 +149,12 @@ internal class EarnPickerCtaTest {
             expectedCalls = listOf(Call.Blocked(block)),
         )
 
-    private fun addFunds(state: EarnProductState, ethBalance: BigDecimal, minDeposit: BigDecimal) = ResolveModel(
+    private fun addFunds(state: EarnProductState, ethBalance: BigDecimal) = ResolveModel(
         state = state,
         ethBalance = ethBalance,
-        text = EarnPickerTexts.addFunds,
+        text = resourceReference(R.string.common_add_funds),
         isEnabled = true,
         isDimmed = false,
-        hint = EarnPickerTexts.minDepositHint(minDeposit),
         expectedCalls = listOf(Call.AddFunds),
     )
 
@@ -138,8 +174,13 @@ internal class EarnPickerCtaTest {
         val text: TextReference,
         val isEnabled: Boolean,
         val isDimmed: Boolean,
-        val hint: TextReference? = null,
         val expectedCalls: List<Call> = emptyList(),
+    )
+
+    internal data class KindModel(
+        val state: EarnProductState,
+        val ethBalance: BigDecimal?,
+        val expected: EarnPickerCta.Kind,
     )
 
     internal sealed interface Call {

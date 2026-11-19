@@ -1,5 +1,9 @@
 package com.tangem.domain.polymarket.sessionkey.operation
 
+import com.tangem.domain.polymarket.sessionkey.EXPIRED_DEADLINE
+import com.tangem.domain.polymarket.sessionkey.FUTURE_DEADLINE
+import com.tangem.domain.polymarket.sessionkey.FakePolymarketPendingAuthorizationStore
+import com.tangem.domain.polymarket.sessionkey.createPendingAuthorization
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -15,6 +19,8 @@ import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorization
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation
@@ -36,6 +42,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -43,7 +50,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketSessionKeyOperationRunnerTest {
@@ -51,10 +61,12 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     private val manage: ManagePolymarketSessionKeyInteractor = mockk()
     private val stateService: PolymarketSessionKeyStateService = mockk()
     private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
+    private val bannerStore: PolymarketFastTradingBannerStore = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(manage, stateService, sessionKeyStore)
+        clearMocks(manage, stateService, sessionKeyStore, bannerStore)
+        coEvery { bannerStore.clear(any()) } just Runs
         every { stateService.refresh(any()) } just Runs
         coEvery { stateService.refreshAndAwait(any(), any()) } just Runs
         coEvery { sessionKeyStore.heldAddress(any()) } returns OWN
@@ -220,15 +232,13 @@ internal class PolymarketSessionKeyOperationRunnerTest {
             advanceUntilIdle()
 
             // Assert
+            val outcome = PolymarketSessionKeyOperationOutcome(
+                id = 1,
+                request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN),
+                result = key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right(),
+            )
             assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(
-                PolymarketSessionKeyOperationState(
-                    running = null,
-                    finished = PolymarketSessionKeyOperationOutcome(
-                        id = 1,
-                        request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN),
-                        result = key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right(),
-                    ),
-                ),
+                PolymarketSessionKeyOperationState(running = null, finished = outcome, lastOutcome = outcome),
             )
         }
 
@@ -389,6 +399,24 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     inner class Activation {
 
         @Test
+        fun `GIVEN activation leaves the key active and unlisted WHEN finished THEN the outcome is the active key`() =
+            runTest {
+                // Arrange
+                every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Authorizing(key(OWN, PolymarketSessionKeyStatus.PENDING)),
+                    PolymarketSessionKeyProgress.CheckingReadiness(key(OWN)),
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+
+                // Act
+                val actual = finishedResult(PolymarketSessionKeyOperationRequest.Activate)
+
+                // Assert
+                assertThat(actual).isEqualTo(key(OWN).right())
+            }
+
+        @Test
         fun `GIVEN reenable WHEN activate THEN enable is called`() = runTest {
             // Arrange
             givenDeviceState(PolymarketSessionKeyDeviceState.Reenable(key(OWN, PolymarketSessionKeyStatus.EXPIRED)))
@@ -534,19 +562,106 @@ internal class PolymarketSessionKeyOperationRunnerTest {
     }
 
     @Nested
+    inner class BannerDismissals {
+
+        @Test
+        fun `GIVEN activate succeeds WHEN finished THEN the banner dismissals are cleared`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            coVerify(exactly = 1) { bannerStore.clear(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN reactivate succeeds WHEN finished THEN the banner dismissals are cleared`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Reactivate)
+
+            // Assert
+            coVerify(exactly = 1) { bannerStore.clear(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN extend succeeds WHEN finished THEN the banner dismissals are cleared`() = runTest {
+            // Arrange
+            every { manage.renew(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Extend)
+
+            // Assert
+            coVerify(exactly = 1) { bannerStore.clear(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN activate fails WHEN finished THEN the banner dismissals are kept`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.SessionKeyBusy).left(),
+                ),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            coVerify(exactly = 0) { bannerStore.clear(any()) }
+        }
+
+        @Test
+        fun `GIVEN revoke succeeds WHEN finished THEN the banner dismissals are kept`() = runTest {
+            // Arrange
+            every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right()),
+            )
+
+            // Act
+            finishedResult(PolymarketSessionKeyOperationRequest.Revoke(FOREIGN))
+
+            // Assert
+            coVerify(exactly = 0) { bannerStore.clear(any()) }
+        }
+    }
+
+    @Nested
     inner class Acknowledge {
 
         @Test
-        fun `GIVEN a finished outcome WHEN acknowledged with its id THEN finished is cleared`() = runTest {
-            // Arrange
-            val runner = runnerWithFinishedRevocation()
+        fun `GIVEN a finished outcome WHEN acknowledged with its id THEN finished is cleared and last outcome kept`() =
+            runTest {
+                // Arrange
+                val runner = runnerWithFinishedRevocation()
 
-            // Act
-            runner.acknowledge(USER_WALLET_ID, operationId = 1)
+                // Act
+                runner.acknowledge(USER_WALLET_ID, operationId = 1)
 
-            // Assert
-            assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(PolymarketSessionKeyOperationState.IDLE)
-        }
+                // Assert
+                assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(
+                    PolymarketSessionKeyOperationState(
+                        running = null,
+                        finished = null,
+                        lastOutcome = PolymarketSessionKeyOperationOutcome(
+                            id = 1,
+                            request = PolymarketSessionKeyOperationRequest.Revoke(FOREIGN),
+                            result = key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right(),
+                        ),
+                    ),
+                )
+            }
 
         @Test
         fun `GIVEN a finished outcome WHEN acknowledged with another id THEN finished is kept`() = runTest {
@@ -573,6 +688,20 @@ internal class PolymarketSessionKeyOperationRunnerTest {
             assertThat(runner.observe(USER_WALLET_ID).value.finished).isNull()
         }
 
+        @Test
+        fun `GIVEN an acknowledged outcome WHEN a new operation starts THEN last outcome is cleared`() = runTest {
+            // Arrange
+            val runner = runnerWithFinishedRevocation()
+            runner.acknowledge(USER_WALLET_ID, operationId = 1)
+            every { manage.enable(USER_WALLET_ID) } returns flow { awaitCancellation() }
+
+            // Act
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            assertThat(runner.observe(USER_WALLET_ID).value.lastOutcome).isNull()
+        }
+
         private fun TestScope.runnerWithFinishedRevocation(): PolymarketSessionKeyOperationRunner {
             every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flowOf(
                 PolymarketSessionKeyProgress.Finished(key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right()),
@@ -584,11 +713,482 @@ internal class PolymarketSessionKeyOperationRunnerTest {
         }
     }
 
-    private fun TestScope.runner() = PolymarketSessionKeyOperationRunner(
+    @Nested
+    inner class Resume {
+
+        @Test
+        fun `GIVEN nothing is stored WHEN resume THEN nothing is resumed`() = runTest {
+            // Arrange
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(PolymarketSessionKeyOperationState.IDLE)
+        }
+
+        @Test
+        fun `GIVEN an expired record WHEN resume THEN it is cleared and no operation starts`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending(deadline = EXPIRED_DEADLINE))
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(PolymarketSessionKeyOperationState.IDLE)
+        }
+
+        @Test
+        fun `GIVEN a record expiring within the send margin WHEN resume THEN it is kept and no operation starts`() =
+            runTest {
+                // Arrange
+                val deadline = NOW.plusSeconds(MARGIN_SECONDS_LEFT).epochSecond.toString()
+                pendingAuthorizations.store(USER_WALLET_ID, pending(deadline = deadline))
+                val runner = runner(clock = Clock.fixed(NOW, ZoneOffset.UTC))
+
+                // Act
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { manage.resume(any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending(deadline = deadline))
+                assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(PolymarketSessionKeyOperationState.IDLE)
+            }
+
+        @Test
+        fun `GIVEN a record 40 s before its deadline WHEN resume THEN it is resumed`() = runTest {
+            // Arrange
+            val deadline = NOW.plusSeconds(OUTSIDE_MARGIN_SECONDS_LEFT).epochSecond.toString()
+            pendingAuthorizations.store(USER_WALLET_ID, pending(deadline = deadline))
+            every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+            val runner = runner(clock = Clock.fixed(NOW, ZoneOffset.UTC))
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN an executable record WHEN resume THEN an extension finishes with the resumed result`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+            )
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            val outcome = PolymarketSessionKeyOperationOutcome(
+                id = 1,
+                request = PolymarketSessionKeyOperationRequest.Extend,
+                result = key(OWN).right(),
+            )
+            assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(
+                PolymarketSessionKeyOperationState(running = null, finished = outcome, lastOutcome = outcome),
+            )
+            verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN the resume keeps failing with the record stored WHEN resume THEN it is retried after 10, 20 and 40 s`() =
+            runTest {
+                // Arrange
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+                val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+                val callTimes = mutableListOf<Long>()
+                every { manage.resume(USER_WALLET_ID) } answers {
+                    callTimes += testScheduler.currentTime
+                    flowOf(PolymarketSessionKeyProgress.Finished(failure.left()))
+                }
+                val runner = runner()
+
+                // Act
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(callTimes).containsExactly(0L, 10_000L, 30_000L, 70_000L).inOrder()
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                    PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+                )
+            }
+
+        @Test
+        fun `GIVEN the record is gone after a failure WHEN resume THEN it is not retried`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            val failure = PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
+            every { manage.resume(USER_WALLET_ID) } returns flow {
+                pendingAuthorizations.clear(USER_WALLET_ID)
+                emit(PolymarketSessionKeyProgress.Finished(failure.left()))
+            }
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+            assertThat(testScheduler.currentTime).isEqualTo(0L)
+            assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+            )
+        }
+
+        @Test
+        fun `GIVEN the resume ends unsettled past the deadline WHEN resume THEN it is not retried`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            val failure = PolymarketSessionKeyLifecycleError.Unsettled(key(OWN, PolymarketSessionKeyStatus.REVOKED))
+            every { manage.resume(USER_WALLET_ID) } returns flow {
+                pendingAuthorizations.store(USER_WALLET_ID, pending(deadline = EXPIRED_DEADLINE))
+                emit(PolymarketSessionKeyProgress.Finished(failure.left()))
+            }
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+            assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+            )
+        }
+
+        @Test
+        fun `GIVEN extend fails keeping a resumable record WHEN finished THEN the authorization is resumed`() =
+            runTest {
+                // Arrange
+                val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+                every { manage.renew(USER_WALLET_ID) } returns flow {
+                    pendingAuthorizations.store(USER_WALLET_ID, pending())
+                    emit(PolymarketSessionKeyProgress.Finished(failure.left()))
+                }
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+                val runner = runner()
+
+                // Act
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Extend)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(key(OWN).right())
+            }
+
+        @Test
+        fun `GIVEN revoke fails while a resumable record waits WHEN finished THEN nothing is resumed`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            val failure = PolymarketSessionKeyLifecycleError.OperationInProgress
+            every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(failure.left()),
+            )
+            val runner = runner()
+
+            // Act
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Revoke(FOREIGN))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+            )
+        }
+
+        @Test
+        fun `GIVEN the record leaves the resumable window during a retry pause WHEN resume THEN it is not retried`() =
+            runTest {
+                // Arrange
+                val deadline = NOW.plusSeconds(OUTSIDE_MARGIN_SECONDS_LEFT).epochSecond.toString()
+                pendingAuthorizations.store(USER_WALLET_ID, pending(deadline = deadline))
+                val failure = PolymarketSessionKeyLifecycleError.Unsettled(key(OWN, PolymarketSessionKeyStatus.REVOKING))
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(failure.left()),
+                )
+                val runner = runner(clock = SchedulerClock(testScheduler))
+
+                // Act
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                    PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+                )
+            }
+
+        @Test
+        fun `GIVEN extend fails while the record cannot be read WHEN finished THEN nothing is resumed`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            pendingAuthorizations.readFailure = PolymarketSessionKeyError.Failure(IllegalStateException("locked"))
+            val failure = PolymarketSessionKeyLifecycleError.OperationInProgress
+            every { manage.renew(USER_WALLET_ID) } returns flowOf(PolymarketSessionKeyProgress.Finished(failure.left()))
+            val runner = runner()
+
+            // Act
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Extend)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+            )
+        }
+
+        @Test
+        fun `GIVEN an outcome the host has not acknowledged WHEN resume THEN it is kept and nothing is resumed`() =
+            runTest {
+                // Arrange
+                val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+                every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(failure.left()),
+                )
+                val runner = runner()
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Reactivate)
+                advanceUntilIdle()
+                val finished = runner.observe(USER_WALLET_ID).value.finished
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+
+                // Act
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { manage.resume(any()) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished).isEqualTo(finished)
+            }
+
+        @Test
+        fun `GIVEN a resume refused for an unacknowledged outcome WHEN acknowledged THEN the pair is resumed`() =
+            runTest {
+                // Arrange
+                val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+                every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(failure.left()),
+                )
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+                val runner = runner()
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Reactivate)
+                advanceUntilIdle()
+                val finishedId = requireNotNull(runner.observe(USER_WALLET_ID).value.finished).id
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+                runner.resume(USER_WALLET_ID)
+                advanceUntilIdle()
+
+                // Act
+                runner.acknowledge(USER_WALLET_ID, finishedId)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(key(OWN).right())
+            }
+
+        @Test
+        fun `GIVEN no resume was refused WHEN an outcome is acknowledged THEN nothing is resumed`() = runTest {
+            // Arrange
+            val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+            every { manage.enable(USER_WALLET_ID) } returns flowOf(
+                PolymarketSessionKeyProgress.Finished(failure.left()),
+            )
+            val runner = runner()
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Reactivate)
+            advanceUntilIdle()
+            val finishedId = requireNotNull(runner.observe(USER_WALLET_ID).value.finished).id
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+
+            // Act
+            runner.acknowledge(USER_WALLET_ID, finishedId)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+        }
+
+        @Test
+        fun `GIVEN the record cannot be read WHEN resume THEN no operation starts and the record is kept`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            pendingAuthorizations.readFailure = PolymarketSessionKeyError.Failure(IllegalStateException("locked"))
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending())
+            assertThat(runner.observe(USER_WALLET_ID).value).isEqualTo(PolymarketSessionKeyOperationState.IDLE)
+        }
+
+        @Test
+        fun `GIVEN extend fails without a record WHEN finished THEN nothing is resumed`() = runTest {
+            // Arrange
+            val failure = PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network)
+            every { manage.renew(USER_WALLET_ID) } returns flowOf(PolymarketSessionKeyProgress.Finished(failure.left()))
+            val runner = runner()
+
+            // Act
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Extend)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(
+                PolymarketSessionKeyOperationFailure(error = failure, isAfterRevocation = false).left(),
+            )
+        }
+
+        @Test
+        fun `GIVEN an operation runs WHEN resume THEN it is ignored`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pending())
+            every { manage.enable(USER_WALLET_ID) } returns flow { awaitCancellation() }
+            val runner = runner()
+            runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate)
+            runCurrent()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { manage.resume(any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending())
+        }
+
+        @Test
+        fun `GIVEN a resume refused while a revoke runs WHEN the revoke is acknowledged THEN the pair is resumed once`() =
+            runTest {
+                // Arrange
+                val revocation = CompletableDeferred<Unit>()
+                every { manage.revoke(USER_WALLET_ID, FOREIGN) } returns flow {
+                    revocation.await()
+                    emit(PolymarketSessionKeyProgress.Finished(key(FOREIGN, PolymarketSessionKeyStatus.REVOKED).right()))
+                }
+                every { manage.resume(USER_WALLET_ID) } returns flowOf(
+                    PolymarketSessionKeyProgress.Finished(key(OWN).right()),
+                )
+                val runner = runner()
+                runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Revoke(FOREIGN))
+                runCurrent()
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+                runner.resume(USER_WALLET_ID)
+                runCurrent()
+                revocation.complete(Unit)
+                advanceUntilIdle()
+                val revokeId = requireNotNull(runner.observe(USER_WALLET_ID).value.finished).id
+
+                // Act
+                runner.acknowledge(USER_WALLET_ID, revokeId)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+                assertThat(runner.observe(USER_WALLET_ID).value.finished?.result).isEqualTo(key(OWN).right())
+            }
+
+        @Test
+        fun `GIVEN a resume reads the record WHEN activation starts THEN it is busy and the resume runs`() =
+            runTest {
+                // Arrange
+                pendingAuthorizations.store(USER_WALLET_ID, pending())
+                every { manage.resume(USER_WALLET_ID) } returns flow { awaitCancellation() }
+                val runner = runner()
+                runner.resume(USER_WALLET_ID)
+
+                // Act
+                val start = runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate)
+                runCurrent()
+
+                // Assert
+                assertThat(start).isEqualTo(PolymarketSessionKeyOperationStart.Busy)
+                verify(exactly = 0) { manage.enable(any()) }
+                verify(exactly = 1) { manage.resume(USER_WALLET_ID) }
+            }
+
+        @Test
+        fun `GIVEN nothing is stored WHEN resume finished reading THEN the user can start an activation`() = runTest {
+            // Arrange
+            every { manage.enable(USER_WALLET_ID) } returns flow { awaitCancellation() }
+            val runner = runner()
+            runner.resume(USER_WALLET_ID)
+            runCurrent()
+
+            // Act
+            val start = runner.start(USER_WALLET_ID, PolymarketSessionKeyOperationRequest.Activate)
+
+            // Assert
+            assertThat(start).isEqualTo(PolymarketSessionKeyOperationStart.Started(id = 1))
+        }
+
+        @Test
+        fun `GIVEN a replacement record WHEN resume THEN it runs as an activation of the authorized key`() = runTest {
+            // Arrange
+            val replacement = createPendingAuthorization(purpose = PolymarketPendingAuthorization.Purpose.REPLACE)
+            pendingAuthorizations.store(USER_WALLET_ID, replacement)
+            every { manage.resume(USER_WALLET_ID) } returns flow { awaitCancellation() }
+            val runner = runner()
+
+            // Act
+            runner.resume(USER_WALLET_ID)
+            runCurrent()
+
+            // Assert
+            assertThat(runner.observe(USER_WALLET_ID).value.running).isEqualTo(
+                PolymarketSessionKeyOperation(
+                    id = 1,
+                    request = PolymarketSessionKeyOperationRequest.Activate,
+                    targetAddress = replacement.authorization.sessionKeyAddress,
+                    stage = PolymarketSessionKeyOperationStage.SIGNING,
+                ),
+            )
+        }
+
+        private fun pending(deadline: String = FUTURE_DEADLINE) = createPendingAuthorization(deadline)
+    }
+
+    private val pendingAuthorizations = FakePolymarketPendingAuthorizationStore()
+
+    private fun TestScope.runner(clock: Clock = Clock.systemUTC()) = PolymarketSessionKeyOperationRunner(
         manage = manage,
         stateService = stateService,
         sessionKeyStore = sessionKeyStore,
+        bannerStore = bannerStore,
+        pendingAuthorizations = pendingAuthorizations,
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
+        clock = clock,
     )
 
     private fun TestScope.finishedResult(request: PolymarketSessionKeyOperationRequest) = runner().run {
@@ -608,6 +1208,8 @@ internal class PolymarketSessionKeyOperationRunnerTest {
         const val PREVIOUS = "0x5e55000000000000000000000000000000000002"
         const val FOREIGN = "0x5e55000000000000000000000000000000000003"
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
+        const val MARGIN_SECONDS_LEFT = 20L
+        const val OUTSIDE_MARGIN_SECONDS_LEFT = 40L
 
         fun key(address: String, status: PolymarketSessionKeyStatus = PolymarketSessionKeyStatus.ACTIVE) =
             PolymarketSessionKey(
@@ -638,5 +1240,14 @@ internal class PolymarketSessionKeyOperationRunnerTest {
             ),
             isTradable = false,
         )
+    }
+
+    private class SchedulerClock(private val scheduler: TestCoroutineScheduler) : Clock() {
+
+        override fun getZone(): ZoneId = ZoneOffset.UTC
+
+        override fun withZone(zone: ZoneId?): Clock = this
+
+        override fun instant(): Instant = NOW.plusMillis(scheduler.currentTime)
     }
 }

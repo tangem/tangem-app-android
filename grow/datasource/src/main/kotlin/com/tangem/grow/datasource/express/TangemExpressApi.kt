@@ -11,7 +11,7 @@ import retrofit2.http.*
 /**
  * Interface of Tangem Express API (new swap mechanism)
  *
- * [RequiresSessionAuth] takes effect only on Express `/v2`, where the client is built with session auth.
+ * Methods marked [RequiresSessionAuth] are sent with the DPoP-bound session.
  */
 @Suppress("LongParameterList")
 interface TangemExpressApi {

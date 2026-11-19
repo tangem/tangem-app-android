@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.account
 
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import kotlinx.collections.immutable.ImmutableList
@@ -9,4 +10,5 @@ internal data class TangemPayDetailsTopBarConfig(
     val onOpenMenu: () -> Unit,
     val items: ImmutableList<TangemPayDropDownItemUM>,
     val subtitle: TextReference,
+    val menu: TangemMenu.UiState? = null,
 )

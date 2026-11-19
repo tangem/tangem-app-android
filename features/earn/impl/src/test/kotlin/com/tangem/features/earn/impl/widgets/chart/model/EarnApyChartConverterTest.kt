@@ -10,7 +10,6 @@ import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
-import com.tangem.features.earn.impl.widgets.chart.EarnApyChartTexts
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyAverageUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyBarUM
 import com.tangem.features.earn.impl.widgets.chart.ui.state.EarnApyChartUM
@@ -21,6 +20,7 @@ import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import org.junit.jupiter.api.AfterEach
@@ -109,7 +109,7 @@ internal class EarnApyChartConverterTest {
         val expected = EarnApyAverageUM(
             value = 5.12,
             text = resourceReference(R.string.yield_module_rate_info_sheet_chart_average, wrappedList("5.12%")),
-            title = EarnApyChartTexts.averageApy,
+            title = resourceReference(R.string.yield_module_incentive_chart_average_apy),
             rate = stringReference("5.12%"),
         )
         assertThat(actual.average).isEqualTo(expected)
@@ -300,6 +300,59 @@ internal class EarnApyChartConverterTest {
     }
 
     @Nested
+    inner class UpdateRate {
+
+        @Test
+        fun `GIVEN loaded state WHEN updateRate THEN header shows the new rate and the rest stays`() {
+            // Arrange
+            val loaded = convert(history).copy(selectedBar = 1)
+
+            // Act
+            val actual = converter.updateRate(state = loaded, rate = rate("0.0612", EarnRateType.APY), locale = Locale.US)
+
+            // Assert
+            assertThat(actual).isEqualTo(loaded.copy(currentRate = stringReference("6.12%")))
+        }
+
+        @Test
+        fun `GIVEN German locale WHEN updateRate THEN the rate follows the given locale`() {
+            // Act
+            val actual = converter.updateRate(
+                state = convert(history),
+                rate = rate("0.0612", EarnRateType.APY),
+                locale = Locale.GERMANY,
+            )
+
+            // Assert
+            assertThat(actual.currentRate).isEqualTo(stringReference("6,12%"))
+        }
+
+        @Test
+        fun `GIVEN no average WHEN updateRate THEN there is still no average`() {
+            // Arrange
+            val loaded = convert(history.copy(average = null))
+
+            // Act
+            val actual = converter.updateRate(state = loaded, rate = rate("0.0612", EarnRateType.APR), locale = Locale.US)
+
+            // Assert
+            assertThat(actual.average).isNull()
+        }
+
+        @Test
+        fun `GIVEN the same rate WHEN updateRate THEN the state is equal`() {
+            // Arrange
+            val loaded = convert(history)
+
+            // Act
+            val actual = converter.updateRate(state = loaded, rate = rate("0.055", EarnRateType.APY), locale = Locale.US)
+
+            // Assert
+            assertThat(actual).isEqualTo(loaded)
+        }
+    }
+
+    @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class RateTitle {
 
@@ -314,16 +367,30 @@ internal class EarnApyChartConverterTest {
             assertThat(actual.average?.title).isEqualTo(model.expectedAverage)
         }
 
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN rate type WHEN updateRate THEN titles follow the new type`(model: RateTitleModel) {
+            // Arrange
+            val loaded = convert(history, params = params(rate = rate("0.055", EarnRateType.APY)))
+
+            // Act
+            val actual = converter.updateRate(state = loaded, rate = rate("0.055", model.type), locale = Locale.US)
+
+            // Assert
+            assertThat(actual.rateTitle).isEqualTo(model.expectedCurrent)
+            assertThat(actual.average?.title).isEqualTo(model.expectedAverage)
+        }
+
         private fun provideTestModels() = listOf(
             RateTitleModel(
                 type = EarnRateType.APY,
-                expectedCurrent = EarnApyChartTexts.currentApy,
-                expectedAverage = EarnApyChartTexts.averageApy,
+                expectedCurrent = resourceReference(R.string.yield_module_earn_sheet_current_apy_title),
+                expectedAverage = resourceReference(R.string.yield_module_incentive_chart_average_apy),
             ),
             RateTitleModel(
                 type = EarnRateType.APR,
-                expectedCurrent = EarnApyChartTexts.currentApr,
-                expectedAverage = EarnApyChartTexts.averageApr,
+                expectedCurrent = resourceReference(R.string.earn_chart_current_apr),
+                expectedAverage = resourceReference(R.string.earn_chart_average_apr),
             ),
         )
     }
@@ -359,7 +426,7 @@ internal class EarnApyChartConverterTest {
         periods = periods,
         defaultPeriod = periods[2],
         history = { IllegalStateException("unused").left() },
-        currentRate = rate,
+        currentRate = MutableStateFlow(rate),
         callback = callback,
     )
 

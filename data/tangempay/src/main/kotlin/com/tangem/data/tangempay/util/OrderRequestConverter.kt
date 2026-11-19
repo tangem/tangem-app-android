@@ -48,6 +48,10 @@ internal object OrderRequestConverter :
                 customerWalletAddress = address,
                 chainId = request.chainId,
             )
+            is CustomerOrderRequest.AccountIssueBanking -> OrderRequest.BankingAccountIssue(
+                depositAddress = request.depositCredentials.address,
+                signature = request.depositCredentials.signature,
+            )
             is CustomerOrderRequest.Onboarding -> OrderRequest.Onboarding(
                 customerWalletAddress = address,
                 tariffPlanTransition = request.tariffPlanTransition?.let { transition ->

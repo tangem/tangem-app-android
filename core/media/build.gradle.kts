@@ -24,6 +24,7 @@ dependencies {
     // region Media
     implementation(deps.androidx.media3.common)
     api(deps.androidx.media3.datasource)
+    implementation(deps.androidx.media3.database)
     implementation(deps.androidx.media3.exoplayer)
     // endregion
 

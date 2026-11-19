@@ -2,9 +2,8 @@ package com.tangem.feature.swap.deeplink
 
 import android.net.Uri
 import arrow.core.Either
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_AMOUNT_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.FROM_TOKEN_ID_KEY
@@ -15,9 +14,12 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TO_NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TO_TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCase
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCase
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
@@ -31,12 +33,12 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
@@ -64,7 +66,7 @@ import java.math.BigDecimal
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SwapDeepLinkHandlerTest {
 
-    private val router: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val selectWalletUseCase: SelectWalletUseCase = mockk()
@@ -75,9 +77,14 @@ internal class SwapDeepLinkHandlerTest {
     private val swapInteractor: SwapInteractor = mockk()
 
     private val walletId = UserWalletId("011")
+    private var stack: List<Route> = emptyList()
 
     @BeforeEach
     fun setUp() {
+        stack = listOf(AppRoute.Wallet)
+        every { router.navigate(any(), any()) } answers {
+            stack = firstArg<(List<Route>) -> List<Route>>().invoke(stack)
+        }
         mockkObject(TangemLogger)
         every { TangemLogger.e(any<String>()) } just Runs
         every { TangemLogger.e(any<String>(), any()) } just Runs
@@ -198,7 +205,6 @@ internal class SwapDeepLinkHandlerTest {
     }
 
     private val handler = SwapDeepLinkHandler(
-        router = router,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getWalletsUseCase = getWalletsUseCase,
         selectWalletUseCase = selectWalletUseCase,
@@ -211,7 +217,13 @@ internal class SwapDeepLinkHandlerTest {
 
     private fun handle(scope: TestScope, queryParams: Map<String, String>) {
         handler.handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = false,
+                router = router,
+            ),
         )
     }
 
@@ -225,7 +237,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { selectWalletUseCase(any()) }
     }
 
@@ -242,7 +254,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
             coVerify(exactly = 1) { selectWalletUseCase(other) }
         }
 
@@ -262,7 +274,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
             coVerify(exactly = 0) { selectWalletUseCase(any()) }
         }
 
@@ -276,7 +288,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { selectWalletUseCase(any()) }
     }
 
@@ -290,7 +302,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { selectWalletUseCase(any()) }
     }
 
@@ -318,7 +330,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 1) { selectWalletUseCase(richer) }
     }
 
@@ -342,7 +354,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     @Test
@@ -355,7 +367,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verify(exactly = 0) { router.navigate(any(), any()) }
     }
 
     @Test
@@ -377,7 +389,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 1) { selectWalletUseCase(walletId) }
         coVerify(exactly = 0) { selectWalletUseCase(locked) }
         coVerify(exactly = 1) { getWalletTotalBalanceUseCase(setOf(walletId)) }
@@ -396,7 +408,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
             coVerify(exactly = 0) { selectWalletUseCase(locked) }
         }
 
@@ -412,7 +424,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) }
     }
 
@@ -446,7 +458,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -473,7 +485,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     @Test
@@ -495,7 +507,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -508,7 +520,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) }
     }
 
@@ -522,7 +534,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) }
     }
 
@@ -544,7 +556,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -565,7 +577,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -595,7 +607,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -633,7 +645,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     // endregion
@@ -674,7 +686,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -703,7 +715,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
     }
 
     @Test
@@ -731,7 +743,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { swapInteractor.getPair(any<SwapCurrencyStatus>(), any<SwapCurrencyStatus>(), any()) }
     }
 
@@ -762,7 +774,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     @Test
@@ -787,7 +799,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expected)
         coVerify(exactly = 0) { swapInteractor.getPair(any<SwapCurrencyStatus>(), any<SwapCurrencyStatus>(), any()) }
     }
 
@@ -823,7 +835,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     @Test
@@ -854,7 +866,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     @Test
@@ -892,7 +904,7 @@ internal class SwapDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(route = expected, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expected)
         }
 
     // endregion
@@ -902,7 +914,7 @@ internal class SwapDeepLinkHandlerTest {
     fun `GIVEN swap route already on top WHEN handle THEN it is replaced instead of pushed`() = runTest {
         // Arrange
         val opened = bareSwap(walletId).copy(fromCryptoCurrency = currency("btc", "bitcoin"))
-        every { router.stack } returns listOf(AppRoute.Wallet, opened)
+        stack = listOf(AppRoute.Wallet, opened)
         val expected = bareSwap(walletId)
 
         // Act
@@ -910,14 +922,12 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.replaceCurrent(route = expected, onComplete = any()) }
-        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, expected).inOrder()
     }
 
     @Test
     fun `GIVEN another screen on top WHEN handle THEN swap is pushed`() = runTest {
         // Arrange
-        every { router.stack } returns listOf(AppRoute.Wallet)
         val expected = bareSwap(walletId)
 
         // Act
@@ -925,28 +935,26 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
-        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, expected).inOrder()
     }
     @Test
-    fun `GIVEN the same swap route already on top WHEN handle THEN nothing is navigated and no error`() = runTest {
+    fun `GIVEN the same swap route already on top WHEN handle THEN stack is unchanged`() = runTest {
         // Arrange
-        every { router.stack } returns listOf(AppRoute.Wallet, bareSwap(walletId))
+        stack = listOf(AppRoute.Wallet, bareSwap(walletId))
 
         // Act
         handle(this, emptyMap())
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
-        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, bareSwap(walletId)).inOrder()
     }
 
     @Test
     fun `GIVEN account flow swap on top WHEN handle THEN swap is pushed over it`() = runTest {
         // Arrange
         val accountFlowSwap = bareSwap(walletId).copy(accountFlow = AppRoute.Swap.AccountFlow.TopUp)
-        every { router.stack } returns listOf(AppRoute.Wallet, accountFlowSwap)
+        stack = listOf(AppRoute.Wallet, accountFlowSwap)
         val expected = bareSwap(walletId)
 
         // Act
@@ -954,8 +962,7 @@ internal class SwapDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { router.push(route = expected, onComplete = any()) }
-        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, accountFlowSwap, expected).inOrder()
     }
     // endregion
 }

@@ -55,14 +55,20 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   owner route is refused. The route comes from `PolymarketOrderSigningRouter` (a BFF record is required, unlike iOS)
   unless the preference is `OWNER_ONLY`.
 - A session key refused by the CLOB (`401`, a signer/authorization `4xx` message, `NotSent`) stays out of trading
-  until a new authorization or restart; the order is re-signed with the owner key. A bare `403` is a geoblock, not
-  a refusal.
+  until a new authorization or restart. The order is never re-signed with the owner key behind the user's back: the
+  user confirms it again on the owner button. A bare `403` is a geoblock, not a refusal.
 
 ## Session key lifecycle
 
 - Every relayer batch takes the next deposit-wallet nonce → claim, withdrawal and lifecycle share
-  `PolymarketDepositWalletLock`. A withdrawal reads its nonce outside it (a lifecycle op in between →
-  `RelayerRejected`).
+  `PolymarketDepositWalletLock`, each reading its nonce under it. Renew / replace hold it from signing to the
+  accepted authorization (revoke `n`, authorize `n+1`), never past the authorization's deadline. A claim or
+  withdrawal never waits for a lifecycle op: it fails at once with `WalletBusy` (iOS parity); the withdrawal
+  tracker retries its resend.
+- Renew / replace keep the signed revocation and authorization in `PolymarketPendingAuthorizationStore` (Keystore)
+  before the revocation is sent, until the authorization is accepted, refused or past its deadline. Entering
+  Predictions resumes it as the operation that signed it (Extend / Activate; retries after 10, 20, 40 s); meanwhile claims, withdrawals and new lifecycle
+  operations are refused. The wallet nonce tells what is left: `n` → send the revocation, `n+1` → the authorization.
 - One lifecycle operation per wallet; the UI starts them only through `PolymarketSessionKeyOperationRunner` (app
   scope — leaving the screen must not drop a pre-signed authorization). `Activate` picks enable / renew / replace.
 - Nothing is signed twice without the user: a refused or expired signature → `StaleSignature`. Only an unanswered or
@@ -71,6 +77,12 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - A key the BFF stops listing while `REVOKING` counts as revoked only once Polymarket no longer lists the signer;
   otherwise the outcome is unsettled and the next refresh shows the truth.
 - The outcome stays in the runner until the host acknowledges it; nothing offers Activate while an operation runs.
+- A listed signer is ours only with scopes exactly `{CLOB}` and the record's `validUntil` to the second.
+  Readiness and reconciliation share it; the own key listed with other terms is foreign, missing and not traded.
+- Readiness lives in memory only, as on iOS: reconciliation restores it from the signer list (Predictions screens,
+  fast trading settings, and an order sheet whose held key is not tradable).
+- An `ACTIVE` key Polymarket does not list after 10 reads (~27 s) still finishes the operation successfully, not
+  ready: the owner signs until reconciliation marks it ready (iOS rule). Only a key that is not `ACTIVE` fails.
 
 ## Claims
 

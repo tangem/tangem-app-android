@@ -1,8 +1,8 @@
 package com.tangem.features.marketing.impl.model
 
-import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.OnrampDeeplinkTarget
 import com.tangem.common.routing.deeplink.resolveOnrampDeeplinkTarget
+import com.tangem.core.navigation.deeplink.DeepLinkScheme
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.utils.extensions.uriValidate
 import java.net.URI
@@ -16,6 +16,9 @@ internal enum class CtaBannerLink {
 
     /** An [APP_LINK] that opens the demand survey, so it is hidden once the wallet has answered it */
     CONCIERGE_WAITLIST,
+
+    /** An [APP_LINK] to the Money account onboarding, whose button says Continue or Activate by the account state */
+    MONEY_ACCOUNT,
 
     /**
      * A partner page. Partner names and links are configured on the backend and change without a release, so the page
@@ -50,9 +53,12 @@ private fun URI.resolveTangemLink(): CtaBannerLink {
         routeHost.isNullOrBlank() -> CtaBannerLink.UNSUPPORTED
         OnrampDeepLinkHandler.canHandle(this) ->
             if (isConciergeWaitlist()) CtaBannerLink.CONCIERGE_WAITLIST else CtaBannerLink.APP_LINK
+        routeHost == MONEY_ACCOUNT_HOST -> CtaBannerLink.MONEY_ACCOUNT
         else -> CtaBannerLink.APP_LINK
     }
 }
+
+private const val MONEY_ACCOUNT_HOST = "onboard-virtual-account"
 
 private fun URI.isConciergeWaitlist(): Boolean =
     resolveOnrampDeeplinkTarget(queryParams()) == OnrampDeeplinkTarget.ConciergeWaitlist

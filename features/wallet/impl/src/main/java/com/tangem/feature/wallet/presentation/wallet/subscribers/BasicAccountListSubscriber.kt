@@ -62,6 +62,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 jointPendingOperations = jointPendingOperations,
                 isRedesignedAccountRowsEnabled = walletFeatureToggles.isRedesignedAccountRowsEnabled,
                 isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
+                isTangemPayGroupEnabled = walletFeatureToggles.isTangemPayGroupEnabled,
             ),
         )
     }

@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -13,6 +14,7 @@ import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.google.common.truth.Truth.assertThat
 import io.mockk.clearMocks
 import io.mockk.every
@@ -65,6 +67,28 @@ internal class TangemPayMainBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN loaded account with single card WHEN convert THEN subtitle is card last digits`() {
+        // Act
+        val result = converter.convert(paymentAccount(loadedValue(cardsCount = 1)))
+
+        // Assert
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(stringReference("*$LAST_DIGITS"))
+    }
+
+    @Test
+    fun `GIVEN loaded account with single card without last digits WHEN convert THEN subtitle is cards count`() {
+        // Act
+        val result = converter.convert(paymentAccount(loadedValue(cardsCount = 1, lastDigits = "")))
+
+        // Assert
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(
+            pluralReference(id = R.plurals.tangempay_cards_count, count = 1, formatArgs = wrappedList(1)),
+        )
+    }
+
+    @Test
     fun `GIVEN loaded account without cards WHEN convert THEN subtitle is zero cards count`() {
         // Act
         val result = converter.convert(paymentAccount(loadedValue(cardsCount = 0)))
@@ -74,6 +98,45 @@ internal class TangemPayMainBlockConverterTest {
         assertThat(content.subtitle).isEqualTo(
             pluralReference(id = R.plurals.tangempay_cards_count, count = 0, formatArgs = wrappedList(0)),
         )
+    }
+
+    @Test
+    fun `GIVEN Loaded with KYC additional info required WHEN convert THEN Content with action required subtitle`() {
+        // Arrange
+        val status = paymentAccount(loadedValue(cardsCount = 2, isKycAdditionalInfoRequired = true))
+
+        // Act
+        val result = converter.convert(status)
+
+        // Assert
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(TextReference.Res(R.string.tangempay_action_required_title))
+        assertThat(content.isActionRequired).isTrue()
+        assertThat(content.balance).isEqualTo(stringReference(DASH_SIGN))
+        content.onClick()
+        verify(exactly = 1) { tangemPayIntents.openDetails(status) }
+    }
+
+    @Test
+    fun `GIVEN Loaded without flag WHEN convert THEN Content with cards count subtitle`() {
+        // Act
+        val result = converter.convert(paymentAccount(loadedValue(cardsCount = 2)))
+
+        // Assert
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(
+            pluralReference(id = R.plurals.tangempay_cards_count, count = 2, formatArgs = wrappedList(2)),
+        )
+        assertThat(content.isActionRequired).isFalse()
+    }
+
+    @Test
+    fun `GIVEN deactivated account WHEN convert THEN action is not required`() {
+        // Act
+        val result = converter.convert(paymentAccount(deactivatedValue()))
+
+        // Assert
+        assertThat((result as TangemPayMainUM.Content).isActionRequired).isFalse()
     }
 
     @Test
@@ -151,6 +214,8 @@ internal class TangemPayMainBlockConverterTest {
     private fun loadedValue(
         cardsCount: Int = 1,
         isPaymentAccountIssuing: Boolean = false,
+        isKycAdditionalInfoRequired: Boolean = false,
+        lastDigits: String = LAST_DIGITS,
     ): PaymentAccountStatusValue.Loaded {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
@@ -159,13 +224,14 @@ internal class TangemPayMainBlockConverterTest {
             balance = null,
             cryptoCurrency = accountToken(),
             networks = emptyList(),
-            cards = List(cardsCount) { mockk<TangemPayCard>() },
+            cards = List(cardsCount) { mockk<TangemPayCard> { every { this@mockk.lastDigits } returns lastDigits } },
             fiatRate = null,
             error = null,
             virtualAccount = null,
             isBankOfframpAvailable = null,
             tariffPlan = null,
             isPaymentAccountIssuing = isPaymentAccountIssuing,
+            isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
         )
     }
 
@@ -185,6 +251,7 @@ internal class TangemPayMainBlockConverterTest {
 
     private companion object {
         const val USD_CURRENCY_CODE = "USD"
+        const val LAST_DIGITS = "1234"
         val RESIDENCY = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX")
     }
 }

@@ -30,7 +30,11 @@ internal class WalletAccountsApi @Inject constructor(
 
     suspend fun getAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletAccountsResponse> {
         return if (isV2Enabled) {
-            tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
+            tangemTechApi.getWalletAccountsV2(
+                walletId = walletId,
+                eTag = eTag,
+                supportedAccountTypes = supportedAccountTypes.query,
+            )
                 .map(GetWalletAccountsV2Response::toResponse)
         } else {
             tangemTechApi.getWalletAccountsV1(walletId = walletId, eTag = eTag)
@@ -43,7 +47,15 @@ internal class WalletAccountsApi @Inject constructor(
         body: SaveWalletAccountsResponse,
     ): ApiResponse<GetWalletAccountsResponse> {
         return if (isV2Enabled) {
-            tangemTechApi.saveWalletAccountsV2(walletId = walletId, eTag = eTag, body = body)
+            // The backend answers 400 to a row of a type the request does not list
+            val supportedRows = body.accounts.filter { supportedAccountTypes.isSupported(it.type) }
+
+            tangemTechApi.saveWalletAccountsV2(
+                walletId = walletId,
+                eTag = eTag,
+                body = body.copy(accounts = supportedRows),
+                supportedAccountTypes = supportedAccountTypes.query,
+            )
                 .map(GetWalletAccountsV2Response::toResponse)
         } else {
             tangemTechApi.saveWalletAccountsV1(
@@ -55,9 +67,16 @@ internal class WalletAccountsApi @Inject constructor(
     }
 
     suspend fun getArchivedAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletArchivedAccountsResponse> {
-        val version = if (isV2Enabled) JOINT_AWARE_VERSION else LEGACY_VERSION
-
-        return tangemTechApi.getWalletArchivedAccounts(version = version, walletId = walletId, eTag = eTag)
+        return if (isV2Enabled) {
+            tangemTechApi.getWalletArchivedAccounts(
+                version = JOINT_AWARE_VERSION,
+                walletId = walletId,
+                eTag = eTag,
+                supportedAccountTypes = supportedAccountTypes.query,
+            )
+        } else {
+            tangemTechApi.getWalletArchivedAccounts(version = LEGACY_VERSION, walletId = walletId, eTag = eTag)
+        }
     }
 
     private companion object {

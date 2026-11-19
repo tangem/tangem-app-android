@@ -7,11 +7,17 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
@@ -24,6 +30,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.features.polymarket.impl.R as PolymarketR
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
@@ -46,9 +53,6 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Opening the gate prompts for nothing: an undetermined wallet lands on Welcome with an idle button rather than
  * an unasked-for card prompt, and the full decision is taken when the user presses it.
- *
- * Nothing blocks the screen on a failure. Welcome is the gate's only content and its button is the only retry,
- * so a failed resolution and a failed run both leave it idle and report through a snackbar.
  */
 @ModelScoped
 @Suppress("LongParameterList")
@@ -63,6 +67,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
+    videoFactory: LoopingVideoController.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -80,12 +85,31 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private var storyContentPrefetch: Deferred<Boolean>? = null
 
+    private val heroVideo = videoFactory.create(
+        scope = modelScope,
+        videoRes = PolymarketR.raw.polymarket_welcome_background,
+        frameSize = HERO_VIDEO_SIZE,
+        diagnosticsSubject = "Polymarket welcome video",
+    )
+
+    val heroVideoState: StateFlow<LoopingVideoState>
+        get() = heroVideo.state
+
     init {
         resolveEntry()
     }
 
     fun onCloseClick() {
         router.pop()
+    }
+
+    fun setHeroVideoRunning(isRunning: Boolean) {
+        heroVideo.setRunning(isRunning = isRunning)
+    }
+
+    override fun onDestroy() {
+        heroVideo.release()
+        super.onDestroy()
     }
 
     private fun resolveEntry() {
@@ -143,7 +167,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 }
                 PolymarketNewAccountAllowance.UNDETERMINED -> {
                     stopStarting()
-                    reportFailure()
+                    reportRetryableFailure(resourceReference(R.string.prediction_onboarding_error_region_unknown))
                     return@launch
                 }
             }
@@ -153,7 +177,18 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun showRegionRestrictions() {
-        updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
+        if (uiState.value is PolymarketOnboardingUM.Welcome) {
+            updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
+            return
+        }
+
+        stopStarting()
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.prediction_region_restrictions_title),
+                message = resourceReference(R.string.prediction_region_restrictions_subtitle),
+            ),
+        )
     }
 
     private fun dismissRegionRestrictions() {
@@ -175,7 +210,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             is PolymarketOnboardingProgress.Ready -> completeOnboarding(isNewAccount = progress.isNewAccount)
             is PolymarketOnboardingProgress.Failed -> {
                 stopStarting()
-                reportFailure()
+                reportFailure(progress)
             }
         }
     }
@@ -197,6 +232,32 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun reportFailure() {
         messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
+    }
+
+    private fun reportFailure(failure: PolymarketOnboardingProgress.Failed) {
+        val message = failure.error.toFailureMessage() ?: return
+
+        if (failure.isRetryable) {
+            reportRetryableFailure(message)
+        } else {
+            messageSender.send(DialogMessage(message = message))
+        }
+    }
+
+    private fun reportRetryableFailure(message: TextReference) {
+        messageSender.send(
+            DialogMessage(
+                message = message,
+                title = resourceReference(R.string.common_something_went_wrong),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.alert_button_try_again),
+                        onClick = ::startOnboarding,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
     }
 
     private fun welcome(
@@ -232,12 +293,24 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun completeOnboarding(isNewAccount: Boolean) {
         modelScope.launch {
+            if (isNewAccount) reportAccountCreated()
+
             if (isNewAccount && isStoryAvailable()) {
                 router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
             }
 
             openFeed()
         }
+    }
+
+    private fun reportAccountCreated() {
+        messageSender.send(
+            SnackbarMessage(
+                message = resourceReference(R.string.account_create_success_message),
+                startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
+            ),
+        )
     }
 
     private fun prefetchStory() {
@@ -264,5 +337,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
         val STORY_SOURCE = AnalyticsParam.ScreensSources.Onboarding.value
         val STORY_AVAILABILITY_TIMEOUT = 1.seconds
+        val HERO_VIDEO_SIZE = VideoFrameSize(width = 1080, height = 1632)
     }
 }

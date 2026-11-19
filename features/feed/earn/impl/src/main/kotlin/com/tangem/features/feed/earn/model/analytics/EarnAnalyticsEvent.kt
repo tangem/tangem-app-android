@@ -77,4 +77,5 @@ internal enum class FilterTypeAnalytic(val value: String) {
     YIELD("Yield"),
     STAKING("Staking"),
     ALL_TYPES("All Types"),
+    VAULTS("Vaults"),
 }

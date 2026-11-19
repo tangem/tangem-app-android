@@ -50,6 +50,7 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -62,6 +63,7 @@ import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.features.tangempay.common.PayContextMenuButton
+import com.tangem.features.tangempay.common.PayMenuButton
 import com.tangem.features.tangempay.common.TangemPayActionButton
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
@@ -200,6 +202,16 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
                 ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
             }
+        }
+    }
+
+    state.kycAdditionalInfoBanner?.let { banner ->
+        item("kycAdditionalInfoBannerBlock") {
+            SpacerH12()
+            MessageBanner(
+                banner = banner,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         }
     }
 
@@ -371,16 +383,26 @@ private fun PayDetailsTopBar(
             Spacer(modifier = Modifier.height(4.dp))
             TangemNavigationText(text = config.subtitle, role = TangemNavigationText.Role.Subtitle)
         },
-        endButtonsGroup = if (config.items.isNotEmpty()) {
-            {
-                PayContextMenuButton(
-                    items = config.items,
-                    testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
-                    onOpen = config.onOpenMenu,
-                )
+        endButtonsGroup = when {
+            config.menu != null -> {
+                {
+                    PayMenuButton(
+                        menu = config.menu,
+                        testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
+                        onOpen = config.onOpenMenu,
+                    )
+                }
             }
-        } else {
-            null
+            config.items.isNotEmpty() -> {
+                {
+                    PayContextMenuButton(
+                        items = config.items,
+                        testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
+                        onOpen = config.onOpenMenu,
+                    )
+                }
+            }
+            else -> null
         },
     )
 }
@@ -417,21 +439,22 @@ private fun BalanceBlock(
             style = TangemTheme.typography3.caption.medium,
         )
 
-        when (state) {
-            is TangemPayDetailsBalanceBlockState.Loading -> Unit
-            is TangemPayDetailsBalanceBlockState.Content -> {
-                if (state.isInactive) {
-                    TangemBadge(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        text = resourceReference(R.string.tangempay_status_inactive),
-                        variant = TangemBadge.Variant.Outline,
-                        status = TangemBadge.Status.Warning,
-                        size = TangemBadge.Size.X6,
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
-                    )
-                }
-            }
-            is TangemPayDetailsBalanceBlockState.Error -> Unit
+        val isInactive = when (state) {
+            is TangemPayDetailsBalanceBlockState.Loading -> false
+            is TangemPayDetailsBalanceBlockState.Content -> state.isInactive
+            is TangemPayDetailsBalanceBlockState.Error -> state.isInactive
+        }
+        if (isInactive) {
+            TangemBadge(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_INACTIVE_BADGE),
+                text = resourceReference(R.string.tangempay_status_inactive),
+                variant = TangemBadge.Variant.Outline,
+                status = TangemBadge.Status.Warning,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
+            )
         }
     }
 }
@@ -488,17 +511,28 @@ private fun CardsBlock(
         ),
         horizontalArrangement = Arrangement.Center,
     ) {
-        items(items = cardsBlockState.cards) { item ->
-            TangemPayCardView(
-                isIssueInProgress = item.state != TangemPayCardUiState.Active,
-                lastDigits = item.lastDigits,
-                imageUrl = item.imageUrl,
-                cardType = item.cardType,
-                onClick = item.onClick,
-                isEnabled = item.isEnabled,
-                isFrozen = item.isFrozen,
-            )
-            SpacerW(8.dp)
+        items(
+            items = cardsBlockState.cards,
+            key = if (cardsBlockState.isCardRemovalAnimated) {
+                { card -> card.id }
+            } else {
+                null
+            },
+        ) { item ->
+            Row(
+                modifier = Modifier.conditional(cardsBlockState.isCardRemovalAnimated) { animateItem() },
+            ) {
+                TangemPayCardView(
+                    isIssueInProgress = item.state != TangemPayCardUiState.Active,
+                    lastDigits = item.lastDigits,
+                    imageUrl = item.imageUrl,
+                    cardType = item.cardType,
+                    onClick = item.onClick,
+                    isEnabled = item.isEnabled,
+                    isFrozen = item.isFrozen,
+                )
+                SpacerW(8.dp)
+            }
         }
         item {
             TangemPayAddCardView(

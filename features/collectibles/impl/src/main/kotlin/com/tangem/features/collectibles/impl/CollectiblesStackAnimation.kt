@@ -22,7 +22,9 @@ internal class CollectiblesStackAnimation(initialRoute: CollectiblesRoute) {
     private val CollectiblesRoute.isModalFlow: Boolean
         get() = this is CollectiblesRoute.MachineDetails ||
             this is CollectiblesRoute.ConfirmOrder ||
-            this is CollectiblesRoute.PackOpenFailed
+            this is CollectiblesRoute.PackOpenFailed ||
+            this is CollectiblesRoute.Inventory ||
+            this is CollectiblesRoute.NftDetails
 
     val animation: StackAnimation<CollectiblesRoute, ComposableContentComponent> = stackAnimation { child ->
         stackAnimator { factor, direction, content ->

@@ -1,25 +1,25 @@
 package com.tangem.features.jointaccount.deeplink
 
-import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import android.net.Uri
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.ENTRY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
-import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.account.status.utils.MainExpandedAccountsHolder
 import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.test.mock.MockAccounts
 import io.mockk.Runs
@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultJointAccountDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val singleAccountListFetcher: SingleAccountListFetcher = mockk()
@@ -69,10 +69,10 @@ class DefaultJointAccountDeepLinkHandlerTest {
     fun `GIVEN entry members WHEN handle deeplink THEN push JointAccountMembers`() = runTest {
         val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
         mockUserWallet(userWalletId)
-        every { appRouter.push(any(), any()) } answers {
+        every { router.push(any(), any()) } answers {
             secondArg<(Boolean) -> Unit>().invoke(true)
         }
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
         every { analyticsEventHandler.send(any()) } just Runs
         every { walletDeepLinkActionTrigger.selectWallet(any()) } just Runs
         every { singleAccountSupplier.filterJointAccount(jointAccount.accountId) } returns flowOf(jointAccount)
@@ -88,7 +88,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         advanceUntilIdle()
 
         verify {
-            appRouter.push(
+            router.push(
                 route = AppRoute.JointAccountMembers(
                     userWalletId = userWalletId,
                     cryptoAccountId = jointAccount.accountId.value,
@@ -104,7 +104,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         // Arrange
         val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
         mockUserWallet(userWalletId)
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
         every { singleAccountSupplier.filterJointAccount(jointAccount.accountId) } returns flowOf(jointAccount)
         coEvery {
             jointAccountCompromisedAlert.showIfCompromised(userWalletId, jointAccount.accountId.value)
@@ -122,15 +122,15 @@ class DefaultJointAccountDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.popTo(AppRoute.Wallet, any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify { router.popTo(AppRoute.Wallet, any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
     fun `GIVEN entry overview WHEN handle deeplink THEN expand account and pop to Wallet`() = runTest {
         val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
         mockUserWallet(userWalletId)
-        every { appRouter.popTo(any<AppRoute>(), any()) } answers {
+        every { router.popTo(any<AppRoute>(), any()) } answers {
             secondArg<(Boolean) -> Unit>().invoke(true)
         }
         every { analyticsEventHandler.send(any()) } just Runs
@@ -148,7 +148,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         )
         advanceUntilIdle()
 
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         verify { expandedAccountsHolder.expandAccount(jointAccount.accountId) }
         verify { walletDeepLinkActionTrigger.selectWallet(userWalletId) }
     }
@@ -157,7 +157,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
     fun `GIVEN entry overview AND pop fails WHEN handle deeplink THEN account is not expanded`() = runTest {
         val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
         mockUserWallet(userWalletId)
-        every { appRouter.popTo(any<AppRoute>(), any()) } answers {
+        every { router.popTo(any<AppRoute>(), any()) } answers {
             secondArg<(Boolean) -> Unit>().invoke(false)
         }
         every { analyticsEventHandler.send(any()) } just Runs
@@ -180,7 +180,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
     @Test
     fun `GIVEN unknown account_id WHEN handle deeplink THEN pop to Wallet`() = runTest {
         mockUserWallet(userWalletId)
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
         every { singleAccountSupplier.filterJointAccount(any<AccountId>()) } returns emptyFlow()
 
         createHandler(
@@ -193,7 +193,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         )
         advanceUntilIdle()
 
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         verify(exactly = 0) { expandedAccountsHolder.expandAccount(any()) }
         verify(exactly = 0) { walletDeepLinkActionTrigger.selectWallet(any()) }
     }
@@ -218,8 +218,8 @@ class DefaultJointAccountDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
-        verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
+        verify(exactly = 0) { router.popTo(any<AppRoute>(), any()) }
     }
 
     @Test
@@ -227,7 +227,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         runTest {
             // Arrange
             mockUserWallet(userWalletId)
-            every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+            every { router.popTo(any<AppRoute>(), any()) } just Runs
             every {
                 singleAccountSupplier.filterJointAccount(any<AccountId>())
             } returns emptyFlow()
@@ -245,7 +245,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
             coVerify(exactly = 0) { singleAccountListFetcher.invoke(any()) }
             coVerify(exactly = 0) { jointAccountListFetcher.invoke(params = any()) }
         }
@@ -255,7 +255,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         // Arrange
         val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
         mockUserWallet(userWalletId)
-        every { appRouter.popTo(any<AppRoute>(), any()) } answers {
+        every { router.popTo(any<AppRoute>(), any()) } answers {
             secondArg<(Boolean) -> Unit>().invoke(true)
         }
         every { analyticsEventHandler.send(any()) } just Runs
@@ -295,7 +295,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             // Arrange
             val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
             mockUserWallet(userWalletId)
-            every { appRouter.popTo(any<AppRoute>(), any()) } answers {
+            every { router.popTo(any<AppRoute>(), any()) } answers {
                 secondArg<(Boolean) -> Unit>().invoke(true)
             }
             every { analyticsEventHandler.send(any()) } just Runs
@@ -329,7 +329,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
     fun `GIVEN refresh failed AND account missing WHEN handle deeplink THEN redirect to main`() = runTest {
         // Arrange
         mockUserWallet(userWalletId)
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
         every { singleAccountSupplier.filterJointAccount(any<AccountId>()) } returns emptyFlow()
         coEvery {
             singleAccountListFetcher.invoke(SingleAccountListFetcher.Params(userWalletId))
@@ -348,7 +348,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
     @Test
@@ -356,7 +356,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         runTest {
             // Arrange
             every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
-            every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+            every { router.popTo(any<AppRoute>(), any()) } just Runs
 
             // Act
             createHandler(
@@ -370,14 +370,14 @@ class DefaultJointAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
             coVerify(exactly = 0) { resolveAndSelectUserWalletUseCase(any()) }
         }
 
     @Test
     fun `GIVEN non-hex wallet id WHEN handle deeplink THEN pop to Wallet without resolving wallet`() = runTest {
         // Arrange
-        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        every { router.popTo(any<AppRoute>(), any()) } just Runs
 
         // Act
         createHandler(
@@ -391,7 +391,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         coVerify(exactly = 0) { resolveAndSelectUserWalletUseCase(any()) }
     }
 
@@ -406,7 +406,6 @@ class DefaultJointAccountDeepLinkHandlerTest {
         isFromOnNewIntent: Boolean = false,
     ) {
         DefaultJointAccountDeepLinkHandler(
-            appRouter = appRouter,
             resolveAndSelectUserWalletUseCase = resolveAndSelectUserWalletUseCase,
             singleAccountSupplier = singleAccountSupplier,
             singleAccountListFetcher = singleAccountListFetcher,
@@ -422,6 +421,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = scope,
                 isFromOnNewIntent = isFromOnNewIntent,
+                router = router,
             ),
         )
     }

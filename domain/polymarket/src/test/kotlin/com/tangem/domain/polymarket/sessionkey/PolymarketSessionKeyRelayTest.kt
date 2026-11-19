@@ -5,13 +5,19 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
+import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,6 +25,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketSessionKeyRelayTest {
 
     private val sessionKeyRepository: PolymarketSessionKeyRepository = mockk()
@@ -84,11 +91,48 @@ internal class PolymarketSessionKeyRelayTest {
         assertThat(actual).isEqualTo(PolymarketSessionKeyRelay.Settlement.Settled(settled))
     }
 
+    @Test
+    fun `GIVEN Polymarket never lists the key WHEN await listing THEN it gives up after ten reads in 27 seconds`() =
+        runTest {
+            // Arrange
+            val active = key(PolymarketSessionKeyStatus.ACTIVE, createdAt = NOW)
+            coEvery { sessionKeyRepository.getSessionSigners(OWNER) } returns
+                emptyList<PolymarketSessionSigner>().right()
+
+            // Act
+            val actual = relay.awaitListing(OWNER, active)
+
+            // Assert
+            assertThat(actual).isFalse()
+            coVerify(exactly = 10) { sessionKeyRepository.getSessionSigners(OWNER) }
+            assertThat(currentTime).isEqualTo(27_000L)
+        }
+
+    @Test
+    fun `GIVEN Polymarket lists the key on the tenth read WHEN await listing THEN it is listed`() = runTest {
+        // Arrange
+        val active = key(PolymarketSessionKeyStatus.ACTIVE, createdAt = NOW)
+        val listed = PolymarketSessionSigner(address = ADDRESS, scopes = listOf("CLOB"), validUntil = active.validUntil)
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER) } returnsMany
+            List(9) { emptyList<PolymarketSessionSigner>().right() } + listOf(listOf(listed).right())
+
+        // Act
+        val actual = relay.awaitListing(OWNER, active)
+
+        // Assert
+        assertThat(actual).isTrue()
+        coVerify(exactly = 10) { sessionKeyRepository.getSessionSigners(OWNER) }
+    }
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         const val ADDRESS = "0x5e55000000000000000000000000000000000abc"
         const val CHECKSUMMED_ADDRESS = "0x5E55000000000000000000000000000000000ABC"
+        val OWNER = PolymarketClobIdentity.Owner(
+            address = "0x1111111111111111111111111111111111111111",
+            credentials = PolymarketApiCredentials(apiKey = "owner", secret = "s", passphrase = "p"),
+        )
 
         fun wallet(vararg keys: PolymarketSessionKey) = PolymarketWalletState(
             depositWalletAddress = "0x2222222222222222222222222222222222222222",

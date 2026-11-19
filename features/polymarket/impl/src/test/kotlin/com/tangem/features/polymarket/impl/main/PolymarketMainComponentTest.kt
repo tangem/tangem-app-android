@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
+import com.tangem.domain.polymarket.model.PolymarketGeoblock
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -64,7 +65,7 @@ internal class PolymarketMainComponentTest {
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk(relaxed = true)
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk<CheckPolymarketGeoblockUseCase>().also {
-        coEvery { it() } returns false.right()
+        coEvery { it() } returns PolymarketGeoblock.ALLOWED.right()
     }
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
@@ -172,7 +173,7 @@ internal class PolymarketMainComponentTest {
         receiveSheetFactory = mockk(),
         walletLinkGate = mockk { coEvery { ensureLinked(any()) } returns true },
         fastTradingBannerSource = mockk {
-            every { observe(any(), any()) } returns flowOf(null)
+            every { observe(any(), any(), any()) } returns flowOf(null)
         },
         polymarketFeatureToggles = mockk {
             every { isPolymarketPhaseTwoEnabled } returns false

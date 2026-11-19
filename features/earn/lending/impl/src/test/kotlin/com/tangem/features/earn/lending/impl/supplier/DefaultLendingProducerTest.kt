@@ -18,6 +18,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.features.earn.lending.impl.provider.FakeLendingProvider
 import com.tangem.features.earn.lending.impl.provider.LendingAsset
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -33,6 +34,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -148,6 +150,32 @@ internal class DefaultLendingProducerTest {
         assertThat(actual.assets.getValue(eth.id).source).isEqualTo(StatusSource.ONLY_CACHE)
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a network status and an actual market WHEN produce THEN the asset source follows the network`(
+        model: NetworkSourceModel,
+    ) = runTest {
+        // Arrange
+        networkStatus.value = NetworkStatus(network = eth.network, value = model.value)
+        val provider = FakeLendingProvider(assets = mapOf(eth.id to asset))
+        provider.marketFlow.value = FakeLendingProvider.loadingMarket(source = StatusSource.ACTUAL)
+        val producer = createProducer(provider)
+
+        // Act
+        val actual = producer.produce().first()
+
+        // Assert
+        assertThat(actual.assets.getValue(eth.id).source).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        NetworkSourceModel(value = NetworkStatus.Unreachable(address = null), expected = StatusSource.ONLY_CACHE),
+        NetworkSourceModel(value = NetworkStatus.MissedDerivation, expected = StatusSource.ONLY_CACHE),
+        NetworkSourceModel(value = noAccount(StatusSource.ACTUAL), expected = StatusSource.ACTUAL),
+        NetworkSourceModel(value = verified(source = StatusSource.ACTUAL).value, expected = StatusSource.ACTUAL),
+        NetworkSourceModel(value = verified(source = StatusSource.CACHE).value, expected = StatusSource.CACHE),
+    )
+
     @Test
     fun `GIVEN WETH token in the account WHEN produce THEN wrapped token is marked as in wallet`() = runTest {
         // Arrange
@@ -230,7 +258,16 @@ internal class DefaultLendingProducerTest {
         ),
     )
 
+    private fun noAccount(source: StatusSource) = NetworkStatus.NoAccount(
+        address = NetworkAddress.Single(NetworkAddress.Address(ADDRESS, NetworkAddress.Address.Type.Primary)),
+        amountToCreateAccount = BigDecimal.ONE,
+        errorMessage = "",
+        source = source,
+    )
+
     private fun txInfo(isOutgoing: Boolean): TxInfo = mockk { every { this@mockk.isOutgoing } returns isOutgoing }
+
+    data class NetworkSourceModel(val value: NetworkStatus.Value, val expected: StatusSource)
 
     private fun quote() = QuoteStatus(
         rawCurrencyId = eth.id.rawCurrencyId!!,

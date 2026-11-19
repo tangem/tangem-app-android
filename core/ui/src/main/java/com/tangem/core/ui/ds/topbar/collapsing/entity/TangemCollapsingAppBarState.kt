@@ -28,10 +28,13 @@ import kotlin.math.min
 @Stable
 class TangemCollapsingAppBarState(
     val initialHeightOffset: Float = 0f,
-    val heightOffsetLimit: Float = 0f,
+    heightOffsetLimit: Float = 0f,
     val partialHeightLimit: Float = heightOffsetLimit,
     var isTopOverscrollEnabled: Boolean = true,
 ) : ScrollableState {
+
+    private val _heightOffsetLimit = mutableFloatStateOf(heightOffsetLimit)
+    val heightOffsetLimit: Float get() = _heightOffsetLimit.floatValue
 
     private val _heightOffset = mutableFloatStateOf(initialHeightOffset)
     private var deferredConsumption: Float = 0f
@@ -63,7 +66,8 @@ class TangemCollapsingAppBarState(
     var direction: TopBarScrollDirection = TopBarScrollDirection.Idle
 
     private val scrollableState = ScrollableState { value ->
-        val effectiveLimit = if (isTopOverscrollEnabled) heightOffsetLimit + partialHeightLimit else heightOffsetLimit
+        val limit = this.heightOffsetLimit
+        val effectiveLimit = if (isTopOverscrollEnabled) limit + partialHeightLimit else limit
         val consume = if (value < 0) {
             // Already at or past the effective limit — don't consume collapsing scroll
             if (heightOffset <= effectiveLimit) 0f else max(effectiveLimit - heightOffset, value)
@@ -84,6 +88,14 @@ class TangemCollapsingAppBarState(
 
     override val isScrollInProgress: Boolean
         get() = scrollableState.isScrollInProgress
+
+    /** Updates measured header height, keeping a collapsed header collapsed when its content changes. */
+    fun updateHeightOffsetLimit(limit: Float) {
+        require(limit <= 0f)
+        val wasCollapsed = heightOffsetLimit < 0f && heightOffset == heightOffsetLimit
+        _heightOffsetLimit.floatValue = limit
+        heightOffset = if (wasCollapsed) limit else heightOffset
+    }
 
     /**
      *

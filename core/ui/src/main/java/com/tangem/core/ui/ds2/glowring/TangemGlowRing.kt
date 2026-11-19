@@ -10,6 +10,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,10 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.util.lerp as lerpFloat
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,7 +41,7 @@ import com.tangem.core.ui.res.generated.TangemColors3
  * Design-system v2 (DS3) **Glow Ring** — an animated angular-gradient halo that runs around a
  * rounded-rect outline, like lights chasing along the border.
  *
- * Version: 1.1.0
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=4933-126&m=dev)
  *
@@ -46,6 +49,9 @@ import com.tangem.core.ui.res.generated.TangemColors3
  * @param variant Color theme of the gradient — see [TangemGlowRing.Variant].
  * @param cornerRadius Corner radius of the ring; should match the radius of the wrapped surface.
  * @param animated When `false`, the ring is rendered static (no rotation).
+ * @param isSyncedAcrossInstances When `true`, the rotation phase is taken from the shared frame clock
+ * instead of the moment the ring entered composition, so several rings drawing slices of one outline
+ * rotate in lockstep.
  * @param quality Rendering strategy; defaults to [TangemGlowRing.Quality.Auto] (device-appropriate).
  * Force [TangemGlowRing.Quality.LayeredStrokes] to preview the pre-Android-12 fallback on any device.
  * @param contentDescription Accessibility label; pass a value when the ring conveys state (e.g. error),
@@ -58,6 +64,7 @@ fun TangemGlowRing(
     variant: TangemGlowRing.Variant = TangemGlowRing.Variant.Magic,
     cornerRadius: Dp = 24.dp,
     animated: Boolean = true,
+    isSyncedAcrossInstances: Boolean = false,
     quality: TangemGlowRing.Quality = TangemGlowRing.Quality.Auto,
     contentDescription: String? = null,
     content: @Composable BoxScope.() -> Unit = {},
@@ -68,23 +75,25 @@ fun TangemGlowRing(
         GlowRingMetrics(coreWidth = 2.dp, ringWidth = 4.dp, blurMid = 8.dp, blurBottom = 16.dp)
     }
 
-    val angle = if (animated) {
-        val transition = rememberInfiniteTransition(label = "glowRing")
-        val rotation by transition.animateFloat(
-            initialValue = GLOW_RING_START_ANGLE,
-            targetValue = 270f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(
-                    durationMillis = 24_000,
-                    easing = CubicBezierEasing(a = 0.1f, b = 0f, c = 0.9f, d = 1f),
+    val angle = when {
+        !animated -> GLOW_RING_START_ANGLE
+        isSyncedAcrossInstances -> rememberFrameClockGlowRingAngle()
+        else -> {
+            val transition = rememberInfiniteTransition(label = "glowRing")
+            val rotation by transition.animateFloat(
+                initialValue = GLOW_RING_START_ANGLE,
+                targetValue = GLOW_RING_END_ANGLE,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = GLOW_RING_ROTATION_DURATION_MILLIS,
+                        easing = GlowRingRotationEasing,
+                    ),
+                    repeatMode = RepeatMode.Restart,
                 ),
-                repeatMode = RepeatMode.Restart,
-            ),
-            label = "angle",
-        )
-        rotation
-    } else {
-        GLOW_RING_START_ANGLE
+                label = "angle",
+            )
+            rotation
+        }
     }
 
     Box(
@@ -117,6 +126,27 @@ fun TangemGlowRing(
 
 /** Sweep start angle, also reused as the static angle when [TangemGlowRing] is not animated (Figma: -90°). */
 private const val GLOW_RING_START_ANGLE = -90f
+private const val GLOW_RING_END_ANGLE = 270f
+private const val GLOW_RING_ROTATION_DURATION_MILLIS = 24_000
+private val GlowRingRotationEasing = CubicBezierEasing(a = 0.1f, b = 0f, c = 0.9f, d = 1f)
+
+@Composable
+private fun rememberFrameClockGlowRingAngle(): Float {
+    val angle by produceState(initialValue = GLOW_RING_START_ANGLE) {
+        while (true) {
+            withInfiniteAnimationFrameMillis { frameTimeMillis ->
+                val progress = (frameTimeMillis % GLOW_RING_ROTATION_DURATION_MILLIS).toFloat() /
+                    GLOW_RING_ROTATION_DURATION_MILLIS
+                value = lerpFloat(
+                    start = GLOW_RING_START_ANGLE,
+                    stop = GLOW_RING_END_ANGLE,
+                    fraction = GlowRingRotationEasing.transform(progress),
+                )
+            }
+        }
+    }
+    return angle
+}
 
 /**
  * Resolves the gradient stops for [variant] from the DS3 `colors3.glow` tokens. The
@@ -147,7 +177,7 @@ private fun rememberGlowRingStops(variant: TangemGlowRing.Variant, animated: Boo
 /** Public API surface of [TangemGlowRing]. */
 object TangemGlowRing {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 2, patch = 0)
 
     /** Color theme of the glow ring gradient. */
     enum class Variant {

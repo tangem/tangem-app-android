@@ -12,6 +12,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRateSource
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.assertSome
@@ -92,8 +93,35 @@ internal class DefaultEarnProductSummaryProducerTest {
                 products = mapOf(ETH_ID to listOf(answeredSummary)),
                 rateSources = emptyMap(),
                 source = StatusSource.CACHE,
+                isAwaitingProducts = true,
             )
             assertThat(frames.first().source).isEqualTo(StatusSource.CACHE)
+            assertThat(frames.last()).isEqualTo(expected)
+        }
+
+    @Test
+    fun `GIVEN one product has not answered and another fails WHEN produce THEN the ONLY_CACHE frame is pending`() =
+        runTest {
+            // Arrange
+            val pending = TestEarnProduct(id = PENDING_ID, rank = 0, summariesFlow = MutableSharedFlow())
+            val failing = TestEarnProduct(
+                id = FAILING_ID,
+                rank = 1,
+                summariesFlow = throwingSummaries(IllegalStateException("boom")),
+            )
+            val producer = createSummaryProducer(products = setOf(pending, failing))
+
+            // Act
+            val frames = getEmittedValues(producer.produce())
+            runCurrent()
+
+            // Assert
+            val expected = EarnProductSummaries(
+                products = emptyMap(),
+                rateSources = emptyMap(),
+                source = StatusSource.ONLY_CACHE,
+                isAwaitingProducts = true,
+            )
             assertThat(frames.last()).isEqualTo(expected)
         }
 
@@ -587,6 +615,32 @@ internal class DefaultEarnProductSummaryProducerTest {
             assertThat(frames.last()).isEqualTo(expected)
         }
 
+        @Test
+        fun `GIVEN one product with CACHE for one currency and ONLY_CACHE for another WHEN produce THEN the frame is pending`() =
+            runTest {
+                // Arrange
+                val refreshing = createSummary(productId = STEADY_ID, source = StatusSource.CACHE)
+                val failed = createSummary(productId = STEADY_ID, source = StatusSource.ONLY_CACHE)
+                val product = TestEarnProduct(
+                    id = STEADY_ID,
+                    summariesFlow = flowOf(mapOf(ETH_ID to refreshing, BNB_ID to failed)),
+                )
+                val producer = createSummaryProducer(products = setOf(product))
+
+                // Act
+                val frames = getEmittedValues(producer.produce())
+                runCurrent()
+
+                // Assert
+                val expected = EarnProductSummaries(
+                    products = mapOf(ETH_ID to listOf(refreshing), BNB_ID to listOf(failed)),
+                    rateSources = emptyMap(),
+                    source = StatusSource.ONLY_CACHE,
+                    pendingCurrencies = setOf(ETH_ID),
+                )
+                assertThat(frames.last()).isEqualTo(expected)
+            }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN products with sources WHEN produce THEN merged source is the weakest of them`(model: SourceModel) =
@@ -609,6 +663,7 @@ internal class DefaultEarnProductSummaryProducerTest {
                     products = mapOf(ETH_ID to listOf(first, second)),
                     rateSources = emptyMap(),
                     source = model.expected,
+                    pendingCurrencies = model.pendingCurrencies,
                 )
                 assertThat(frames.last()).isEqualTo(expected)
             }
@@ -636,19 +691,123 @@ internal class DefaultEarnProductSummaryProducerTest {
         }
 
         private fun provideTestModels() = listOf(
-            SourceModel(first = StatusSource.ACTUAL, second = StatusSource.ACTUAL, expected = StatusSource.ACTUAL),
-            SourceModel(first = StatusSource.ACTUAL, second = StatusSource.CACHE, expected = StatusSource.CACHE),
+            SourceModel(
+                first = StatusSource.ACTUAL,
+                second = StatusSource.ACTUAL,
+                expected = StatusSource.ACTUAL,
+                pendingCurrencies = emptySet(),
+            ),
+            SourceModel(
+                first = StatusSource.ACTUAL,
+                second = StatusSource.CACHE,
+                expected = StatusSource.CACHE,
+                pendingCurrencies = setOf(ETH_ID),
+            ),
             SourceModel(
                 first = StatusSource.ACTUAL,
                 second = StatusSource.ONLY_CACHE,
                 expected = StatusSource.ONLY_CACHE,
+                pendingCurrencies = emptySet(),
             ),
             SourceModel(
                 first = StatusSource.CACHE,
                 second = StatusSource.ONLY_CACHE,
                 expected = StatusSource.ONLY_CACHE,
+                pendingCurrencies = setOf(ETH_ID),
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Pending {
+
+        @Test
+        fun `GIVEN a product reports a loading currency WHEN produce THEN only that currency is pending on CACHE`() = runTest {
+            // Arrange
+            val summary = createSummary(productId = STEADY_ID)
+            val product = TestEarnProduct(
+                id = STEADY_ID,
+                summariesFlow = flowOf(mapOf(ETH_ID to summary)),
+                loadingCurrencies = setOf(BNB_ID),
+            )
+            val producer = createSummaryProducer(products = setOf(product))
+
+            // Act
+            val frames = getEmittedValues(producer.produce())
+            runCurrent()
+
+            // Assert
+            val expected = EarnProductSummaries(
+                products = mapOf(ETH_ID to listOf(summary)),
+                rateSources = emptyMap(),
+                source = StatusSource.CACHE,
+                pendingCurrencies = setOf(BNB_ID),
+            )
+            assertThat(frames.last()).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN a product with a loading currency WHEN its flow throws THEN nothing stays pending`() = runTest {
+            // Arrange
+            val summary = createSummary(productId = FAILING_ID)
+            val failing = TestEarnProduct(
+                id = FAILING_ID,
+                summariesFlow = flow {
+                    emit(mapOf(ETH_ID to summary))
+                    throw IllegalStateException("boom")
+                },
+                loadingCurrencies = setOf(BNB_ID),
+            )
+            val producer = createSummaryProducer(products = setOf(failing))
+
+            // Act
+            val frames = getEmittedValues(producer.produce())
+            runCurrent()
+
+            // Assert
+            val expected = EarnProductSummaries(
+                products = mapOf(ETH_ID to listOf(summary.copy(source = StatusSource.ONLY_CACHE))),
+                rateSources = emptyMap(),
+                source = StatusSource.ONLY_CACHE,
+            )
+            assertThat(frames.last()).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN a rate source not answered and another on CACHE WHEN produce THEN nothing is pending`() = runTest {
+            // Arrange
+            val productSummary = createSummary(productId = PRODUCT_ID)
+            val product = TestEarnProduct(id = PRODUCT_ID, summariesFlow = flowOf(mapOf(ETH_ID to productSummary)))
+            val rate = createRate()
+            val refreshing = TestEarnRateSource(
+                id = YIELD_ID,
+                ratesFlow = flowOf(mapOf(ETH_ID to createRateEntry(rate = rate, source = StatusSource.CACHE))),
+            )
+            val silent = TestEarnRateSource(id = SILENT_ID, ratesFlow = MutableSharedFlow())
+            val producer = createSummaryProducer(products = setOf(product), rateSources = setOf(refreshing, silent))
+
+            // Act
+            val frames = getEmittedValues(producer.produce())
+            runCurrent()
+
+            // Assert
+            val actual = frames.last()
+            val rateSummary = createSummary(
+                productId = YIELD_ID,
+                rate = rate,
+                source = StatusSource.CACHE,
+                rateText = badgeConverter.convert(rate),
+                risk = null,
+                onClickAction = actual.rateSources.getValue(ETH_ID).single().onClickAction,
+            )
+            val expected = EarnProductSummaries(
+                products = mapOf(ETH_ID to listOf(productSummary)),
+                rateSources = mapOf(ETH_ID to listOf(rateSummary)),
+                source = StatusSource.CACHE,
+            )
+            assertThat(actual).isEqualTo(expected)
+        }
     }
 
     @Nested
@@ -804,8 +963,13 @@ internal class DefaultEarnProductSummaryProducerTest {
     private fun throwingSummaries(cause: Throwable): Flow<Map<CryptoCurrency.ID, EarnProductSummary>> =
         flow { throw cause }
 
-    internal data class SourceModel(val first: StatusSource, val second: StatusSource, val expected: StatusSource) {
-        override fun toString(): String = "$first + $second -> $expected"
+    internal data class SourceModel(
+        val first: StatusSource,
+        val second: StatusSource,
+        val expected: StatusSource,
+        val pendingCurrencies: Set<CryptoCurrency.ID>,
+    ) {
+        override fun toString(): String = "$first + $second -> $expected, pending ${pendingCurrencies.size}"
     }
 
     internal data class RateEntryModel(val isActive: Boolean, val expectedPosition: EarnPositionSummary?) {
@@ -823,6 +987,8 @@ internal class DefaultEarnProductSummaryProducerTest {
         val DEGRADING_ID = EarnProductId("degrading")
         val PRODUCT_ID = EarnProductId("product")
         val YIELD_ID = EarnProductId("yield")
+        val SILENT_ID = EarnProductId("silent")
         val OTHER_WALLET_ID = UserWalletId("fedcba9876543210")
+        val BNB_ID = CryptoCurrency.ID.fromValue("coin⟨BNB⟩binancecoin")
     }
 }

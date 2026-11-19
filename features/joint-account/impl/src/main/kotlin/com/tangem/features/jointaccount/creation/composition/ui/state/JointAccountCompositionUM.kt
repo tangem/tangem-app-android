@@ -1,6 +1,8 @@
 package com.tangem.features.jointaccount.creation.composition.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.jointaccount.common.ui.jointAccountAccessLossNote
 
 @Immutable
 internal data class JointAccountCompositionUM(
@@ -10,6 +12,9 @@ internal data class JointAccountCompositionUM(
     val onContinueClick: () -> Unit,
     val onBackClick: () -> Unit,
 ) {
+
+    val accessLossNote: TextReference
+        get() = jointAccountAccessLossNote(threshold = requiredToSign.value, total = totalMembers.value)
 
     data class StepperUM(
         val value: Int,
