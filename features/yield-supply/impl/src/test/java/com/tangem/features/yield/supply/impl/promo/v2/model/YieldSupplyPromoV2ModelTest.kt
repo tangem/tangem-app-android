@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.promo.v2.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.ui.extensions.wrappedList
@@ -152,6 +153,7 @@ internal class YieldSupplyPromoV2ModelTest {
                     userWalletId = UserWalletId("011"),
                     currency = currency,
                     apy = "5.98",
+                    account = AccountKind.Portfolio,
                     isPromoEnabled = isPromoEnabled,
                 ),
             ),

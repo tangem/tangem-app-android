@@ -849,6 +849,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
                         apy = route.apy,
+                        account = route.account,
                     ),
                     componentFactory = yieldSupplyEntryComponentFactory,
                 )

@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.common
 import arrow.core.none
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -51,7 +52,6 @@ internal class YieldSupplyCurrencyStatusResolverTest {
         clearMocks(singleAccountStatusListSupplier, nonPortfolioCurrenciesProvider)
         every { singleAccountStatusListSupplier(userWalletId) } returns flowOf(accountStatusListOf())
         coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusListOf()
-        coEvery { nonPortfolioCurrenciesProvider.findCurrency(userWalletId, token.id) } returns null
         coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, network) } returns emptyList()
     }
 
@@ -65,7 +65,7 @@ internal class YieldSupplyCurrencyStatusResolverTest {
             every { singleAccountStatusListSupplier(userWalletId) } returns flowOf(accountStatusListOf(tokenStatus))
 
             // Act
-            val actual = resolver.observe(userWalletId, token).first()
+            val actual = resolver.observe(userWalletId, token, AccountKind.Portfolio).first()
 
             // Assert
             assertThat(actual).isEqualTo(tokenStatus.some())
@@ -75,12 +75,11 @@ internal class YieldSupplyCurrencyStatusResolverTest {
         fun `GIVEN a currency held outside the portfolio WHEN observe THEN its holder status, not the portfolio`() =
             runTest {
                 // Arrange
-                coEvery { nonPortfolioCurrenciesProvider.findCurrency(userWalletId, token.id) } returns token
                 every { nonPortfolioCurrenciesProvider.observe(userWalletId, token) } returns
                     flowOf(Account.Money(userWalletId = userWalletId) to tokenStatus)
 
                 // Act
-                val actual = resolver.observe(userWalletId, token).first()
+                val actual = resolver.observe(userWalletId, token, AccountKind.Money).first()
 
                 // Assert
                 assertThat(actual).isEqualTo(tokenStatus.some())
@@ -99,7 +98,7 @@ internal class YieldSupplyCurrencyStatusResolverTest {
                 accountStatusListOf(tokenStatus)
 
             // Act
-            val actual = resolver.getSync(userWalletId, token)
+            val actual = resolver.getSync(userWalletId, token, AccountKind.Portfolio)
 
             // Assert
             assertThat(actual).isEqualTo(tokenStatus.some())
@@ -113,10 +112,23 @@ internal class YieldSupplyCurrencyStatusResolverTest {
                 listOf(coinStatus, tokenStatus)
 
             // Act
-            val actual = resolver.getSync(userWalletId, token)
+            val actual = resolver.getSync(userWalletId, token, AccountKind.Money)
 
             // Assert
             assertThat(actual).isEqualTo(tokenStatus.some())
+        }
+
+        @Test
+        fun `GIVEN a portfolio flow and the currency only outside the portfolio WHEN getSync THEN none`() = runTest {
+            // Arrange
+            coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, network) } returns
+                listOf(coinStatus, tokenStatus)
+
+            // Act
+            val actual = resolver.getSync(userWalletId, token, AccountKind.Portfolio)
+
+            // Assert
+            assertThat(actual).isEqualTo(none<CryptoCurrencyStatus>())
         }
 
         @Test
@@ -126,7 +138,12 @@ internal class YieldSupplyCurrencyStatusResolverTest {
                 listOf(coinStatus, tokenStatus)
 
             // Act
-            val actual = resolver.getSync(userWalletId = userWalletId, currencyId = token.id, network = network)
+            val actual = resolver.getSync(
+                userWalletId = userWalletId,
+                currencyId = token.id,
+                network = network,
+                account = AccountKind.Money,
+            )
 
             // Assert
             assertThat(actual).isEqualTo(tokenStatus)
@@ -135,71 +152,10 @@ internal class YieldSupplyCurrencyStatusResolverTest {
         @Test
         fun `GIVEN the currency nowhere WHEN getSync THEN none`() = runTest {
             // Act
-            val actual = resolver.getSync(userWalletId, token)
+            val actual = resolver.getSync(userWalletId, token, AccountKind.Portfolio)
 
             // Assert
             assertThat(actual).isEqualTo(none<CryptoCurrencyStatus>())
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class IsInPortfolio {
-
-        @Test
-        fun `GIVEN a portfolio currency WHEN isInPortfolio THEN true`() = runTest {
-            // Arrange
-            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns
-                accountStatusListOf(tokenStatus)
-
-            // Act
-            val actual = resolver.isInPortfolio(userWalletId, token)
-
-            // Assert
-            assertThat(actual).isTrue()
-        }
-
-        @Test
-        fun `GIVEN a currency held outside the portfolio WHEN isInPortfolio THEN false`() = runTest {
-            // Arrange
-            coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, network) } returns listOf(tokenStatus)
-
-            // Act
-            val actual = resolver.isInPortfolio(userWalletId, token)
-
-            // Assert
-            assertThat(actual).isFalse()
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class IsHeldOutsidePortfolio {
-
-        @Test
-        fun `GIVEN portfolio not loaded and currency held outside WHEN isHeldOutsidePortfolio THEN true`() = runTest {
-            // Arrange
-            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns null
-            coEvery { nonPortfolioCurrenciesProvider.findCurrency(userWalletId, token.id) } returns token
-
-            // Act
-            val actual = resolver.isHeldOutsidePortfolio(userWalletId, token)
-
-            // Assert
-            assertThat(actual).isTrue()
-        }
-
-        @Test
-        fun `GIVEN a portfolio currency WHEN isHeldOutsidePortfolio THEN false`() = runTest {
-            // Arrange
-            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns
-                accountStatusListOf(tokenStatus)
-
-            // Act
-            val actual = resolver.isHeldOutsidePortfolio(userWalletId, token)
-
-            // Assert
-            assertThat(actual).isFalse()
         }
     }
 

@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.active.model
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -123,8 +124,10 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
     fun `GIVEN a currency held outside the portfolio WHEN go to token is tapped THEN it goes back to the account`() =
         runTest {
             // Arrange
-            coEvery { currencyStatusResolver.isInPortfolio(userWalletId, token) } returns false
-            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            val model = createModel(
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+                account = AccountKind.Money,
+            )
             advanceUntilIdle()
 
             // Act

@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -71,6 +72,7 @@ internal class MoneyAccountDetailsScreenComponent(
                 params = YieldSupplyComponent.Params(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = currency,
+                    account = AccountKind.Money,
                 ),
             )
         },

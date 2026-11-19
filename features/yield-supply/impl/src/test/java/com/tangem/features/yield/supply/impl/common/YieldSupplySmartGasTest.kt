@@ -8,6 +8,7 @@ import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.account.models.AccountStatusList
@@ -148,7 +149,12 @@ internal class YieldSupplySmartGasTest : YieldSupplyActionModelTestBase() {
             stubFeeTokenLookup(cryptoCurrencyStatus.some())
 
             // Act
-            val actual = yieldSupplySmartGas.getFeeTokenStatus(userWalletId, token.id, token.network)
+            val actual = yieldSupplySmartGas.getFeeTokenStatus(
+                userWalletId = userWalletId,
+                feeTokenId = token.id,
+                network = token.network,
+                account = AccountKind.Portfolio,
+            )
 
             // Assert
             assertThat(actual).isEqualTo(cryptoCurrencyStatus)
@@ -161,7 +167,12 @@ internal class YieldSupplySmartGasTest : YieldSupplyActionModelTestBase() {
             stubFeeTokenLookup(none())
 
             // Act
-            val actual = yieldSupplySmartGas.getFeeTokenStatus(userWalletId, token.id, token.network)
+            val actual = yieldSupplySmartGas.getFeeTokenStatus(
+                userWalletId = userWalletId,
+                feeTokenId = token.id,
+                network = token.network,
+                account = AccountKind.Portfolio,
+            )
 
             // Assert
             assertThat(actual).isNull()
@@ -173,7 +184,12 @@ internal class YieldSupplySmartGasTest : YieldSupplyActionModelTestBase() {
             coEvery { accountStatusListSupplier.getSyncOrNull(userWalletId) } returns null
 
             // Act
-            val actual = yieldSupplySmartGas.getFeeTokenStatus(userWalletId, token.id, token.network)
+            val actual = yieldSupplySmartGas.getFeeTokenStatus(
+                userWalletId = userWalletId,
+                feeTokenId = token.id,
+                network = token.network,
+                account = AccountKind.Portfolio,
+            )
 
             // Assert
             assertThat(actual).isNull()

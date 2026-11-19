@@ -76,7 +76,6 @@ internal abstract class YieldSupplyActionModelTestBase {
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         every { notificationsUpdateTrigger.hasErrorFlow } returns MutableStateFlow(false)
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns cryptoCurrencyStatus.right()
-        coEvery { currencyStatusResolver.isHeldOutsidePortfolio(any(), any()) } returns false
         coEvery {
             getAvailableFeeTokensUseCase(
                 userWallet = any(),

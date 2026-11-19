@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.main.model
 import arrow.core.*
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -12,6 +13,7 @@ import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -70,6 +72,7 @@ internal class YieldSupplyModelTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
+    private val nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher = mockk()
     private val yieldModuleStatusFetcher: YieldModuleStatusFetcher = mockk()
     private val tokensFeatureToggles: TokensFeatureToggles = mockk()
     private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk()
@@ -106,6 +109,7 @@ internal class YieldSupplyModelTest {
         coEvery { enterStatusUseCase(any(), any()) } returns null.right()
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
         coEvery { yieldModuleStatusFetcher(any()) } returns Unit.right()
+        coEvery { nonPortfolioCurrenciesFetcher.fetch(any(), any()) } returns Unit
         every { tokensFeatureToggles.isYieldContributionEnabled } returns false
         coEvery { getTokenStatusUseCase(any()) } returns marketToken(isActive = true).right()
         coEvery { isBoostPromoEnabledUseCase(any(), any()) } returns false.right()
@@ -170,6 +174,32 @@ internal class YieldSupplyModelTest {
                 YieldModuleStatusFetcher.Params(userWalletId = userWalletId, tokens = setOf(token)),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN a portfolio flow WHEN model created THEN the Money account is not fetched`() = runTest {
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { singleNetworkStatusFetcher(any()) }
+        coVerify(exactly = 0) { nonPortfolioCurrenciesFetcher.fetch(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a Money flow WHEN model created THEN only the Money account is fetched`() = runTest {
+        // Arrange
+        every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+
+        // Act
+        createModel(account = AccountKind.Money)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { nonPortfolioCurrenciesFetcher.fetch(userWalletId, token.network) }
+        coVerify(exactly = 0) { singleNetworkStatusFetcher(any()) }
+        coVerify(exactly = 0) { yieldModuleStatusFetcher(any()) }
     }
 
     @Test
@@ -360,13 +390,12 @@ internal class YieldSupplyModelTest {
             // Arrange
             val status = status(isActive = true, effectiveProtocolBalance = BigDecimal.ONE)
             val statusResolver: YieldSupplyCurrencyStatusResolver = mockk {
-                every { observe(userWalletId, token) } returns flowOf(status.some())
-                coEvery { isHeldOutsidePortfolio(userWalletId, token) } returns true
+                every { observe(userWalletId, token, any()) } returns flowOf(status.some())
             }
             coEvery { minAmountUseCase(any(), any(), true) } returns BigDecimal("5").right()
 
             // Act
-            val model = createModel(statusResolver = statusResolver)
+            val model = createModel(account = AccountKind.Money, statusResolver = statusResolver)
             advanceUntilIdle()
 
             // Assert
@@ -735,10 +764,11 @@ internal class YieldSupplyModelTest {
 
     private fun TestScope.createModel(
         currency: CryptoCurrency = token,
+        account: AccountKind = AccountKind.Portfolio,
         statusResolver: YieldSupplyCurrencyStatusResolver = portfolioCurrencyStatusResolver(accountStatusListSupplier),
     ): YieldSupplyModel = YieldSupplyModel(
         paramsContainer = MutableParamsContainer(
-            YieldSupplyComponent.Params(userWalletId = userWalletId, cryptoCurrency = currency),
+            YieldSupplyComponent.Params(userWalletId = userWalletId, cryptoCurrency = currency, account = account),
         ),
         dispatchers = createDispatchers(),
         analyticsEventsHandler = analytics,
@@ -747,7 +777,7 @@ internal class YieldSupplyModelTest {
         getUserWalletUseCase = getUserWalletUseCase,
         currencyStatusResolver = statusResolver,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-        nonPortfolioCurrenciesFetcher = mockk(relaxed = true),
+        nonPortfolioCurrenciesFetcher = nonPortfolioCurrenciesFetcher,
         yieldModuleStatusFetcher = yieldModuleStatusFetcher,
         tokensFeatureToggles = tokensFeatureToggles,
         yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,

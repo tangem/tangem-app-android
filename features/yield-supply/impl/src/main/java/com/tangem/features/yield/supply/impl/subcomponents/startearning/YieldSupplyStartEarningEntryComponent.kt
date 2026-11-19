@@ -7,6 +7,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -85,6 +86,7 @@ internal class YieldSupplyStartEarningEntryComponent(
             params = YieldSupplyStartEarningComponent.Params(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
+                account = params.account,
                 yieldSupplyActionUM = model.uiState.value,
                 callback = model,
                 feeSelectorComponentFactory = params.feeSelectorComponentFactory,
@@ -103,6 +105,7 @@ internal class YieldSupplyStartEarningEntryComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
+        val account: AccountKind,
         val onDismiss: (Boolean) -> Unit,
         val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
     )

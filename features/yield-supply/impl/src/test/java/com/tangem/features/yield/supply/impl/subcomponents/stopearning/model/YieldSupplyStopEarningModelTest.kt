@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -238,10 +239,9 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTest
     fun `GIVEN currency held outside the portfolio WHEN onClick THEN fee status and pending tracked for its holder`() =
         runTest {
             // Arrange
-            coEvery { currencyStatusResolver.isHeldOutsidePortfolio(userWalletId, token) } returns true
             coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
                 cryptoCurrencyStatus.right()
-            val model = createModel()
+            val model = createModel(account = AccountKind.Money)
             advanceUntilIdle()
 
             // Act

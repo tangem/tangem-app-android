@@ -15,6 +15,9 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.analytics.models)
 
+    /** Routing */
+    api(projects.common.routing)
+
     /** Serialization */
     api(deps.kotlin.serialization.core)
 

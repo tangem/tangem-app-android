@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.notifications.Notification
@@ -54,6 +55,7 @@ internal class YieldSupplyNotificationsComponent(
         val userWalletId: UserWalletId,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val account: AccountKind,
         val callback: ModelCallback,
     )
 

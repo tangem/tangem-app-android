@@ -688,7 +688,23 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
-    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+        val account: AccountKind = AccountKind.Portfolio,
+    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}") {
+
+        /**
+         * The kind of account the flow was opened from; its currencies are looked up and refreshed there only.
+         * A wallet has a single Money account, so the kind identifies it without an id.
+         */
+        @Serializable
+        enum class AccountKind {
+            Portfolio,
+            Money,
+            ;
+
+            val isHeldOutsidePortfolio: Boolean
+                get() = this == Money
+        }
+    }
 
     @Serializable
     data class EarnEntry(
