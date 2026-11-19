@@ -39,6 +39,12 @@ interface HotWalletPasswordRequester {
     suspend fun dismiss()
 
     /**
+     * Dismisses the dialog only while [attemptRequest] still owns it, so a late call cannot close the dialog of
+     * another request that replaced it.
+     */
+    suspend fun dismiss(attemptRequest: AttemptRequest)
+
+    /**
      * Represents a request to authenticate with a hot wallet.
      * @param hotWalletId The ID of the hot wallet to authenticate with.
      * @param authMode Indicates whether the request is for authentication mode.

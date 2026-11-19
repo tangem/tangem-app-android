@@ -25,6 +25,9 @@ class HotWalletPasswordRequesterProxy @Inject constructor() : HotWalletPasswordR
 
     override suspend fun dismiss() = call { dismiss() }
 
+    override suspend fun dismiss(attemptRequest: HotWalletPasswordRequester.AttemptRequest) =
+        call { dismiss(attemptRequest) }
+
     private suspend fun <T> call(block: suspend HotWalletPasswordRequester.() -> T): T {
         return withTimeout(timeMillis = 1000) {
             componentRequester.filterNotNull().first()

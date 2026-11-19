@@ -16,6 +16,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -89,16 +90,42 @@ internal class DefaultHotWalletAccessorSignHashesPreparingTest {
             assertThat(actual).isEqualTo(error)
             assertThat(events).isEmpty()
             coVerify(exactly = 0) { passwordRequester.requestPassword(any()) }
-            coVerify { passwordRequester.dismiss() }
         }
 
     @Test
-    fun `GIVEN password wallet WHEN signHashesPreparing THEN prepares after the code is entered`() = runTest {
+    fun `GIVEN preparation cancelled after the code is entered WHEN signHashesPreparing THEN dismisses the prompt`() =
+        runTest {
+            // Arrange
+            val cancellation = CancellationException("screen closed")
+
+            // Act
+            val actual = runCatching { accessor.signHashesPreparing(passwordWalletId) { throw cancellation } }
+                .exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(cancellation)
+            assertThat(events).containsExactly(PASSWORD_ENTERED)
+            coVerify(exactly = 1) { passwordRequester.dismiss(any()) }
+            coVerify(exactly = 0) { tangemHotSdk.signHashes(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN password wallet WHEN signHashesPreparing THEN closes the prompt before preparing`() = runTest {
+        // Arrange
+        val requests = mutableListOf<HotWalletPasswordRequester.AttemptRequest>()
+        coEvery { passwordRequester.requestPassword(capture(requests)) } answers {
+            events += PASSWORD_ENTERED
+            HotWalletPasswordRequester.Result.EnteredPassword(HotAuth.Password("code".toCharArray()))
+        }
+        coEvery { passwordRequester.dismiss(any()) } answers { events += DISMISSED }
+
         // Act
         accessor.signHashesPreparing(passwordWalletId) { prepare() }
 
         // Assert
-        assertThat(events).containsExactly(PASSWORD_ENTERED, PREPARED, SIGNED).inOrder()
+        assertThat(events).containsExactly(PASSWORD_ENTERED, DISMISSED, PREPARED, SIGNED, DISMISSED).inOrder()
+        coVerify(exactly = 2) { passwordRequester.dismiss(requests.single()) }
+        coVerify(exactly = 0) { passwordRequester.dismiss() }
         coVerify(exactly = 0) { tangemHotSdk.getContextUnlock(any()) }
     }
 
@@ -143,6 +170,7 @@ internal class DefaultHotWalletAccessorSignHashesPreparingTest {
 
     private companion object {
         const val PASSWORD_ENTERED = "password entered"
+        const val DISMISSED = "dismissed"
         const val UNLOCKED = "unlocked"
         const val PREPARED = "prepared"
         const val SIGNED = "signed"

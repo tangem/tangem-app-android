@@ -116,6 +116,42 @@ internal class HotAccessCodeRequestModelTest {
     }
 
     @Test
+    fun `GIVEN request A replaced by B WHEN late dismiss of A THEN dialog of B stays open`() = runTest {
+        // Arrange
+        val model = createModel(this)
+        model.show(requestA)
+        advanceUntilIdle()
+        model.show(requestB)
+        advanceUntilIdle()
+
+        // Act
+        model.dismiss(requestA)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isShown).isTrue()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN request A owns the dialog WHEN dismiss of A THEN dialog closed`() = runTest {
+        // Arrange
+        val model = createModel(this)
+        model.show(requestA)
+        advanceUntilIdle()
+
+        // Act
+        model.dismiss(requestA)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isShown).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN request A owns the dialog WHEN wrong code of A THEN attempt incremented for A`() = runTest {
         // Arrange
         val model = createModel(this)

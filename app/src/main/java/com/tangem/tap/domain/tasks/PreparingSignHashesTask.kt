@@ -11,7 +11,10 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 
 class PreparingSignHashesTask(
     private val hashesProvider: suspend () -> List<ByteArray>,
@@ -43,12 +46,20 @@ class PreparingSignHashesTask(
 
     private fun prepareAndSign(session: CardSession, finish: CompletionCallback<TangemSignHashesResponse>) {
         session.scope.launch {
-            val hashes = runSuspendCatching { hashesProvider() }.getOrElse { error ->
-                // UserCancelled closes the NFC sheet without a card error; the caller reports the preparation error
-                TangemLogger.e("Failed to prepare hashes for signing", error)
-                finish(CompletionResult.Failure(TangemSdkError.UserCancelled()))
-                return@launch
-            }
+            val hashes = runSuspendCatching { withTimeoutOrNull(PREPARATION_TIMEOUT) { hashesProvider() } }
+                .getOrElse { error ->
+                    // UserCancelled closes the NFC sheet without a card error; the caller reports the preparation error
+                    TangemLogger.e("Failed to prepare hashes for signing", error)
+                    finish(CompletionResult.Failure(TangemSdkError.UserCancelled()))
+                    return@launch
+                }
+                ?: run {
+                    // The card is held while the hashes are prepared, so a hanging network gets no more time than this
+                    val error = TimeoutException("Preparing hashes for signing timed out")
+                    TangemLogger.e("Failed to prepare hashes for signing", error)
+                    finish(CompletionResult.Failure(TangemSdkError.ExceptionError(error)))
+                    return@launch
+                }
             SignHashesTask(hashes, publicKey, pairWalletPublicKey).run(session, finish)
         }.invokeOnCompletion { cause ->
             when (cause) {
@@ -57,5 +68,9 @@ class PreparingSignHashesTask(
                 else -> finish(CompletionResult.Failure(TangemSdkError.ExceptionError(cause)))
             }
         }
+    }
+
+    private companion object {
+        val PREPARATION_TIMEOUT = 15.seconds
     }
 }
