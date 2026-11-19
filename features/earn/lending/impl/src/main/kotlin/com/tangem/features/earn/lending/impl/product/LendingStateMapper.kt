@@ -22,6 +22,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.detailsRow
@@ -39,11 +40,13 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
         EarnRow(
             label = resourceReference(R.string.earn_product_details_protocol),
             value = EarnValue.Link(text = provider.info.title, url = provider.websiteUrl),
+            kind = EarnRowKind.Protocol,
         ),
         infoRow(
             label = resourceReference(R.string.earn_product_details_withdrawals),
             value = EarnValue.Text(resourceReference(R.string.earn_product_details_usually_instant)),
             info = resourceReference(R.string.earn_product_details_lending_withdrawals_info),
+            kind = EarnRowKind.Withdrawals,
         ),
         infoRow(
             label = resourceReference(R.string.earn_product_details_performance_fee),
@@ -54,6 +57,7 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
                 R.string.earn_product_details_performance_fee_info,
                 wrappedList(performanceFeeText),
             ),
+            kind = EarnRowKind.PerformanceFee,
         ),
     )
 
@@ -170,10 +174,12 @@ internal class LendingStateMapper(private val provider: LendingProvider) {
             action = EarnBlockAction.Retry,
         )
 
-        private fun infoRow(label: TextReference, value: EarnValue, info: TextReference) = EarnRow(
-            label = label,
-            value = value,
-            info = EarnRowInfo.Text(title = label, text = info),
-        )
+        private fun infoRow(label: TextReference, value: EarnValue, info: TextReference, kind: EarnRowKind? = null) =
+            EarnRow(
+                label = label,
+                value = value,
+                info = EarnRowInfo.Text(title = label, text = info),
+                kind = kind,
+            )
     }
 }

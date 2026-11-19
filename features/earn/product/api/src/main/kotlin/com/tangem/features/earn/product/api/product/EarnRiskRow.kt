@@ -16,6 +16,7 @@ fun EarnRisk.detailsRow(): EarnRow = EarnRow(
             )
         },
     ),
+    kind = EarnRowKind.Risk,
 )
 
 private class RiskTexts(@StringRes val level: Int, @StringRes val title: Int, @StringRes val description: Int)

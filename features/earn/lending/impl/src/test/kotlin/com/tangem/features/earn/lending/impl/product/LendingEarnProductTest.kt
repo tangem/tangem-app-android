@@ -48,6 +48,7 @@ import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnSummaries
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
@@ -504,6 +505,23 @@ internal class LendingEarnProductTest {
 
             // Assert
             assertThat(actual.details.first()).isEqualTo(EarnRisk.Low.detailsRow())
+        }
+
+        @Test
+        fun `GIVEN provider WHEN state THEN detail rows carry their analytics kinds`() = runTest {
+            // Arrange
+            every { lendingSupplier(userWalletId) } returns flowOf(snapshotOf(assetState()))
+
+            // Act
+            val actual = product.state(params).first() as EarnProductState.Ready
+
+            // Assert
+            assertThat(actual.details.map { it.kind }).containsExactly(
+                EarnRowKind.Risk,
+                EarnRowKind.Protocol,
+                EarnRowKind.Withdrawals,
+                EarnRowKind.PerformanceFee,
+            ).inOrder()
         }
 
         @Test

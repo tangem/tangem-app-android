@@ -31,6 +31,7 @@ import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
@@ -140,7 +141,11 @@ internal class PooledStakingMapper @Inject constructor() {
         return listOf(
             RISK.detailsRow(),
             // The p2p.org link needs a link value in the contract; plain text until it exists.
-            row(label = resourceReference(R.string.staking_validator), value = stringReference(VALIDATOR_VALUE)),
+            row(
+                label = resourceReference(R.string.staking_validator),
+                value = stringReference(VALIDATOR_VALUE),
+                kind = EarnRowKind.Protocol,
+            ),
             row(
                 label = withdrawalsLabel,
                 value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
@@ -148,6 +153,7 @@ internal class PooledStakingMapper @Inject constructor() {
                     title = withdrawalsLabel,
                     text = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
                 ),
+                kind = EarnRowKind.Withdrawals,
             ),
             row(
                 label = feeLabel,
@@ -159,14 +165,21 @@ internal class PooledStakingMapper @Inject constructor() {
                         formatArgs = wrappedList(percent),
                     ),
                 ),
+                kind = EarnRowKind.PerformanceFee,
             ),
         )
     }
 
-    private fun row(label: TextReference, value: TextReference, info: EarnRowInfo? = null): EarnRow = EarnRow(
+    private fun row(
+        label: TextReference,
+        value: TextReference,
+        info: EarnRowInfo? = null,
+        kind: EarnRowKind,
+    ): EarnRow = EarnRow(
         label = label,
         value = EarnValue.Text(value),
         info = info,
+        kind = kind,
     )
 
     /** A stake that is known or could not be read: "Start earning" must not be offered over a possible balance. */
