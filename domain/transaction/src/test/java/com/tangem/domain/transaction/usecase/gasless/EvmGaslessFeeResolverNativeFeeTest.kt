@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.demo.models.DemoConfig
@@ -194,6 +195,26 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
 
         // Assert
         assertThat(actual.map { it.nativeFee }).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN Lending withdrawal WHEN resolveWithAutoFeeToken THEN native fee carries the module margin`() = runTest {
+        // Arrange
+        val withdrawal = uncompiledWithCallData(callData = EthereumYieldSupplyExitNativeCallData)
+        coEvery { walletManager.getFee(withdrawal) } returns Result.Success(bareFee)
+
+        // Act
+        val actual = resolver.resolveWithAutoFeeToken(
+            userWallet = userWallet,
+            network = coin.network,
+            transactionData = withdrawal,
+            nativeCurrencyStatus = nativeStatus,
+            accountStatusList = accountStatusList,
+            nativeTransactionData = withdrawal,
+        )
+
+        // Assert
+        assertThat(actual.map { it.nativeFee }).isEqualTo(bareFeeWithReserve.right())
     }
 
     private fun ethereumFee(gasLimit: Long, value: String): Fee.Ethereum.EIP1559 {

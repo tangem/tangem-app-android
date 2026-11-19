@@ -3,11 +3,13 @@ package com.tangem.data.walletmanager.utils
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.blockchain.common.address.Address
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.test.core.ProvideTestModels
@@ -351,6 +353,62 @@ internal class SdkTransactionHistoryItemConverterTest {
 
     private fun providePayoutOrders() = listOf(false, true)
 
+    @Test
+    fun `GIVEN a Smart Gas withdrawal paid in a token WHEN convertList THEN one lending row with the token fee`() {
+        // Arrange
+        val tokenFee = Amount(
+            token = Token(name = "Tether USD", symbol = "USDT", contractAddress = USDT, decimals = 6),
+            value = BigDecimal("1.5"),
+        )
+        // The SDK reads a relayed call's selector bare from its call data
+        val call = item(
+            type = contractMethod(
+                callData = WITHDRAW_ONE_ETHER_CALLDATA,
+                selector = EthereumYieldSupplyWithdrawNativeCallData.METHOD_ID.removePrefix("0x"),
+            ),
+            isOutgoing = true,
+            destination = TransactionHistoryItem.AddressType.Contract(YIELD_MODULE_ADDRESS),
+            amount = BigDecimal.ZERO,
+            fee = tokenFee,
+        )
+        val payout = item(
+            type = TransactionHistoryItem.TransactionType.Transfer,
+            isOutgoing = false,
+            destination = TransactionHistoryItem.AddressType.User(SENDER),
+            source = YIELD_MODULE_ADDRESS,
+            amount = BigDecimal.ONE,
+        )
+
+        // Act
+        val actual = lendingConverter.convertList(listOf(call, payout)).single()
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            TxInfo.MultiTransfer(
+                amount = BigDecimal.ONE,
+                isOutgoing = true,
+                type = TxInfo.TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = ONE_ETHER),
+                destinationType = TxInfo.DestinationType.Multiple(
+                    listOf(
+                        TxInfo.AddressType.Contract(YIELD_MODULE_ADDRESS),
+                        TxInfo.AddressType.User(SENDER),
+                    ),
+                ),
+                sourceType = TxInfo.SourceType.Multiple(listOf(SENDER, YIELD_MODULE_ADDRESS)),
+                interactionAddressType = TxInfo.InteractionAddressType.Multiple(listOf(YIELD_MODULE_ADDRESS)),
+                transfers = listOf(lendingConverter.convert(call), lendingConverter.convert(payout)),
+            ),
+        )
+        assertThat(actual.fee).isEqualTo(
+            SdkAmount(
+                currencySymbol = "USDT",
+                value = BigDecimal("1.5"),
+                decimals = 6,
+                type = SdkAmountType.Token(contractAddress = USDT),
+            ),
+        )
+    }
+
     @ParameterizedTest
     @MethodSource("providePayoutOrders")
     fun `GIVEN a DEX call and its coin payout on a personal coin WHEN convertList THEN only the call row`(
@@ -419,8 +477,8 @@ internal class SdkTransactionHistoryItemConverterTest {
 
     private fun yieldModuleMethod(name: String) = SmartContractMethod(info = "yieldModule", source = null, name = name)
 
-    private fun contractMethod(callData: String) =
-        TransactionHistoryItem.TransactionType.ContractMethod(id = callData.take(SELECTOR_LENGTH), callData = callData)
+    private fun contractMethod(callData: String, selector: String = callData.take(SELECTOR_LENGTH)) =
+        TransactionHistoryItem.TransactionType.ContractMethod(id = selector, callData = callData)
 
     private fun Amount.toSdkAmount() = SdkAmount(currencySymbol = currencySymbol, value = value, decimals = decimals)
 
@@ -539,6 +597,7 @@ internal class SdkTransactionHistoryItemConverterTest {
     private companion object {
         const val TX_HASH = "0xhash"
         const val SELECTOR_LENGTH = 10
+        const val USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
         const val YIELD_MODULE_ADDRESS = "0x4444444444444444444444444444444444444444"
         const val DEX_ROUTER = "0x1111111254eeb25477b68fb85ed929f73a960582"
         const val SWAP_CALLDATA = "0x07ed2379"
