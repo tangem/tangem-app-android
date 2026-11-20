@@ -153,7 +153,6 @@ internal class EarnPickerModel @Inject constructor(
         .map { it.getCryptoCurrencyStatus(params.cryptoCurrency).getOrNull()?.value?.amount }
         .stateIn(modelScope, SharingStarted.Eagerly, null)
 
-    /** Keyed by product, action and balance, so the ticks of a `Ready` state do not price the deposit again. */
     private val capacity: Flow<CapacityFrame> = combine(selection, ethBalance, ::capacityRequest)
         .distinctUntilChanged()
         .flatMapLatest(::estimateCapacity)
@@ -320,7 +319,6 @@ internal class EarnPickerModel @Inject constructor(
             params.shouldRedirectToActive &&
             (isPending && !hasSettled.get() || currencySummaries.any { it.position != null })
 
-    /** Only a deposit the button would offer is priced: zero, a block or an open position decide it without a fee. */
     private fun capacityRequest(selection: Selection?, balance: BigDecimal?): CapacityRequest? {
         val state = selection?.state as? EarnProductState.Ready ?: return null
         val action = state.primary.action as? EarnFlowAction ?: return null
