@@ -27,6 +27,7 @@ private const val BASIC_ORDER_SCENARIO = "tangem_pay_tariff_plan_basic_order"
 
 /** The card-issue order list is drained explicitly, so an issue order never masks the tariff-plan one. */
 private const val CARD_ISSUE_ORDERS_SCENARIO = "tangem_pay_card_issue_orders"
+private const val CARD_ISSUE_ORDER_SCENARIO = "tangem_pay_card_issue_order"
 
 private const val HISTORY_SCENARIO = "tangem_pay_transaction_history"
 
@@ -37,6 +38,9 @@ private const val ORDERS_EMPTY_STATE = "Empty"
 private const val ORDERS_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDERS_PLUS_PROCESSING_STATE = "PlusProcessing"
 private const val ORDERS_BASIC_PROCESSING_STATE = "BasicProcessing"
+private const val CARD_ISSUE_ORDERS_ACTIVE_STATE = "ActiveOrder"
+private const val CARD_ISSUE_ORDER_STARTED_STATE = "Started"
+private const val CARD_ISSUE_ORDER_COMPLETED_STATE = "Completed"
 private const val ORDER_STARTED_STATE = "Started"
 private const val ORDER_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDER_COMPLETED_STATE = "Completed"
@@ -353,10 +357,20 @@ fun stageTangemPayOnboardingPlanFeeAwaitingDeposit() {
     }
 }
 
+/**
+ * The issuing banner is rendered only from an active card-issue order, so the onboarding card issue is held
+ * by one: the onboarding order itself is not tracked as an issue order.
+ */
 fun stageTangemPayOnboardingBasicCardIssuing() {
     stageTangemPayBasicOrderPolling()
     step("Switch WireMock scenario '$ORDERS_SCENARIO' to '$ORDERS_BASIC_PROCESSING_STATE'") {
         setWireMockScenarioState(ORDERS_SCENARIO, ORDERS_BASIC_PROCESSING_STATE)
+    }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDER_SCENARIO' to '$CARD_ISSUE_ORDER_STARTED_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDER_SCENARIO, CARD_ISSUE_ORDER_STARTED_STATE)
+    }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDERS_SCENARIO' to '$CARD_ISSUE_ORDERS_ACTIVE_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDERS_SCENARIO, CARD_ISSUE_ORDERS_ACTIVE_STATE)
     }
     step("Switch WireMock scenario '$MONEY_ACCOUNT_SCENARIO' to '$PAYMENT_ACCOUNT_ISSUING_STATE'") {
         setWireMockScenarioState(MONEY_ACCOUNT_SCENARIO, PAYMENT_ACCOUNT_ISSUING_STATE)
@@ -365,6 +379,12 @@ fun stageTangemPayOnboardingBasicCardIssuing() {
 
 fun BaseTestCase.completeTangemPayOnboardingBasicCardIssuing(plan: String) {
     step("Reset WireMock scenario '$MONEY_ACCOUNT_SCENARIO'") { resetWireMockScenarioState(MONEY_ACCOUNT_SCENARIO) }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDER_SCENARIO' to '$CARD_ISSUE_ORDER_COMPLETED_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDER_SCENARIO, CARD_ISSUE_ORDER_COMPLETED_STATE)
+    }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDERS_SCENARIO' to '$ORDERS_EMPTY_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDERS_SCENARIO, ORDERS_EMPTY_STATE)
+    }
     completeTangemPayBasicPlanIssuing(plan)
 }
 
