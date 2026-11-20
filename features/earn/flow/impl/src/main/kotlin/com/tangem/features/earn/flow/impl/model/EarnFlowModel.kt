@@ -68,10 +68,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -366,25 +365,28 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     private fun subscribeOnNotices(type: EarnTxType) {
-        combine(state, amount, confirm) { current, amountUM, confirmUM ->
-            val isFeeInFlight = current.fee is FeeSelectorUM.Loading
-            when (current.step) {
-                EarnFlowStep.Amount -> NoticeFrame(
-                    screen = type.amountScreen(),
-                    notices = noticesOf(current, amountUM?.notifications, checksAmount = true),
-                    isFeeInFlight = isFeeInFlight,
-                )
-                EarnFlowStep.Confirm -> NoticeFrame(
-                    screen = EarnFlowScreen.Confirm,
-                    notices = noticesOf(current, confirmUM?.notifications, checksAmount = false),
-                    isFeeInFlight = isFeeInFlight,
-                )
-                EarnFlowStep.Result -> null
-            }
-        }
-            .filterNotNull()
+        state
+            .mapNotNull { current -> noticeFrame(type, current) }
             .onEach { frame -> noticeAnalytics.update(frame.screen, frame.notices, frame.isFeeInFlight) }
             .launchIn(modelScope)
+    }
+
+    /** The cards come from the same state: [amount] and [confirm] map it on their own and may lag a state behind. */
+    private fun noticeFrame(type: EarnTxType, current: EarnFlowState): NoticeFrame? {
+        val isFeeInFlight = current.fee is FeeSelectorUM.Loading
+        return when (current.step) {
+            EarnFlowStep.Amount -> NoticeFrame(
+                screen = type.amountScreen(),
+                notices = noticesOf(current, toAmountUM(current)?.notifications, checksAmount = true),
+                isFeeInFlight = isFeeInFlight,
+            )
+            EarnFlowStep.Confirm -> NoticeFrame(
+                screen = EarnFlowScreen.Confirm,
+                notices = noticesOf(current, toConfirmUM(current)?.notifications, checksAmount = false),
+                isFeeInFlight = isFeeInFlight,
+            )
+            EarnFlowStep.Result -> null
+        }
     }
 
     private fun noticesOf(
