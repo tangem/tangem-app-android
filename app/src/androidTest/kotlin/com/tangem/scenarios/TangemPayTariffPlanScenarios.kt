@@ -204,19 +204,9 @@ fun BaseTestCase.completeTangemPayBasicPlanIssuing(plan: String) {
     }
 }
 
-/** From the Main screen, opens plan selection through the 'Select plan' Tangem Pay tile. */
 fun BaseTestCase.openTangemPaySelectPlanFromOnboarding() {
-    val selectPlanSubtitle = getResourceString(CoreResR.string.tangempay_main_select_plan)
-
-    step("Click on Tangem Pay '$selectPlanSubtitle' tile") {
-        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            onTangemPayMainScreen { tileWithSubtitle(selectPlanSubtitle).assertIsDisplayed() }
-        }
-        onTangemPayMainScreen { tileWithSubtitle(selectPlanSubtitle).performClick() }
-    }
-    step("Assert 'Select plan' screen is displayed") {
-        awaitSuccess { onTangemPaySelectPlanScreen { title.assertIsDisplayed() } }
-    }
+    openTangemPayVerifiedFromDisplayedActionRequiredTile()
+    openTangemPaySelectPlanFromVerified()
 }
 
 /** Opens 'Current plan' from the top bar menu; [assertMenuItems] also checks the items it offers. */
@@ -363,9 +353,13 @@ fun stageTangemPayOnboardingPlanFeeAwaitingDeposit() {
 fun getTangemPaySummaryRequestCount(): Int = getWireMockRequestCount("GET", SUMMARY_ENDPOINT)
 
 fun BaseTestCase.openTangemPayVerifiedFromActionRequiredTile() {
+    step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+    openTangemPayVerifiedFromDisplayedActionRequiredTile()
+}
+
+private fun BaseTestCase.openTangemPayVerifiedFromDisplayedActionRequiredTile() {
     val actionRequired = getResourceString(CoreResR.string.tangempay_action_required_title)
 
-    step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
     step("Assert Tangem Pay tile with '$actionRequired' is displayed") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             onTangemPayMainScreen { tileWithSubtitle(actionRequired).assertIsDisplayed() }

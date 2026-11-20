@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.DsVersion
@@ -31,6 +32,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_16
 import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
+import com.tangem.core.ui.test.TokenElementsTestTags
 
 /**
  * Design-system v2 (DS3) **Token Row** — a portfolio list item: token icon, title with an optional
@@ -125,7 +127,9 @@ fun TangemTokenRow(
                 text = cryptoBalance,
                 isFlickering = isBalanceFlickering,
                 isBalanceHidden = isBalanceHidden,
-                modifier = Modifier.layoutId(layoutId = TokenRowLayoutId.END_BOTTOM),
+                modifier = Modifier
+                    .layoutId(layoutId = TokenRowLayoutId.END_BOTTOM)
+                    .testTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
             )
         }
         if (messageBubble != null) {

@@ -22,7 +22,6 @@ import org.junit.Test
 class TangemPayTariffPlansTest : BaseTestCase() {
 
     // WireMock scenario states the flows are driven by.
-    private val planSelectNeededState = "PlanSelectNeeded"
     private val planBasicState = "Basic"
     private val planBasicInsufficientBalanceState = "BasicInsufficientBalance"
     private val planBasicThreeCardsState = "BasicThreeCards"
@@ -30,7 +29,6 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     private val planPlusFiveCardsState = "PlusFiveCards"
     private val planDowngradePendingState = "DowngradePending"
 
-    private val transitionsOnboardingState = "Onboarding"
     private val transitionsFromBasicState = "FromBasic"
     private val transitionsFromPlusState = "FromPlus"
     private val transitionsNoneState = "NoTransitions"
@@ -77,14 +75,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     @DisplayName("Tangem Pay: comparing plans during onboarding lists both plans")
     @Test
     fun comparePlansDuringOnboardingTest() {
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planSelectNeededState,
-                    transitions = transitionsOnboardingState,
-                )
-            }
-        ).run {
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Open 'Compare plans' sheet") { openTangemPayComparePlans(basicPlan) }
@@ -104,14 +95,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     @DisplayName("Tangem Pay: selecting Basic during onboarding activates the Basic plan")
     @Test
     fun selectBasicPlanDuringOnboardingTest() {
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planSelectNeededState,
-                    transitions = transitionsOnboardingState,
-                )
-            }
-        ).run {
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Assert '$basicPlan' plan name is displayed") {
@@ -147,14 +131,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     fun paymentAccountRowShowsActivatingWhileCardIssuedTest() {
         val activatingStatus = getResourceString(CoreResR.string.money_account_main_status_activating)
 
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planSelectNeededState,
-                    transitions = transitionsOnboardingState,
-                )
-            }
-        ).run {
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayBasicOrderPolling() }
@@ -180,14 +157,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         val expectedAccountNumber = "1234567890"
         val expectedRoutingNumber = "101019644"
 
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planSelectNeededState,
-                    transitions = transitionsOnboardingState,
-                )
-            }
-        ).run {
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Assert '$basicPlan' plan name is displayed") {
@@ -315,14 +285,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     @DisplayName("Tangem Pay: the Plus plan is activated once the plan fee order completes")
     @Test
     fun selectPlusPlanIssuesCardAfterTopUpTest() {
-        setupHooks(
-            additionalBeforeSection = {
-                setTangemPayTariffPlanScenarios(
-                    plan = planSelectNeededState,
-                    transitions = transitionsOnboardingState,
-                )
-            }
-        ).run {
+        setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Swipe to the '$plusPlan' plan") {

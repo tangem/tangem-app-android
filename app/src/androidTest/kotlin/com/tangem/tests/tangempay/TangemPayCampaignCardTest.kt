@@ -7,10 +7,10 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.scenarios.SINGLE_CARD_TILE_SUBTITLE
 import com.tangem.scenarios.assertTangemPayCampaignIssueCardContent
 import com.tangem.scenarios.closeFinishWalletActivationSheetIfShown
 import com.tangem.scenarios.assertTangemPayCampaignLandingContent
@@ -127,9 +127,9 @@ class TangemPayCampaignCardTest : BaseTestCase() {
             step("Click on Tangem Pay tile") {
                 onTangemPayMainScreen { clickMainScreenTileViaOnClickAction() }
             }
-            step("Assert 'Issuing your card' sheet is displayed") {
+            step("Assert 'Issuing new digital card' banner is displayed on the Payment account") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onTangemPayMainScreen { issuingCardSheetDescription.assertIsDisplayed() }
+                    onTangemPayMainScreen { issuingCardBanner.assertIsDisplayed() }
                 }
             }
         }
@@ -148,7 +148,7 @@ class TangemPayCampaignCardTest : BaseTestCase() {
         val cardIssuedState = "CardIssued"
         val issueOrderScenario = "tangem_pay_card_issue_order"
         val issueOrderCompletedState = "Completed"
-        val oneCardSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 1, 1)
+        val oneCardSubtitle = SINGLE_CARD_TILE_SUBTITLE
 
         setupHooks(
             additionalBeforeSection = { serveTangemPayOnboardingOrderFromWireMock() },

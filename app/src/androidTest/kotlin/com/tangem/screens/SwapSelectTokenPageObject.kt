@@ -8,6 +8,9 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyChild as withAnyChild
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
 class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -98,8 +101,11 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     }
 
     fun tokenWithName(tokenName: String): KNode = child {
-        hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
-        hasAnyChild(withText(tokenName))
+        val tokenTitle = withTestTag(TokenElementsTestTags.TOKEN_TITLE) and withAnyChild(withText(tokenName))
+        val accountRow = withTestTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM) and
+            withAnyDescendant(withText(tokenName)) and
+            !withAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_TITLE))
+        addSemanticsMatcher(tokenTitle or accountRow)
         useUnmergedTree = true
     }
 

@@ -31,6 +31,10 @@ import androidx.compose.ui.test.hasText as withText
 class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TangemPayMainPageObject>(semanticsProvider = semanticsProvider) {
 
+    init {
+        semanticsProvider.expandTangemPayGroupIfCollapsed()
+    }
+
     val mainScreenTile: KNode = child {
         hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
         useUnmergedTree = true
@@ -340,11 +344,6 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
             text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress_description),
             substring = true,
         )
-        useUnmergedTree = true
-    }
-
-    val issuingCardSheetDescription: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangempay_issuing_your_card_description))
         useUnmergedTree = true
     }
 

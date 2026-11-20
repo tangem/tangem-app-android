@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -102,6 +103,16 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     val walletImage: KNode = child {
         hasTestTag(MainScreenTestTags.CARD_IMAGE)
         useUnmergedTree = true
+    }
+
+    // A half-collapsed header leaves the action buttons under the top bar, where an injected tap lands on the bar.
+    fun clickActionButtonViaOnClickAction(title: String) {
+        semanticsProvider.onNode(
+            hasClickAction() and hasAnyAncestor(
+                withTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON) and hasAnyDescendant(withText(title)),
+            ),
+            useUnmergedTree = true,
+        ).performSemanticsAction(SemanticsActions.OnClick)
     }
 
     /**

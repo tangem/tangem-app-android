@@ -18,6 +18,12 @@ class TangemPayVerifiedPageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val bothProductsDescription: KNode = child {
+        hasTestTag(StatusScreenTestTags.DESCRIPTION)
+        hasText(getResourceString(CoreResR.string.tangempay_verified_description_all))
+        useUnmergedTree = true
+    }
+
     val choosePlanButton: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_verified_choose_plan))
         hasClickAction()
