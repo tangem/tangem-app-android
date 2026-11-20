@@ -190,6 +190,19 @@ internal class WalletWarningsClickIntentsTest {
     }
 
     @Test
+    fun `GIVEN permanent upgrade banner WHEN clicked THEN the launcher opens the upgrade from the banner`() = runTest {
+        // Act
+        createImplementor(scope = this).onPermanentUpgradeBannerClick(userWalletId)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER)
+        }
+        verify(exactly = 0) { analyticsEventHandler.send(any<WalletScreenAnalyticsEvent.MainScreen.ButtonUpgrade>()) }
+    }
+
+    @Test
     fun `GIVEN upgrade launch pending WHEN screen paused THEN the launch is cancelled`() = runTest {
         // Arrange
         val launchCancelled = CompletableDeferred<Boolean>()

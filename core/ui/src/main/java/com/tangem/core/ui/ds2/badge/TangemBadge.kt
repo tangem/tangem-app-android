@@ -52,9 +52,9 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  *
  * Behavior notes:
  * - Shape is always a fully-rounded pill (`borderRadius.full`).
- * - Icon tints are driven by [variant] + [status]; any tint set on a supplied [TangemIconUM.Icon]
- *   is overridden. Other [TangemIconUM] subtypes (e.g. currency / image / url) pass through with
- *   their own colors intact.
+ * - Icon tints are driven by [variant] + [status] unless [iconTint] is passed; any tint set on a
+ *   supplied [TangemIconUM.Icon] is overridden. Other [TangemIconUM] subtypes (e.g. currency / image /
+ *   url) pass through with their own colors intact.
  * - The badge is non-interactive by default. Pass [onClick] to make it clickable.
  * - A focused clickable badge draws the brand focus ring in place of its border.
  * - The label is single-line and ellipsized; a [maxLines] above 1 lets it wrap into centered lines.
@@ -68,6 +68,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param maxLines Maximum number of label lines before the label is ellipsized.
  * @param iconStart Optional leading icon.
  * @param iconEnd Optional trailing icon.
+ * @param iconTint Overrides the icon tint derived from [variant] + [status], for a slot icon the
+ *   design colors on its own (e.g. an accent icon on a neutral badge).
  * @param contentDescription Accessibility label announced by TalkBack. When non-null it overrides
  *   the label text for screen readers.
  * @param onClick Optional click handler. `null` makes the badge non-interactive.
@@ -84,11 +86,13 @@ fun TangemBadge(
     maxLines: Int = 1,
     iconStart: TangemIconUM? = null,
     iconEnd: TangemIconUM? = null,
+    iconTint: Color? = null,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
 ) {
-    val colorTokens = resolveColorTokens(variant = variant, status = status)
+    val statusColorTokens = resolveColorTokens(variant = variant, status = status)
+    val colorTokens = iconTint?.let { statusColorTokens.copy(iconTint = it) } ?: statusColorTokens
     val sizeTokens = size.tokens()
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isFocused by resolvedInteractionSource.collectIsFocusedAsState()
@@ -161,7 +165,7 @@ internal fun BadgeContent(
 }
 
 /**
- * Forces [tint] onto [TangemIconUM.Icon] so the badge's variant always drives icon color. Other
+ * Forces [tint] onto [TangemIconUM.Icon] so the badge, not the icon, drives icon color. Other
  * icon types (currency, image, url) pass through unchanged so they keep their own visuals.
  */
 private fun TangemIconUM.applyTint(tint: Color): TangemIconUM = when (this) {

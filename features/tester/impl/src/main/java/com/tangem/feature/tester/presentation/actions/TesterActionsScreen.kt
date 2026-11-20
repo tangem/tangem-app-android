@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,7 @@ import kotlin.time.Duration.Companion.minutes
 internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Modifier = Modifier) {
     var shouldShowTtlSelector by remember { mutableStateOf(value = false) }
     var shouldShowTtlCustomInput by remember { mutableStateOf(value = false) }
+    var shouldShowUpgradeBannerBalanceInput by remember { mutableStateOf(value = false) }
 
     LazyColumn(
         modifier = modifier
@@ -85,6 +87,18 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
                 enabled = state.shareLogsUM.file != null,
             )
         }
+
+        upgradeBannerThresholdItems(
+            um = state.upgradeBannerThresholdUM,
+            onCheckClick = { shouldShowUpgradeBannerBalanceInput = true },
+        )
+    }
+
+    if (shouldShowUpgradeBannerBalanceInput) {
+        UpgradeBannerBalanceInputDialog(
+            um = state.upgradeBannerThresholdUM,
+            onDismiss = { shouldShowUpgradeBannerBalanceInput = false },
+        )
     }
 
     if (shouldShowTtlSelector) {
@@ -175,6 +189,55 @@ private fun UsedeskTtlCustomInputDialog(um: UsedeskTokenTtlUM, onDismiss: () -> 
     )
 }
 
+private fun LazyListScope.upgradeBannerThresholdItems(
+    um: TesterActionsContentState.UpgradeBannerThresholdUM,
+    onCheckClick: () -> Unit,
+) {
+    item {
+        TesterActionItem(
+            name = stringResourceSafe(id = R.string.upgrade_banner_check_threshold),
+            onClick = onCheckClick,
+        )
+    }
+
+    item {
+        TesterActionItem(
+            name = stringResourceSafe(id = R.string.upgrade_banner_reset_threshold),
+            onClick = um.onResetClick,
+        )
+    }
+}
+
+@Composable
+private fun UpgradeBannerBalanceInputDialog(
+    um: TesterActionsContentState.UpgradeBannerThresholdUM,
+    onDismiss: () -> Unit,
+) {
+    var value by remember { mutableStateOf(TextFieldValue()) }
+    val usdBalance = value.text.replace(',', '.').toBigDecimalOrNull()
+
+    TextInputDialog(
+        title = stringResourceSafe(R.string.upgrade_banner_check_threshold),
+        fieldValue = value,
+        onValueChange = { newValue ->
+            value = newValue.copy(text = newValue.text.filter { it.isDigit() || it == '.' || it == ',' })
+        },
+        textFieldParams = AdditionalTextInputDialogUM(
+            label = stringResourceSafe(R.string.upgrade_banner_check_threshold_hint),
+            placeholder = "5000",
+        ),
+        confirmButton = DialogButtonUM(
+            isEnabled = usdBalance != null,
+            onClick = {
+                if (usdBalance != null) um.onCheckUsdBalance(usdBalance)
+                onDismiss()
+            },
+        ),
+        dismissButton = DialogButtonUM(title = stringResourceSafe(id = R.string.common_close), onClick = onDismiss),
+        onDismissDialog = onDismiss,
+    )
+}
+
 private fun Activity.shareFile(file: File?) {
     val originalIntent = createEmailShareIntent(activity = this, file = file)
 
@@ -220,6 +283,10 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
                     onCustomMinutesSelected = {},
                 ),
                 shareLogsUM = TesterActionsContentState.ShareLogsUM(file = null),
+                upgradeBannerThresholdUM = TesterActionsContentState.UpgradeBannerThresholdUM(
+                    onCheckUsdBalance = {},
+                    onResetClick = {},
+                ),
                 onBackClick = {},
             ),
         )

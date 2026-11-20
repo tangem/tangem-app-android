@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.hotwallet.CheckHotWalletBalanceThresholdUseCase
+import com.tangem.domain.hotwallet.SetHotWalletBalanceThresholdReachedUseCase
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.UsedeskTokenTtlUM
@@ -17,6 +19,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -29,6 +32,7 @@ internal class TesterActionsViewModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletAccountsSaver: WalletAccountsSaver,
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
+    private val setHotWalletBalanceThresholdReachedUseCase: SetHotWalletBalanceThresholdReachedUseCase,
 ) : ViewModel() {
 
     private val initialState: TesterActionsContentState
@@ -41,6 +45,10 @@ internal class TesterActionsViewModel @Inject constructor(
                 onCustomMinutesSelected = { minutes -> setUsedeskTokenTtl(minutes.minutes.inWholeMilliseconds) },
             ),
             shareLogsUM = TesterActionsContentState.ShareLogsUM(file = feedbackRepository.getLogFile()),
+            upgradeBannerThresholdUM = TesterActionsContentState.UpgradeBannerThresholdUM(
+                onCheckUsdBalance = this::checkUpgradeBannerThreshold,
+                onResetClick = this::resetUpgradeBannerThreshold,
+            ),
             onBackClick = { /* no-op */ },
         )
 
@@ -77,6 +85,20 @@ internal class TesterActionsViewModel @Inject constructor(
         uiState = uiState.copy(
             hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this@TesterActionsViewModel::hideAllCurrencies),
         )
+    }
+
+    private fun checkUpgradeBannerThreshold(usdBalance: BigDecimal) = viewModelScope.launch {
+        val userWalletId = userWalletsListRepository.selectedUserWalletSync()?.walletId ?: return@launch
+
+        if (usdBalance >= CheckHotWalletBalanceThresholdUseCase.THRESHOLD_USD) {
+            setHotWalletBalanceThresholdReachedUseCase(userWalletId, isReached = true)
+        }
+    }
+
+    private fun resetUpgradeBannerThreshold() = viewModelScope.launch {
+        val userWalletId = userWalletsListRepository.selectedUserWalletSync()?.walletId ?: return@launch
+
+        setHotWalletBalanceThresholdReachedUseCase(userWalletId, isReached = false)
     }
 
     private fun setUsedeskTokenTtl(millis: Long) = viewModelScope.launch {
