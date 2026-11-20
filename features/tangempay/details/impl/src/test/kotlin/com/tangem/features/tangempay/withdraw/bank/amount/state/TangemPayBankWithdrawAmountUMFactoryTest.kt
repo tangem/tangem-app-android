@@ -255,20 +255,17 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
         ),
         PlaceholderModel(
             networkFee = NetworkFeeState.Unreachable,
-            expected = unreachable(R.string.tangempay_withdraw_bank_network_fee_unreachable),
+            expected = Unreachable(
+                header = header,
+                onRetryClick = onRetryClick,
+                onBackClick = onBackClick,
+            ),
         ),
     )
 
     internal data class PlaceholderModel(
         val networkFee: NetworkFeeState,
         val expected: TangemPayBankWithdrawAmountUM,
-    )
-
-    private fun unreachable(messageRes: Int) = Unreachable(
-        header = header,
-        message = resourceReference(messageRes),
-        onRetryClick = onRetryClick,
-        onBackClick = onBackClick,
     )
 
     private fun createFactory(

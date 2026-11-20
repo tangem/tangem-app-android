@@ -10,7 +10,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
-import com.tangem.domain.tangempay.model.bankofframp.CustomerName
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
@@ -21,7 +20,6 @@ import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.spend.datasource.tangempay.TangemPayApi
 import com.tangem.spend.datasource.tangempay.models.response.BankAccountsResponse
 import com.tangem.spend.datasource.tangempay.models.response.BankOfframpOptionsResponse
-import com.tangem.spend.datasource.tangempay.models.response.CustomerNameResponse
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -32,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @Suppress("UNCHECKED_CAST")
@@ -209,48 +206,6 @@ internal class DefaultBankOfframpRepositoryTest {
         assertThat(options.sources).isEmpty()
         assertThat(options.destinations).isEmpty()
     }
-
-    @ParameterizedTest
-    @MethodSource("provideCustomerNameModels")
-    fun `GIVEN name response WHEN getCustomerName THEN both parts mapped as given`(model: CustomerNameModel) =
-        runTest {
-            // Arrange
-            coEvery { tangemPayApi.getCustomerName(AUTH_HEADER) } returns
-                ApiResponse.Success(CustomerNameResponse(result = model.result))
-
-            // Act
-            val actual = repository.getCustomerName(WALLET_ID)
-
-            // Assert
-            assertThat(actual.getOrNull()).isEqualTo(model.expected)
-        }
-
-    @Test
-    fun `GIVEN failing request WHEN getCustomerName THEN unknown error`() = runTest {
-        // Arrange
-        coEvery { tangemPayApi.getCustomerName(AUTH_HEADER) } returns
-            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerNameResponse>
-
-        // Act
-        val actual = repository.getCustomerName(WALLET_ID)
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
-    }
-
-    private fun provideCustomerNameModels() = listOf(
-        CustomerNameModel(
-            result = CustomerNameResponse.Result(firstName = "José", lastName = "Hernández"),
-            expected = CustomerName(firstName = "José", lastName = "Hernández"),
-        ),
-        CustomerNameModel(
-            result = CustomerNameResponse.Result(firstName = "José", lastName = null),
-            expected = CustomerName(firstName = "José", lastName = null),
-        ),
-        CustomerNameModel(result = null, expected = CustomerName(firstName = null, lastName = null)),
-    )
-
-    data class CustomerNameModel(val result: CustomerNameResponse.Result?, val expected: CustomerName)
 
     @Test
     fun `GIVEN failing request WHEN getOptions THEN unknown error`() = runTest {
