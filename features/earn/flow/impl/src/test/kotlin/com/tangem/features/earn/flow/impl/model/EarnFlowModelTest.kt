@@ -1979,6 +1979,32 @@ internal class EarnFlowModelTest {
             }
 
         @Test
+        fun `GIVEN a plan amount other than the entered one WHEN confirm screen opened THEN the plan amount is bucketed`() =
+            runTest {
+                // Arrange
+                coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns
+                    TestPlan(expectedAmount = BigDecimal("0.48")).right()
+
+                // Act
+                val model = createConfirmedModel(amount = "0.5")
+
+                // Assert
+                coVerify(exactly = 1) {
+                    usdValuation.bucket(
+                        currency = testEthereum,
+                        cryptoAmount = match { amount -> amount?.compareTo(BigDecimal("0.48")) == 0 },
+                    )
+                }
+                coVerify(exactly = 0) {
+                    usdValuation.bucket(
+                        currency = testEthereum,
+                        cryptoAmount = match { amount -> amount?.compareTo(BigDecimal("0.5")) == 0 },
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN the confirm screen WHEN Next arrives again THEN confirm screen opened is not sent again`() = runTest {
             // Arrange
             val model = createConfirmedModel()

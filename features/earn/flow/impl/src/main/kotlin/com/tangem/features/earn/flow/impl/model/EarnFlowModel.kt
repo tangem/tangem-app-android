@@ -651,8 +651,9 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
+    /** The amount Confirm shows: a Max withdrawal resolves the entire position into the plan. */
     private fun sendConfirmScreenOpened() {
-        val amount = state.value.sendingAmount
+        val amount = state.value.plan?.expectedAmount ?: state.value.sendingAmount
         launchFlowEvent { category, type ->
             val screen = session.screenAnalytics(action)
             EarnFlowAnalyticsEvent.ConfirmScreenOpened(
