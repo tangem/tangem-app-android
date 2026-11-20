@@ -130,8 +130,8 @@ fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
             .conditional(messageUM.onClick != null) {
                 clickableSingle(onClick = requireNotNull(messageUM.onClick))
             },
-        title = messageUM.title,
-        description = messageUM.subtitle,
+        title = messageUM.title ?: messageUM.subtitle,
+        description = messageUM.title?.let { messageUM.subtitle },
         variant = messageUM.variant ?: messageUM.messageEffect.toBannerVariant(),
         showGlowRing = messageUM.shouldShowGlowRing ?: messageUM.messageEffect.hasGlowRing(),
         contentAlign = if (messageUM.isCentered) {

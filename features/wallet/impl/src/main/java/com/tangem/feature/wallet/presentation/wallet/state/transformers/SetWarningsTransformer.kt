@@ -87,14 +87,17 @@ internal class SetWarningsTransformer(
     }
 
     /**
-     * Everything but the Tangem Pay cards and the developer card: the promo is a promo card, the account warnings
-     * stay out of the rule, and the developer card is on every test card, where it would leave no promo to check
+     * Everything but the Tangem Pay cards, the developer card and the outdated data card: the promo is a promo card,
+     * the account warnings stay out of the rule, the developer card is on every test card, where it would leave no
+     * promo to check, and the outdated data card comes only after the balances are fetched, so it would replace
+     * the promo cards already shown
      */
     private fun WalletNotificationUM.isSystemCard(): Boolean {
         return this !is WalletNotificationUM.TangemPayPromo &&
             this !is WalletNotificationUM.TangemPayRefreshNeeded &&
             this !is WalletNotificationUM.TangemPayUnreachable &&
-            this !is WalletNotificationUM.DevCard
+            this !is WalletNotificationUM.DevCard &&
+            this !is WalletNotificationUM.UsedOutdatedData
     }
 
     /** The notifications are sorted by type, which puts the promo below "Get your first crypto" */

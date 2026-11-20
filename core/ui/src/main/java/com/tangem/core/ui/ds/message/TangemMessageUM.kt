@@ -32,7 +32,7 @@ import kotlinx.collections.immutable.persistentListOf
  */
 data class TangemMessageUM(
     val id: String,
-    val title: TextReference,
+    val title: TextReference?,
     val subtitle: TextReference,
     val messageEffect: TangemMessageEffect = TangemMessageEffect.None,
     val variant: TangemMessageBanner.Variant? = null,
