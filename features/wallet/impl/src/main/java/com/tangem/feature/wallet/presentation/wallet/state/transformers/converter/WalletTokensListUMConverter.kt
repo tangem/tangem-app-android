@@ -54,6 +54,7 @@ internal class WalletTokensListUMConverter(
             userWalletId = selectedWallet.walletId,
             onAccountClick = clickIntents::onJointAccountClick,
             onCompromisedAccountClick = clickIntents::onCompromisedJointAccountClick,
+            isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         )
     }
 

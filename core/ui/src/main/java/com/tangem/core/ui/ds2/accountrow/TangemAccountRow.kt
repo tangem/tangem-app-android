@@ -42,6 +42,7 @@ import com.tangem.core.ui.ds2.expandable.ExpandableEmptyBody
 import com.tangem.core.ui.ds2.expandable.ExpandableShimmerLine
 import com.tangem.core.ui.ds2.expandable.ExpandableTitle
 import com.tangem.core.ui.ds2.expandable.ExpandableTitleAnchor
+import com.tangem.core.ui.ds2.expandable.ExpandableTitleIcon
 import com.tangem.core.ui.ds2.expandable.rememberExpansionMotion
 import com.tangem.core.ui.ds2.expandable.rememberRowPressAlpha
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
@@ -55,6 +56,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.assets.il_account_airplane
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
+import com.tangem.core.ui.res.generated.icons.ic_users_16_filled
 
 /**
  * Design-system v2 (DS3) **Account Row** — a portfolio card for one account. Collapsed it is a
@@ -62,7 +64,7 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * shrinks that line into a compact heading. The account's [TangemTokenRow]s are emitted by the
  * host next to the row, not nested inside it.
  *
- * Version: 1.2.0
+ * Version: 1.2.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
@@ -108,6 +110,7 @@ fun TangemAccountRow(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
+    titleIcon: ImageVector? = null,
     label: TextReference? = null,
     description: TextReference? = null,
     balance: TextReference? = null,
@@ -129,6 +132,7 @@ fun TangemAccountRow(
         avatar = avatar,
         title = title,
         modifier = modifier,
+        titleIcon = titleIcon,
         label = label,
         labelColor = labelColor,
         backgroundColor = backgroundColor,
@@ -184,6 +188,7 @@ fun TangemAccountRow(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
+    titleIcon: ImageVector? = null,
     label: TextReference? = null,
     description: TextReference? = null,
     balance: TextReference? = null,
@@ -205,6 +210,7 @@ fun TangemAccountRow(
         avatar = avatar,
         title = title,
         modifier = modifier,
+        titleIcon = titleIcon,
         label = label,
         labelColor = labelColor,
         backgroundColor = backgroundColor,
@@ -227,7 +233,7 @@ fun TangemAccountRow(
 /** Public API surface of [TangemAccountRow]. */
 object TangemAccountRow {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 0)
+    val version = DsVersion(major = 1, minor = 2, patch = 1)
 
     /**
      * Action message under a [NotActive] row's heading, leading the user to activate the account.
@@ -274,6 +280,7 @@ object TangemAccountRow {
         data class Content(
             override val id: String,
             val title: TextReference,
+            val titleIcon: ImageVector? = null,
             val label: TextReference? = null,
             val description: TextReference? = null,
             val balance: TextReference? = null,
@@ -300,6 +307,7 @@ object TangemAccountRow {
         data class Unreachable(
             override val id: String,
             val title: TextReference,
+            val titleIcon: ImageVector? = null,
             val badge: TextReference,
             val label: TextReference? = null,
             val description: TextReference? = null,
@@ -322,6 +330,7 @@ object TangemAccountRow {
         data class BalanceError(
             override val id: String,
             val title: TextReference,
+            val titleIcon: ImageVector? = null,
             val label: TextReference? = null,
             val description: TextReference? = null,
             val onClick: (() -> Unit)? = null,
@@ -347,6 +356,7 @@ object TangemAccountRow {
         data class NotActive(
             override val id: String,
             val title: TextReference,
+            val titleIcon: ImageVector? = null,
             val label: TextReference? = null,
             val description: TextReference? = null,
             val balance: TextReference? = null,
@@ -404,6 +414,7 @@ fun TangemAccountRow(
             avatar = avatar,
             title = state.title,
             modifier = modifier,
+            titleIcon = state.titleIcon,
             label = state.label,
             description = state.description,
             balance = state.balance,
@@ -423,6 +434,7 @@ fun TangemAccountRow(
             title = state.title,
             badge = state.badge,
             modifier = modifier,
+            titleIcon = state.titleIcon,
             label = state.label,
             description = state.description,
             isExpanded = isExpanded,
@@ -436,6 +448,7 @@ fun TangemAccountRow(
             avatar = avatar,
             title = state.title,
             modifier = modifier,
+            titleIcon = state.titleIcon,
             label = state.label,
             description = state.description,
             isExpanded = isExpanded,
@@ -449,6 +462,7 @@ fun TangemAccountRow(
             avatar = avatar,
             title = state.title,
             modifier = modifier,
+            titleIcon = state.titleIcon,
             label = state.label,
             description = state.description,
             balance = state.balance,
@@ -495,6 +509,7 @@ fun TangemAccountRow.Unreachable(
     title: TextReference,
     badge: TextReference,
     modifier: Modifier = Modifier,
+    titleIcon: ImageVector? = null,
     label: TextReference? = null,
     description: TextReference? = null,
     isExpanded: Boolean = false,
@@ -508,6 +523,7 @@ fun TangemAccountRow.Unreachable(
         avatar = avatar,
         title = title,
         modifier = modifier,
+        titleIcon = titleIcon,
         label = label,
         description = description,
         badge = badge,
@@ -547,6 +563,7 @@ fun TangemAccountRow.BalanceError(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
+    titleIcon: ImageVector? = null,
     label: TextReference? = null,
     description: TextReference? = null,
     isExpanded: Boolean = false,
@@ -560,6 +577,7 @@ fun TangemAccountRow.BalanceError(
         avatar = avatar,
         title = title,
         modifier = modifier,
+        titleIcon = titleIcon,
         label = label,
         description = description,
         hasBalanceError = true,
@@ -602,6 +620,7 @@ fun TangemAccountRow.NotActive(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
+    titleIcon: ImageVector? = null,
     label: TextReference? = null,
     description: TextReference? = null,
     balance: TextReference? = null,
@@ -616,6 +635,7 @@ fun TangemAccountRow.NotActive(
         avatar = avatar,
         title = title,
         modifier = modifier,
+        titleIcon = titleIcon,
         label = label,
         description = description,
         balance = balance,
@@ -752,6 +772,7 @@ private fun AccountRowScaffold(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
+    titleIcon: ImageVector? = null,
     isExpanded: Boolean = false,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
@@ -804,6 +825,15 @@ private fun AccountRowScaffold(
                 .graphicsLayer { alpha = pressAlpha },
         )
         ExpandableTitleAnchor(title = title, modifier = Modifier.layoutId(ExpandableCardLayoutId.TITLE_ANCHOR))
+
+        if (titleIcon != null) {
+            ExpandableTitleIcon(
+                imageVector = titleIcon,
+                modifier = Modifier
+                    .layoutId(ExpandableCardLayoutId.TITLE_ICON)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
+            )
+        }
 
         if (label != null || description != null) {
             AccountRowSubtitle(
@@ -904,6 +934,15 @@ private fun TangemAccountRowCollapsedPreview() {
                 value = stringReference("2.08%"),
                 direction = TangemPriceChange.Direction.Up,
             ),
+            onClick = {},
+        )
+        TangemAccountRow(
+            avatar = avatar,
+            title = stringReference("Very long shared account title"),
+            titleIcon = Icons.ic_users_16_filled,
+            label = stringReference("Subtitle"),
+            description = stringReference("Description"),
+            balance = stringReference("$12,000.00"),
             onClick = {},
         )
         TangemAccountRow.Unreachable(

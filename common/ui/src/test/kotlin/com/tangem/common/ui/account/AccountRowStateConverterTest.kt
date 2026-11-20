@@ -1,5 +1,6 @@
 package com.tangem.common.ui.account
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -11,6 +12,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_users_16_filled
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.StatusSource
@@ -21,12 +24,14 @@ import com.tangem.domain.models.account.Account.Personal.Companion.createMainAcc
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -90,6 +95,48 @@ internal class AccountRowStateConverterTest {
                 expected = TangemAccountRow.State.BalanceError::class,
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TitleIcon {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN account kind and balance WHEN convert THEN members icon only for joint`(model: TitleIconModel) {
+            // Arrange
+            val accountStatus = if (model.isJoint) {
+                jointAccountStatus(totalFiatBalance = model.totalFiatBalance, values = model.values)
+            } else {
+                accountStatus(totalFiatBalance = model.totalFiatBalance, values = model.values)
+            }
+
+            // Act
+            val actual = converter.convert(value = accountStatus, onClick = {})
+
+            // Assert
+            assertThat(actual.titleIcon()).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<TitleIconModel> {
+            val loaded = TotalFiatBalance.Loaded(BigDecimal.TEN, StatusSource.ACTUAL)
+            return listOf(true, false).flatMap { isJoint ->
+                val expected = Icons.ic_users_16_filled.takeIf { isJoint }
+                listOf(
+                    TitleIconModel(isJoint, loaded, listOf(loaded()), expected),
+                    TitleIconModel(isJoint, TotalFiatBalance.Failed, listOf(loaded(), unreachable()), expected),
+                    TitleIconModel(isJoint, TotalFiatBalance.Failed, listOf(missedDerivation()), expected),
+                )
+            }
+        }
+
+        private fun TangemAccountRow.State.titleIcon(): ImageVector? = when (this) {
+            is TangemAccountRow.State.Content -> titleIcon
+            is TangemAccountRow.State.Unreachable -> titleIcon
+            is TangemAccountRow.State.BalanceError -> titleIcon
+            is TangemAccountRow.State.NotActive -> titleIcon
+            is TangemAccountRow.State.Shimmer -> null
+        }
     }
 
     @Nested
@@ -262,15 +309,36 @@ internal class AccountRowStateConverterTest {
                 derivationIndex = mainAccount.derivationIndex,
             )
         } ?: mainAccount
-        val coin = currencyFactory.createCoin(Blockchain.Ethereum)
         return AccountStatus.Personal(
             account = account,
-            tokenList = TokenList.Ungrouped(
-                currencies = values.map { CryptoCurrencyStatus(currency = coin, value = it) },
-                totalFiatBalance = totalFiatBalance,
-                sortedBy = TokensSortType.NONE,
-            ),
+            tokenList = tokenList(totalFiatBalance = totalFiatBalance, values = values),
             priceChangeLce = Unit.lceError(),
+        )
+    }
+
+    private fun jointAccountStatus(
+        totalFiatBalance: TotalFiatBalance,
+        values: List<CryptoCurrencyStatus.Value>,
+    ): AccountStatus.Joint {
+        return AccountStatus.Joint(
+            account = MockAccounts.createJointAccount(userWalletId = userWalletId),
+            value = JointAccountStatusValue.Active(
+                source = StatusSource.ACTUAL,
+                totalMembers = 3,
+                safeAddress = "0x5afe",
+                threshold = 2,
+            ),
+            tokenList = tokenList(totalFiatBalance = totalFiatBalance, values = values),
+            priceChangeLce = Unit.lceError(),
+        )
+    }
+
+    private fun tokenList(totalFiatBalance: TotalFiatBalance, values: List<CryptoCurrencyStatus.Value>): TokenList {
+        val coin = currencyFactory.createCoin(Blockchain.Ethereum)
+        return TokenList.Ungrouped(
+            currencies = values.map { CryptoCurrencyStatus(currency = coin, value = it) },
+            totalFiatBalance = totalFiatBalance,
+            sortedBy = TokensSortType.NONE,
         )
     }
 
@@ -296,6 +364,13 @@ internal class AccountRowStateConverterTest {
         val totalFiatBalance: TotalFiatBalance,
         val values: List<CryptoCurrencyStatus.Value>,
         val expected: KClass<out TangemAccountRow.State>,
+    )
+
+    data class TitleIconModel(
+        val isJoint: Boolean,
+        val totalFiatBalance: TotalFiatBalance,
+        val values: List<CryptoCurrencyStatus.Value>,
+        val expected: ImageVector?,
     )
 
     data class GlyphModel(

@@ -44,6 +44,7 @@ internal enum class ExpandableCardLayoutId {
     AVATAR,
     TITLE,
     TITLE_ANCHOR,
+    TITLE_ICON,
     SUBTITLE,
     END_TOP,
     END_BOTTOM,
@@ -164,12 +165,14 @@ internal fun ExpandableCard(
             0,
             innerWidth - avatarExpanded - avatarGapExpanded - arrow.widthOrZero() - avatarGapExpanded - inlineWidth,
         )
+        val titleIcon = measurables.measureById(ExpandableCardLayoutId.TITLE_ICON, loose)
+        val titleIconSpace = titleIcon?.let { it.width + inlineGap } ?: 0
         val titleScale = motion.titleScale
         val titleBudgetExpanded = (titleWidthExpanded / ROW_TITLE_EXPANDED_SCALE).roundToInt()
         val titleMaxWidth = if (motion.isTitleCaption) {
             titleWidthExpanded
         } else {
-            lerp(startWidthCollapsed, titleBudgetExpanded, progress)
+            lerp(max(0, startWidthCollapsed - titleIconSpace), titleBudgetExpanded, progress)
         }
 
         val title = measurables.measureById(
@@ -253,6 +256,8 @@ internal fun ExpandableCard(
                 padding + avatarExpanded + avatarGapExpanded + titleAnchor.widthOrZero(),
                 progress,
             )
+            titleIcon?.placeRelative(x = titleRight + inlineGap, y = titleCenterY - titleIcon.height / 2)
+
             var inlineX = titleRight + inlineGap
             inline.forEach { placeable ->
                 placeable.placeRelative(x = inlineX, y = titleCenterY - placeable.height / 2)
