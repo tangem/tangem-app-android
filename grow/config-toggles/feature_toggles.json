@@ -9,7 +9,7 @@
     },
     {
         "name": "TWI_1858_TRON_CLIENT_ENERGY_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "AND_17201_TRON_LOWER_FEE_TYPE_ENABLED",
@@ -41,7 +41,7 @@
     },
     {
         "name": "TWI_1676_EARN_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "TWI_1869_GAUNTLET_VAULT_ENABLED",
@@ -53,7 +53,7 @@
     },
     {
         "name": "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "AND_18953_EARN_UPDATE_ASSET_SELECTION",
