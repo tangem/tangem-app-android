@@ -49,6 +49,7 @@ import com.tangem.features.polymarket.impl.common.feed.model.converter.Polymarke
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.isSoccerMatch
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -410,7 +411,7 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(
             PolymarketRoute.EventDetails(
                 eventId = event.id,
-                eventType = event.eventType,
+                isSoccerMatch = event.isSoccerMatch,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedFeedCategory()?.label,
             ),

@@ -14,6 +14,7 @@ import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessa
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.isSoccerMatch
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import com.tangem.features.polymarket.impl.search.model.transformer.PolymarketSearchContentTransformer
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
@@ -161,7 +162,7 @@ internal class PolymarketSearchModel @Inject constructor(
             PolymarketRoute.EventDetails(
                 eventId = event.id,
                 userWalletId = params.userWalletId,
-                eventType = event.eventType,
+                isSoccerMatch = event.isSoccerMatch,
             ),
         )
     }

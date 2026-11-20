@@ -28,6 +28,7 @@ import com.tangem.features.polymarket.impl.common.feed.model.converter.Polymarke
 import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
 import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.isSoccerMatch
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -185,7 +186,7 @@ internal class PolymarketCategoryModel @Inject constructor(
         router.push(
             PolymarketRoute.EventDetails(
                 eventId = event.id,
-                eventType = event.eventType,
+                isSoccerMatch = event.isSoccerMatch,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedCategory().label,
             ),

@@ -194,7 +194,9 @@ internal class PolymarketSoccerModel @Inject constructor(
         val result = withContext(dispatchers.default) { getEvent(params.userWalletId, event?.id ?: params.eventId) }
         coroutineContext.ensureActive()
         result.fold(
-            ifLeft = ::onRefreshFailed,
+            ifLeft = { error ->
+                if (error == PolymarketEventError.NotFound && event == null) openAsEvent() else onRefreshFailed(error)
+            },
             ifRight = { loaded ->
                 if (isOutdated(loaded.dataFetchedAt) || isAwaitingFinalSnapshot && loaded.isEnded != true) {
                     onRefreshFailed(PolymarketEventError.Unknown(null, "Outdated soccer snapshot"))
@@ -241,6 +243,18 @@ internal class PolymarketSoccerModel @Inject constructor(
     private fun isOutdated(timestamp: Instant?): Boolean {
         val previous = listOfNotNull(mainEvents.value?.dataFetchedAt, event?.dataFetchedAt).maxOrNull() ?: return false
         return timestamp == null || timestamp < previous
+    }
+
+    private fun openAsEvent() {
+        TangemLogger.i("Soccer details: ${params.eventId} is not a match, opening it as an event")
+        router.navigate(transformer = { stack ->
+            val current = stack.lastOrNull() as? PolymarketRoute.EventDetails
+            if (current?.eventId == params.eventId && current.userWalletId == params.userWalletId) {
+                stack.dropLast(1) + current.copy(isSoccerMatch = false)
+            } else {
+                stack
+            }
+        })
     }
 
     private fun onRefreshFailed(error: PolymarketEventError) {

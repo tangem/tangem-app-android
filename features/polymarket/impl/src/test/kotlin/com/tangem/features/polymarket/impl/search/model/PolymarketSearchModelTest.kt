@@ -244,7 +244,7 @@ internal class PolymarketSearchModelTest {
     }
 
     @Test
-    fun `GIVEN results WHEN a card is clicked THEN the details route is pushed with the wallet`() = runTest {
+    fun `GIVEN a soccer event without teams WHEN its card is clicked THEN the details route opens it as no match`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         model.uiState.value.onQueryChange("uzb")
@@ -261,7 +261,7 @@ internal class PolymarketSearchModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId, eventType = "soccer"),
+                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId, isSoccerMatch = false),
                 any(),
             )
         }

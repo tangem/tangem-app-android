@@ -57,6 +57,8 @@ internal class PolymarketEventDetailsComponent(
      *  screen starts.
      * @property marketId market preselected by the caller, e.g. by tapping an outcome on the feed card
      * @property assetId outcome preselected by the caller
+     * @property isSoccerMatch whether the caller knew the event to be a soccer match; `null` lets the screen move
+     *  to the soccer screen once the loaded event turns out to be one
      */
     data class Params(
         val eventId: String,
@@ -64,5 +66,6 @@ internal class PolymarketEventDetailsComponent(
         val marketId: String? = null,
         val assetId: String? = null,
         val categoryLabel: String? = null,
+        val isSoccerMatch: Boolean? = null,
     )
 }

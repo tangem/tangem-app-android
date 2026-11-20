@@ -62,6 +62,8 @@ internal sealed interface PolymarketRoute : Route {
      *  different wallet than the one the feature was opened with.
      * @property marketId market preselected by the caller, e.g. by tapping an outcome on the feed card
      * @property assetId outcome preselected by the caller
+     * @property isSoccerMatch whether the caller knew the event to be a soccer match; `null` leaves it to the event
+     *  screen, which moves to the soccer screen once the loaded event turns out to be one
      */
     data class EventDetails(
         val eventId: String,
@@ -69,7 +71,7 @@ internal sealed interface PolymarketRoute : Route {
         val marketId: String? = null,
         val assetId: String? = null,
         val categoryLabel: String? = null,
-        val eventType: String? = null,
+        val isSoccerMatch: Boolean? = null,
     ) : PolymarketRoute
 
     /**

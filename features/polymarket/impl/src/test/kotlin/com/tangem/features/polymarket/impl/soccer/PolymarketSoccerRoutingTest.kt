@@ -40,14 +40,14 @@ internal class PolymarketSoccerRoutingTest {
     fun tearDown() { unmockkStatic(EntryPoints::class) }
 
     @ParameterizedTest
-    @CsvSource("true,soccer,true", "false,soccer,false", "true,basketball,false", "true,,false", "true,future_type,false")
+    @CsvSource("true,true,true", "false,true,false", "true,false,false", "true,,false")
     fun `GIVEN route and toggle WHEN opened and paused THEN only the selected screen lifecycle runs`(
         enabled: Boolean,
-        type: String?,
+        isSoccerMatch: Boolean?,
         expectSoccer: Boolean,
     ) {
         // Arrange
-        val route = PolymarketRoute.EventDetails("child", UserWalletId("011"), eventType = type)
+        val route = PolymarketRoute.EventDetails("child", UserWalletId("011"), isSoccerMatch = isSoccerMatch)
         every { soccer.rulesNavigation } returns SlotNavigation()
         val context = context()
 
