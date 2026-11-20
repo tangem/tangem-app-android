@@ -91,6 +91,10 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         dismissState()
     }
 
+    fun dismiss(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        if (isCurrentRequest(attemptRequest)) dismiss()
+    }
+
     suspend fun wrongAccessCode(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         hotAccessCodeAttemptsRepository.incrementAttempts(attemptRequest.attemptId)
         // The caller re-requests the code right after this returns, which would cancel a deletion still in flight

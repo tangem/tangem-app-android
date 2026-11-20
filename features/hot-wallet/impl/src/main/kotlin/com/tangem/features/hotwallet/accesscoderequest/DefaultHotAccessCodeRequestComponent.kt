@@ -40,6 +40,10 @@ internal class DefaultHotAccessCodeRequestComponent @AssistedInject constructor(
         model.dismiss()
     }
 
+    override suspend fun dismiss(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        model.dismiss(attemptRequest)
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
