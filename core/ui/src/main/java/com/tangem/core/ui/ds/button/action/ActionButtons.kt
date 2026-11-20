@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
@@ -23,10 +24,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.extensions.orEmpty
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -35,6 +35,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import com.tangem.core.ui.ds.button.TangemButtonUM as Ds2TangemButtonUM
 
 private val ACTION_BUTTONS_SPACING = 10.dp
 
@@ -93,6 +95,25 @@ fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = M
     }
 }
 
+@JvmName("ActionButtonsDs2")
+@Composable
+fun ActionButtons(buttons: ImmutableList<Ds2TangemButtonUM>, modifier: Modifier = Modifier) {
+    ActionButtons(
+        buttons = remember(buttons) {
+            buttons.map { button ->
+                TangemButtonUM(
+                    text = button.text,
+                    isEnabled = button.isEnabled,
+                    isDimmed = button.isDimmed,
+                    iconStart = button.tangemIconUM,
+                    onClick = button.onClick,
+                )
+            }.toImmutableList()
+        },
+        modifier = modifier,
+    )
+}
+
 @Composable
 private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) {
     val textColor = if (button.isEnabled && !button.isDimmed) {
@@ -113,8 +134,9 @@ private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) 
             variant = TangemButton.Variant.Material,
             isEnabled = button.isEnabled,
             isDimmed = button.isDimmed,
-            iconStart = button.tangemIconUM,
+            iconStart = button.iconStart,
             size = TangemButton.Size.X14,
+            onLongClick = button.onLongClick,
         )
         Text(
             text = button.text.orEmpty().resolveReference(),
@@ -147,37 +169,27 @@ private class ActionButtonsPreviewProvider : PreviewParameterProvider<ImmutableL
             persistentListOf(
                 TangemButtonUM(
                     text = stringReference("Send"),
-                    tangemIconUM = previewIcon(R.drawable.ic_arrow_up_24, isEnabled = true),
+                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_up_24),
                     onClick = { },
                     isEnabled = true,
-                    type = TangemButtonType.Secondary,
+                    variant = TangemButton.Variant.Material,
                 ),
                 TangemButtonUM(
                     text = stringReference("Receive"),
-                    tangemIconUM = previewIcon(R.drawable.ic_exchange_default_24, isEnabled = true),
+                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_default_24),
                     onClick = { },
                     isEnabled = true,
-                    type = TangemButtonType.Secondary,
+                    variant = TangemButton.Variant.Material,
                 ),
                 TangemButtonUM(
                     text = stringReference("Swap"),
-                    tangemIconUM = previewIcon(R.drawable.ic_dollar_default_24, isEnabled = false),
+                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_dollar_default_24),
                     onClick = { },
                     isEnabled = false,
-                    type = TangemButtonType.Secondary,
+                    variant = TangemButton.Variant.Material,
                 ),
             ),
         )
 }
 
-private fun previewIcon(iconRes: Int, isEnabled: Boolean): TangemIconUM = TangemIconUM.Icon(
-    iconRes = iconRes,
-    tintReference = {
-        if (isEnabled) {
-            TangemTheme.colors3.icon.primary
-        } else {
-            TangemTheme.colors3.icon.tertiary
-        }
-    },
-)
 // endregion

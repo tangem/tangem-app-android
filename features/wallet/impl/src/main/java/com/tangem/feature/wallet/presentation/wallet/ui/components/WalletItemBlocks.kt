@@ -97,7 +97,7 @@ internal fun LazyListScope.organizeTokens2(
                     organizeButton.onClick()
                 },
                 variant = TangemButton.Variant.Secondary,
-                iconStart = organizeButton.tangemIconUM,
+                iconStart = organizeButton.iconStart,
                 text = organizeButton.text,
                 isEnabled = organizeButton.isEnabled,
             )

@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.image.TangemIconUM

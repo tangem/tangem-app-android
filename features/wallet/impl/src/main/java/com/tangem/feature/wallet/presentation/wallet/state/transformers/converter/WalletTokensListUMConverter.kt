@@ -1,14 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.jointaccount.model.JointPendingOperation
@@ -297,19 +294,9 @@ internal class WalletTokensListUMConverter(
             TangemButtonUM(
                 text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
-                size = TangemButtonSize.X9,
-                shape = TangemButtonShape.Rounded,
-                type = TangemButtonType.PrimaryInverse,
-                tangemIconUM = TangemIconUM.Icon(
-                    iconRes = iconRes,
-                    tintReference = {
-                        if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
-                            TangemTheme.colors3.icon.primary
-                        } else {
-                            TangemTheme.colors3.icon.tertiary
-                        }
-                    },
-                ),
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X9,
+                iconStart = TangemIconUM.Icon(iconRes = iconRes),
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {

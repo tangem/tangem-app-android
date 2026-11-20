@@ -4,7 +4,7 @@ import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet

@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
