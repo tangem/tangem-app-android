@@ -282,8 +282,11 @@ internal class EarnPickerModel @Inject constructor(
                 Frame(converter.initial(intents = this))
             else -> {
                 val state = selection?.takeIf { it.product.id == chosen.id }?.state ?: EarnProductState.Loading
-                val capacity = capacityFrame.takeIf { it.productId == chosen.id }?.value
-                    ?: EarnPickerDepositCapacity.Unknown
+                val capacity = capacityOf(
+                    selection = selection?.takeIf { it.product.id == chosen.id },
+                    balance = ethBalance,
+                    frame = capacityFrame,
+                )
                 val um = converter.convert(
                     product = chosen,
                     state = state,
@@ -328,21 +331,32 @@ internal class EarnPickerModel @Inject constructor(
 
     /** A failed or hung estimate leaves the button to the balance: a network error must not block deposits. */
     private fun estimateCapacity(request: CapacityRequest?): Flow<CapacityFrame> {
-        if (request == null) return flowOf(CapacityFrame(productId = null, value = EarnPickerDepositCapacity.Unknown))
+        if (request == null) return flowOf(CapacityFrame(request = null, value = EarnPickerDepositCapacity.Unknown))
 
         return flow {
-            emit(CapacityFrame(productId = request.productId, value = EarnPickerDepositCapacity.Loading))
+            emit(CapacityFrame(request = request, value = EarnPickerDepositCapacity.Loading))
             val result = withTimeoutOrNull(ESTIMATE_TIMEOUT) {
                 depositCapacity.availableMax(
                     productId = request.productId,
                     params = productParams,
                     action = request.action,
+                    balance = request.balance,
                 )
             }
             if (result == null) TangemLogger.e("Earn picker: deposit capacity of ${request.productId.value} timed out")
             val value = result?.getOrNull()?.let(EarnPickerDepositCapacity::Known) ?: EarnPickerDepositCapacity.Unknown
-            emit(CapacityFrame(productId = request.productId, value = value))
+            emit(CapacityFrame(request = request, value = value))
         }
+    }
+
+    /** The UI frame can run before [capacity] reacts to a new balance or state: an older estimate must not decide. */
+    private fun capacityOf(
+        selection: Selection?,
+        balance: BigDecimal?,
+        frame: CapacityFrame,
+    ): EarnPickerDepositCapacity {
+        val request = capacityRequest(selection, balance) ?: return EarnPickerDepositCapacity.Unknown
+        return if (frame.request == request) frame.value else EarnPickerDepositCapacity.Loading
     }
 
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
@@ -368,13 +382,17 @@ internal class EarnPickerModel @Inject constructor(
             )
         }
 
-        val isNoFunds = cta.kind(shown.state, shown.ethBalance, shown.capacity) == EarnPickerCta.Kind.AddFunds
-        noFundsNotice.onCta(
-            EarnNoFundsNoticeAnalytics.Notice(
-                token = params.cryptoCurrency.symbol,
-                product = shown.product.analytics.product,
-            ).takeIf { isNoFunds },
-        )
+        when (cta.kind(shown.state, shown.ethBalance, shown.capacity)) {
+            // A re-estimate does not end the no-funds state the notice already reported
+            EarnPickerCta.Kind.Loading -> Unit
+            EarnPickerCta.Kind.AddFunds -> noFundsNotice.onCta(
+                EarnNoFundsNoticeAnalytics.Notice(
+                    token = params.cryptoCurrency.symbol,
+                    product = shown.product.analytics.product,
+                ),
+            )
+            else -> noFundsNotice.onCta(null)
+        }
     }
 
     private fun List<EarnProductSummary>.apyOf(id: EarnProductId): String? =
@@ -514,7 +532,7 @@ internal class EarnPickerModel @Inject constructor(
         val balance: BigDecimal,
     )
 
-    private data class CapacityFrame(val productId: EarnProductId?, val value: EarnPickerDepositCapacity)
+    private data class CapacityFrame(val request: CapacityRequest?, val value: EarnPickerDepositCapacity)
 
     private companion object {
         val ESTIMATE_TIMEOUT = 10.seconds

@@ -22,10 +22,10 @@ internal class DefaultEarnDepositCapacity @Inject constructor(
         productId: EarnProductId,
         params: EarnProduct.Params,
         action: EarnFlowAction,
+        balance: BigDecimal,
     ): Either<EarnDepositCapacity.Unavailable, BigDecimal> = either {
         val factory = ensureNotNull(sessionFactories.find(productId)) { unavailable(productId, reason = "no session") }
         val session = factory.create(params)
-        val max = session.maxAmount(action = action).mapLeft { unavailable(productId, reason = it) }.bind()
         // Without an amount the session prices the whole source, as the deposit screen does before any input
         val fee = session.loadFee(
             action = action,
@@ -37,7 +37,7 @@ internal class DefaultEarnDepositCapacity @Inject constructor(
             selection = EarnFeeSelection(fee = fee, extended = null),
         )
         val deduction = if (isSubtractAvailable) feeValue else BigDecimal.ZERO
-        (max - deduction).coerceAtLeast(BigDecimal.ZERO)
+        (balance - deduction).coerceAtLeast(BigDecimal.ZERO)
     }
 
     private fun unavailable(productId: EarnProductId, reason: Any): EarnDepositCapacity.Unavailable {

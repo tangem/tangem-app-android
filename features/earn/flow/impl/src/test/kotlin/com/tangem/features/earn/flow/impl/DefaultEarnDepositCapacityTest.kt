@@ -21,7 +21,6 @@ import com.tangem.features.earn.flow.impl.model.testUserWalletId
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnSession
-import com.tangem.features.earn.product.api.session.EarnSessionError
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
@@ -79,14 +78,18 @@ internal class DefaultEarnDepositCapacityTest {
     @ProvideTestModels
     fun availableMax(model: AvailableMaxModel) = runTest {
         // Arrange
-        coEvery { session.maxAmount(action = any()) } returns model.max
         coEvery { session.loadFee(action = any(), amount = any()) } returns model.fee
         coEvery {
             isAmountSubtractAvailableUseCase.invoke(userWalletId = any(), currency = any(), maybeGaslessFee = any())
         } returns model.isSubtractAvailable.right()
 
         // Act
-        val actual = capacity.availableMax(productId = model.productId, params = params, action = Deposit())
+        val actual = capacity.availableMax(
+            productId = model.productId,
+            params = params,
+            action = Deposit(),
+            balance = model.balance,
+        )
 
         // Assert
         assertThat(actual.isLeft()).isEqualTo(model.expected == null)
@@ -96,14 +99,15 @@ internal class DefaultEarnDepositCapacityTest {
     @Test
     fun `GIVEN a deposit WHEN availableMax THEN the fee is estimated for the whole source of this product`() = runTest {
         // Arrange
-        coEvery { session.maxAmount(action = any()) } returns BigDecimal.ONE.right()
-        coEvery { session.loadFee(action = any(), amount = any()) } returns TransactionFee.Single(testFee("0.01")).right()
+        coEvery {
+            session.loadFee(action = any(), amount = any())
+        } returns TransactionFee.Single(testFee("0.01")).right()
         coEvery {
             isAmountSubtractAvailableUseCase.invoke(userWalletId = any(), currency = any(), maybeGaslessFee = any())
         } returns true.right()
 
         // Act
-        capacity.availableMax(productId = PRODUCT_ID, params = params, action = Deposit())
+        capacity.availableMax(productId = PRODUCT_ID, params = params, action = Deposit(), balance = BigDecimal.ONE)
 
         // Assert
         coVerify(exactly = 1) { session.loadFee(action = Deposit(), amount = null) }
@@ -113,11 +117,10 @@ internal class DefaultEarnDepositCapacityTest {
     @Test
     fun `GIVEN fee estimate fails WHEN availableMax THEN the reason is logged`() = runTest {
         // Arrange
-        coEvery { session.maxAmount(action = any()) } returns BigDecimal.ONE.right()
         coEvery { session.loadFee(action = any(), amount = any()) } returns GetFeeError.UnknownError.left()
 
         // Act
-        capacity.availableMax(productId = PRODUCT_ID, params = params, action = Deposit())
+        capacity.availableMax(productId = PRODUCT_ID, params = params, action = Deposit(), balance = BigDecimal.ONE)
 
         // Assert
         verify(exactly = 1) {
@@ -131,15 +134,12 @@ internal class DefaultEarnDepositCapacityTest {
             expected = null,
         ),
         AvailableMaxModel(
-            max = EarnSessionError.Failed().left(),
-            expected = null,
-        ),
-        AvailableMaxModel(
             fee = GetFeeError.UnknownError.left(),
             expected = null,
         ),
         AvailableMaxModel(
-            fee = TransactionFee.Single(Fee.Common(Amount(currencySymbol = "ETH", value = null, decimals = 18))).right(),
+            fee = TransactionFee.Single(Fee.Common(Amount(currencySymbol = "ETH", value = null, decimals = 18)))
+                .right(),
             expected = null,
         ),
         AvailableMaxModel(expected = BigDecimal("0.99")),
@@ -153,7 +153,7 @@ internal class DefaultEarnDepositCapacityTest {
         ),
         AvailableMaxModel(isSubtractAvailable = false, expected = BigDecimal.ONE),
         AvailableMaxModel(
-            max = BigDecimal("0.00001").right(),
+            balance = BigDecimal("0.00001"),
             fee = TransactionFee.Single(testFee("0.0001")).right(),
             expected = BigDecimal.ZERO,
         ),
@@ -161,7 +161,7 @@ internal class DefaultEarnDepositCapacityTest {
 
     data class AvailableMaxModel(
         val productId: EarnProductId = PRODUCT_ID,
-        val max: Either<EarnSessionError, BigDecimal> = BigDecimal.ONE.right(),
+        val balance: BigDecimal = BigDecimal.ONE,
         val fee: Either<GetFeeError, TransactionFee> = TransactionFee.Single(testFee("0.01")).right(),
         val isSubtractAvailable: Boolean = true,
         val expected: BigDecimal?,

@@ -145,7 +145,7 @@ internal class EarnPickerModelTest {
     fun setUp() {
         clearMocks(router, uiMessageSender, urlOpener, analyticsEventHandler, overviewFetcher, summarySupplier, accountStatusListSupplier, accountStatusList)
         clearMocks(videoFactory, heroVideo, depositCapacity)
-        coEvery { depositCapacity.availableMax(any(), any(), any()) } returns BigDecimal.ONE.right()
+        coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ONE.right()
         mockkObject(CryptoCurrencyStatusOperations)
         mockkObject(TangemLogger)
         lending = PickerProduct(createFakeEarnProduct(FakeEarnProductPreset.Lending), readyState(FakeEarnProductPreset.Lending))
@@ -1009,7 +1009,7 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN capacity zero WHEN model created THEN the button is Add funds`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(any(), any(), any()) } returns BigDecimal.ZERO.right()
+            coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ZERO.right()
 
             // Act
             val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
@@ -1023,7 +1023,7 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN capacity above the minimum WHEN model created THEN the button is the primary action`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(any(), any(), any()) } returns BigDecimal.ONE.right()
+            coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ONE.right()
 
             // Act
             val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
@@ -1040,7 +1040,7 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN estimate pending WHEN model created THEN the button is loading and disabled`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(any(), any(), any()) } coAnswers { awaitCancellation() }
+            coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } coAnswers { awaitCancellation() }
 
             // Act
             val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
@@ -1057,7 +1057,7 @@ internal class EarnPickerModelTest {
         fun `GIVEN estimate never answers WHEN the timeout passes THEN the button falls back to the primary action`() =
             runTest {
                 // Arrange
-                coEvery { depositCapacity.availableMax(any(), any(), any()) } coAnswers { awaitCancellation() }
+                coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } coAnswers { awaitCancellation() }
                 val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
                 runCurrent()
 
@@ -1077,7 +1077,9 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN capacity unavailable WHEN model created THEN today's rule decides`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(any(), any(), any()) } returns EarnDepositCapacity.Unavailable.left()
+            coEvery {
+                depositCapacity.availableMax(any(), any(), any(), any())
+            } returns EarnDepositCapacity.Unavailable.left()
 
             // Act
             val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
@@ -1094,7 +1096,7 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN ready ticks with the same balance WHEN state re-emits THEN capacity is asked once`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(any(), any(), any()) } returns BigDecimal.ONE.right()
+            coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ONE.right()
             val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
             advanceUntilIdle()
 
@@ -1103,12 +1105,12 @@ internal class EarnPickerModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { depositCapacity.availableMax(any(), any(), any()) }
+            coVerify(exactly = 1) { depositCapacity.availableMax(any(), any(), any(), any()) }
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN balance null then two values WHEN balances arrive THEN capacity is asked once per value`() =
+        fun `GIVEN balance null then two values WHEN balances arrive THEN capacity is asked once for each balance`() =
             runTest {
                 // Arrange
                 val withHalf: AccountStatusList = mockk()
@@ -1118,7 +1120,7 @@ internal class EarnPickerModelTest {
                 stubBalance(balance = BigDecimal("2"), list = withTwo)
                 val lists = MutableStateFlow(accountStatusList)
                 every { accountStatusListSupplier(USER_WALLET_ID) } returns lists
-                coEvery { depositCapacity.availableMax(any(), any(), any()) } returns BigDecimal.ONE.right()
+                coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ONE.right()
                 val model = createModel(frames = MutableStateFlow(frame(summary(lending))))
                 advanceUntilIdle()
 
@@ -1130,9 +1132,13 @@ internal class EarnPickerModelTest {
 
                 // Assert
                 val params = EarnProduct.Params(userWalletId = USER_WALLET_ID, currency = currency)
-                coVerify(exactly = 2) {
-                    depositCapacity.availableMax(productId = lending.id, params = params, action = Deposit())
+                coVerify(exactly = 1) {
+                    depositCapacity.availableMax(lending.id, params, Deposit(), BigDecimal("0.5"))
                 }
+                coVerify(exactly = 1) {
+                    depositCapacity.availableMax(lending.id, params, Deposit(), BigDecimal("2"))
+                }
+                coVerify(exactly = 2) { depositCapacity.availableMax(any(), any(), any(), any()) }
                 model.onDestroy()
             }
 
@@ -1150,7 +1156,7 @@ internal class EarnPickerModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 0) { depositCapacity.availableMax(any(), any(), any()) }
+            coVerify(exactly = 0) { depositCapacity.availableMax(any(), any(), any(), any()) }
             picker.onDestroy()
         }
 
@@ -1173,8 +1179,8 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN lending capacity known WHEN vault selected THEN its button waits for its own estimate`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(lending.id, any(), any()) } returns BigDecimal.ZERO.right()
-            coEvery { depositCapacity.availableMax(vault.id, any(), any()) } coAnswers { awaitCancellation() }
+            coEvery { depositCapacity.availableMax(lending.id, any(), any(), any()) } returns BigDecimal.ZERO.right()
+            coEvery { depositCapacity.availableMax(vault.id, any(), any(), any()) } coAnswers { awaitCancellation() }
             val model = createModel(frames = MutableStateFlow(frame(summary(lending), summary(vault))))
             advanceUntilIdle()
             val beforeSwitch = model.uiState.value.cta.text
@@ -1722,7 +1728,7 @@ internal class EarnPickerModelTest {
         fun `GIVEN balance above min deposit and no capacity left after the fee WHEN shown THEN NoFundsNotice`() =
             runTest {
                 // Arrange
-                coEvery { depositCapacity.availableMax(any(), any(), any()) } returns BigDecimal.ZERO.right()
+                coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ZERO.right()
 
                 // Act
                 val model = createModel(
@@ -1741,7 +1747,7 @@ internal class EarnPickerModelTest {
         @Test
         fun `GIVEN deposit capacity estimate pending WHEN shown THEN no NoFundsNotice`() = runTest {
             // Arrange
-            coEvery { depositCapacity.availableMax(any(), any(), any()) } coAnswers { awaitCancellation() }
+            coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } coAnswers { awaitCancellation() }
 
             // Act
             val model = createModel(
@@ -1760,7 +1766,7 @@ internal class EarnPickerModelTest {
             runTest {
                 // Arrange
                 coEvery {
-                    depositCapacity.availableMax(any(), any(), any())
+                    depositCapacity.availableMax(any(), any(), any(), any())
                 } returns EarnDepositCapacity.Unavailable.left()
 
                 // Act
@@ -1772,6 +1778,51 @@ internal class EarnPickerModelTest {
 
                 // Assert
                 verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.NoFundsNotice>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN deposit capacity estimate never answers WHEN the timeout passes THEN no NoFundsNotice`() = runTest {
+            // Arrange
+            coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } coAnswers { awaitCancellation() }
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                preselected = lending.id,
+            )
+            runCurrent()
+
+            // Act
+            advanceTimeBy(ESTIMATE_TIMEOUT_MILLIS + 1)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.NoFundsNotice>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no funds notice for a fee-uncovered balance WHEN the balance changes and is still uncovered THEN one NoFundsNotice`() =
+            runTest {
+                // Arrange
+                val withTwo: AccountStatusList = mockk()
+                stubBalance(balance = BigDecimal("2"), list = withTwo)
+                val lists = MutableStateFlow(accountStatusList)
+                every { accountStatusListSupplier(USER_WALLET_ID) } returns lists
+                coEvery { depositCapacity.availableMax(any(), any(), any(), any()) } returns BigDecimal.ZERO.right()
+                val model = createModel(
+                    frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+
+                // Act
+                lists.value = withTwo
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 2) { depositCapacity.availableMax(any(), any(), any(), any()) }
+                assertThat(model.uiState.value.cta.text).isEqualTo(resourceReference(R.string.common_add_funds))
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnPickerAnalyticsEvent.NoFundsNotice>()) }
                 model.onDestroy()
             }
 
