@@ -227,6 +227,15 @@ fun findWireMockRequestQueryParamValues(
     baseUrl = baseUrl,
 ).mapNotNull { request -> Uri.parse(request.getString("url")).getQueryParameter(queryParam) }
 
+fun findWireMockRequestUrls(
+    method: String,
+    urlPath: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequests(
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPath),
+    baseUrl = baseUrl,
+).map { request -> request.getString("url") }
+
 fun findWireMockRequestHeaders(
     method: String,
     urlPath: String,
@@ -284,6 +293,7 @@ private fun findWireMockRequests(requestPattern: JSONObject, baseUrl: String): L
             if (!response.isSuccessful) return emptyList()
             val requests = JSONObject(body).getJSONArray("requests")
             List(requests.length()) { index -> requests.getJSONObject(index) }
+                .sortedBy { request -> request.optLong("loggedDate") }
         }
     } catch (e: IOException) {
         TangemLogger.e("WireMock request find error", e)
