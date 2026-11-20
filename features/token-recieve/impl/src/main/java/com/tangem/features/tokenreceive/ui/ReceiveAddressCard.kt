@@ -47,6 +47,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -204,18 +205,25 @@ private fun CardFace(
                 AddressLabelBadge(address)
             }
         }
-        if (ensName != null) {
-            LightPalette {
-                TangemBadge(
-                    text = stringReference(ensName),
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    size = TangemBadge.Size.X6,
-                    variant = TangemBadge.Variant.Solid,
-                    iconEnd = TangemIconUM.Icon(Icons.ic_copy_16),
-                    onClick = onCopyEnsClick,
-                )
-            }
-        }
+        if (ensName != null) EnsButton(ensName = ensName, onCopyClick = onCopyEnsClick)
+    }
+}
+
+@Composable
+private fun EnsButton(ensName: String, onCopyClick: () -> Unit) {
+    val hapticManager = LocalHapticManager.current
+    LightPalette {
+        TangemButton(
+            text = stringReference(ensName),
+            modifier = Modifier.padding(bottom = 16.dp),
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X7,
+            iconEnd = TangemIconUM.Icon(Icons.ic_copy_16),
+            onClick = {
+                hapticManager.perform(TangemHapticEffect.View.LongPress)
+                onCopyClick()
+            },
+        )
     }
 }
 
