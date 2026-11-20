@@ -25,6 +25,7 @@ dependencies {
 
     /** Domain */
     api(projects.domain.models)
+    implementation(projects.domain.quotes)
     api(projects.domain.transaction)
     api(projects.domain.transaction.models)
 
@@ -41,6 +42,7 @@ dependencies {
     implementation(deps.hilt.core)
 
     /** Tests */
+    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(deps.kotlin.serialization)
 }

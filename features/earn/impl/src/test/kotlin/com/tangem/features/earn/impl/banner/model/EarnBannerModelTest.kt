@@ -18,7 +18,6 @@ import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.earn.api.overview.EarnOverviews
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.analytics.EarnBannerAnalyticsEvent
-import com.tangem.features.earn.impl.analytics.EarnUsdValuation
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -31,6 +30,7 @@ import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.overview.createRate
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetConfig
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks

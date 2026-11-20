@@ -1,4 +1,4 @@
-package com.tangem.features.earn.impl.analytics
+package com.tangem.features.earn.product.api.analytics
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain

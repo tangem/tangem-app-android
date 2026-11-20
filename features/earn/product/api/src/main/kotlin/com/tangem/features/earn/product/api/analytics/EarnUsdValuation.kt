@@ -1,11 +1,11 @@
-package com.tangem.features.earn.impl.analytics
+package com.tangem.features.earn.product.api.analytics
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal class EarnUsdValuation @Inject constructor(
+class EarnUsdValuation @Inject constructor(
     private val getCurrencyUSDQuote: GetCurrencyUSDQuoteUseCase,
 ) {
 
@@ -14,6 +14,6 @@ internal class EarnUsdValuation @Inject constructor(
         val rawCurrencyId = currency.id.rawCurrencyId ?: return null
         val usdQuote = getCurrencyUSDQuote(rawCurrencyId) ?: return null
 
-        return usdBucketOf(amount.multiply(usdQuote))
+        return EarnAmountBucket.of(amount.multiply(usdQuote))
     }
 }

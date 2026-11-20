@@ -16,14 +16,14 @@ import com.tangem.features.earn.api.overview.EarnBannerOverview
 import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.earn.impl.HostEarnNavigator
 import com.tangem.features.earn.impl.analytics.EarnBannerAnalyticsEvent
-import com.tangem.features.earn.impl.analytics.EarnUsdValuation
-import com.tangem.features.earn.impl.analytics.toAnalyticsApy
 import com.tangem.features.earn.impl.banner.ui.state.EarnBannerUM
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
 import com.tangem.features.earn.impl.overview.EarnProductSummarySupplier
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetComponent
 import com.tangem.features.earn.impl.sheet.EarnYieldSheetConfig
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
+import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

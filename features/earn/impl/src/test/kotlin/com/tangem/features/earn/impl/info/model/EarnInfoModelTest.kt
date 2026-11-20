@@ -38,7 +38,6 @@ import com.tangem.features.earn.impl.R
 import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
 import com.tangem.features.earn.impl.analytics.EarnInfoAnalyticsEvent
 import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
-import com.tangem.features.earn.impl.analytics.EarnUsdValuation
 import com.tangem.features.earn.impl.analytics.InfoAction
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
@@ -52,6 +51,7 @@ import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.overview.USER_WALLET_ID
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfig
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.navigation.EarnNavigator
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute

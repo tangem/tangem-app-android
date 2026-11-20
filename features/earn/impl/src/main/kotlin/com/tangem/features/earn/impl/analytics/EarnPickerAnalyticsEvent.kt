@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
+import com.tangem.features.earn.product.api.analytics.toAnalyticsValue
 import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnRowKind
 
