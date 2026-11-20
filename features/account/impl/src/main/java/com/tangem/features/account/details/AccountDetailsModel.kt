@@ -23,6 +23,7 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
@@ -35,6 +36,7 @@ import com.tangem.features.account.details.entity.AccountDetailsUM
 import com.tangem.features.account.details.entity.AccountDetailsUM.ArchiveMode
 import com.tangem.features.account.details.entity.AccountDetailsSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,6 +53,7 @@ internal class AccountDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val jointAccountPollingCoordinator: JointAccountPollingCoordinator,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountDetailsComponent.Params>()
@@ -62,6 +65,8 @@ internal class AccountDetailsModel @Inject constructor(
     private val accountId = params.account.accountId
 
     val bottomSheetNavigation: SlotNavigation<AccountDetailsSheetConfig> = SlotNavigation()
+
+    private val isResumed = MutableStateFlow(false)
 
     val uiState: StateFlow<AccountDetailsUM>
         field = MutableStateFlow(
@@ -82,6 +87,28 @@ internal class AccountDetailsModel @Inject constructor(
                 .map { status -> buildJointUI(status.account, status) }
         }
             .onEach { newState -> uiState.update { newState } }
+            .launchIn(modelScope)
+
+        subscribeJointAccountPolling()
+    }
+
+    fun onResume() {
+        isResumed.value = true
+    }
+
+    fun onPause() {
+        isResumed.value = false
+    }
+
+    /** The backend does not push joint account changes — a member joining, activation — so the screen polls */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun subscribeJointAccountPolling() {
+        if (params.account !is Account.Joint) return
+
+        isResumed
+            .flatMapLatest { resumed ->
+                if (resumed) jointAccountPollingCoordinator.poll(walletId = accountId.userWalletId) else emptyFlow()
+            }
             .launchIn(modelScope)
     }
 

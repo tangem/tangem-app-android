@@ -19,6 +19,7 @@ dependencies {
     api(projects.core.utils)
     api(projects.domain.models)
     implementation(projects.domain.account)
+    implementation(projects.domain.common)
     // endregion
 
     // region Tangem SDK (derivation path and derived public keys types)

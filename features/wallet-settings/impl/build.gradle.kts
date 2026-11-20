@@ -35,6 +35,7 @@ dependencies {
 
     /* Project - Domain */
     api(projects.domain.account)
+    implementation(projects.domain.jointAccount)
     api(projects.domain.account.status)
     api(projects.domain.appCurrency)
     api(projects.domain.assetsdiscovery)

@@ -24,6 +24,7 @@ import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
@@ -170,11 +171,13 @@ internal interface JointAccountDataModule {
         fun provideJointAccountPollingCoordinator(
             fetcher: SingleJointAccountListFetcher,
             getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase,
+            userWalletsListRepository: UserWalletsListRepository,
             appScope: AppCoroutineScope,
         ): JointAccountPollingCoordinator {
             return JointAccountPollingCoordinator(
                 fetcher = fetcher,
                 isWalletLinked = { userWalletId -> getWalletLinkStatusUseCase(userWalletId) },
+                userWalletsListRepository = userWalletsListRepository,
                 appScope = appScope,
             )
         }

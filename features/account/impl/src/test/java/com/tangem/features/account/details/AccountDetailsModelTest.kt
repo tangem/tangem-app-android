@@ -19,6 +19,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
@@ -40,6 +41,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
@@ -62,6 +64,7 @@ internal class AccountDetailsModelTest {
     private val singleAccountStatusSupplier: SingleAccountStatusSupplier = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val jointAccountPollingCoordinator: JointAccountPollingCoordinator = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -73,7 +76,9 @@ internal class AccountDetailsModelTest {
             singleAccountStatusSupplier,
             analyticsEventHandler,
             getUserWalletUseCase,
+            jointAccountPollingCoordinator,
         )
+        every { jointAccountPollingCoordinator.poll(walletId = any(), isFirstFetchImmediate = any()) } returns emptyFlow()
     }
 
     @ParameterizedTest
@@ -382,6 +387,52 @@ internal class AccountDetailsModelTest {
         }
 
     @Test
+    fun `GIVEN joint account WHEN the screen is resumed and paused THEN its wallet is polled only while resumed`() =
+        runTest {
+            // Arrange
+            val account = MockAccounts.createJointAccount()
+            val polls = MutableSharedFlow<Unit>()
+            every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+            every { jointAccountPollingCoordinator.poll(walletId = account.accountId.userWalletId) } returns polls
+            givenWallet(isMultiCurrency = true)
+            val model = createModel(account = account, testScope = this)
+            advanceUntilIdle()
+            val subscribedBeforeResume = polls.subscriptionCount.value
+
+            // Act
+            model.onResume()
+            advanceUntilIdle()
+            val subscribedWhileResumed = polls.subscriptionCount.value
+            model.onPause()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(listOf(subscribedBeforeResume, subscribedWhileResumed, polls.subscriptionCount.value))
+                .containsExactly(0, 1, 0)
+                .inOrder()
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN personal account WHEN the screen is resumed THEN nothing is polled`() = runTest {
+        // Arrange
+        val account = MockAccounts.createAccount(derivationIndex = 1)
+        every { singleAccountSupplier.filterPersonalAccount(any()) } returns flowOf(account)
+        givenWallet(isMultiCurrency = true)
+        val model = createModel(account = account, testScope = this)
+
+        // Act
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { jointAccountPollingCoordinator.poll(walletId = any(), isFirstFetchImmediate = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN personal account WHEN model loads THEN activation is not pending`() = runTest {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1)
@@ -460,6 +511,7 @@ internal class AccountDetailsModelTest {
             singleAccountStatusSupplier = singleAccountStatusSupplier,
             analyticsEventHandler = analyticsEventHandler,
             getUserWalletUseCase = getUserWalletUseCase,
+            jointAccountPollingCoordinator = jointAccountPollingCoordinator,
         )
     }
 

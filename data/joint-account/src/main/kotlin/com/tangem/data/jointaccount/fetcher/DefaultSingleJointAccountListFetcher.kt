@@ -16,6 +16,9 @@ import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 internal class DefaultSingleJointAccountListFetcher @Inject constructor(
@@ -26,9 +29,14 @@ internal class DefaultSingleJointAccountListFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleJointAccountListFetcher {
 
-    override suspend fun invoke(params: SingleJointAccountListFetcher.Params): Either<Throwable, Unit> {
-        val userWalletId = params.userWalletId
+    private val fetchMutexes = ConcurrentHashMap<UserWalletId, Mutex>()
 
+    /** One at a time per wallet: of two overlapping requests the older answer could be stored last */
+    override suspend fun invoke(params: SingleJointAccountListFetcher.Params): Either<Throwable, Unit> {
+        return fetchMutexes.computeIfAbsent(params.userWalletId) { Mutex() }.withLock { fetch(params.userWalletId) }
+    }
+
+    private suspend fun fetch(userWalletId: UserWalletId): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
             val response = jointAccountApi.getJointAccounts(
                 walletId = userWalletId.stringValue,

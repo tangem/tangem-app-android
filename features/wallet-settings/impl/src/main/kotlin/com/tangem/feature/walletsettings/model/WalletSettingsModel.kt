@@ -31,6 +31,8 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStateUseCase
 import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -98,6 +100,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val jointAccountPollingCoordinator: JointAccountPollingCoordinator,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
@@ -140,6 +143,8 @@ internal class WalletSettingsModel @Inject constructor(
             ),
         ),
     )
+
+    private val isResumed = MutableStateFlow(false)
 
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight { wallet ->
@@ -195,6 +200,28 @@ internal class WalletSettingsModel @Inject constructor(
             .filterIsInstance<Either.Right<UserWallet>>()
             .flatMapLatest { combineUI(it.value) }
             .launchIn(modelScope)
+
+        subscribeJointAccountPolling()
+    }
+
+    /**
+     * The backend does not push joint account changes, so the accounts list polls while the screen is on top —
+     * only for a wallet that has a joint account, as a wallet gets one through this device alone.
+     */
+    private fun subscribeJointAccountPolling() {
+        val hasJointAccount = singleAccountListSupplier(params.userWalletId)
+            .map { accountList -> accountList.accounts.any { it is Account.Joint } }
+
+        combine(isResumed, hasJointAccount) { resumed, hasJoint -> resumed && hasJoint }
+            .distinctUntilChanged()
+            .flatMapLatest { isPolling ->
+                if (isPolling) jointAccountPollingCoordinator.poll(walletId = params.userWalletId) else emptyFlow()
+            }
+            .launchIn(modelScope)
+    }
+
+    fun onResume() {
+        isResumed.value = true
     }
 
     override fun onDestroy() {
@@ -426,6 +453,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     /** Drops a pending upgrade launch, so it doesn't navigate after the user has left the screen. */
     fun onPause() {
+        isResumed.value = false
         upgradeJobHolder.cancel()
     }
 
