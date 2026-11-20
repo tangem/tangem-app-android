@@ -1,11 +1,11 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
-import com.tangem.domain.pay.model.bankofframp.BankAccountType
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.model.bankofframp.PostalAddress
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.PostalAddress
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
@@ -93,13 +93,60 @@ internal class NewRecipientDraftTest {
     }
 
     @Test
+    fun `GIVEN business SPEI draft WHEN to bank account details THEN own MXN CLABE without address or bank`() {
+        // Arrange
+        val draft = NewRecipientDraft(
+            isThirdParty = true,
+            fields = mapOf(
+                BankWithdrawFormField.Clabe to " 002010077777777771 ",
+                BankWithdrawFormField.BusinessName to "Raxanax",
+            ),
+        )
+
+        // Act
+        val actual = draft.toBankAccountDetails(rail = BankRail.SPEI, isBusiness = true)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankAccountDetails(
+                currency = "MXN",
+                rail = BankRail.SPEI,
+                isThirdParty = false,
+                beneficiary = Beneficiary.Business(name = "Raxanax"),
+                beneficiaryAddress = null,
+                bankName = null,
+                bankAddress = null,
+                accountNumber = "002010077777777771",
+                routingNumber = null,
+                accountType = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN CLABE and names without transfer or account type WHEN is complete for SPEI THEN true`() {
+        // Arrange
+        val draft = NewRecipientDraft(
+            fields = mapOf(
+                BankWithdrawFormField.Clabe to "002010077777777771",
+                BankWithdrawFormField.FirstName to "Maria",
+                BankWithdrawFormField.LastName to "Lopez",
+            ),
+        )
+
+        // Assert
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.SPEI)).isTrue()
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.ACH)).isFalse()
+    }
+
+    @Test
     fun `GIVEN business fields WHEN checked as personal THEN incomplete`() {
         // Arrange
         val draft = answeredDraft(fields = businessFields)
 
         // Assert
-        assertThat(draft.isComplete(isBusiness = true)).isTrue()
-        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+        assertThat(draft.isComplete(isBusiness = true, rail = BankRail.ACH)).isTrue()
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.ACH)).isFalse()
     }
 
     @Test
@@ -108,7 +155,7 @@ internal class NewRecipientDraftTest {
         val draft = answeredDraft(fields = personalFields + (BankWithdrawFormField.BankName to "  "))
 
         // Assert
-        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.ACH)).isFalse()
     }
 
     @Test
@@ -117,7 +164,7 @@ internal class NewRecipientDraftTest {
         val draft = answeredDraft(fields = personalFields - BankWithdrawFormField.BankRegion)
 
         // Assert
-        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.ACH)).isFalse()
     }
 
     @Test
@@ -126,7 +173,7 @@ internal class NewRecipientDraftTest {
         val draft = NewRecipientDraft(accountType = BankAccountType.CHECKING, fields = personalFields)
 
         // Assert
-        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.ACH)).isFalse()
     }
 
     @Test
@@ -135,7 +182,7 @@ internal class NewRecipientDraftTest {
         val draft = NewRecipientDraft(isThirdParty = false, fields = personalFields)
 
         // Assert
-        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+        assertThat(draft.isComplete(isBusiness = false, rail = BankRail.ACH)).isFalse()
     }
 
     @Test

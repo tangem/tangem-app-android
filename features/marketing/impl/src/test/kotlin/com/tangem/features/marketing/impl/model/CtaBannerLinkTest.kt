@@ -12,32 +12,22 @@ internal class CtaBannerLinkTest {
     @ProvideTestModels
     fun `GIVEN campaign link WHEN resolved THEN classified by how Android opens it`(model: ResolveModel) {
         // Act
-        val actual = resolveCtaBannerLink(model.link, isSupportChatEnabled = model.isSupportChatEnabled)
+        val actual = resolveCtaBannerLink(model.link)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    internal data class ResolveModel(
-        val link: String?,
-        val expected: CtaBannerLink,
-        val isSupportChatEnabled: Boolean = true,
-    )
+    internal data class ResolveModel(val link: String?, val expected: CtaBannerLink)
 
     private fun provideTestModels() = listOf(
         ResolveModel(link = "tangem://support", expected = CtaBannerLink.APP_LINK),
-        ResolveModel(link = "tangem://support", isSupportChatEnabled = false, expected = CtaBannerLink.UNSUPPORTED),
         ResolveModel(link = "tangem://onramp?type=concierge_waitlist", expected = CtaBannerLink.CONCIERGE_WAITLIST),
         ResolveModel(
             link = "tangem://onramp?foo=bar&type=concierge_waitlist",
             expected = CtaBannerLink.CONCIERGE_WAITLIST,
         ),
         ResolveModel(link = "tangem://onramp?type=concierge%5Fwaitlist", expected = CtaBannerLink.CONCIERGE_WAITLIST),
-        ResolveModel(
-            link = "tangem://onramp?type=concierge_waitlist",
-            isSupportChatEnabled = false,
-            expected = CtaBannerLink.CONCIERGE_WAITLIST,
-        ),
         ResolveModel(link = "https://partner.example/otc?ref=tangem", expected = CtaBannerLink.PARTNER_PAGE),
         ResolveModel(link = "tangem://onramp", expected = CtaBannerLink.APP_LINK),
         ResolveModel(link = "tangem://onramp?type=other&type=concierge_waitlist", expected = CtaBannerLink.APP_LINK),

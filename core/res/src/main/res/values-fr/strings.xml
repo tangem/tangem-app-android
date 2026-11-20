@@ -945,6 +945,7 @@
   <string name="hw_upgrade_start_description">Vous êtes sur le point de passer à notre hardware wallet. Il assurera la sécurité de vos actifs grâce au stockage hors ligne.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Passez à notre Hardware Wallet</string>
+  <string name="hw_upgrade_to_cold_badge">Passez à un cold wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Protégez vos cryptomonnaies grâce au hardware wallet haut de gamme de Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Améliorez la sécurité de votre wallet grâce à un dispositif matériel</string>
   <string name="hw_wallets_limit_alert_message">Vous pouvez avoir jusqu’à %1$s portefeuilles mobiles dans Tangem. Pour en ajouter un autre, supprimez d’abord l’un de vos portefeuilles mobiles actuels.</string>
@@ -1305,7 +1306,7 @@
   <string name="mcp_swap_intent_processed_subtitle">Échange de %1$s contre des %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Vous devez effectuer la mise à jour %1$s afin de créer un portefeuille mobile.</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Le portefeuille mobile nécessite %1$s ou une version supérieure.</string>
-  <string name="money_account_add_funds_bank_description">Recevez des USD depuis un compte bancaire via ACH/Wire ou SPEI</string>
+  <string name="money_account_add_funds_bank_description">Recevez des USD de banques américaines via ACH ou des MXN de banques mexicaines via SPEI</string>
   <string name="money_account_add_funds_receive_description">Envoyez des USDC sur Polygon à l\'adresse de votre compte</string>
   <string name="money_account_add_funds_swap_description">Utilisez les cryptos de votre portefeuille pour alimenter votre compte en USD</string>
   <string name="money_account_balance_unavailable_description">Impossible de charger votre solde. Réessayez plus tard.</string>
@@ -1318,7 +1319,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">Ouverture après votre dépôt</string>
   <string name="money_account_main_status_dialog_activating_description">Nous préparons votre compte. Cela peut prendre un peu de temps</string>
-  <string name="money_account_main_status_dialog_activating_title">Création de votre compte bancaire</string>
+  <string name="money_account_main_status_dialog_activating_title">Création de votre compte en USD</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Nous travaillons à étendre notre service à d’autres régions. Besoin d’aide ?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Nous travaillons à couvrir d\'autres régions. Besoin d\'aide ? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Pas encore disponible dans votre région</string>
@@ -1335,7 +1336,7 @@
   <string name="money_account_main_status_verification">Vérification en cours…</string>
   <string name="money_account_onboarding_currency_card_caption">Devise du compte</string>
   <string name="money_account_onboarding_description">Fonctionne comme un compte bancaire classique. Mais propulsé par la crypto et entièrement sous votre contrôle.</string>
-  <string name="money_account_onboarding_disclaimer">Tangem Pay est une entreprise de technologie financière, et non une banque. Les services bancaires sont fournis par SSB, membre de la FDIC. Les fonds déposés auprès de SSB sont éligibles à la couverture d’assurance de la FDIC jusqu’à 250 000 $ US par déposant et par banque assurée, sous réserve des limitations applicables et des règles de la FDIC.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay n’est pas une banque. Les coordonnées du compte sont fournies par SSB Bank. Les fonds sont détenus en USDC, et non sous forme de dépôts auprès de SSB Bank. L’USDC n’est pas assuré par la FDIC.</string>
   <string name="money_account_onboarding_earn_card_caption">Gagnez</string>
   <string name="money_account_onboarding_fees_error">Impossible de charger les frais.\nAppuyez pour réessayer</string>
   <string name="money_account_onboarding_fees_notice">Les virements SWIFT ne sont pas pris en charge. Tout virement SWIFT sera renvoyé</string>
@@ -2885,7 +2886,7 @@
   <string name="tangempay_tangem_visa_card">Dépensez vos cryptos au quotidien</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Recevoir des USD depuis un compte bancaire via ACH/Wire</string>
+  <string name="tangempay_topup_bank_transfer_body">Recevoir des USD d’une banque américaine via ACH</string>
   <string name="tangempay_topup_bank_transfer_pending_body">Création de vos coordonnées bancaires...</string>
   <string name="tangempay_topup_bank_transfer_title">Depuis un compte bancaire</string>
   <string name="tangempay_topup_receive_body_multichain">Envoyez des USDC ou USDT à l\'adresse de votre compte</string>
@@ -2913,7 +2914,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Paiements</string>
-  <string name="tangempay_unified_onboarding_payments_title">Virements ACH et bancaires au quotidien</string>
+  <string name="tangempay_unified_onboarding_payments_title">Virements bancaires au quotidien</string>
   <string name="tangempay_unified_onboarding_plan_caption">Un seul forfait</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic est gratuit.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus couvre les deux et bien plus encore</string>

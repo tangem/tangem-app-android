@@ -9,10 +9,10 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.repository.CashbackRepository
+import com.tangem.domain.tangempay.repository.CashbackRepository
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.cashback
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.paymentTransaction
@@ -115,7 +115,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
     @Test
     fun `GIVEN spend transaction WHEN detail fetch fails THEN card is Error`() = runTest {
         // Arrange
-        coEvery { repository.getTransaction(any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { repository.getTransaction(any(), any()) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(testScope = this, transaction = spendTransaction())
 
         // Act
@@ -132,8 +132,8 @@ internal class TangemPayTxHistoryDetailsModelTest {
         val loaded = spendTransaction(cardName = "Loaded card", cardNumberLast4 = "4321")
         coEvery {
             repository.getTransaction(any(), any())
-        } returnsMany listOf<Either<VisaApiError, TangemPayTxHistoryItem?>>(
-            VisaApiError.Unspecified.left(),
+        } returnsMany listOf<Either<TangemPayApiError, TangemPayTxHistoryItem?>>(
+            TangemPayApiError.Unspecified.left(),
             loaded.right(),
         )
         val model = createModel(testScope = this, transaction = spendTransaction())
@@ -206,7 +206,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
     fun `GIVEN cashback enabled WHEN details fetch fails THEN cashback is Error`() = runTest {
         // Arrange
         coEvery { repository.getTransaction(any(), any()) } returns spendTransaction().right()
-        coEvery { cashbackRepository.getCashbackDetails(any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackDetails(any(), any()) } returns TangemPayApiError.Unspecified.left()
         val model = createModel(testScope = this, transaction = spendTransaction())
 
         // Act
@@ -224,7 +224,7 @@ internal class TangemPayTxHistoryDetailsModelTest {
         coEvery {
             cashbackRepository.getCashbackDetails(any(), any())
         } returnsMany listOf(
-            VisaApiError.Unspecified.left(),
+            TangemPayApiError.Unspecified.left(),
             cashback().right(),
         )
         val model = createModel(testScope = this, transaction = spendTransaction())

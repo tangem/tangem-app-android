@@ -1,8 +1,8 @@
 package com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees
 
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

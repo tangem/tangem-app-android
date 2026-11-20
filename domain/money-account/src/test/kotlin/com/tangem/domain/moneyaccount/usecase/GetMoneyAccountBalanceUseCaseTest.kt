@@ -9,10 +9,12 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.moneyaccount.yield.MoneyAccountYieldModeStatusProvider
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -33,12 +35,14 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
+    private val yieldModeStatusProvider: MoneyAccountYieldModeStatusProvider = mockk()
 
     private val useCase = GetMoneyAccountBalanceUseCase(
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
+        yieldModeStatusProvider = yieldModeStatusProvider,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -58,8 +62,10 @@ internal class GetMoneyAccountBalanceUseCaseTest {
             singleNetworkStatusSupplier,
             singleQuoteStatusFetcher,
             singleQuoteStatusSupplier,
+            yieldModeStatusProvider,
         )
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
+        coEvery { yieldModeStatusProvider.get(any(), any(), any()) } returns null
         coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
     }
 
@@ -89,6 +95,30 @@ internal class GetMoneyAccountBalanceUseCaseTest {
                 SingleQuoteStatusFetcher.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID, appCurrencyId = null),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN yield supply status provided WHEN invoke THEN balance carries it`() = runTest {
+        // Arrange
+        val amount = BigDecimal("12.34")
+        val networkStatus = networkStatusWith(NetworkStatus.Amount.Loaded(amount))
+        val verified = networkStatus.value as NetworkStatus.Verified
+        val yieldSupplyStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("10"),
+        )
+        coEvery { singleNetworkStatusSupplier.getSyncOrNull(networkParams) } returns networkStatus
+        coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
+        coEvery { yieldModeStatusProvider.get(userWalletId, token, verified) } returns yieldSupplyStatus
+
+        // Act
+        val actual = useCase(userWalletId, token)
+
+        // Assert
+        val expected = expectedBalance(amount = amount, fiatRate = null).copy(yieldSupplyStatus = yieldSupplyStatus)
+        Truth.assertThat(actual.getOrNull()).isEqualTo(expected)
     }
 
     @Test

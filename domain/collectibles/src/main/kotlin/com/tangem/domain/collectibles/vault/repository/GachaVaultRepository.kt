@@ -52,13 +52,6 @@ interface GachaVaultRepository {
         cached: CollectiblesVaultBalance? = null,
     ): Either<CollectiblesAccountError, CollectiblesVaultBalance>
 
-    /**
-     * Closes the vault and returns its rent. Refused only while a buyback delegate is live (6014 `VaultNotClean`);
-     * a vault that still owns token accounts closes successfully and strands their rent, so emptying it first is
-     * the caller's job.
-     */
-    suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit>
-
     /** The base58 `session_key` the vault points at, or `null` when the wallet has no vault on chain. */
     suspend fun getVaultSessionKey(userWallet: UserWallet): Either<CollectiblesAccountError, String?>
 
@@ -67,7 +60,7 @@ interface GachaVaultRepository {
 
     /**
      * Pays for one spin with `purchase_pack`, signed by the session key without a prompt. Not idempotent: never call
-     * again for the same [memo] while the outcome is unknown.
+     * again for the same [memo] while the outcome is unknown — [CollectiblesAccountError.MaybeSent].
      *
      * @param amount the pack price in base units of USDC, as the backend issued it
      * @param feeAmount Tangem's fee in base units of USDC, charged on top of [amount]

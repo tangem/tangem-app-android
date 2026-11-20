@@ -45,7 +45,12 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         scope = modelScope,
     )
 
-    private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
+    private val orderSubmitter = orderSubmitterFactory.create(
+        params = params,
+        uiState = uiState,
+        scope = modelScope,
+        closeOrder = ::onCloseClick,
+    )
 
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
@@ -70,7 +75,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             val result = orderSubmitter.submit(
                 prepared = order,
-                confirmedWith = confirmedWith,
+                preference = buttonStyle.signingPreference(confirmedWith = confirmedWith),
                 onKeyLost = buttonStyle::onSessionKeyLost,
             )
             if (result == null) {
@@ -79,7 +84,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
                 buttonStyle.applyIfIdle()
                 return@launch
             }
-            router.replaceAll(order.toStatusRoute(result = result))
+            router.replaceAll(order.toStatusRoute(result = result, current = uiState.value))
         }
     }
 

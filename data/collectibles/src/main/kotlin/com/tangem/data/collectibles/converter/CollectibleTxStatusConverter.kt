@@ -1,16 +1,27 @@
 package com.tangem.data.collectibles.converter
 
+import com.tangem.data.collectibles.error.CollectiblesErrorCodes
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse.CollectibleTxStatusDTO
 import com.tangem.utils.converter.Converter
 
-@Suppress("CyclomaticComplexMethod")
-internal object CollectibleTxStatusConverter : Converter<CollectibleTxStatusDTO, CollectibleTxStatus> {
+/** A `pack-opening-error` is a refund when the backend says so with its refund code, a failed opening otherwise. */
+internal object CollectibleTxStatusConverter : Converter<CollectibleTxResponse, CollectibleTxStatus> {
 
-    override fun convert(value: CollectibleTxStatusDTO): CollectibleTxStatus = when (value) {
+    override fun convert(value: CollectibleTxResponse): CollectibleTxStatus {
+        val status = convertStatus(value.status)
+        val isRefund = status == CollectibleTxStatus.PACK_OPENING_ERROR &&
+            value.packOpeningErrorCode?.toIntOrNull() == CollectiblesErrorCodes.REFUND_IN_PROGRESS
+
+        return if (isRefund) CollectibleTxStatus.REFUNDING else status
+    }
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun convertStatus(value: CollectibleTxStatusDTO): CollectibleTxStatus = when (value) {
         CollectibleTxStatusDTO.CREATED -> CollectibleTxStatus.CREATED
         CollectibleTxStatusDTO.WAITING_TX_HASH -> CollectibleTxStatus.WAITING_TX_HASH
-        CollectibleTxStatusDTO.PURCHASE_TX_HASH -> CollectibleTxStatus.PURCHASE_TX_HASH
+        CollectibleTxStatusDTO.PURCHASE_TX_SENT -> CollectibleTxStatus.PURCHASE_TX_SENT
         CollectibleTxStatusDTO.WAITING_FOR_PAYMENT -> CollectibleTxStatus.WAITING_FOR_PAYMENT
         CollectibleTxStatusDTO.PACK_PURCHASED -> CollectibleTxStatus.PACK_PURCHASED
         CollectibleTxStatusDTO.PACK_OPENING_ERROR -> CollectibleTxStatus.PACK_OPENING_ERROR

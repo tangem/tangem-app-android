@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
-import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderRequest
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.toNewBankAccountDetails
 import java.math.BigDecimal

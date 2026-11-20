@@ -25,6 +25,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
+import com.tangem.domain.jointaccount.model.PreparedJointOperation
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
@@ -159,17 +160,23 @@ internal class JointOperationDelegate @Inject constructor(
             .distinctUntilChanged()
     }
 
-    suspend fun sign(
+    suspend fun prepareSigning(
         state: JointOperationState,
         network: Network,
         operationId: String,
-    ): Either<JointOperationSignError, JointOperation?> {
-        return signJointOperationUseCase(
+    ): Either<JointOperationSignError, PreparedJointOperation.Signing> {
+        return signJointOperationUseCase.prepare(
             account = state.account,
             network = network,
             operationId = operationId,
             displayed = state.displayed,
         )
+    }
+
+    suspend fun submitSigning(
+        prepared: PreparedJointOperation.Signing,
+    ): Either<JointOperationSignError, JointOperation?> {
+        return signJointOperationUseCase.submit(prepared = prepared)
     }
 
     suspend fun openSupport(userWalletId: UserWalletId) {

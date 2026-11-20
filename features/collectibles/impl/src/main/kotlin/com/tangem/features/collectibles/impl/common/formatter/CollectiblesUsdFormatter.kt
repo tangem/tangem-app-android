@@ -19,8 +19,11 @@ internal fun BigDecimal?.formatUsd(): String = format {
 
 /** @param minDecimals null keeps the default crypto format, at least two decimals */
 internal fun BigDecimal?.formatUsdc(minDecimals: Int? = null): String = format {
-    val usdc =
-        crypto(symbol = CollectiblesVaultCurrencies.TOKEN_SYMBOL, decimals = CollectiblesVaultCurrencies.DECIMALS)
+    val usdc = crypto(
+        symbol = CollectiblesVaultCurrencies.TOKEN_SYMBOL,
+        decimals = CollectiblesVaultCurrencies.DECIMALS,
+        ignoreSymbolPosition = true,
+    )
 
     if (minDecimals == null) usdc else usdc.anyDecimals(minDecimals = minDecimals)
 }

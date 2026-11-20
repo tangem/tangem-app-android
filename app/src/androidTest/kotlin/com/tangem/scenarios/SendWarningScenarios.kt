@@ -14,11 +14,9 @@ fun BaseTestCase.checkSendWarning(
 ) {
     val assertDisplay = if (isDisplayed) "displayed" else "not displayed"
 
-    // When we expect the warning to be absent, it may still be finishing its disappear animation right after the
-    // Confirm screen opens (e.g. after re-entering a valid address), so poll the Compose tree until it is actually
-    // gone instead of asserting once. When we expect it to be present, assert straight away.
+    // Poll in both directions — a present warning's amount settles only once the async network fee lands.
     fun assertWarning(block: () -> Unit) {
-        if (isDisplayed) block() else awaitSuccess(block = block)
+        if (isDisplayed) awaitAssert(block = block) else awaitSuccess(block = block)
     }
 
     step("Assert 'Send confirm screen' is displayed") {

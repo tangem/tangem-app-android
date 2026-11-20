@@ -49,7 +49,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
+import com.tangem.domain.tangempay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.core.ui.R as CoreUiR
 

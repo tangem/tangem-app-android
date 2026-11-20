@@ -3,7 +3,6 @@ package com.tangem.data.collectibles.vault
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.blockchain.collectibles.models.CollectiblesVault
 import com.tangem.blockchain.collectibles.models.CollectiblesVaultUsdc
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
@@ -12,14 +11,12 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.tokenbalance.models.TokenBalance
-import com.tangem.common.CompletionResult
-import com.tangem.common.card.EllipticCurve
-import com.tangem.common.core.CardSession
-import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.core.run
-import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.collectibles.vault.transaction.DevnetGachaVaultTransactionSender
+import com.tangem.data.collectibles.vault.transaction.GachaVaultSigners
+import com.tangem.data.collectibles.vault.transaction.GaslessGachaVaultTransactionSender
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
@@ -34,29 +31,16 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.config.curvesConfig
-import com.tangem.domain.wallets.derivations.DerivationsRepository
-import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
-import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.coroutines.resume
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -71,10 +55,10 @@ internal class DefaultGachaVaultRepositoryTest {
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val networkProvider: CollectiblesOwnerNetworkProvider = mockk()
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
-    private val derivationsRepository: DerivationsRepository = mockk()
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
-    private val tangemSdkManager: TangemSdkManager = mockk()
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory = mockk()
+    private val gaslessSender: GaslessGachaVaultTransactionSender = mockk()
+    private val devnetSender: DevnetGachaVaultTransactionSender = mockk()
     private val sessionKey: CollectiblesSessionKey = mockk()
 
     private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
@@ -82,7 +66,6 @@ internal class DefaultGachaVaultRepositoryTest {
     private val walletManager: WalletManager = mockk()
     private val signer: TangemHotWalletSigner = mockk()
     private val network: Network = mockk(relaxed = true)
-    private val transaction: TransactionData.Compiled = mockk()
 
     private val userWallet: UserWallet.Hot = mockk { every { walletId } returns WALLET_ID }
 
@@ -91,332 +74,196 @@ internal class DefaultGachaVaultRepositoryTest {
         networkProvider = networkProvider,
         currencyFactory = currencyFactory,
         ownerDeriver = ownerDeriver,
-        derivationsRepository = derivationsRepository,
-        cardSdkConfigRepository = cardSdkConfigRepository,
-        tangemSdkManager = tangemSdkManager,
-        hotWalletSignerFactory = hotWalletSignerFactory,
+        signers = GachaVaultSigners(cardSdkConfigRepository, hotWalletSignerFactory),
+        gaslessSender = gaslessSender,
+        devnetSender = devnetSender,
         sessionKey = sessionKey,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    /**
-     * The one place the init-or-update rule lives: the one-tap session, the mobile wallet and a card that already
-     * holds the owner key all come through here.
-     */
+    /** Mainnet goes through the gasless sponsor; only a test card, which addresses devnet, pays in SOL. */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class InitOrUpdateVault {
+    inner class TransactionSenderChoice {
 
         @BeforeEach
         fun resetMocks() {
-            clearMocks(walletManagersFacade, networkProvider, hotWalletSignerFactory, walletManager)
-            every { hotWalletSignerFactory.create(userWallet) } returns signer
-            coEvery { networkProvider.create(userWallet) } returns network.right()
-            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
-            coEvery { walletManager.buildInitCollectiblesVault(any(), any(), any()) } returns
-                Result.Success(transaction)
-            coEvery { walletManager.buildUpdateCollectiblesVault(any(), any(), any()) } returns
-                Result.Success(transaction)
-            coEvery { walletManager.send(any<TransactionData>(), signer, any()) } returns Result.Success(mockk())
-        }
-
-        @Test
-        fun `GIVEN no vault WHEN initOrUpdate THEN it is created with the limits`() = runTest {
-            // Arrange
-            stubVault(vault = null)
-
-            // Act
-            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) {
-                walletManager.buildInitCollectiblesVault(
-                    sessionKey = SESSION_KEY.base58,
-                    perSpinCap = GachaVaultLimits.Default.perSpinCap,
-                    dailyCap = GachaVaultLimits.Default.dailyCap,
-                )
-                walletManager.send(transaction, signer, any())
-            }
-            coVerify(exactly = 0) { walletManager.buildUpdateCollectiblesVault(any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN a vault of another device WHEN initOrUpdate THEN the session key is re-pointed`() = runTest {
-            // Arrange
-            stubVault(vault = vault(sessionKey = OTHER_SESSION_KEY.base58))
-
-            // Act
-            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) {
-                walletManager.buildUpdateCollectiblesVault(
-                    sessionKey = SESSION_KEY.base58,
-                    perSpinCap = null,
-                    dailyCap = null,
-                )
-                walletManager.send(transaction, signer, any())
-            }
-            coVerify(exactly = 0) { walletManager.buildInitCollectiblesVault(any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN the vault already points here WHEN initOrUpdate THEN nothing is signed`() = runTest {
-            // Arrange
-            stubVault(vault = vault(sessionKey = SESSION_KEY.base58))
-
-            // Act
-            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 0) {
-                walletManager.buildInitCollectiblesVault(any(), any(), any())
-                walletManager.buildUpdateCollectiblesVault(any(), any(), any())
-                walletManager.send(any<TransactionData>(), any(), any())
-            }
-        }
-
-        @Test
-        fun `GIVEN the read fails WHEN initOrUpdate THEN nothing is signed`() = runTest {
-            // Arrange
-            coEvery { walletManager.getCollectiblesVault() } returns
-                Result.Failure(BlockchainSdkError.CustomError("rpc is down"))
-
-            // Act
-            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
-
-            // Assert
-            assertThat(actual.isLeft()).isTrue()
-            coVerify(exactly = 0) {
-                walletManager.buildInitCollectiblesVault(any(), any(), any())
-                walletManager.buildUpdateCollectiblesVault(any(), any(), any())
-            }
-        }
-
-        @Test
-        fun `GIVEN no wallet manager WHEN initOrUpdate THEN the vault is never read`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
-
-            // Act
-            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
-
-            // Assert
-            assertThat(actual.isLeft()).isTrue()
-            coVerify(exactly = 0) { walletManager.getCollectiblesVault() }
-        }
-
-        @Test
-        fun `GIVEN the owner key is not derived WHEN initOrUpdate THEN no manager is built`() = runTest {
-            // Arrange
-            coEvery { networkProvider.create(userWallet) } returns GachaVaultError.WalletUnavailable.left()
-
-            // Act
-            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, GachaVaultLimits.Default)
-
-            // Assert
-            assertThat(actual.isLeft()).isTrue()
-            coVerify(exactly = 0) { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) }
-        }
-
-        private fun stubVault(vault: CollectiblesVault?) {
-            coEvery { walletManager.getCollectiblesVault() } returns Result.Success(vault)
-        }
-
-        private fun vault(sessionKey: String): CollectiblesVault = mockk {
-            every { this@mockk.sessionKey } returns sessionKey
-        }
-    }
-
-    /**
-     * The one-tap session signs on the card and broadcasts afterwards, and the NFC sheet lives exactly as long as
-     * the session's runnable — so the runnable has to end on the signature, not on the broadcast.
-     */
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class DeriveOwnerAndSetUpVault {
-
-        private val coldWallet: UserWallet.Cold = mockk {
-            every { walletId } returns WALLET_ID
-            every { scanResponse } returns mockk {
-                every { productType } returns ProductType.Wallet2
-                every { card } returns mockk {
-                    every { cardId } returns CARD_ID
-                    every { backupStatus } returns CardDTO.BackupStatus.NoBackup
-                    every { wallets } returns listOf(
-                        mockk {
-                            every { curve } returns EllipticCurve.Ed25519Slip0010
-                            every { publicKey } returns SEED_KEY
-                        },
-                    )
-                }
-            }
-        }
-
-        private val cardSigner: TransactionSigner = mockk()
-        private val session: CardSession = mockk()
-
-        /** Cancelled the way the SDK cancels it when the session stops. */
-        private lateinit var sessionScope: CoroutineScope
-        private lateinit var broadcast: CompletableDeferred<Unit>
-        private var sessionResult: CompletionResult<Unit>? = null
-
-        @BeforeEach
-        fun resetMocks() {
-            clearMocks(walletManagersFacade, networkProvider, walletManager, tangemSdkManager, cardSigner)
-            mockkStatic(CURVES_CONFIG_FILE)
-            mockkStatic(CARD_SESSION_RUNNABLE_FILE)
-
-            sessionResult = null
-            every { coldWallet.curvesConfig } returns mockk {
-                every { primaryCurve(any()) } returns EllipticCurve.Ed25519Slip0010
-            }
-            every { cardSdkConfigRepository.getCommonSigner(any(), any(), WALLET_ID, session) } returns cardSigner
-            coEvery { derivationsRepository.storeDerivedKeys(any(), any()) } returns Unit
-            coEvery { any<DeriveWalletPublicKeyTask>().run(session) } returns
-                CompletionResult.Success(mockk<ExtendedPublicKey>())
-
-            coEvery { networkProvider.create(coldWallet) } returns network.right()
-            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
-            coEvery { walletManager.getCollectiblesVault() } returns Result.Success(null)
-            coEvery { walletManager.buildInitCollectiblesVault(any(), any(), any()) } returns
-                Result.Success(transaction)
+            clearMocks(gaslessSender, devnetSender, ownerDeriver)
+            mockkStatic(SCAN_RESPONSE_EXT_FILE)
+            coEvery { gaslessSender.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
+            coEvery { devnetSender.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
+            coEvery { gaslessSender.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
+            coEvery { devnetSender.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
         }
 
         @AfterEach
         fun unmockStatics() {
-            unmockkStatic(CURVES_CONFIG_FILE)
-            unmockkStatic(CARD_SESSION_RUNNABLE_FILE)
+            unmockkStatic(SCAN_RESPONSE_EXT_FILE)
         }
 
         @Test
-        fun `GIVEN the broadcast is still running WHEN deriveOwnerAndSetUpVault THEN the session is already over`() =
-            runTest {
-                // Arrange
-                stubCardSession()
-                stubSend()
-
-                // Act
-                val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(sessionScope.isActive).isFalse()
-                assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
-                assertThat(setUp.isCompleted).isFalse()
-
-                broadcast.complete(Unit)
-                advanceUntilIdle()
-                assertThat(setUp.await()).isEqualTo(Unit.right())
-            }
-
-        @Test
-        fun `GIVEN the session is over WHEN the broadcast finishes THEN its result is returned`() = runTest {
-            // Arrange
-            stubCardSession()
-            stubSend()
-
+        fun `GIVEN a mobile wallet WHEN initOrUpdateVault THEN the gasless sender sets it up`() = runTest {
             // Act
-            val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
-            advanceUntilIdle()
-            broadcast.complete(Unit)
-            advanceUntilIdle()
+            val actual = repository.initOrUpdateVault(userWallet, SESSION_KEY, LIMITS)
 
             // Assert
-            assertThat(setUp.await()).isEqualTo(Unit.right())
-            coVerify(exactly = 1) { walletManager.send(transaction, cardSigner, any()) }
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { gaslessSender.initOrUpdateVault(userWallet, SESSION_KEY, LIMITS) }
+            coVerify(exactly = 0) { devnetSender.initOrUpdateVault(any(), any(), any()) }
         }
 
-        /** The broadcast is past the card, so its failure is ours to show rather than the session's. */
         @Test
-        fun `GIVEN the broadcast fails WHEN deriveOwnerAndSetUpVault THEN the failure is returned`() = runTest {
+        fun `GIVEN a production card WHEN initOrUpdateVault THEN the gasless sender sets it up`() = runTest {
             // Arrange
-            stubCardSession()
-            stubSend(result = Result.Failure(BlockchainSdkError.FailedToSendException))
+            val coldWallet = coldWallet(isTestCard = false)
 
             // Act
-            val setUp = async { repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
-            advanceUntilIdle()
-            broadcast.complete(Unit)
-            advanceUntilIdle()
+            val actual = repository.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS)
 
             // Assert
-            assertThat(setUp.await().isLeft()).isTrue()
-            assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { gaslessSender.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS) }
+            coVerify(exactly = 0) { devnetSender.initOrUpdateVault(any(), any(), any()) }
         }
 
-        /** Nothing signs here, so the sheet is still up — the failure belongs to the session. */
         @Test
-        fun `GIVEN the signing fails WHEN deriveOwnerAndSetUpVault THEN the session reports the failure`() = runTest {
+        fun `GIVEN a production card WHEN deriveOwnerAndSetUpVault THEN the gasless sender sets it up`() = runTest {
             // Arrange
-            stubCardSession()
-            coEvery { walletManager.send(any<TransactionData>(), any(), any()) } returns
-                Result.Failure(BlockchainSdkError.WrappedTangemError(TangemSdkError.UserCancelled()))
+            val coldWallet = coldWallet(isTestCard = false)
 
             // Act
             val actual = repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { gaslessSender.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
+            coVerify(exactly = 0) { devnetSender.deriveOwnerAndSetUpVault(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN a test card WHEN initOrUpdateVault THEN the devnet sender sets it up`() = runTest {
+            // Arrange
+            val coldWallet = coldWallet(isTestCard = true)
+
+            // Act
+            val actual = repository.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 1) { devnetSender.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS) }
+            coVerify(exactly = 0) { gaslessSender.initOrUpdateVault(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN a mobile wallet WHEN deriveOwnerAndSetUpVault THEN the owner is derived before the set-up`() =
+            runTest {
+                // Arrange
+                coEvery { ownerDeriver.deriveOwner(WALLET_ID) } returns OWNER.right()
+
+                // Act
+                val actual = repository.deriveOwnerAndSetUpVault(userWallet, SESSION_KEY, LIMITS)
+
+                // Assert
+                assertThat(actual).isEqualTo(Unit.right())
+                coVerifyOrder {
+                    ownerDeriver.deriveOwner(WALLET_ID)
+                    gaslessSender.initOrUpdateVault(userWallet, SESSION_KEY, LIMITS)
+                }
+            }
+
+        @Test
+        fun `GIVEN the owner cannot be derived WHEN deriveOwnerAndSetUpVault THEN nothing is set up`() = runTest {
+            // Arrange
+            coEvery { ownerDeriver.deriveOwner(WALLET_ID) } returns CollectiblesAccountError.Cancelled.left()
+
+            // Act
+            val actual = repository.deriveOwnerAndSetUpVault(userWallet, SESSION_KEY, LIMITS)
 
             // Assert
             assertThat(actual).isEqualTo(CollectiblesAccountError.Cancelled.left())
-            assertThat(sessionResult).isInstanceOf(CompletionResult.Failure::class.java)
+            coVerify(exactly = 0) { gaslessSender.initOrUpdateVault(any(), any(), any()) }
+        }
+
+        private fun coldWallet(isTestCard: Boolean): UserWallet.Cold {
+            val coldWallet = mockk<UserWallet.Cold> { every { walletId } returns WALLET_ID }
+            every { coldWallet.cardTypesResolver } returns mockk { every { isTestCard() } returns isTestCard }
+            return coldWallet
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SendPurchasePack {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(gaslessSender, sessionKey)
+            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SESSION_KEY
         }
 
         @Test
-        fun `GIVEN the vault cannot be read WHEN deriveOwnerAndSetUpVault THEN the session still ends`() = runTest {
+        fun `GIVEN the sender pays WHEN sendPurchasePack THEN its hash is returned`() = runTest {
             // Arrange
-            stubCardSession()
-            coEvery { walletManager.getCollectiblesVault() } returns
-                Result.Failure(BlockchainSdkError.CustomError("rpc is down"))
+            coEvery { gaslessSender.sendPurchasePack(userWallet, SESSION_KEY, AMOUNT, FEE_AMOUNT, MEMO, any()) } returns
+                TX_HASH.right()
 
             // Act
-            val actual = repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS)
+            val actual = sendPurchasePack()
 
             // Assert
-            assertThat(actual.isLeft()).isTrue()
-            assertThat(sessionScope.isActive).isFalse()
-            coVerify(exactly = 0) { walletManager.send(any<TransactionData>(), any(), any()) }
+            assertThat(actual).isEqualTo(TX_HASH.right())
         }
 
-        /** Emulates the SDK: cancels the session's scope when the runnable reports, as stopping a session does. */
-        private fun TestScope.stubCardSession() {
-            sessionScope = CoroutineScope(StandardTestDispatcher(testScheduler))
-            broadcast = CompletableDeferred()
-            every { session.scope } returns sessionScope
-
-            coEvery {
-                tangemSdkManager.runTaskAsync(
-                    runnable = any<CardSessionRunnable<Unit>>(),
-                    preflightReadFilter = any(),
-                    cardId = any(),
-                    initialMessage = any(),
-                    accessCode = any(),
-                    iconScanRes = any(),
-                    registerColdWallet = any(),
-                )
-            } coAnswers {
-                val runnable = firstArg<CardSessionRunnable<Unit>>()
-
-                suspendCancellableCoroutine { continuation ->
-                    runnable.run(session) { result ->
-                        sessionResult = result
-                        sessionScope.cancel()
-                        continuation.resume(result)
-                    }
-                }
+        @Test
+        fun `GIVEN the session key fails to sign WHEN sendPurchasePack THEN its own error is returned`() = runTest {
+            // Arrange
+            val signingError = CollectiblesAccountError.SessionKeySigningFailed(IllegalStateException())
+            coEvery { sessionKey.sign(any(), any()) } returns signingError.left()
+            coEvery { gaslessSender.sendPurchasePack(any(), any(), any(), any(), any(), any()) } coAnswers {
+                arg<suspend (ByteArray) -> Result<ByteArray>>(5).invoke(byteArrayOf(1))
+                CollectiblesAccountError.Vault(GachaVaultError.Unexpected(IllegalStateException())).left()
             }
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(signingError.left())
         }
 
-        /** The manager reports the signature, then broadcasts — which is where [broadcast] holds it. */
-        private fun stubSend(result: Result<TransactionSendResult> = Result.Success(mockk())) {
-            coEvery { walletManager.send(any<TransactionData>(), any(), any()) } coAnswers {
-                thirdArg<() -> Unit>().invoke()
-                broadcast.await()
-                result
-            }
+        @Test
+        fun `GIVEN the outcome is unknown WHEN sendPurchasePack THEN it is passed on`() = runTest {
+            // Arrange
+            val maybeSent = CollectiblesAccountError.MaybeSent(txHash = TX_HASH)
+            coEvery { gaslessSender.sendPurchasePack(any(), any(), any(), any(), any(), any()) } returns
+                maybeSent.left()
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(maybeSent.left())
         }
+
+        @Test
+        fun `GIVEN the session key is not provisioned WHEN sendPurchasePack THEN nothing is sent`() = runTest {
+            // Arrange
+            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns null
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectiblesAccountError.SessionKeyNotProvisioned.left())
+            coVerify(exactly = 0) { gaslessSender.sendPurchasePack(any(), any(), any(), any(), any(), any()) }
+        }
+
+        private suspend fun sendPurchasePack() = repository.sendPurchasePack(
+            userWallet = userWallet,
+            amount = AMOUNT,
+            feeAmount = FEE_AMOUNT,
+            memo = MEMO,
+        )
     }
 
     @Nested
@@ -447,6 +294,7 @@ internal class DefaultGachaVaultRepositoryTest {
                 MockCollectibles.vaultBalance(
                     amount = BigDecimal("12.5"),
                     currency = expectedCurrency(),
+                    vaultAddress = VAULT_ADDRESS,
                     ataAddress = VAULT_USDC_ADDRESS,
                 ).right(),
             )
@@ -546,96 +394,6 @@ internal class DefaultGachaVaultRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class SendPurchasePack {
-
-        @BeforeEach
-        fun resetMocks() {
-            clearMocks(walletManagersFacade, networkProvider, walletManager, sessionKey)
-            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SESSION_KEY
-            coEvery { networkProvider.create(userWallet) } returns network.right()
-            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
-        }
-
-        @Test
-        fun `GIVEN the purchase is sent WHEN sendPurchasePack THEN its hash is returned`() = runTest {
-            // Arrange
-            coEvery {
-                walletManager.sendPurchasePack(SESSION_KEY.base58, AMOUNT, FEE_AMOUNT, MEMO, any())
-            } returns Result.Success(TransactionSendResult(hash = TX_HASH))
-
-            // Act
-            val actual = sendPurchasePack()
-
-            // Assert
-            assertThat(actual).isEqualTo(TX_HASH.right())
-        }
-
-        @Test
-        fun `GIVEN the session key fails to sign WHEN sendPurchasePack THEN its own error is returned`() = runTest {
-            // Arrange
-            val signingError = CollectiblesAccountError.SessionKeySigningFailed(IllegalStateException())
-            coEvery { sessionKey.sign(any(), any()) } returns signingError.left()
-            coEvery { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) } coAnswers {
-                arg<suspend (ByteArray) -> Result<ByteArray>>(4).invoke(byteArrayOf(1))
-                Result.Failure(BlockchainSdkError.CustomError("signing failed"))
-            }
-
-            // Act
-            val actual = sendPurchasePack()
-
-            // Assert
-            assertThat(actual).isEqualTo(signingError.left())
-        }
-
-        @Test
-        fun `GIVEN the network rejects the purchase WHEN sendPurchasePack THEN it fails`() = runTest {
-            // Arrange
-            coEvery { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) } returns
-                Result.Failure(BlockchainSdkError.CustomError("rpc is down"))
-
-            // Act
-            val actual = sendPurchasePack()
-
-            // Assert
-            assertThat(actual.isLeft()).isTrue()
-        }
-
-        @Test
-        fun `GIVEN the session key is not provisioned WHEN sendPurchasePack THEN nothing is sent`() = runTest {
-            // Arrange
-            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns null
-
-            // Act
-            val actual = sendPurchasePack()
-
-            // Assert
-            assertThat(actual).isEqualTo(CollectiblesAccountError.SessionKeyNotProvisioned.left())
-            coVerify(exactly = 0) { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN no wallet manager WHEN sendPurchasePack THEN nothing is sent`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
-
-            // Act
-            val actual = sendPurchasePack()
-
-            // Assert
-            assertThat(actual.isLeft()).isTrue()
-            coVerify(exactly = 0) { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) }
-        }
-
-        private suspend fun sendPurchasePack() = repository.sendPurchasePack(
-            userWallet = userWallet,
-            amount = AMOUNT,
-            feeAmount = FEE_AMOUNT,
-            memo = MEMO,
-        )
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class SendWithOwnerSignature {
 
         private val coldWallet: UserWallet.Cold = mockk {
@@ -698,23 +456,22 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         @Test
-        fun `GIVEN a card wallet and a large transaction WHEN sent THEN it is refused before the tap`() =
-            runTest {
-                // Arrange
-                val transaction = solanaTransaction(instructionDataSize = LARGE_INSTRUCTION_DATA_SIZE).toBase64()
+        fun `GIVEN a card wallet and a large transaction WHEN sent THEN it is refused before the tap`() = runTest {
+            // Arrange
+            val transaction = solanaTransaction(instructionDataSize = LARGE_INSTRUCTION_DATA_SIZE).toBase64()
 
-                // Act
-                val actual = repository.sendWithOwnerSignature(coldWallet, transaction)
+            // Act
+            val actual = repository.sendWithOwnerSignature(coldWallet, transaction)
 
-                // Assert
-                assertThat(actual).isEqualTo(
-                    CollectiblesAccountError.Vault(GachaVaultError.TransactionTooLarge).left(),
-                )
-                coVerify(exactly = 0) {
-                    networkProvider.create(any())
-                    walletManager.send(any<TransactionData>(), any(), any())
-                }
+            // Assert
+            assertThat(actual).isEqualTo(
+                CollectiblesAccountError.Vault(GachaVaultError.TransactionTooLarge).left(),
+            )
+            coVerify(exactly = 0) {
+                networkProvider.create(any())
+                walletManager.send(any<TransactionData>(), any(), any())
             }
+        }
 
         @Test
         fun `GIVEN malformed base64 WHEN sendWithOwnerSignature THEN nothing is sent`() = runTest {
@@ -788,13 +545,13 @@ internal class DefaultGachaVaultRepositoryTest {
         const val OTHER_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 
         val SESSION_KEY = SessionKeyPublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
-        val OTHER_SESSION_KEY = SessionKeyPublicKey("A4ahkivAG4NoZAE8Sy4qv8nn2DU9yoXRQcttuCeGtTJv")
         val LIMITS = GachaVaultLimits.Default
 
         const val AMOUNT = 50_000_000L
         const val FEE_AMOUNT = 1_000_000L
         const val MEMO = "cc-uuid"
         const val TX_HASH = "hash"
+        const val OWNER = "owner"
 
         const val CARD_ID = "AC01000000041225"
         const val PUBLIC_KEY_SIZE = 32
@@ -802,9 +559,7 @@ internal class DefaultGachaVaultRepositoryTest {
 
         /** Pushes the message past the 930 bytes a card can sign. */
         const val LARGE_INSTRUCTION_DATA_SIZE = 900
-        val SEED_KEY = byteArrayOf(2, 0xA.toByte(), 0xB.toByte())
 
-        const val CURVES_CONFIG_FILE = "com.tangem.domain.wallets.config.CurvesConfigKt"
-        const val CARD_SESSION_RUNNABLE_FILE = "com.tangem.common.core.CardSessionRunnableKt"
+        const val SCAN_RESPONSE_EXT_FILE = "com.tangem.domain.card.common.util.ScanResponseExtKt"
     }
 }

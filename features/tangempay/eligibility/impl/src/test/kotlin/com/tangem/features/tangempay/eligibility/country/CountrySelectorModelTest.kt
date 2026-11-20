@@ -5,10 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.pay.TangemPayCountry
-import com.tangem.domain.models.pay.TangemPayRegion
-import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
-import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
+import com.tangem.domain.models.tangempay.TangemPayCountry
+import com.tangem.domain.models.tangempay.TangemPayRegion
+import com.tangem.domain.tangempay.usecase.GetTangemPayCountriesUseCase
+import com.tangem.domain.tangempay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent.Params
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks

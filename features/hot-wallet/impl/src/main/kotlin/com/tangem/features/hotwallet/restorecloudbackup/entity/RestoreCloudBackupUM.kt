@@ -23,7 +23,10 @@ internal sealed interface RestoreCloudBackupUM {
         val items: ImmutableList<BackupRowUM>,
         override val accountEmail: String?,
         override val onBack: () -> Unit,
-    ) : RestoreCloudBackupUM
+    ) : RestoreCloudBackupUM {
+
+        val areAllAdded: Boolean = items.isNotEmpty() && items.all(BackupRowUM::isAlreadyAdded)
+    }
 
     data class EnterPassword(
         val walletName: String,
@@ -72,5 +75,6 @@ internal sealed interface RestoreCloudBackupUM {
 internal data class BackupRowUM(
     val walletName: String,
     val createdAtMillis: Long,
+    val isAlreadyAdded: Boolean,
     val onClick: () -> Unit,
 )

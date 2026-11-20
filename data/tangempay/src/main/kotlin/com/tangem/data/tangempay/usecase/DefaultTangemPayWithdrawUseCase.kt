@@ -1,0 +1,30 @@
+package com.tangem.data.tangempay.usecase
+
+import arrow.core.Either
+import com.tangem.core.error.UniversalError
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tangempay.WithdrawalResult
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import java.math.BigDecimal
+import javax.inject.Inject
+
+internal class DefaultTangemPayWithdrawUseCase @Inject constructor(
+    private val repository: TangemPayWithdrawRepository,
+) : TangemPayWithdrawUseCase {
+
+    override suspend fun invoke(
+        userWallet: UserWallet,
+        cryptoAmount: BigDecimal,
+        sourceCurrency: CryptoCurrency,
+        receiverCexAddress: String,
+    ): Either<UniversalError, WithdrawalResult> {
+        return repository.withdraw(
+            userWallet = userWallet,
+            cryptoAmount = cryptoAmount,
+            receiverAddress = receiverCexAddress,
+            sourceCurrency = sourceCurrency,
+        )
+    }
+}

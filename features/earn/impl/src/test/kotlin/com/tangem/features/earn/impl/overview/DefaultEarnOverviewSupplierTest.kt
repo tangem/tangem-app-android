@@ -1,7 +1,9 @@
 package com.tangem.features.earn.impl.overview
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -11,10 +13,12 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.EarnFeatureToggles
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnBannerOverview
 import com.tangem.features.earn.api.overview.EarnHeadline
 import com.tangem.features.earn.api.overview.EarnOverview
 import com.tangem.features.earn.api.overview.EarnOverviews
+import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProductSummary
@@ -63,7 +67,7 @@ internal class DefaultEarnOverviewSupplierTest {
     private val registry = EarnProductsRegistry(
         products = setOf(
             TestEarnProduct(id = lendingId, rank = 0),
-            TestEarnProduct(id = stakingId, rank = 1, hasLegacyBlock = true),
+            TestEarnProduct(id = stakingId, rank = 1, hasLegacyBlock = true, badgeAccent = EarnBadgeAccent.Info),
             TestEarnProduct(id = vaultId, rank = 2),
         ),
         rateSources = setOf(TestEarnRateSource(id = yieldModeId, rank = 3)),
@@ -77,6 +81,7 @@ internal class DefaultEarnOverviewSupplierTest {
     private val selector = EarnHeadlineSelector(
         order = EarnSummaryOrder(registry),
         rateBadgeConverter = EarnRateBadgeConverter(),
+        registry = registry,
     )
 
     private var previousLocale: Locale = Locale.getDefault()
@@ -115,7 +120,13 @@ internal class DefaultEarnOverviewSupplierTest {
             )
             val expected = overviewsOf(
                 EarnOverview(
-                    headline = EarnHeadline(rate = rate, isActive = true, badge = aprBadge("4.00"), route = route),
+                    headline = headlineOf(
+                        rate = rate,
+                        isActive = true,
+                        badge = aprBadge("4.00"),
+                        route = route,
+                        badgeAccent = EarnBadgeAccent.Info,
+                    ),
                     banner = null,
                 ),
             )
@@ -143,13 +154,19 @@ internal class DefaultEarnOverviewSupplierTest {
                 val lending = createSummary(productId = lendingId, rate = lendingRate)
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(
+                        headline = headlineOf(
                             rate = stakingRate,
                             isActive = true,
                             badge = aprBadge("4.00"),
                             route = route,
+                            badgeAccent = EarnBadgeAccent.Info,
                         ),
-                        banner = EarnBannerOverview(rate = lendingRate, activeCount = 0, totalPosition = null),
+                        banner = EarnBannerOverview(
+                            rate = lendingRate,
+                            bestProductId = lendingId,
+                            activeCount = 0,
+                            totalPosition = null,
+                        ),
                     ),
                 )
 
@@ -171,13 +188,18 @@ internal class DefaultEarnOverviewSupplierTest {
                 val yieldMode = createSummary(productId = yieldModeId, rate = yieldModeRate, route = yieldModeRoute)
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(
+                        headline = headlineOf(
                             rate = yieldModeRate,
                             isActive = false,
                             badge = apyBadge("9.00"),
                             route = yieldModeRoute,
                         ),
-                        banner = EarnBannerOverview(rate = lendingRate, activeCount = 0, totalPosition = null),
+                        banner = EarnBannerOverview(
+                            rate = lendingRate,
+                            bestProductId = lendingId,
+                            activeCount = 0,
+                            totalPosition = null,
+                        ),
                     ),
                 )
 
@@ -196,7 +218,7 @@ internal class DefaultEarnOverviewSupplierTest {
             val yieldMode = createSummary(productId = yieldModeId, rate = rate, route = route)
             val expected = overviewsOf(
                 EarnOverview(
-                    headline = EarnHeadline(rate = rate, isActive = false, badge = apyBadge("9.00"), route = route),
+                    headline = headlineOf(rate = rate, isActive = false, badge = apyBadge("9.00"), route = route),
                     banner = null,
                 ),
             )
@@ -215,8 +237,13 @@ internal class DefaultEarnOverviewSupplierTest {
             val lending = createSummary(productId = lendingId, rate = rate)
             val expected = overviewsOf(
                 EarnOverview(
-                    headline = EarnHeadline(rate = rate, isActive = false, badge = apyBadge("5.00"), route = null),
-                    banner = EarnBannerOverview(rate = rate, activeCount = 0, totalPosition = null),
+                    headline = headlineOf(rate = rate, isActive = false, badge = apyBadge("5.00"), route = null),
+                    banner = EarnBannerOverview(
+                        rate = rate,
+                        bestProductId = lendingId,
+                        activeCount = 0,
+                        totalPosition = null,
+                    ),
                 ),
             )
             val frames = collectOverviews(productSummaries(lending))
@@ -246,16 +273,21 @@ internal class DefaultEarnOverviewSupplierTest {
                 val expected = EarnOverviews(
                     byCurrency = mapOf(
                         ETH_ID to EarnOverview(
-                            headline = EarnHeadline(
+                            headline = headlineOf(
                                 rate = lendingRate,
                                 isActive = false,
                                 badge = apyBadge("5.00"),
                                 route = null,
                             ),
-                            banner = EarnBannerOverview(rate = lendingRate, activeCount = 0, totalPosition = null),
+                            banner = EarnBannerOverview(
+                                rate = lendingRate,
+                                bestProductId = lendingId,
+                                activeCount = 0,
+                                totalPosition = null,
+                            ),
                         ),
                         bnbId to EarnOverview(
-                            headline = EarnHeadline(
+                            headline = headlineOf(
                                 rate = yieldModeRate,
                                 isActive = false,
                                 badge = apyBadge("9.00"),
@@ -292,7 +324,13 @@ internal class DefaultEarnOverviewSupplierTest {
                 )
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(rate = rate, isActive = true, badge = aprBadge("4.00"), route = null),
+                        headline = headlineOf(
+                            rate = rate,
+                            isActive = true,
+                            badge = aprBadge("4.00"),
+                            route = null,
+                            badgeAccent = EarnBadgeAccent.Info,
+                        ),
                         banner = null,
                     ),
                     source = model,
@@ -330,14 +368,16 @@ internal class DefaultEarnOverviewSupplierTest {
                 )
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(
+                        headline = headlineOf(
                             rate = stakingRate,
                             isActive = true,
                             badge = aprBadge("8.00"),
                             route = null,
+                            badgeAccent = EarnBadgeAccent.Info,
                         ),
                         banner = EarnBannerOverview(
                             rate = lendingRate,
+                            bestProductId = lendingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("2"),
                         ),
@@ -359,7 +399,13 @@ internal class DefaultEarnOverviewSupplierTest {
                 val staking = createSummary(productId = stakingId, rate = rate)
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(rate = rate, isActive = false, badge = aprBadge("4.00"), route = null),
+                        headline = headlineOf(
+                            rate = rate,
+                            isActive = false,
+                            badge = aprBadge("4.00"),
+                            route = null,
+                            badgeAccent = EarnBadgeAccent.Info,
+                        ),
                         banner = null,
                     ),
                 )
@@ -383,7 +429,7 @@ internal class DefaultEarnOverviewSupplierTest {
                 )
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(rate = rate, isActive = true, badge = apyBadge("6.00"), route = null),
+                        headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("6.00"), route = null),
                         banner = null,
                     ),
                 )
@@ -406,7 +452,7 @@ internal class DefaultEarnOverviewSupplierTest {
             )
             val expected = overviewsOf(
                 EarnOverview(
-                    headline = EarnHeadline(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
+                    headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
                     banner = null,
                 ),
             )
@@ -434,8 +480,13 @@ internal class DefaultEarnOverviewSupplierTest {
                 )
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
-                        banner = EarnBannerOverview(rate = rate, activeCount = 1, totalPosition = BigDecimal("2")),
+                        headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
+                        banner = EarnBannerOverview(
+                            rate = rate,
+                            bestProductId = lendingId,
+                            activeCount = 1,
+                            totalPosition = BigDecimal("2"),
+                        ),
                     ),
                 )
                 summaryFeed.emit(productSummaries(lending))
@@ -465,7 +516,12 @@ internal class DefaultEarnOverviewSupplierTest {
                 val expected = overviewsOf(
                     EarnOverview(
                         headline = null,
-                        banner = EarnBannerOverview(rate = null, activeCount = 0, totalPosition = null),
+                        banner = EarnBannerOverview(
+                            rate = null,
+                            bestProductId = null,
+                            activeCount = 0,
+                            totalPosition = null,
+                        ),
                     ),
                 )
 
@@ -496,7 +552,7 @@ internal class DefaultEarnOverviewSupplierTest {
                 )
                 val expected = overviewsOf(
                     EarnOverview(
-                        headline = EarnHeadline(
+                        headline = headlineOf(
                             rate = yieldModeRate,
                             isActive = true,
                             badge = apyBadge("9.00"),
@@ -504,6 +560,7 @@ internal class DefaultEarnOverviewSupplierTest {
                         ),
                         banner = EarnBannerOverview(
                             rate = lendingRate,
+                            bestProductId = lendingId,
                             activeCount = 1,
                             totalPosition = BigDecimal("1"),
                         ),
@@ -538,13 +595,18 @@ internal class DefaultEarnOverviewSupplierTest {
             val vault = createSummary(productId = vaultId, rate = vaultRate)
             val expected = overviewsOf(
                 EarnOverview(
-                    headline = EarnHeadline(
+                    headline = headlineOf(
                         rate = lendingRate,
                         isActive = true,
                         badge = apyBadge("3.00"),
                         route = null,
                     ),
-                    banner = EarnBannerOverview(rate = lendingRate, activeCount = 1, totalPosition = BigDecimal("2")),
+                    banner = EarnBannerOverview(
+                        rate = lendingRate,
+                        bestProductId = lendingId,
+                        activeCount = 1,
+                        totalPosition = BigDecimal("2"),
+                    ),
                 ),
             )
 
@@ -582,6 +644,7 @@ internal class DefaultEarnOverviewSupplierTest {
             }
             val expected = EarnBannerOverview(
                 rate = createRate(),
+                bestProductId = lendingId,
                 activeCount = model.expectedActiveCount,
                 totalPosition = model.expectedTotal,
             )
@@ -704,8 +767,13 @@ internal class DefaultEarnOverviewSupplierTest {
 
         private val overviews = overviewsOf(
             EarnOverview(
-                headline = EarnHeadline(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
-                banner = EarnBannerOverview(rate = rate, activeCount = 1, totalPosition = BigDecimal("2")),
+                headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
+                banner = EarnBannerOverview(
+                    rate = rate,
+                    bestProductId = lendingId,
+                    activeCount = 1,
+                    totalPosition = BigDecimal("2"),
+                ),
             ),
         )
 
@@ -767,8 +835,13 @@ internal class DefaultEarnOverviewSupplierTest {
             )
             val expected = overviewsOf(
                 EarnOverview(
-                    headline = EarnHeadline(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
-                    banner = EarnBannerOverview(rate = rate, activeCount = 1, totalPosition = BigDecimal("2")),
+                    headline = headlineOf(rate = rate, isActive = true, badge = apyBadge("5.00"), route = null),
+                    banner = EarnBannerOverview(
+                        rate = rate,
+                        bestProductId = lendingId,
+                        activeCount = 1,
+                        totalPosition = BigDecimal("2"),
+                    ),
                 ),
             )
             val wallet = createColdWallet()
@@ -831,6 +904,14 @@ internal class DefaultEarnOverviewSupplierTest {
 
     private fun overviewsOf(overview: EarnOverview, source: StatusSource = StatusSource.ACTUAL) =
         EarnOverviews(byCurrency = mapOf(ETH_ID to overview), source = source)
+
+    private fun headlineOf(
+        rate: EarnProductRate,
+        isActive: Boolean,
+        badge: TextReference,
+        route: Route?,
+        badgeAccent: EarnBadgeAccent = EarnBadgeAccent.Success,
+    ) = EarnHeadline(rate = rate, isActive = isActive, badge = badge, badgeAccent = badgeAccent, route = route)
 
     private fun apyBadge(percent: String) =
         resourceReference(R.string.yield_module_earn_badge, wrappedList(percent))

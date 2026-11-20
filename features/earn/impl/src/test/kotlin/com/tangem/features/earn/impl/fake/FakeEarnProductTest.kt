@@ -2,12 +2,15 @@ package com.tangem.features.earn.impl.fake
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
@@ -62,6 +65,58 @@ internal class FakeEarnProductTest {
         IdentityModel(FakeEarnProductPreset.Staking, expectedId = "staking", expectedRank = 1),
         IdentityModel(FakeEarnProductPreset.Vault, expectedId = "vault", expectedRank = 2),
     )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BadgeAccent {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN preset WHEN product created THEN the badge accent is the one of that preset`(model: AccentModel) {
+            // Act
+            val actual = createProduct(model.preset).badgeAccent
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedAccent)
+        }
+
+        private fun provideTestModels() = listOf(
+            AccentModel(FakeEarnProductPreset.Lending, expectedAccent = EarnBadgeAccent.Success),
+            AccentModel(FakeEarnProductPreset.Staking, expectedAccent = EarnBadgeAccent.Info),
+            AccentModel(FakeEarnProductPreset.Vault, expectedAccent = EarnBadgeAccent.Success),
+        )
+    }
+
+    internal data class AccentModel(val preset: FakeEarnProductPreset, val expectedAccent: EarnBadgeAccent) {
+        override fun toString(): String = "$preset -> $expectedAccent"
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ProviderIcon {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN preset WHEN product created THEN the provider icon is the bundled logo of that provider`(
+            model: ProviderIconModel,
+        ) {
+            // Act
+            val actual = createProduct(model.preset).provider.icon
+
+            // Assert
+            assertThat(actual).isEqualTo(ImageReference.Res(model.expectedLogo))
+        }
+
+        private fun provideTestModels() = listOf(
+            ProviderIconModel(FakeEarnProductPreset.Lending, expectedLogo = R.drawable.ic_aave_36),
+            ProviderIconModel(FakeEarnProductPreset.Staking, expectedLogo = R.drawable.ic_p2p_logo),
+            ProviderIconModel(FakeEarnProductPreset.Vault, expectedLogo = R.drawable.ic_p2p_logo),
+        )
+    }
+
+    internal data class ProviderIconModel(val preset: FakeEarnProductPreset, val expectedLogo: Int) {
+        override fun toString(): String = "$preset -> $expectedLogo"
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

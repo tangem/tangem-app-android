@@ -1,13 +1,13 @@
 package com.tangem.features.earn.impl.widgets.calculator.ui.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.earn.impl.ui.EarnIncentiveUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class EarnCalculatorUM(
-    val incentive: TangemBadgeUM?,
+    val incentive: EarnIncentiveUM?,
     val total: TextReference,
     val earned: TextReference,
     val earnedLabel: TextReference,

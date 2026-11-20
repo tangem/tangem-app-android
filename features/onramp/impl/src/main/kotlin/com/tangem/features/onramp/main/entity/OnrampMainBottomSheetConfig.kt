@@ -9,6 +9,9 @@ sealed interface OnrampMainBottomSheetConfig {
     data class ConfirmResidency(val country: OnrampCountry) : OnrampMainBottomSheetConfig
 
     @Serializable
+    data object SelectCountry : OnrampMainBottomSheetConfig
+
+    @Serializable
     data object CurrenciesList : OnrampMainBottomSheetConfig
 
     @Serializable

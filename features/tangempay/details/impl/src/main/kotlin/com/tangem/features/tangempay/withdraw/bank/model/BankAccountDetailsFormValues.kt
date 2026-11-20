@@ -1,7 +1,8 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
-import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountDetails
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 
 /**
@@ -13,7 +14,7 @@ internal fun BankAccountDetails.toFormValues(): Map<BankWithdrawFormField, Strin
     val individual = beneficiary as? Beneficiary.Individual
     val business = beneficiary as? Beneficiary.Business
     return listOf(
-        BankWithdrawFormField.AccountNumber to accountNumber,
+        accountNumberField() to accountNumber,
         BankWithdrawFormField.RoutingNumber to routingNumber,
         BankWithdrawFormField.FirstName to individual?.firstName,
         BankWithdrawFormField.LastName to individual?.lastName,
@@ -32,3 +33,6 @@ internal fun BankAccountDetails.toFormValues(): Map<BankWithdrawFormField, Strin
         value?.takeIf(String::isNotBlank)?.let { field to it }
     }.toMap()
 }
+
+private fun BankAccountDetails.accountNumberField(): BankWithdrawFormField =
+    if (rail == BankRail.SPEI) BankWithdrawFormField.Clabe else BankWithdrawFormField.AccountNumber

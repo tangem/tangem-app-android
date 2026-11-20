@@ -44,6 +44,7 @@ class CreateAndSendSolanaGaslessTransactionUseCase(
                 transactionData = transactionData,
                 feePayer = sponsorship.feePayer,
                 signer = gaslessSignerProvider(userWallet),
+                sponsorsRent = sponsorship.isRentSponsored,
             )
         ) {
             is Result.Success -> result.data

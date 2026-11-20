@@ -24,7 +24,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
@@ -55,7 +54,6 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
     protected val minAmountUseCase: YieldSupplyMinAmountUseCase = mockk()
     protected val getMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase = mockk()
     protected val getCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase = mockk()
-    protected val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk()
     protected val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase = mockk()
     protected val applyEnterAmountUseCase: YieldSupplyApplyEnterAmountUseCase = mockk()
     protected val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
@@ -81,7 +79,16 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
             sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
         } returns listOf("0xhash").right()
         coEvery { activateUseCase(any(), any(), any()) } returns true.right()
-        every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns false
+        coEvery {
+            estimateFeeForGaslessBatchUseCase(
+                userWallet = any(),
+                operationTokenStatus = any(),
+                calls = any(),
+                sameTokenRule = any(),
+                isOperationTokenExcluded = any(),
+                feeCurrencyStatus = any(),
+            )
+        } returns null.right()
         every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
         coEvery { applyEnterAmountUseCase.supportsEnterAmount(any(), any(), any()) } returns true
     }
@@ -131,7 +138,6 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
         yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyPendingTracker = pendingTracker,
         appsFlyerRepository = appsFlyerRepository,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         estimateFeeForGaslessBatchUseCase = estimateFeeForGaslessBatchUseCase,
         yieldSupplyApplyEnterAmountUseCase = applyEnterAmountUseCase,
         yieldSupplySmartGas = YieldSupplySmartGas(

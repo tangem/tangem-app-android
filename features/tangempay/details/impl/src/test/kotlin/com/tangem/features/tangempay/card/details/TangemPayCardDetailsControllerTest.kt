@@ -13,17 +13,18 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.TangemPayCardDetails
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.TangemPayCardDetails
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.card.view.CardDataType
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
@@ -31,10 +32,15 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 private const val SHOW_DETAILS_TIME = 40_000L
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayCardDetailsControllerTest {
 
     private val userWalletId = UserWalletId("123")
@@ -46,8 +52,8 @@ internal class TangemPayCardDetailsControllerTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val supplier: PaymentAccountStatusSupplier = mockk()
-    private val supplierFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
-    private val eventListener = DefaultCardDetailsEventListener()
+    private lateinit var supplierFlow: MutableSharedFlow<AccountStatus.Payment>
+    private lateinit var eventListener: DefaultCardDetailsEventListener
     private val cardAuthenticator: TangemPayCardAuthenticator = mockk()
 
     private val details = TangemPayCardDetails(
@@ -57,7 +63,11 @@ internal class TangemPayCardDetailsControllerTest {
         expirationMonth = "9",
     )
 
-    init {
+    @BeforeEach
+    fun setUp() {
+        clearMocks(repository, clipboardManager, uiMessageSender, analytics, supplier, cardAuthenticator)
+        supplierFlow = MutableSharedFlow(replay = 1)
+        eventListener = DefaultCardDetailsEventListener()
         every { supplier.invoke(userWalletId) } returns supplierFlow
         every { repository.cardFrozenState(any()) } returns emptyFlow()
     }
@@ -117,9 +127,11 @@ internal class TangemPayCardDetailsControllerTest {
 
     @Test
     fun `GIVEN card WHEN created THEN initial state is hidden with masked digits`() = runTest {
+        // Act
         val controller = createController(scope = backgroundScope, card = card(lastDigits = "9999"))
         runCurrent()
 
+        // Assert
         val state = controller.uiState.value
         assertThat(state.isHidden).isTrue()
         assertThat(state.numberShort).isEqualTo("${StringsSigns.ASTERISK}9999")
@@ -127,13 +139,16 @@ internal class TangemPayCardDetailsControllerTest {
 
     @Test
     fun `GIVEN Show for this card WHEN event received THEN details revealed and analytics sent`() = runTest {
+        // Arrange
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
         val controller = createController(scope = backgroundScope)
         runCurrent()
 
+        // Act
         eventListener.send(CardDetailsEvent.Show(cardId))
         runCurrent()
 
+        // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.ViewCardDetailsClicked()) }
         coVerify(exactly = 1) { repository.revealCardDetails(userWalletId, cardId) }
         val state = controller.uiState.value
@@ -144,75 +159,25 @@ internal class TangemPayCardDetailsControllerTest {
 
     @Test
     fun `GIVEN reveal fails WHEN event received THEN snackbar shown and state hidden`() = runTest {
+        // Arrange
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns ERROR.left()
         val controller = createController(scope = backgroundScope)
         runCurrent()
 
+        // Act
         eventListener.send(CardDetailsEvent.Show(cardId))
         runCurrent()
 
+        // Assert
         verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
         assertThat(controller.uiState.value.isHidden).isTrue()
     }
 
-    @Test
-    fun `GIVEN revealed WHEN Show for another card THEN this card hides`() = runTest {
-        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
-        val controller = createController(scope = backgroundScope)
-        runCurrent()
-        eventListener.send(CardDetailsEvent.Show(cardId))
-        runCurrent()
-
-        eventListener.send(CardDetailsEvent.Show(otherCardId))
-        runCurrent()
-
-        assertThat(controller.uiState.value.isHidden).isTrue()
-    }
-
-    @Test
-    fun `GIVEN revealed WHEN Hide for another card THEN this card stays revealed`() = runTest {
-        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
-        val controller = createController(scope = backgroundScope)
-        runCurrent()
-        eventListener.send(CardDetailsEvent.Show(cardId))
-        runCurrent()
-
-        eventListener.send(CardDetailsEvent.Hide(otherCardId))
-        runCurrent()
-
-        assertThat(controller.uiState.value.isHidden).isFalse()
-    }
-
-    @Test
-    fun `GIVEN revealed WHEN HideAll THEN this card hides`() = runTest {
-        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
-        val controller = createController(scope = backgroundScope)
-        runCurrent()
-        eventListener.send(CardDetailsEvent.Show(cardId))
-        runCurrent()
-
-        eventListener.send(CardDetailsEvent.HideAll)
-        runCurrent()
-
-        assertThat(controller.uiState.value.isHidden).isTrue()
-    }
-
-    @Test
-    fun `GIVEN revealed WHEN show timer elapses THEN details auto-hide`() = runTest {
-        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
-        val controller = createController(scope = backgroundScope)
-        runCurrent()
-        eventListener.send(CardDetailsEvent.Show(cardId))
-        runCurrent()
-
-        advanceTimeBy(SHOW_DETAILS_TIME + 1)
-        runCurrent()
-
-        assertThat(controller.uiState.value.isHidden).isTrue()
-    }
-
-    @Test
-    fun `GIVEN revealed WHEN show timeout has not elapsed THEN details stay revealed`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN revealed WHEN visibility event received THEN hidden state follows the event`(
+        case: VisibilityEventModel,
+    ) = runTest {
         // Arrange
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
         val controller = createController(scope = backgroundScope)
@@ -221,15 +186,36 @@ internal class TangemPayCardDetailsControllerTest {
         runCurrent()
 
         // Act
-        advanceTimeBy(SHOW_DETAILS_TIME - 1)
+        eventListener.send(case.event)
         runCurrent()
 
         // Assert
-        assertThat(controller.uiState.value.isHidden).isFalse()
+        assertThat(controller.uiState.value.isHidden).isEqualTo(case.isHidden)
+    }
+
+    @ParameterizedTest
+    @MethodSource("showTimerCases")
+    fun `GIVEN revealed WHEN time passes THEN details auto-hide only once the show timeout elapses`(
+        case: ShowTimerModel,
+    ) = runTest {
+        // Arrange
+        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+        eventListener.send(CardDetailsEvent.Show(cardId))
+        runCurrent()
+
+        // Act
+        advanceTimeBy(case.elapsedMillis)
+        runCurrent()
+
+        // Assert
+        assertThat(controller.uiState.value.isHidden).isEqualTo(case.isHidden)
     }
 
     @Test
     fun `GIVEN supplier emits actual loaded WHEN card present THEN frozen state and digits updated`() = runTest {
+        // Arrange
         val updatedCard = card(lastDigits = "5678", frozenState = TangemPayCardFrozenState.Frozen)
         val loaded = mockk<PaymentAccountStatusValue.Loaded> {
             every { source } returns StatusSource.ACTUAL
@@ -241,111 +227,106 @@ internal class TangemPayCardDetailsControllerTest {
         val controller = createController(scope = backgroundScope)
         runCurrent()
 
+        // Act
         supplierFlow.emit(payment)
         runCurrent()
 
+        // Assert
         val state = controller.uiState.value
         assertThat(state.numberShort).isEqualTo("${StringsSigns.ASTERISK}5678")
         assertThat(state.cardFrozenState).isEqualTo(TangemPayCardFrozenState.Frozen)
         assertThat(state.isActionsAvailable).isTrue()
     }
 
-    @Test
-    fun `GIVEN copy cvv WHEN onCopy invoked THEN clipboard set as sensitive and analytics sent`() = runTest {
-        val controller = revealedController()
+    @ParameterizedTest
+    @MethodSource("copyCases")
+    fun `GIVEN revealed WHEN onCopy invoked THEN value copied as sensitive and analytics sent`(case: CopyModel) =
+        runTest {
+            // Arrange
+            val controller = revealedController()
 
-        controller.uiState.value.onCopy("1 2 3", CardDataType.CVV)
+            // Act
+            controller.uiState.value.onCopy(case.value, case.type)
 
-        verify(exactly = 1) { clipboardManager.setText(text = "123", isSensitive = true) }
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CopyCardCVVClicked()) }
-    }
-
-    @Test
-    fun `GIVEN copy cardholder name WHEN onCopy invoked THEN spaces kept and analytics sent`() = runTest {
-        val controller = revealedController()
-
-        controller.uiState.value.onCopy("JOHNNY SILVERHAND", CardDataType.CardholderName)
-
-        verify(exactly = 1) { clipboardManager.setText(text = "JOHNNY SILVERHAND", isSensitive = true) }
-        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CopyCardholderNameClicked()) }
-    }
+            // Assert
+            verify(exactly = 1) { clipboardManager.setText(text = case.expectedClipboardText, isSensitive = true) }
+            verify(exactly = 1) { analytics.send(case.expectedEvent) }
+        }
 
     @Test
     fun `GIVEN details hidden WHEN onCopy invoked THEN nothing copied`() = runTest {
+        // Arrange
         val controller = createController(scope = backgroundScope)
         runCurrent()
 
+        // Act
         controller.uiState.value.onCopy("1 2 3", CardDataType.CVV)
 
+        // Assert
         verify(exactly = 0) { clipboardManager.setText(any(), any(), any()) }
     }
 
-    @Test
-    fun `GIVEN card with emboss name WHEN created THEN cardholder name exposed`() = runTest {
-        val controller = createController(
-            scope = backgroundScope,
-            card = card(embossName = "JOHNNY SILVERHAND"),
-        )
+    @ParameterizedTest
+    @MethodSource("cardholderNameCases")
+    fun `GIVEN card emboss name WHEN created THEN cardholder name mirrors it`(case: CardholderNameModel) = runTest {
+        // Act
+        val controller = createController(scope = backgroundScope, card = card(embossName = case.embossName))
         runCurrent()
 
-        assertThat(controller.uiState.value.cardholderName).isEqualTo("JOHNNY SILVERHAND")
-    }
-
-    @Test
-    fun `GIVEN card without emboss name WHEN created THEN cardholder name is null`() = runTest {
-        val controller = createController(scope = backgroundScope, card = card(embossName = null))
-        runCurrent()
-
-        assertThat(controller.uiState.value.cardholderName).isNull()
+        // Assert
+        assertThat(controller.uiState.value.cardholderName).isEqualTo(case.expectedCardholderName)
     }
 
     @Test
     fun `GIVEN Show already sent WHEN controller created with isolated listener THEN details stay hidden`() =
         runTest {
-            // GIVEN
+            // Arrange
             coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
             eventListener.send(CardDetailsEvent.Show(cardId))
 
-            // WHEN
+            // Act
             val controller = createController(
                 scope = backgroundScope,
                 listener = CardDetailsEventListener.default(),
             )
             advanceUntilIdle()
 
-            // THEN
+            // Assert
             assertThat(controller.uiState.value.isHidden).isTrue()
             coVerify(exactly = 0) { repository.revealCardDetails(any(), any()) }
         }
 
     @Test
     fun `GIVEN isolated listener WHEN reveal requested THEN blocks on shared listener stay hidden`() = runTest {
-        // GIVEN
+        // Arrange
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
         val sharedController = createController(scope = backgroundScope)
         val isolatedListener = CardDetailsEventListener.default()
         val isolatedController = createController(scope = backgroundScope, listener = isolatedListener)
         runCurrent()
 
-        // WHEN
+        // Act
         isolatedListener.send(CardDetailsEvent.Show(cardId))
         runCurrent()
 
-        // THEN
+        // Assert
         assertThat(isolatedController.uiState.value.isHidden).isFalse()
         assertThat(sharedController.uiState.value.isHidden).isTrue()
     }
 
     @Test
     fun `GIVEN disposed WHEN Show received THEN reveal not triggered`() = runTest {
+        // Arrange
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
         val controller = createController(scope = backgroundScope)
         runCurrent()
-
         controller.dispose()
+
+        // Act
         eventListener.send(CardDetailsEvent.Show(cardId))
         advanceUntilIdle()
 
+        // Assert
         coVerify(exactly = 0) { repository.revealCardDetails(any(), any()) }
     }
 
@@ -403,6 +384,50 @@ internal class TangemPayCardDetailsControllerTest {
         embossName = embossName,
         cardType = TangemPayCardType.VIRTUAL,
     )
+
+    private fun provideTestModels() = listOf(
+        VisibilityEventModel(event = CardDetailsEvent.Show(otherCardId), isHidden = true),
+        VisibilityEventModel(event = CardDetailsEvent.Hide(otherCardId), isHidden = false),
+        VisibilityEventModel(event = CardDetailsEvent.HideAll, isHidden = true),
+    )
+
+    private fun showTimerCases() = listOf(
+        ShowTimerModel(elapsedMillis = SHOW_DETAILS_TIME + 1, isHidden = true),
+        ShowTimerModel(elapsedMillis = SHOW_DETAILS_TIME - 1, isHidden = false),
+    )
+
+    private fun copyCases() = listOf(
+        CopyModel(
+            value = "1 2 3",
+            type = CardDataType.CVV,
+            expectedClipboardText = "123",
+            expectedEvent = TangemPayAnalyticsEvents.CopyCardCVVClicked(),
+        ),
+        CopyModel(
+            value = "JOHNNY SILVERHAND",
+            type = CardDataType.CardholderName,
+            expectedClipboardText = "JOHNNY SILVERHAND",
+            expectedEvent = TangemPayAnalyticsEvents.CopyCardholderNameClicked(),
+        ),
+    )
+
+    private fun cardholderNameCases() = listOf(
+        CardholderNameModel(embossName = "JOHNNY SILVERHAND", expectedCardholderName = "JOHNNY SILVERHAND"),
+        CardholderNameModel(embossName = null, expectedCardholderName = null),
+    )
+
+    internal data class VisibilityEventModel(val event: CardDetailsEvent, val isHidden: Boolean)
+
+    internal data class ShowTimerModel(val elapsedMillis: Long, val isHidden: Boolean)
+
+    internal data class CopyModel(
+        val value: String,
+        val type: CardDataType,
+        val expectedClipboardText: String,
+        val expectedEvent: TangemPayAnalyticsEvents,
+    )
+
+    internal data class CardholderNameModel(val embossName: String?, val expectedCardholderName: String?)
 
     private companion object {
         val ERROR = object : UniversalError {

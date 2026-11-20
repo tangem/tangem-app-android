@@ -8,7 +8,5 @@ object DemoHelper {
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
 
-    fun isTestDemoCard(scanResponse: ScanResponse): Boolean = config.isTestDemoCardId(scanResponse.card.cardId)
-
     fun isDemoCardId(cardId: String): Boolean = config.isDemoCardId(cardId)
 }

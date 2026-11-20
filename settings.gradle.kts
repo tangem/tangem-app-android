@@ -301,6 +301,8 @@ include(":spend:push-provisioning:no-op")
 // endregion Spend modules
 
 // region Store modules
+include(":store:features:card-settings:api")
+include(":store:features:card-settings:impl")
 include(":store:datasource")
 // endregion Store modules
 
@@ -363,7 +365,10 @@ include(":features:earn:api")
 include(":features:earn:flow:api")
 include(":features:earn:flow:impl")
 include(":features:earn:impl")
+include(":features:earn:lending:impl")
 include(":features:earn:product:api")
+include(":features:earn:staking:impl")
+include(":features:earn:yield:impl")
 
 include(":features:force-update:api")
 include(":features:force-update:impl")
@@ -471,9 +476,6 @@ include(":features:promo-banners:impl")
 include(":features:marketing:api")
 include(":features:marketing:impl")
 
-include(":features:payment:api")
-include(":features:payment:impl")
-
 /* Joint Accounts */
 include(":features:joint-account:api")
 include(":features:joint-account:impl")
@@ -497,6 +499,9 @@ include(":features:collectibles:impl")
 
 include(":features:mcp:api")
 include(":features:mcp:impl")
+
+include(":features:all-services:api")
+include(":features:all-services:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -534,10 +539,8 @@ include(":domain:push-notification-preferences")
 include(":domain:transaction")
 include(":domain:transaction:models")
 include(":domain:appsflyer")
-include(":domain:visa")
-include(":domain:visa:models")
-include(":domain:payment")
-include(":domain:payment:models")
+include(":domain:tangempay")
+include(":domain:tangempay:models")
 include(":domain:money-account")
 include(":domain:money-account:models")
 include(":domain:onboarding")
@@ -609,8 +612,7 @@ include(":data:txhistory")
 include(":data:wallets")
 include(":data:transaction")
 include(":data:appsflyer")
-include(":data:visa")
-include(":data:payment")
+include(":data:tangempay")
 include(":data:money-account")
 include(":data:stories")
 include(":data:marketing")

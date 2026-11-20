@@ -1,7 +1,8 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import org.junit.jupiter.api.Test
 
@@ -24,6 +25,18 @@ internal class BankAccountSuggestionsTest {
     )
 
     private val accounts = listOf(basit, arasaka, saburo)
+
+    @Test
+    fun `GIVEN CLABE recipient matching the prefix WHEN match THEN only US accounts suggested`() {
+        // Arrange
+        val clabe = bankAccount(id = "acc-4", accountNumber = "4830100000000000001", rail = BankRail.SPEI)
+
+        // Act
+        val actual = BankAccountSuggestions.match(accounts = accounts + clabe, prefix = "4830")
+
+        // Assert
+        assertThat(actual).containsExactly(arasaka, basit).inOrder()
+    }
 
     @Test
     fun `GIVEN saved accounts WHEN prefix matches two THEN both returned sorted by name`() {

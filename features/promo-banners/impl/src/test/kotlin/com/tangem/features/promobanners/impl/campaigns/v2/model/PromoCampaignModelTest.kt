@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -13,12 +14,15 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -38,6 +42,7 @@ import com.tangem.domain.promo.usecase.RegisterPromoCampaignUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.PayoutToken
 import com.tangem.features.promobanners.impl.campaigns.model.PredefinedTokenResolver
@@ -47,6 +52,7 @@ import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaig
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -59,10 +65,12 @@ import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import java.math.BigDecimal
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -84,6 +92,9 @@ internal class PromoCampaignModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val walletFeatureToggles: WalletFeatureToggles = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isBalanceHidden = MutableStateFlow(false)
 
     private val mainWallet = MockUserWalletFactory.create()
     private val linkedWallet = MockUserWalletFactory.create().copy(walletId = UserWalletId("0b"), name = "Linked")
@@ -109,7 +120,12 @@ internal class PromoCampaignModelTest {
             sendFeedbackEmailUseCase,
             messageSender,
             analyticsEventHandler,
+            walletFeatureToggles,
+            getBalanceHidingSettingsUseCase,
         )
+        isBalanceHidden.value = false
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
+        every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns false
         val bridge = mockk<ChooseTokenBridge>(relaxed = true) {
             every { onCurrencyChosen } returns this@PromoCampaignModelTest.onCurrencyChosen
             every { onClose } returns this@PromoCampaignModelTest.onClose
@@ -168,9 +184,88 @@ internal class PromoCampaignModelTest {
         val state = model.uiState.value
         assertThat(state.tokenSelector?.selectedToken).isNotNull()
         assertThat(state.tokenSelector?.selectedAccount).isNull()
+        assertThat(state.tokenSelector?.selectedTokenRow).isNull()
         assertThat(state.footer.terms).isNotNull()
         assertThat(state.footer.buttonText).isEqualTo(stringReference("Enroll"))
         verify(exactly = 1) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN redesigned token rows enabled WHEN token chosen THEN selector shows the DS3 token row`() = runTest {
+        // Arrange
+        every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns true
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+        model.uiState.value.tokenSelector?.onClick?.invoke()
+        val result = chooseTokenResult()
+
+        // Act
+        onCurrencyChosen.send(result)
+        advanceUntilIdle()
+
+        // Assert
+        val row = model.uiState.value.tokenSelector?.selectedTokenRow
+        assertThat(row).isNotNull()
+        assertThat(row?.id).isEqualTo(result.currency.currency.id.value)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN redesigned token rows enabled AND euro app currency WHEN token chosen THEN row formatted in euro`() =
+        runTest {
+            // Arrange
+            every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns true
+            every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(euro)
+            val model = createModel(isPayoutNeeded = true)
+            advanceUntilIdle()
+            model.uiState.value.tokenSelector?.onClick?.invoke()
+            val result = chooseTokenResult(value = loadedValue())
+
+            // Act
+            onCurrencyChosen.send(result)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.tokenSelector?.selectedTokenRow).isEqualTo(
+                TokenRowStateConverter(euro).convert(
+                    currencyStatus = result.currency,
+                    onClick = null,
+                    subtitle = resourceReference(
+                        R.string.domain_receive_assets_onboarding_network_name,
+                        wrappedList(result.currency.currency.network.name),
+                    ),
+                ),
+            )
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN balance hidden WHEN model created THEN token selector hides balance`() = runTest {
+        // Arrange
+        isBalanceHidden.value = true
+
+        // Act
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.tokenSelector?.isBalanceHidden).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance shown WHEN balance hidden THEN token selector hides balance`() = runTest {
+        // Arrange
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+
+        // Act
+        isBalanceHidden.value = true
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.tokenSelector?.isBalanceHidden).isTrue()
         model.onDestroy()
     }
 
@@ -616,19 +711,34 @@ internal class PromoCampaignModelTest {
     private fun chooseTokenResult(
         wallet: UserWallet = mainWallet,
         address: String? = "0xUser",
+        value: CryptoCurrencyStatus.Value = CryptoCurrencyStatus.Unreachable(
+            priceChange = null,
+            fiatRate = null,
+            networkAddress = address?.let {
+                NetworkAddress.Single(NetworkAddress.Address(value = it, type = NetworkAddress.Address.Type.Primary))
+            },
+        ),
     ): ChooseTokenResult {
         val status = CryptoCurrencyStatus(
             currency = cryptoCurrencyFactory.createToken(blockchain = Blockchain.Ethereum, contractAddress = "0xToken"),
-            value = CryptoCurrencyStatus.Unreachable(
-                priceChange = null,
-                fiatRate = null,
-                networkAddress = address?.let {
-                    NetworkAddress.Single(NetworkAddress.Address(value = it, type = NetworkAddress.Address.Type.Primary))
-                },
-            ),
+            value = value,
         )
         return ChooseTokenResult(currency = status, account = mockk(relaxed = true), wallet = wallet)
     }
+
+    private fun loadedValue() = CryptoCurrencyStatus.Loaded(
+        amount = BigDecimal.ONE,
+        fiatAmount = BigDecimal.TEN,
+        fiatRate = BigDecimal.TEN,
+        priceChange = BigDecimal.ZERO,
+        networkAddress = NetworkAddress.Single(
+            NetworkAddress.Address(value = "0xUser", type = NetworkAddress.Address.Type.Primary),
+        ),
+        yieldSupplyStatus = null,
+        hasCurrentNetworkTransactions = false,
+        pendingTransactions = emptySet(),
+        sources = CryptoCurrencyStatus.Sources(),
+    )
 
     private fun TestScope.createModel(
         isPayoutNeeded: Boolean,
@@ -655,5 +765,12 @@ internal class PromoCampaignModelTest {
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         messageSender = messageSender,
         analyticsEventHandler = analyticsEventHandler,
+        walletFeatureToggles = walletFeatureToggles,
+        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+        getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
     )
+
+    private companion object {
+        val euro = AppCurrency(code = "EUR", name = "Euro", symbol = "€")
+    }
 }

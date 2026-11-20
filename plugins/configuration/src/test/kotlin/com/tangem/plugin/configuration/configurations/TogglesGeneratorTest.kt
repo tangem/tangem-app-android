@@ -268,6 +268,103 @@ class TogglesGeneratorTest {
         assertThat(code).doesNotContain(";\n")
     }
 
+    @Test
+    fun `GIVEN several config files WHEN generate THEN one enum holds entries of all files in order`() {
+        // Arrange
+        val coreFile = writeStreamConfig("core", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
+        val storeFile = writeStreamConfig("store", """[{ "name": "FEATURE_B", "version": "undefined" }]""")
+
+        // Act
+        TogglesGenerator.generate(listOf(coreFile, storeFile), outputDir, "FeatureToggles")
+
+        // Assert
+        val code = File(outputDir, "com/tangem/core/configtoggle/FeatureToggles.kt").readText()
+        assertThat(code).contains(""""FEATURE_A", "1.0"""")
+        assertThat(code).contains(""""FEATURE_B", "undefined"""")
+        assertThat(code.indexOf("FEATURE_A(")).isLessThan(code.indexOf("FEATURE_B("))
+        assertThat(code).contains(" * core/config-toggles/feature_toggles.json\n * store/config-toggles/feature_toggles.json\n")
+    }
+
+    @Test
+    fun `GIVEN streams WHEN generate THEN every entry holds its stream`() {
+        // Arrange
+        val storeFile = writeStreamConfig("store", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
+        val growFile = writeStreamConfig("grow", """[{ "name": "FEATURE_B", "version": "undefined" }]""")
+
+        // Act
+        TogglesGenerator.generate(listOf(storeFile, growFile), outputDir, "FeatureToggles", listOf("store", "grow"))
+
+        // Assert
+        val code = File(outputDir, "com/tangem/core/configtoggle/FeatureToggles.kt").readText()
+        assertThat(code).contains("val stream: String")
+        assertThat(code).contains("""FEATURE_A("FEATURE_A", "1.0", "store")""")
+        assertThat(code).contains("""FEATURE_B("FEATURE_B", "undefined", "grow")""")
+    }
+
+    @Test
+    fun `GIVEN no streams WHEN generate THEN enum has no stream property`() {
+        // Arrange
+        val json = """[{ "name": "FEATURE_A", "version": "1.0" }]"""
+
+        // Act
+        val code = generateAndReadOutput(json, "TestToggles")
+
+        // Assert
+        assertThat(code).doesNotContain("stream")
+    }
+
+    @Test
+    fun `GIVEN streams of another size WHEN generate THEN fails`() {
+        // Arrange
+        val storeFile = writeStreamConfig("store", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
+
+        // Act
+        val error = runCatching {
+            TogglesGenerator.generate(listOf(storeFile), outputDir, "FeatureToggles", listOf("store", "grow"))
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun `GIVEN same toggle in two config files WHEN generate THEN fails naming both files`() {
+        // Arrange
+        val coreFile = writeStreamConfig("core", """[{ "name": "FEATURE_A", "version": "1.0" }]""")
+        val growFile = writeStreamConfig("grow", """[{ "name": "FEATURE_A", "version": "undefined" }]""")
+
+        // Act
+        val error = runCatching {
+            TogglesGenerator.generate(listOf(coreFile, growFile), outputDir, "FeatureToggles")
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(error).hasMessageThat().isEqualTo(
+            "Duplicate entries in FeatureToggles: FEATURE_A in " +
+                "core/config-toggles/feature_toggles.json, grow/config-toggles/feature_toggles.json",
+        )
+    }
+
+    @Test
+    fun `GIVEN names mapping to same enum entry WHEN generate THEN fails`() {
+        // Arrange
+        val json = """[{ "name": "NEXA/test", "version": "undefined" }, { "name": "NEXA_TEST", "version": "1.0" }]"""
+
+        // Act
+        val error = runCatching { generateAndReadOutput(json, "Toggles") }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    private fun writeStreamConfig(stream: String, json: String): File {
+        return File(tempDir, "$stream/config-toggles/feature_toggles.json").apply {
+            parentFile.mkdirs()
+            writeText(json)
+        }
+    }
+
     private fun generateAndReadOutput(json: String, fileName: String): String {
         val inputFile = File(tempDir, "config.json").apply {
             writeText(json)

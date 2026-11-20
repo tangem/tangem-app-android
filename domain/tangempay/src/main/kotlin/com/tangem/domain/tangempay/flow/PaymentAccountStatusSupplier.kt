@@ -1,0 +1,17 @@
+package com.tangem.domain.tangempay.flow
+
+import com.tangem.domain.core.flow.FlowCachingSupplier
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
+
+open class PaymentAccountStatusSupplier(
+    override val factory: PaymentAccountStatusProducer.Factory,
+    override val keyCreator: (PaymentAccountStatusProducer.Params) -> String,
+) : FlowCachingSupplier<PaymentAccountStatusProducer, PaymentAccountStatusProducer.Params, AccountStatus.Payment>() {
+
+    operator fun invoke(userWalletId: UserWalletId): Flow<AccountStatus.Payment> {
+        val params = PaymentAccountStatusProducer.Params(userWalletId)
+        return this.invoke(params)
+    }
+}

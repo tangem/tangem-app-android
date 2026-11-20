@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -20,6 +21,9 @@ internal object BuyAmountCalculator {
         }
         return amount.setScale(PolymarketConst.COLLATERAL_DISPLAY_DECIMALS, RoundingMode.DOWN)
     }
+
+    fun feeRate(quote: QuoteUM): BigDecimal =
+        (quote as? QuoteUM.Content)?.signable?.quote?.let(::feeRate) ?: BigDecimal.ZERO
 
     fun feeRate(quote: PredictionOrderQuote): BigDecimal? = quote.notional.takeIf { it.signum() > 0 }
         ?.let { notional -> quote.fees.total.divide(notional, MathContext.DECIMAL64) }

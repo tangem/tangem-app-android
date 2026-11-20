@@ -8,7 +8,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.getWireMockRequestCountByQueryParam
-import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.tangempay.TangemPayEligibilityManager
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMainScreenTopBar

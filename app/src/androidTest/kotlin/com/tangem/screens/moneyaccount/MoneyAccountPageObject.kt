@@ -87,6 +87,10 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         hasText(text = text, substring = true)
     }
 
+    fun clickMainRowWithText(text: String) {
+        mainRowWithText(text).performSemanticsAction(SemanticsActions.OnClick)
+    }
+
     val mainRowCacheIcon: KNode = child {
         hasTestTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON)
         useUnmergedTree = true

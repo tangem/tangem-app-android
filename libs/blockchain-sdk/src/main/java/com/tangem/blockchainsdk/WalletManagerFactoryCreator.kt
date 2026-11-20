@@ -47,6 +47,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isMonadEnabled = true,
                 isYieldModuleV3Enabled = featureToggleValues.isYieldModuleV3Enabled,
                 isSolanaCoreNftEnabled = featureToggleValues.isSolanaCoreNftEnabled,
+                isYieldBalanceSeparated = featureToggleValues.isYieldBalanceSeparated,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
@@ -57,5 +58,6 @@ internal class WalletManagerFactoryCreator @Inject constructor(
         val isYieldModeSwapEnabled: Boolean,
         val isYieldModuleV3Enabled: Boolean,
         val isSolanaCoreNftEnabled: Boolean,
+        val isYieldBalanceSeparated: Boolean,
     )
 }

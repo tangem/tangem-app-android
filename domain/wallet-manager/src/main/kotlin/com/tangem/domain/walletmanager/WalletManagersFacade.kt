@@ -315,25 +315,30 @@ interface WalletManagersFacade {
 
     /**
      * Signs a provider-built Solana transaction for the gasless [feePayer] (account index 0), without
-     * broadcasting. Returns `null` if the wallet manager is unavailable or is not Solana.
+     * broadcasting. With [sponsorsRent] the fee payer also pays the rent of the wallet's own new token accounts.
+     * Returns `null` if the wallet manager is unavailable or is not Solana.
      */
+    @Suppress("LongParameterList")
     suspend fun signSolanaGaslessTransaction(
         userWalletId: UserWalletId,
         network: Network,
         transactionData: TransactionData,
         feePayer: String,
         signer: TransactionSigner,
+        sponsorsRent: Boolean,
     ): Result<SolanaGaslessSignedTransaction>?
 
     /**
-     * Simulates a provider-built Solana transaction as if [feePayer] paid for it, without signing. Returns `null` if
-     * the wallet manager is unavailable or is not Solana.
+     * Simulates a provider-built Solana transaction as if [feePayer] paid for it, without signing. With [sponsorsRent]
+     * the fee payer also pays the rent of the wallet's own new token accounts. Returns `null` if the wallet manager is
+     * unavailable or is not Solana.
      */
     suspend fun simulateSolanaGaslessTransaction(
         userWalletId: UserWalletId,
         network: Network,
         transactionData: TransactionData,
         feePayer: String,
+        sponsorsRent: Boolean,
     ): Result<SolanaGaslessSimulation>?
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean

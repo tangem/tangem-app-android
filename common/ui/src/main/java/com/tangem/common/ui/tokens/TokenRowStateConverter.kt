@@ -5,6 +5,7 @@ import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.R
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -12,7 +13,11 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.quote.fold
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.utils.StringsSigns
 
 class TokenRowStateConverter(private val appCurrency: AppCurrency) {
@@ -24,6 +29,39 @@ class TokenRowStateConverter(private val appCurrency: AppCurrency) {
         onClick: (() -> Unit)?,
         badge: TangemTokenRow.Badge? = null,
         messageBubble: TangemTokenRow.MessageBubble? = null,
+        subtitle: TextReference? = null,
+    ): TangemTokenRow.State {
+        val state = convertDefault(
+            currencyStatus = currencyStatus,
+            onClick = onClick,
+            badge = badge,
+            messageBubble = messageBubble,
+        )
+        return if (subtitle != null && state is TangemTokenRow.State.Content) state.withSubtitle(subtitle) else state
+    }
+
+    private fun TangemTokenRow.State.Content.withSubtitle(subtitle: TextReference) = TangemTokenRow.State.Network(
+        id = id,
+        icon = icon,
+        title = title,
+        network = subtitle,
+        badge = badge,
+        hasPending = hasPending,
+        fiatBalance = fiatBalance,
+        cryptoBalance = cryptoBalance,
+        shouldShowContractWarning = shouldShowContractWarning,
+        shouldShowUpdateWarning = shouldShowUpdateWarning,
+        isBalanceFlickering = isBalanceFlickering,
+        messageBubble = messageBubble,
+        onClick = onClick,
+        onLongClick = onLongClick,
+    )
+
+    private fun convertDefault(
+        currencyStatus: CryptoCurrencyStatus,
+        onClick: (() -> Unit)?,
+        badge: TangemTokenRow.Badge?,
+        messageBubble: TangemTokenRow.MessageBubble?,
     ): TangemTokenRow.State {
         val id = currencyStatus.currency.id.value
         val icon = currencyToIconStateConverter.convert(currencyStatus).toTokenIconState()
@@ -58,7 +96,7 @@ class TokenRowStateConverter(private val appCurrency: AppCurrency) {
             is CryptoCurrencyStatus.NoAccount,
             -> {
                 val isFlickering = value.sources.total == StatusSource.CACHE
-                val yieldSupply = value.yieldSupplyStatus
+                val yieldSupply = value.yieldSupply
                 TangemTokenRow.State.Content(
                     id = id,
                     icon = icon,
@@ -88,5 +126,23 @@ class TokenRowStateConverter(private val appCurrency: AppCurrency) {
                 )
             }
         }
+    }
+
+    fun convert(currency: CryptoCurrency, quoteStatus: QuoteStatus, onClick: (() -> Unit)?): TangemTokenRow.State {
+        val quote = quoteStatus.fold(onData = { this }, onEmpty = { null })
+        return TangemTokenRow.State.Content(
+            id = currency.id.value,
+            icon = currencyToIconStateConverter.convert(currency).toTokenIconState(),
+            title = stringReference(currency.name),
+            quote = quote?.let { data ->
+                stringReference(
+                    data.fiatRate.format {
+                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                    },
+                )
+            },
+            priceChange = quote?.priceChange?.toPriceChangeState(),
+            onClick = onClick,
+        )
     }
 }

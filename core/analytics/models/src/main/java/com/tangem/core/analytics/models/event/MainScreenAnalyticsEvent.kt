@@ -160,9 +160,4 @@ sealed class MainScreenAnalyticsEvent(
         }
     }
     // endregion
-
-    companion object {
-        const val VISA_TYPE = "Visa"
-        const val WALLET_TYPE = "Wallet"
-    }
 }

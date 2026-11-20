@@ -35,7 +35,6 @@ internal data class PlacePredictionUM(
     val submit: SubmitUM,
     val placeAction: PlaceActionUM,
     val isAwaitingFunds: Boolean = false,
-    val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
     val placeButtonStyle: PlaceButtonStyleUM = PlaceButtonStyleUM.HOLD,
     val holdResetKey: Int = 0,
@@ -117,6 +116,9 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
 
 internal val PlacePredictionUM.isReadyToPlace: Boolean
     get() = placeAction == PlaceActionUM.Ready
+
+internal fun PlacePredictionUM.isTradable(): Boolean =
+    isMarketAcceptingOrders && PredictionNotificationUM.MarketClosed !in notifications
 
 internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
     (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }

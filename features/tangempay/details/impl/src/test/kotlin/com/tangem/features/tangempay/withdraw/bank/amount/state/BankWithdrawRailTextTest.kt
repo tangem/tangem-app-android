@@ -6,8 +6,9 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import org.junit.jupiter.api.Test
@@ -80,15 +81,42 @@ internal class BankWithdrawRailTextTest {
 
     @ParameterizedTest
     @MethodSource("provideTotalFeeModels")
-    fun `GIVEN rail and network fees WHEN totalFeeText THEN their sum without needless decimals`(
+    fun `GIVEN rail and network fees WHEN totalFeeText THEN fixed parts summed and a percentage kept apart`(
         model: TotalFeeModel,
     ) {
+        // Arrange
+        val destination = offrampDestination(
+            fee = model.railFee,
+            calculationType = model.calculationType,
+            fixedFeeAmount = model.fixedFeeAmount,
+        )
+
         // Act
-        val actual = offrampDestination(fee = model.railFee).totalFeeText(model.networkFee)
+        val actual = destination.totalFeeText(model.networkFee)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideRailTotalFeeModels")
+    fun `GIVEN rail WHEN totalFee THEN a route fee goes on top and a SPEI fee comes out of the amount`(
+        model: RailTotalFeeModel,
+    ) {
+        // Act
+        val actual = offrampDestination(rail = model.rail, fee = BigDecimal("1.00")).totalFee(BigDecimal("0.03"))
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideRailTotalFeeModels() = listOf(
+        RailTotalFeeModel(rail = BankRail.ACH, expected = BigDecimal("1.03")),
+        RailTotalFeeModel(rail = BankRail.WIRE, expected = BigDecimal("1.03")),
+        RailTotalFeeModel(rail = BankRail.SPEI, expected = BigDecimal("0.03")),
+    )
+
+    internal data class RailTotalFeeModel(val rail: BankRail, val expected: BigDecimal)
 
     private fun provideBuiltInLabelModels() = listOf(
         BuiltInLabelModel(rail = BankRail.ACH, expected = resourceReference(R.string.tangempay_bank_transfer_fee_ach)),
@@ -105,7 +133,39 @@ internal class BankWithdrawRailTextTest {
         TotalFeeModel(railFee = BigDecimal("11.00"), networkFee = BigDecimal.ZERO, expected = "$11"),
         TotalFeeModel(railFee = BigDecimal("1.00"), networkFee = BigDecimal("0.03"), expected = "$1.03"),
         TotalFeeModel(railFee = BigDecimal("1.50"), networkFee = BigDecimal("0.50"), expected = "$2"),
+        TotalFeeModel(
+            railFee = BigDecimal("1"),
+            networkFee = BigDecimal.ZERO,
+            expected = "$0.50 + 1%",
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+        ),
+        TotalFeeModel(
+            railFee = BigDecimal("1"),
+            networkFee = BigDecimal.ZERO,
+            expected = "1%",
+            calculationType = FeeCalculationType.PERCENTAGE,
+        ),
+        TotalFeeModel(
+            railFee = BigDecimal("1"),
+            networkFee = BigDecimal("0.03"),
+            expected = "$0.53 + 1%",
+            calculationType = FeeCalculationType.PERCENTAGE,
+            fixedFeeAmount = BigDecimal("0.50"),
+        ),
+        TotalFeeModel(
+            railFee = BigDecimal("1"),
+            networkFee = BigDecimal("0.03"),
+            expected = "$0.03 + 1%",
+            calculationType = FeeCalculationType.PERCENTAGE,
+        ),
     )
 
-    internal data class TotalFeeModel(val railFee: BigDecimal, val networkFee: BigDecimal, val expected: String)
+    internal data class TotalFeeModel(
+        val railFee: BigDecimal,
+        val networkFee: BigDecimal,
+        val expected: String,
+        val calculationType: FeeCalculationType = FeeCalculationType.FIXED,
+        val fixedFeeAmount: BigDecimal? = null,
+    )
 }

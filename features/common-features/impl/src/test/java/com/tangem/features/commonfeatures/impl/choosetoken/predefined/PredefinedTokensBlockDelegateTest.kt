@@ -14,6 +14,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
 import com.tangem.features.commonfeatures.impl.choosetoken.AddToPortfolioRoute
 import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.PredefinedTokenItemUM
 import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.PredefinedTokensUM
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.getEmittedValues
 import io.mockk.CapturingSlot
@@ -41,6 +42,9 @@ internal class PredefinedTokensBlockDelegateTest {
     private val addToPortfolioManager: AddToPortfolioManager = mockk(relaxUnitFun = true)
     private val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute> = mockk(relaxUnitFun = true)
     private val account: AccountStatus = mockk()
+    private val walletFeatureToggles: WalletFeatureToggles = mockk {
+        every { isRedesignedTokenRowsEnabled } returns false
+    }
 
     @BeforeEach
     fun setup() {
@@ -278,6 +282,7 @@ internal class PredefinedTokensBlockDelegateTest {
         modelScope = CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
         tokenFilter = tokenFilter,
         portfolioTokenKeys = portfolioTokenKeys,
+        walletFeatureToggles = walletFeatureToggles,
     )
 
     private fun currency(rawId: String, networkId: String): CryptoCurrencyStatus =

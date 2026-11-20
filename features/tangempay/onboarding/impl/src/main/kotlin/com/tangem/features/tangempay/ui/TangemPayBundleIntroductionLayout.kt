@@ -161,7 +161,6 @@ private fun TangemPayBundleIntroductionLayoutPreview() {
         TangemPayBundleIntroductionLayout(
             modifier = Modifier.fillMaxSize(),
             state = TangemPayHotWalletOnboardingUM(
-                isPayBundleIntroductionEnabled = true,
                 isUnifiedOnboarding = false,
                 isLoading = false,
                 onGetCardClick = {},

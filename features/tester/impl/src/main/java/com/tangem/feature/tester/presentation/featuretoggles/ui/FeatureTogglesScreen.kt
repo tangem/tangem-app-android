@@ -3,10 +3,12 @@ package com.tangem.feature.tester.presentation.featuretoggles.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.components.chip.Chip
+import com.tangem.core.ui.components.chip.entity.ChipUM
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
@@ -59,14 +63,18 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
             stickyHeader {
                 Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
                     TopBarWithRefresh(state = state.topBar)
+                    SetupNotification(
+                        isCustomSetup = state.topBar.refreshButton.isVisible,
+                        appVersion = state.appVersion,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
                     TangemSearch(
                         state = state.searchBar,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     )
+                    StreamFilters(filters = state.streamFilters)
                 }
             }
-
-            customSetup(state.topBar, state.appVersion)
 
             emptySearch(state.featureToggleGroups, state.searchBar)
 
@@ -80,31 +88,24 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
     }
 }
 
-private fun LazyListScope.customSetup(topBar: TopBarWithRefreshUM, appVersion: String) {
-    if (topBar.refreshButton.isVisible) {
-        item(key = "warning_notification", contentType = "warning_notification") {
-            CustomSetupNotification(
-                subtitle = resourceReference(
-                    id = R.string.feature_toggles_custom_setup_warning_description,
-                    wrappedList(appVersion),
-                ),
-                modifier = Modifier
-                    .animateItem()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
+@Composable
+private fun SetupNotification(isCustomSetup: Boolean, appVersion: String, modifier: Modifier = Modifier) {
+    if (isCustomSetup) {
+        CustomSetupNotification(
+            subtitle = resourceReference(
+                id = R.string.feature_toggles_custom_setup_warning_description,
+                wrappedList(appVersion),
+            ),
+            modifier = modifier,
+        )
     } else {
-        item(key = "warning_notification", contentType = "warning_notification") {
-            InitialSetupNotification(
-                subtitle = resourceReference(
-                    id = R.string.feature_toggles_initial_setup_warning_description,
-                    wrappedList(appVersion),
-                ),
-                modifier = Modifier
-                    .animateItem()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
+        InitialSetupNotification(
+            subtitle = resourceReference(
+                id = R.string.feature_toggles_initial_setup_warning_description,
+                wrappedList(appVersion),
+            ),
+            modifier = modifier,
+        )
     }
 }
 
@@ -119,6 +120,23 @@ private fun LazyListScope.emptySearch(featureToggleGroups: List<FeatureToggleGro
                 color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
             )
+        }
+    }
+}
+
+@Composable
+private fun StreamFilters(filters: ImmutableList<ChipUM>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        filters.forEach { filter ->
+            key(filter.id) {
+                Chip(state = filter)
+            }
         }
     }
 }
@@ -248,6 +266,12 @@ private fun PreviewFeatureTogglesScreen() {
                     onQueryChange = {},
                     isActive = false,
                     onActiveChange = {},
+                ),
+                streamFilters = persistentListOf(
+                    ChipUM(id = 0, text = stringReference(value = "All"), isSelected = true, onClick = {}),
+                    ChipUM(id = 1, text = stringReference(value = "Store"), onClick = {}),
+                    ChipUM(id = 2, text = stringReference(value = "Grow"), onClick = {}),
+                    ChipUM(id = 3, text = stringReference(value = "Spend"), onClick = {}),
                 ),
                 featureToggleGroups = previewFeatureToggleGroups(),
                 onToggleValueChange = { _, _ -> isCustomSetup = true },

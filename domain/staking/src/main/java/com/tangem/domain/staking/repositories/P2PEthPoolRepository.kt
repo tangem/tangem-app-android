@@ -18,8 +18,11 @@ interface P2PEthPoolRepository {
      * Fetch and store available staking vaults
      *
      * @param network P2PEthPool network (MAINNET or TESTNET)
+     * @return `Left` when the request of the vaults failed; an empty list is stored in that case
      */
-    suspend fun fetchVaults(network: P2PEthPoolNetwork = P2PEthPoolStakingConfig.activeNetwork)
+    suspend fun fetchVaults(
+        network: P2PEthPoolNetwork = P2PEthPoolStakingConfig.activeNetwork,
+    ): Either<StakingError, Unit>
 
     /**
      * Get list of available staking vaults
@@ -139,8 +142,10 @@ interface P2PEthPoolRepository {
 
     /**
      * Fetch and store vault limits from Tangem API /v1/coins/settings
+     *
+     * @return `Left` when the limits could not be loaded; the stored limits stay as they were
      */
-    suspend fun fetchVaultLimits()
+    suspend fun fetchVaultLimits(): Either<StakingError, Unit>
 
     /**
      * Get flow of cached vault limits.

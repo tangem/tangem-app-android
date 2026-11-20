@@ -11,9 +11,9 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
-import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
+import com.tangem.domain.tangempay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.tangempay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

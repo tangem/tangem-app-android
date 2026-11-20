@@ -24,6 +24,7 @@ internal data class MoneyAccountDetailsUM(
     val isAddFundsEnabled: Boolean,
     val isSendEnabled: Boolean,
     val txHistoryCurrency: CryptoCurrency.Token?,
+    val yieldSupplyCurrency: CryptoCurrency.Token?,
     val pullToRefreshConfig: PullToRefreshConfig,
     val onTxHistoryReloadClick: () -> Unit,
 )

@@ -5,7 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
@@ -13,12 +12,16 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.BankCredentials
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.DailyDepositLimitUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.isEmpty
@@ -30,10 +33,11 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.onrampFee
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import com.tangem.test.mock.pay.MockBankCredentials
+import com.tangem.test.mock.tangempay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList
@@ -53,16 +57,16 @@ import java.math.BigDecimal
 import java.util.Locale
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayBankTransferOnrampDetailsModelTest {
+internal class TangemPayBankTransferOnrampDetailsModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val product = TangemPayProduct.PAYMENT_ACCOUNT
 
-    private val router: Router = mockk(relaxed = true)
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
-    private val analytics: TangemPayBankTransferOnrampDetailsComponent.Analytics = mockk(relaxed = true)
+    private val detailsAnalytics: TangemPayBankTransferOnrampDetailsComponent.Analytics = mockk(relaxed = true)
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     private val defaultLocale = Locale.getDefault()
 
@@ -70,7 +74,8 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     fun resetMocks() {
         Locale.setDefault(Locale.US)
         clearMocks(router, getOnrampFeesUseCase, clipboardManager, shareManager)
-        clearMocks(analytics)
+        clearMocks(detailsAnalytics, moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
         coEvery { getOnrampFeesUseCase(userWalletId, product) } returns emptyList<AccountFee>().right()
     }
 
@@ -95,7 +100,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 "Bank name" to "SSB Bank",
                 "Bank address" to "8700 Perry Highway",
             ).inOrder()
-            verify(exactly = 1) { analytics.onDetailsShown() }
+            verify(exactly = 1) { detailsAnalytics.onDetailsShown() }
         }
 
     @Test
@@ -151,7 +156,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN onramp fees returned WHEN model created THEN fixed fee shown as amount and percentage as percent`() =
+    fun `GIVEN onramp fees returned WHEN model created THEN fixed fee as amount and percentage with its fixed part`() =
         runTest {
             // Arrange
             coEvery { getOnrampFeesUseCase(userWalletId, product) } returns listOf(
@@ -159,9 +164,17 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 onrampFee(
                     type = "SPEI_ONRAMP",
                     name = "SPEI",
-                    calculationType = AccountFee.CalculationType.PERCENTAGE,
+                    calculationType = FeeCalculationType.PERCENTAGE,
                     amount = BigDecimal("1"),
                     currency = "MXN",
+                ),
+                onrampFee(
+                    type = "SPEI_OFFRAMP",
+                    name = "SPEI withdrawal",
+                    calculationType = FeeCalculationType.PERCENTAGE,
+                    amount = BigDecimal("1"),
+                    currency = "USD",
+                    fixedAmount = BigDecimal("0.50"),
                 ),
             ).right()
 
@@ -175,6 +188,11 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                     rows = persistentListOf(
                         TangemPayOnrampFeesUM.FeeRow(type = "ACH_ONRAMP", title = stringReference("ACH"), value = "$1"),
                         TangemPayOnrampFeesUM.FeeRow(type = "SPEI_ONRAMP", title = stringReference("SPEI"), value = "1%"),
+                        TangemPayOnrampFeesUM.FeeRow(
+                            type = "SPEI_OFFRAMP",
+                            title = stringReference("SPEI withdrawal"),
+                            value = "$0.50 + 1%",
+                        ),
                     ),
                 ),
             )
@@ -218,7 +236,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     fun `GIVEN fees request fails WHEN retry succeeds THEN fee rows shown`() = runTest {
         // Arrange
         coEvery { getOnrampFeesUseCase(userWalletId, product) } returnsMany listOf(
-            VisaApiError.Unspecified.left(),
+            TangemPayApiError.Unspecified.left(),
             listOf(onrampFee(amount = BigDecimal("1.00"))).right(),
         )
         val model = createModel()
@@ -238,11 +256,11 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     fun `GIVEN fees retry in flight WHEN retry clicked again THEN shimmer shown and fees requested once more`() =
         runTest {
             // Arrange
-            val pending = CompletableDeferred<Either<VisaApiError, List<AccountFee>>>()
+            val pending = CompletableDeferred<Either<TangemPayApiError, List<AccountFee>>>()
             var calls = 0
             coEvery { getOnrampFeesUseCase(userWalletId, product) } coAnswers {
                 calls++
-                if (calls == 1) VisaApiError.Unspecified.left() else pending.await()
+                if (calls == 1) TangemPayApiError.Unspecified.left() else pending.await()
             }
             val model = createModel()
             advanceUntilIdle()
@@ -272,7 +290,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = "123456", isSensitive = true) }
-        verify(exactly = 1) { analytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER) }
     }
 
     @Test
@@ -295,7 +313,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                     "Bank address: 8700 Perry Highway",
             )
         }
-        verify(exactly = 1) { analytics.onShareClicked() }
+        verify(exactly = 1) { detailsAnalytics.onShareClicked() }
     }
 
     @Test
@@ -344,6 +362,40 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 ),
             ),
         )
+        assertThat(state.minimumDeposit).isEqualTo(stringReference("$2"))
+        assertThat(state.dailyDepositLimit).isNull()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMinimumDepositModels")
+    fun `GIVEN route credentials WHEN shown THEN minimum deposit follows the amount limits and no daily limit`(
+        model: MinimumDepositModel,
+    ) = runTest {
+        // Act
+        val detailsModel = createModel(
+            bankCredentials = USD_ROUTE.copy(amountLimits = model.amountLimits),
+            feeSource = FeeSource.Route,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val state = detailsModel.uiState.value
+        assertThat(state.minimumDeposit).isEqualTo(model.expected)
+        assertThat(state.dailyDepositLimit).isNull()
+    }
+
+    @Test
+    fun `GIVEN MXN off and route credentials WHEN shown THEN the daily limit stays and no minimum deposit`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
+
+        // Act
+        val model = createModel(bankCredentials = USD_ROUTE, feeSource = FeeSource.Route)
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.minimumDeposit).isNull()
         assertThat(state.dailyDepositLimit).isEqualTo(
             DailyDepositLimitUM(
                 value = stringReference("$10,000"),
@@ -354,6 +406,19 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
             ),
         )
     }
+
+    @Test
+    fun `GIVEN catalogue fee source with amount limits WHEN shown THEN no minimum deposit and the daily limit stays`() =
+        runTest {
+            // Act
+            val model = createModel(bankCredentials = USD_ROUTE, feeSource = FeeSource.Catalogue(product))
+            advanceUntilIdle()
+
+            // Assert
+            val state = model.uiState.value
+            assertThat(state.minimumDeposit).isNull()
+            assertThat(state.dailyDepositLimit).isNotNull()
+        }
 
     @Test
     fun `GIVEN ACH route with a transfer message WHEN shown THEN no reference row or warning`() = runTest {
@@ -448,9 +513,8 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 notes = persistentListOf(CONVERSION_NOTICE, RATE_DISCLAIMER),
             ),
         )
-        assertThat(state.dailyDepositLimit).isEqualTo(
-            DailyDepositLimitUM(value = stringReference("$10,000"), hint = null),
-        )
+        assertThat(state.minimumDeposit).isEqualTo(stringReference("$2"))
+        assertThat(state.dailyDepositLimit).isNull()
     }
 
     @Test
@@ -509,7 +573,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = model.value, isSensitive = true) }
-        verify(exactly = 1) { analytics.onFieldCopied(model.field) }
+        verify(exactly = 1) { detailsAnalytics.onFieldCopied(model.field) }
     }
 
     private fun TestScope.createModelWithRails(
@@ -521,7 +585,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 userWalletId = userWalletId,
                 bankCredentials = rails,
                 feeSource = feeSource,
-                analytics = analytics,
+                analytics = detailsAnalytics,
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -529,6 +593,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
         getOnrampFeesUseCase = getOnrampFeesUseCase,
         clipboardManager = clipboardManager,
         shareManager = shareManager,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     private fun TangemTabItemUM.toTabState() = (this as TangemTabItemUM.Content).let { tab ->
@@ -554,7 +619,10 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
         ),
         RouteFeesModel(
             credentials = SPEI_CREDENTIALS.copy(
-                depositFee = BankCredentials.DepositFee(BigDecimal("15"), BankCredentials.DepositFee.Type.FLAT),
+                depositFee = BankCredentials.DepositFee(
+                    calculationType = FeeCalculationType.FIXED,
+                    amount = BigDecimal("15"),
+                ),
                 exchangeRate = null,
             ),
             expected = TangemPayOnrampFeesUM.Content(
@@ -611,23 +679,50 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
         val achRow = { value: String ->
             TangemPayOnrampFeesUM.FeeRow(type = "ACH", title = stringReference("ACH"), value = value)
         }
-        val flatFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.FLAT)
+        val fixedFee = BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.FIXED,
+            amount = BigDecimal("1.00"),
+        )
+        val percentageFee = BankCredentials.DepositFee(
+            calculationType = FeeCalculationType.PERCENTAGE,
+            amount = BigDecimal("1"),
+        )
         return listOf(
-            RouteFeeModel(rail = "ACH", depositFee = flatFee, expectedRows = persistentListOf(achRow("$1"))),
+            RouteFeeModel(rail = "ACH", depositFee = fixedFee, expectedRows = persistentListOf(achRow("$1"))),
+            RouteFeeModel(rail = "ACH", depositFee = percentageFee, expectedRows = persistentListOf(achRow("1%"))),
             RouteFeeModel(
                 rail = "ACH",
-                depositFee = BankCredentials.DepositFee(BigDecimal("1"), BankCredentials.DepositFee.Type.PERCENTAGE),
+                depositFee = percentageFee.copy(fixedAmount = BigDecimal("0.50"), currency = "USD"),
+                expectedRows = persistentListOf(achRow("$0.50 + 1%")),
+            ),
+            RouteFeeModel(
+                rail = "ACH",
+                depositFee = percentageFee.copy(fixedAmount = BigDecimal.ZERO),
                 expectedRows = persistentListOf(achRow("1%")),
             ),
             RouteFeeModel(
                 rail = "ACH",
-                depositFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.UNKNOWN),
-                expectedRows = persistentListOf(),
+                depositFee = fixedFee.copy(currency = "MXN"),
+                expectedRows = persistentListOf(achRow("MX$1")),
             ),
             RouteFeeModel(rail = "ACH", depositFee = null, expectedRows = persistentListOf()),
-            RouteFeeModel(rail = null, depositFee = flatFee, expectedRows = persistentListOf()),
+            RouteFeeModel(rail = null, depositFee = fixedFee, expectedRows = persistentListOf()),
         )
     }
+
+    private fun provideMinimumDepositModels() = listOf(
+        MinimumDepositModel(
+            amountLimits = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"),
+            expected = stringReference("$2"),
+        ),
+        MinimumDepositModel(
+            amountLimits = AmountLimits(min = BigDecimal("2.50"), max = BigDecimal("10000"), currency = "USD"),
+            expected = stringReference("$2.50"),
+        ),
+        MinimumDepositModel(amountLimits = null, expected = null),
+    )
+
+    data class MinimumDepositModel(val amountLimits: AmountLimits?, val expected: TextReference?)
 
     private fun provideTestModels() = listOf(
         HiddenLimitModel(depositLimit = null),
@@ -650,18 +745,25 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     private companion object {
         val SPEI_CREDENTIALS = MockBankCredentials.speiBankCredentials(transferMessage = "TNG7K2Q9")
         val USD_ROUTE = bankCredentials(
-            depositFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.FLAT),
+            depositFee = BankCredentials.DepositFee(
+                calculationType = FeeCalculationType.FIXED,
+                amount = BigDecimal("1.00"),
+            ),
             depositLimit = BankCredentials.DepositLimit(
                 amount = BigDecimal("10000"),
                 period = BankCredentials.DepositLimit.Period.DAY,
             ),
-        )
+        ).copy(amountLimits = AmountLimits(min = BigDecimal("2"), max = null, currency = "USD"))
         val CONVERSION_NOTICE = resourceReference(
             id = R.string.tangempay_bank_transfer_details_conversion_notice,
             formatArgs = wrappedList("MXN"),
         )
         val RATE_DISCLAIMER = resourceReference(R.string.tangempay_bank_transfer_details_rate_disclaimer)
-        val SPEI_FEE_ROW = TangemPayOnrampFeesUM.FeeRow(type = "SPEI", title = stringReference("SPEI"), value = "1%")
+        val SPEI_FEE_ROW = TangemPayOnrampFeesUM.FeeRow(
+            type = "SPEI",
+            title = stringReference("SPEI"),
+            value = "MX$10 + 1%",
+        )
         val RATE_ROW = TangemPayOnrampFeesUM.FeeRow(
             type = "EXCHANGE_RATE",
             title = resourceReference(R.string.tangempay_bank_transfer_details_exchange_rate),

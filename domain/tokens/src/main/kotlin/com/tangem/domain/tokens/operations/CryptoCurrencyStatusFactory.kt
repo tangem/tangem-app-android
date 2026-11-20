@@ -8,7 +8,9 @@ import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.utils.annotations.RemoveWithToggle
 import java.math.BigDecimal
 
 /**
@@ -33,12 +35,16 @@ object CryptoCurrencyStatusFactory {
      * @param maybeQuoteStatus An optional quote status containing price information.
      * @param contributions Extra balances collected generically at the seam; the only source of staking and
      * yield-supply balances.
+     * @param isYieldContributionEnabled leave [CryptoCurrencyStatus.Value.yieldSupplyStatus] empty: yield then
+     * reaches readers only as a [YieldSupplyContribution] in [contributions]
      */
     fun create(
         currency: CryptoCurrency,
         maybeNetworkStatus: Option<NetworkStatus>,
         maybeQuoteStatus: Option<QuoteStatus>,
         contributions: List<BalanceContribution>,
+        @RemoveWithToggle("TWI_1948_YIELD_CONTRIBUTION_ENABLED")
+        isYieldContributionEnabled: Boolean = false,
     ): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
@@ -47,6 +53,7 @@ object CryptoCurrencyStatusFactory {
                 maybeNetworkStatus = maybeNetworkStatus,
                 maybeQuoteStatus = maybeQuoteStatus,
                 contributions = contributions,
+                isYieldPositionsSourceEnabled = isYieldContributionEnabled,
             ),
         )
     }
@@ -56,6 +63,7 @@ object CryptoCurrencyStatusFactory {
         maybeNetworkStatus: Option<NetworkStatus>,
         maybeQuoteStatus: Option<QuoteStatus>,
         contributions: List<BalanceContribution>,
+        isYieldPositionsSourceEnabled: Boolean,
     ): CryptoCurrencyStatus.Value {
         val quoteStatus = maybeQuoteStatus.getOrNull()
 
@@ -68,6 +76,11 @@ object CryptoCurrencyStatusFactory {
                 status = status,
                 quoteStatus = quoteStatus,
                 contributions = contributions,
+                yieldSupplyStatus = if (isYieldPositionsSourceEnabled) {
+                    null
+                } else {
+                    status.getYieldSupplyStatus(currency.id)
+                },
             )
             null -> CryptoCurrencyStatus.Loading
         }
@@ -113,8 +126,9 @@ object CryptoCurrencyStatusFactory {
         status: NetworkStatus.Verified,
         quoteStatus: QuoteStatus?,
         contributions: List<BalanceContribution>,
+        yieldSupplyStatus: YieldSupplyStatus?,
     ): CryptoCurrencyStatus.Value {
-        val amount = when (val amount = status.amounts[currency.id]) {
+        val networkAmount = when (val amount = status.amounts[currency.id]) {
             is NetworkStatus.Amount.Loaded -> amount.value
             is NetworkStatus.Amount.NotFound -> {
                 return createNoAmount(quoteStatus = quoteStatus)
@@ -123,6 +137,7 @@ object CryptoCurrencyStatusFactory {
                 return CryptoCurrencyStatus.Loading
             }
         }
+        val amount = networkAmount.withSpendableContributions(contributions)
 
         if (currency is CryptoCurrency.Token && currency.isCustom) {
             return createCustom(
@@ -131,6 +146,7 @@ object CryptoCurrencyStatusFactory {
                 amount = amount,
                 quoteStatus = quoteStatus,
                 contributions = contributions,
+                yieldSupplyStatus = yieldSupplyStatus,
             )
         }
 
@@ -143,6 +159,7 @@ object CryptoCurrencyStatusFactory {
                     amount = amount,
                     quoteStatus = quoteStatus,
                     contributions = contributions,
+                    yieldSupplyStatus = yieldSupplyStatus,
                 )
             }
             is QuoteStatus.Data -> {
@@ -152,6 +169,7 @@ object CryptoCurrencyStatusFactory {
                     amount = amount,
                     quoteStatus = quoteValue,
                     contributions = contributions,
+                    yieldSupplyStatus = yieldSupplyStatus,
                 )
             }
             null -> CryptoCurrencyStatus.Loading
@@ -171,6 +189,7 @@ object CryptoCurrencyStatusFactory {
         amount: BigDecimal,
         quoteStatus: QuoteStatus?,
         contributions: List<BalanceContribution>,
+        yieldSupplyStatus: YieldSupplyStatus?,
     ): CryptoCurrencyStatus.Custom {
         return CryptoCurrencyStatus.Custom(
             amount = amount,
@@ -180,7 +199,7 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            yieldSupplyStatus = status.getYieldSupplyStatus(id),
+            yieldSupplyStatus = yieldSupplyStatus,
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
@@ -196,13 +215,14 @@ object CryptoCurrencyStatusFactory {
         amount: BigDecimal,
         quoteStatus: QuoteStatus?,
         contributions: List<BalanceContribution>,
+        yieldSupplyStatus: YieldSupplyStatus?,
     ): CryptoCurrencyStatus.NoQuote {
         return CryptoCurrencyStatus.NoQuote(
             amount = amount,
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            yieldSupplyStatus = status.getYieldSupplyStatus(id),
+            yieldSupplyStatus = yieldSupplyStatus,
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
@@ -218,6 +238,7 @@ object CryptoCurrencyStatusFactory {
         amount: BigDecimal,
         quoteStatus: QuoteStatus.Data,
         contributions: List<BalanceContribution>,
+        yieldSupplyStatus: YieldSupplyStatus?,
     ): CryptoCurrencyStatus.Loaded {
         return CryptoCurrencyStatus.Loaded(
             amount = amount,
@@ -227,7 +248,7 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            yieldSupplyStatus = status.getYieldSupplyStatus(id),
+            yieldSupplyStatus = yieldSupplyStatus,
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
@@ -243,11 +264,23 @@ object CryptoCurrencyStatusFactory {
         return pendingTransactions.getOrElse(key = id, defaultValue = ::emptySet)
     }
 
+    @RemoveWithToggle("TWI_1948_YIELD_CONTRIBUTION_ENABLED")
     private fun NetworkStatus.Verified.getYieldSupplyStatus(id: CryptoCurrency.ID): YieldSupplyStatus? {
         return yieldSupplyStatuses[id]
     }
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
+    }
+
+    /**
+     * Folds what the contributions add to the spendable balance into the network amount, so `amount` and
+     * `fiatAmount` keep meaning "what can be sent" wherever that balance is fetched from. Returns the network amount
+     * untouched, scale included, when nothing spendable is added.
+     */
+    private fun BigDecimal.withSpendableContributions(contributions: List<BalanceContribution>): BigDecimal {
+        val spendableDelta = contributions.sumOf(BalanceContribution::spendableDeltaCryptoAmount)
+
+        return if (spendableDelta.signum() == 0) this else this + spendableDelta
     }
 }

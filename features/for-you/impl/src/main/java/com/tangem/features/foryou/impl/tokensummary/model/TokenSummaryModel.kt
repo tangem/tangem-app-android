@@ -211,7 +211,7 @@ internal class TokenSummaryModel @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Markets.value,
             ),
         ).apply {
-            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio())
             setTokenParams(target.token)
             setTokenNetworks(target.networks)
         }

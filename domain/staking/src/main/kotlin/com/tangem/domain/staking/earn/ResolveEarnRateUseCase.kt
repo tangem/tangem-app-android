@@ -3,6 +3,7 @@ package com.tangem.domain.staking.earn
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -54,7 +55,7 @@ class ResolveEarnRateUseCase {
             // Percent to fraction by shifting the point, not dividing: the shift is exact, so the rate
             // reaches the formatter with every digit the backend sent and is rounded only there.
             apy = apyPercent.movePointLeft(PERCENT_POINT_SHIFT),
-            isActive = currencyStatus.value.yieldSupplyStatus?.isActive == true,
+            isActive = currencyStatus.value.yieldSupply?.isActive == true,
             source = EarnRate.Source.YieldSupply(apyPercent = apyPercent),
         )
     }

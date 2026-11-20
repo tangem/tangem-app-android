@@ -30,9 +30,8 @@ class TangemSigner(
     private val session: CardSession? = null,
 ) : TransactionSigner {
 
-    // Cold registration piggybacks on the signing tap (best-effort — the launcher skips twin / Visa /
-    // walletless cards). It runs on the card session's own scope inside [RegisterColdWalletRunnable],
-    // so it's bound to the tap.
+    // Cold registration piggybacks on the signing tap (best-effort — the launcher skips twin and walletless cards).
+    // It runs on the card session's own scope inside [RegisterColdWalletRunnable], so it's bound to the tap.
     private fun <T> withColdRegistration(task: CardSessionRunnable<T>): CardSessionRunnable<T> =
         RegisterColdWalletRunnable(inner = task, launcher = walletRegistrationLauncher)
 

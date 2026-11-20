@@ -169,6 +169,12 @@
   <string name="alert_manage_tokens_unsupported_message">Os tokens da rede %1$s não são suportados por este cartão ou anel devido a limitações de firmware.</string>
   <string name="alert_troubleshooting_scan_card_title">Você está com dificuldades para escanear seu cartão ou anel?</string>
   <string name="alert_unsupported_card">Este cartão não foi projetado para funcionar com este aplicativo.</string>
+  <string name="all_services_crypto_account_subtitle">Separe seus fundos por finalidade</string>
+  <string name="all_services_header_description">Tudo o que você precisa, em um só lugar.\nAdicione o que precisar, quando precisar.</string>
+  <string name="all_services_header_title">Todos os serviços</string>
+  <string name="all_services_joint_account_subtitle">Compartilhe fundos com aprovações do grupo</string>
+  <string name="all_services_staking_subtitle">Faça staking de tokens com APY de até %s</string>
+  <string name="all_services_yield_mode_subtitle">APY de até %s, saque quando quiser</string>
   <string name="app_settings_access_code_warning">Defina um código de acesso para ativar a biometria.</string>
   <string name="app_settings_biometrics_footer">Usar %1$s para desbloquear sua carteira e aprovar ações sensíveis, como assinar transações. No caso de carteiras de hardware, ainda é necessário um cartão ou anel para assinar.</string>
   <string name="app_settings_default_fee">Taxa padrão</string>
@@ -812,7 +818,11 @@
     <item quantity="other">%d Anos</item>
   </plurals>
   <string name="earn_chart_average_apr">APR médio</string>
+  <string name="earn_chart_clear_selection_accessibility">Limpar seleção</string>
   <string name="earn_chart_current_apr">APR atual</string>
+  <string name="earn_chart_history_accessibility">Gráfico do histórico de rendimentos</string>
+  <string name="earn_chart_next_bar_accessibility">Próxima barra</string>
+  <string name="earn_chart_previous_bar_accessibility">Barra anterior</string>
   <string name="earn_clear_filter">Limpar filtro</string>
   <string name="earn_deposit_title">Depositar em %s</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
@@ -1243,6 +1253,7 @@
   <string name="hw_upgrade_start_description">Você está prestes a atualizar para nossa carteira de hardware. Ela manterá seus ativos seguros em armazenamento offline.</string>
   <string name="hw_upgrade_start_title">Carteira Tangem</string>
   <string name="hw_upgrade_title">Faça upgrade para nossa carteira de hardware.</string>
+  <string name="hw_upgrade_to_cold_badge">Atualize para carteira fria</string>
   <string name="hw_upgrade_to_cold_banner_description">Proteja suas criptomoedas com a carteira de hardware de alta qualidade da Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Atualize a segurança da sua carteira para hardware.</string>
   <string name="hw_wallets_limit_alert_message">Você pode ter até %1$s carteiras móveis na Tangem. Para adicionar outra, remova primeiro uma das suas carteiras móveis atuais.</string>
@@ -1406,6 +1417,9 @@
     <item quantity="one">Aguardando %d membro</item>
     <item quantity="other">Aguardando %d membros</item>
   </plurals>
+  <string name="joint_account_members_access_loss_all">Se todos os membros perderem o acesso à carteira, os fundos serão perdidos permanentemente</string>
+  <string name="joint_account_members_access_loss_any">Se qualquer membro perder o acesso à carteira, os fundos serão perdidos permanentemente</string>
+  <string name="joint_account_members_access_loss_some">Se %1$s dos %2$s membros perderem o acesso à carteira, os fundos serão perdidos permanentemente</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d Membro</item>
     <item quantity="other">%d Membros</item>
@@ -1468,6 +1482,9 @@
   <string name="joint_blockaid_create_anyway">Criar mesmo assim</string>
   <string name="joint_blockaid_decline_transaction">Recusar transação</string>
   <string name="joint_blockaid_malicious_body">Este endereço foi identificado como malicioso. Se você enviar fundos para ele, provavelmente os perderá.</string>
+  <string name="joint_blockaid_malicious_title">Transação maliciosa</string>
+  <string name="joint_blockaid_risky_body">Este endereço do destinatário pode não ser seguro. Prossiga somente se confiar no destinatário.</string>
+  <string name="joint_blockaid_risky_title">Endereço potencialmente arriscado</string>
   <string name="joint_blockaid_sign_anyway">Assinar mesmo assim</string>
   <string name="joint_operation_auto_sends_footer">Envia automaticamente assim que %1$s de %2$s membros assinarem</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
@@ -1778,13 +1795,14 @@
   <string name="mcp_swap_intent_processed_subtitle">Trocar %1$s por %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Você precisa atualizar para %1$s antes de criar uma carteira móvel</string>
   <string name="mobile_wallet_requires_min_os_warning_title">A carteira digital requer %1$s ou mais tarde</string>
-  <string name="money_account_add_funds_bank_description">Receba USD de uma conta bancária via ACH/Wire ou SPEI</string>
+  <string name="money_account_add_funds_bank_description">Receba USD de bancos dos EUA via ACH ou MXN de bancos mexicanos via SPEI</string>
   <string name="money_account_add_funds_receive_description">Envie USDC pela rede Polygon para o endereço da sua conta</string>
   <string name="money_account_add_funds_swap_description">Use criptoativos da sua carteira para adicionar fundos à sua conta em USD</string>
   <string name="money_account_balance_unavailable_description">Estamos com dificuldades para carregar seu saldo. Tente novamente mais tarde.</string>
   <string name="money_account_balance_unavailable_title">Saldo indisponível</string>
   <string name="money_account_banner_proceed">Continuar</string>
   <string name="money_account_close_account">Encerrar conta</string>
+  <string name="money_account_main_details_button">Detalhes</string>
   <string name="money_account_main_name">Conta em USD</string>
   <string name="money_account_main_status_action_required">Ação necessária</string>
   <string name="money_account_main_status_activating">Ativando...</string>
@@ -1792,7 +1810,7 @@
   <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_awaiting_deposit">Abre após seu depósito</string>
   <string name="money_account_main_status_dialog_activating_description">Estamos preparando sua conta. Isso pode levar algum tempo</string>
-  <string name="money_account_main_status_dialog_activating_title">Criando sua conta bancária</string>
+  <string name="money_account_main_status_dialog_activating_title">Criando sua conta em USD</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Estamos trabalhando para expandir para mais regiões. Precisa de ajuda?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Estamos trabalhando para expandir para mais regiões. Precisa de ajuda? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Ainda não disponível na sua região</string>
@@ -1800,6 +1818,9 @@
   <string name="money_account_main_status_dialog_failed_title">Não foi possível ativar sua conta</string>
   <string name="money_account_main_status_dialog_hide_account">Ocultar conta da tela inicial</string>
   <string name="money_account_main_status_dialog_join_waitlist">Entrar na lista de espera</string>
+  <string name="money_account_main_status_dialog_not_started_description">Receba transferências via ACH usando seus próprios dados bancários dos EUA. Tenha um saldo separado, sem alterar seu cartão. A conta ficará pronta em até 2 dias.</string>
+  <string name="money_account_main_status_dialog_not_started_terms_link">Termos da Conta Virtual do Tangem Pay</string>
+  <string name="money_account_main_status_dialog_not_started_terms_notice">Ao tocar em Ativar, você concorda com os \n%s</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Desculpe, não foi possível verificar sua identidade com base nas informações fornecidas</string>
   <string name="money_account_main_status_dialog_verification_declined_title">Não foi possível verificar sua identidade</string>
   <string name="money_account_main_status_dialog_verification_description">Isso normalmente leva alguns minutos. Você pode verificar o status abaixo</string>
@@ -1809,13 +1830,14 @@
   <string name="money_account_main_status_verification">Verificação em andamento...</string>
   <string name="money_account_onboarding_currency_card_caption">Moeda da conta</string>
   <string name="money_account_onboarding_description">Funciona como uma conta bancária comum. Mas é baseada em cripto e está totalmente sob seu controle.</string>
-  <string name="money_account_onboarding_disclaimer">A Tangem Pay é uma empresa de tecnologia financeira, não um banco. Os serviços bancários são fornecidos pela SSB, membro da FDIC. Os fundos depositados na SSB são elegíveis para a cobertura do seguro da FDIC de até US$ 250.000 por depositante, por banco segurado, sujeito às limitações aplicáveis e às regras da FDIC.</string>
+  <string name="money_account_onboarding_disclaimer">A Tangem Pay não é um banco. Os dados da conta são fornecidos pelo SSB Bank. Os fundos são mantidos como USDC, não como depósitos no SSB Bank. O USDC não é segurado pela FDIC.</string>
   <string name="money_account_onboarding_earn_card_caption">Obtenha rendimentos</string>
   <string name="money_account_onboarding_fees_error">Não foi possível carregar as informações sobre as taxas.\nToque para recarregar</string>
   <string name="money_account_onboarding_fees_notice">As transferências SWIFT não são compatíveis. Se você enviar uma, ela será devolvida</string>
   <string name="money_account_onboarding_fees_provider">Provedor</string>
   <string name="money_account_onboarding_fees_title">Taxas</string>
   <string name="money_account_onboarding_secondary_button">Termos e taxas</string>
+  <string name="money_account_onboarding_success_title">A conta em USD está sendo ativada</string>
   <string name="money_account_onboarding_terms_link">Termos de Serviço</string>
   <string name="money_account_onboarding_terms_notice">Ao usar o serviço, você aceita os %1$s do provedor</string>
   <string name="money_account_onboarding_title">Obtenha uma conta em USD</string>
@@ -2375,6 +2397,12 @@
   <string name="prediction_search_initial_title">Comece a digitar para pesquisar</string>
   <string name="prediction_search_results_title">Resultados da pesquisa</string>
   <string name="prediction_session_key_activate_session_key">Ativar chave de sessão</string>
+  <string name="prediction_session_key_banner_extend_button">Prorrogar</string>
+  <string name="prediction_session_key_banner_extend_text">Prorrogue a validade por mais 180 dias com uma única aproximação do cartão e continue fazendo apostas rapidamente, sem precisar aproximá-lo a cada aposta</string>
+  <plurals name="prediction_session_key_banner_extend_title">
+    <item quantity="one">O trading rápido expira em %d dia</item>
+    <item quantity="other">O trading rápido expira em %d dias</item>
+  </plurals>
   <string name="prediction_session_key_banner_reactivate_text">Reative-o uma única vez para continuar fazendo apostas rapidamente, sem precisar confirmar cada uma delas.</string>
   <string name="prediction_session_key_banner_reactivate_title">O trading rápido parou de funcionar neste dispositivo</string>
   <string name="prediction_session_key_duration_caption">Por quanto tempo é válida</string>
@@ -2401,6 +2429,8 @@
   <string name="prediction_session_key_revoke_confirm_unknown_signer_text">As ordens assinadas por %s deixam de funcionar imediatamente</string>
   <string name="prediction_session_key_status_activation_failed">Falha na ativação</string>
   <string name="prediction_session_key_status_reconnect_needed">É necessário reconectar</string>
+  <string name="prediction_session_key_toast_busy">Outra alteração está em andamento. Tente novamente em um minuto</string>
+  <string name="prediction_session_key_toast_extension_in_progress">Prorrogação em andamento</string>
   <string name="prediction_session_key_toast_order_fallback">O trading rápido não está disponível para esta ordem. Confirme-a da maneira habitual.</string>
   <string name="prediction_session_key_unknown_signer">Signatário desconhecido</string>
   <string name="prediction_session_key_unknown_signers_text">Outra pessoa pode negociar usando seu saldo de previsões. Se você não autorizou isso, revogue estes signatários agora.</string>
@@ -3148,12 +3178,12 @@
   <string name="tangempay_card_details_activate">Ativar cartão</string>
   <string name="tangempay_card_details_add_funds">Adicionar fundos</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opções de recarga</string>
-  <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar ao Google Wallet</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar à Carteira do Google</string>
   <string name="tangempay_card_details_add_to_wallet_error_description">Tentar usar outro dispositivo ou entre em contato com o suporte</string>
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Tentativas demais. Tente novamente em 24 horas</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Não foi possível adicionar o cartão</string>
-  <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">O Google Wallet não está disponível. Verifique as configurações do sistema</string>
-  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado ao Google Wallet</string>
+  <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">A Carteira do Google não está disponível. Verifique as configurações do sistema</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Cartão adicionado à Carteira do Google</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancele %1$s, mude para %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Para pagar a mensalidade do plano e começar a usar o novo cartão</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Recarregue sua conta no valor de %1$s</string>
@@ -3169,7 +3199,7 @@
   <string name="tangempay_card_details_hide_details">Ocultar detalhes</string>
   <string name="tangempay_card_details_hide_text">Esconder</string>
   <string name="tangempay_card_details_name_on_card">Nome do titular do cartão</string>
-  <string name="tangempay_card_details_open_wallet_button">Abra a Carteira do Google</string>
+  <string name="tangempay_card_details_open_wallet_button">Abrir a Carteira do Google</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Configure o Tangem Pay em poucos toques e comece a pagar com o Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configure o Tangem Pay em poucos toques e comece a pagar com o Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Adicione seu cartão ao Google Pay</string>
@@ -3513,7 +3543,7 @@
   <string name="tangempay_tangem_visa_card">Use suas criptos no dia a dia</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária via ACH/Wire</string>
+  <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária dos EUA via ACH</string>
   <string name="tangempay_topup_bank_transfer_pending_body">Criando seus dados bancários...</string>
   <string name="tangempay_topup_bank_transfer_title">De uma conta bancária</string>
   <string name="tangempay_topup_receive_body_multichain">Envie USDC ou USDT para o endereço da sua conta</string>
@@ -3541,7 +3571,7 @@
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Pagamentos</string>
-  <string name="tangempay_unified_onboarding_payments_title">Transferências ACH e wire para as necessidades do dia a dia</string>
+  <string name="tangempay_unified_onboarding_payments_title">Transferências bancárias do dia a dia</string>
   <string name="tangempay_unified_onboarding_plan_caption">Um plano</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">O Basic é gratuito.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s O Plus inclui ambos e oferece muito mais</string>

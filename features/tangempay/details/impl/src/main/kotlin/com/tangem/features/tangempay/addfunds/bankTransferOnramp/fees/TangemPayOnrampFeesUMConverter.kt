@@ -7,17 +7,19 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.FeeCalculationType
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 internal class TangemPayOnrampFeesUMConverter(
     private val onRetryClick: () -> Unit,
-) : Converter<Either<VisaApiError, List<AccountFee>>, TangemPayOnrampFeesUM> {
+) : Converter<Either<TangemPayApiError, List<AccountFee>>, TangemPayOnrampFeesUM> {
 
-    override fun convert(value: Either<VisaApiError, List<AccountFee>>): TangemPayOnrampFeesUM = value.fold(
+    override fun convert(value: Either<TangemPayApiError, List<AccountFee>>): TangemPayOnrampFeesUM = value.fold(
         ifLeft = { TangemPayOnrampFeesUM.Error(onRetryClick = onRetryClick) },
         ifRight = { fees -> TangemPayOnrampFeesUM.Content(rows = fees.map(::toFeeRow).toImmutableList()) },
     )
@@ -26,8 +28,12 @@ internal class TangemPayOnrampFeesUMConverter(
         type = fee.type,
         title = stringReference(fee.name),
         value = when (fee.calculationType) {
-            AccountFee.CalculationType.FIXED -> fee.amount.formatFiatAmount(currencyCode = fee.currency)
-            AccountFee.CalculationType.PERCENTAGE -> fee.amount.formatPercentageFee()
+            FeeCalculationType.FIXED -> fee.amount.formatFiatAmount(currencyCode = fee.currency)
+            FeeCalculationType.PERCENTAGE -> formatPercentageFee(
+                percentage = fee.amount,
+                fixedAmount = fee.fixedAmount,
+                currencyCode = fee.currency,
+            )
         },
     )
 }
@@ -38,3 +44,9 @@ internal fun BigDecimal.formatFiatAmount(currencyCode: String): String {
 }
 
 internal fun BigDecimal.formatPercentageFee(): String = movePointLeft(2).format { percent(minFractionDigits = 0) }
+
+internal fun formatPercentageFee(percentage: BigDecimal, fixedAmount: BigDecimal?, currencyCode: String): String {
+    val percentageText = percentage.formatPercentageFee()
+    val fixedPart = fixedAmount?.takeIf(BigDecimal::isPositive) ?: return percentageText
+    return "${fixedPart.formatFiatAmount(currencyCode)} + $percentageText"
+}

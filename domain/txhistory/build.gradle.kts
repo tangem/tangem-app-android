@@ -29,6 +29,6 @@ dependencies {
     api(projects.domain.jointAccount)
     api(projects.domain.models)
     api(projects.domain.txhistory.models)
-    api(projects.domain.visa.models)
+    api(projects.domain.tangempay.models)
     // endregion
 }

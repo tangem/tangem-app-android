@@ -15,16 +15,24 @@ dependencies {
     api(projects.features.earn.api)
     api(projects.features.earn.product.api)
 
+    /** Common */
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
+
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
@@ -45,10 +53,13 @@ dependencies {
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
 
     /** Other */
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.haze)
     implementation(deps.lifecycle.compose)
 
     /** DI */

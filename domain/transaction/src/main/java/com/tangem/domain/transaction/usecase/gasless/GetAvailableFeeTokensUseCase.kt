@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
@@ -186,12 +187,12 @@ class GetAvailableFeeTokensUseCase(
     internal companion object {
 
         internal fun isEligibleFeeToken(status: CryptoCurrencyStatus): Boolean {
-            val yieldSupplyStatus = status.value.yieldSupplyStatus ?: return true
+            val yieldSupplyStatus = status.value.yieldSupply ?: return true
             return yieldSupplyStatus.isActive
         }
 
         private fun hasSpendableBalance(status: CryptoCurrencyStatus): Boolean {
-            if (status.value.yieldSupplyStatus?.isActive == true) return true
+            if (status.value.yieldSupply?.isActive == true) return true
             val amount = status.value.amount ?: return false
             return amount.signum() > 0
         }

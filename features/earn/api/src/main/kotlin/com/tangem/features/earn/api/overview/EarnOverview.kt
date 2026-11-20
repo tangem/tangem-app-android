@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
@@ -45,8 +46,10 @@ data class EarnOverview(
     val banner: EarnBannerOverview?,
 )
 
+/** @property bestProductId the product [rate] comes from: `null` together with it */
 data class EarnBannerOverview(
     val rate: EarnProductRate?,
+    val bestProductId: EarnProductId?,
     val activeCount: Int,
     val totalPosition: BigDecimal?,
 )
@@ -55,6 +58,7 @@ data class EarnHeadline(
     val rate: EarnProductRate,
     val isActive: Boolean,
     val badge: TextReference,
+    val badgeAccent: EarnBadgeAccent,
     val route: Route?,
 )
 
@@ -62,3 +66,9 @@ data class EarnHeadline(
 data class EarnProductRate(val fraction: BigDecimal, val type: EarnRateType)
 
 enum class EarnRateType { APY, APR }
+
+/**
+ * How a host paints the badge of an active product. Names no product: a host must not know which one it shows. Every
+ * product and rate source declares its own, the winner's reaches the host in [EarnHeadline.badgeAccent].
+ */
+enum class EarnBadgeAccent { Info, Success }

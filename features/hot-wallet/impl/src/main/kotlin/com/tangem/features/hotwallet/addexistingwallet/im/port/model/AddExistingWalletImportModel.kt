@@ -14,8 +14,10 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletsLimitReachedDialog
+import com.tangem.core.ui.message.dialog.Dialogs.walletAlreadyAddedDialog
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
@@ -35,6 +37,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val hotWalletImporter: HotWalletImporter,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
@@ -86,14 +89,17 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 mnemonic = mnemonic,
                 passphrase = passphrase?.toCharArray(),
                 isSeedPhraseBackedUp = true,
+                analyticsSource = params.analyticsSource,
             )
             setImportProgress(false)
             result.fold(
                 ifLeft = { error ->
                     val message = when (error) {
-                        HotWalletImportError.AlreadySaved -> SnackbarMessage(
-                            resourceReference(R.string.hw_import_seed_phrase_already_imported),
-                        )
+                        HotWalletImportError.AlreadySaved -> if (hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
+                            walletAlreadyAddedDialog()
+                        } else {
+                            SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported))
+                        }
                         is HotWalletImportError.PassphraseTooLong -> SnackbarMessage(
                             resourceReference(
                                 R.string.hw_import_seed_phrase_passphrase_too_long,

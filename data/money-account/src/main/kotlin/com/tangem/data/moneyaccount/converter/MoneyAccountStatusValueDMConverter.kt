@@ -4,9 +4,10 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.MoneyAccountStatusValue.Onboarding.Activating.Step as ActivatingStep
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
-import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM.Activating.StepDM as ActivatingStepDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM
+import com.tangem.spend.datasource.tangempay.entity.MoneyAccountStatusValueDM.Activating.StepDM as ActivatingStepDM
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -84,6 +85,7 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             depositAddress = depositAddress,
             currencyCode = currencyCode,
             fiatRate = fiatRate,
+            yieldSupplyStatus = yieldSupplyStatus?.toDM(),
         )
     }
 
@@ -93,6 +95,25 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             depositAddress = depositAddress,
             currencyCode = currencyCode,
             fiatRate = fiatRate,
+            yieldSupplyStatus = yieldSupplyStatus?.toDomain(),
+        )
+    }
+
+    private fun YieldSupplyStatus.toDM(): MoneyAccountStatusValueDM.YieldSupplyStatusDM {
+        return MoneyAccountStatusValueDM.YieldSupplyStatusDM(
+            isActive = isActive,
+            isInitialized = isInitialized,
+            isAllowedToSpend = isAllowedToSpend,
+            effectiveProtocolBalance = effectiveProtocolBalance,
+        )
+    }
+
+    private fun MoneyAccountStatusValueDM.YieldSupplyStatusDM.toDomain(): YieldSupplyStatus {
+        return YieldSupplyStatus(
+            isActive = isActive,
+            isInitialized = isInitialized,
+            isAllowedToSpend = isAllowedToSpend,
+            effectiveProtocolBalance = effectiveProtocolBalance,
         )
     }
 }

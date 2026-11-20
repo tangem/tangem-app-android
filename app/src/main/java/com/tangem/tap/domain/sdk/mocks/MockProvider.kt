@@ -110,7 +110,6 @@ object MockProvider {
             ProductType.Ring -> RingMockContent
             ProductType.Twins -> TwinsMockContent
             ProductType.Start2Coin -> S2CMockContent
-            else -> TODO()
         }
     }
 

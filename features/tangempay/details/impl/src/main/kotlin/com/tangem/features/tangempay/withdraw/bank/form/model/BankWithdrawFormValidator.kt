@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
+import com.tangem.domain.tangempay.model.bankofframp.ClabeValidator
 import com.tangem.features.tangempay.common.TangemPayFormCharset
 
 /**
@@ -71,8 +72,10 @@ internal object BankWithdrawFormValidator {
 
     private fun hasValidFormat(field: BankWithdrawFormField, value: String, isUsAddress: Boolean): Boolean {
         return when (field) {
-            BankWithdrawFormField.AccountNumber -> value.length in ACCOUNT_NUMBER_LENGTH && value.all(Char::isDigit)
-            BankWithdrawFormField.RoutingNumber -> isRoutingNumber(value)
+            BankWithdrawFormField.AccountNumber,
+            BankWithdrawFormField.RoutingNumber,
+            BankWithdrawFormField.Clabe,
+            -> isValidNumber(field = field, value = value)
             BankWithdrawFormField.FirstName,
             BankWithdrawFormField.LastName,
             BankWithdrawFormField.BusinessName,
@@ -95,6 +98,12 @@ internal object BankWithdrawFormValidator {
             BankWithdrawFormField.BankRegion -> TWO_LETTER_CODE.matches(value)
             BankWithdrawFormField.BankPostalCode -> US_ZIP.matches(value)
         }
+    }
+
+    private fun isValidNumber(field: BankWithdrawFormField, value: String): Boolean = when (field) {
+        BankWithdrawFormField.RoutingNumber -> isRoutingNumber(value)
+        BankWithdrawFormField.Clabe -> ClabeValidator.isValid(value)
+        else -> value.length in ACCOUNT_NUMBER_LENGTH && value.all(Char::isDigit)
     }
 
     private fun isRoutingNumber(value: String): Boolean =

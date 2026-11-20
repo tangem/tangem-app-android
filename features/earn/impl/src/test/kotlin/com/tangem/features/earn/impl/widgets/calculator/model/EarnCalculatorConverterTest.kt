@@ -1,6 +1,7 @@
 package com.tangem.features.earn.impl.widgets.calculator.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
@@ -10,6 +11,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
@@ -339,8 +342,23 @@ internal class EarnCalculatorConverterTest {
                 ),
                 status = TangemBadge.Status.Info,
                 size = TangemBadge.Size.X6,
+                iconEnd = TangemIconUM.Icon(Icons.ic_info_16),
             )
-            assertThat(actual).isEqualTo(expected)
+            assertThat(actual?.badge).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN incentive rate WHEN badge clicked THEN onIncentiveClick is called once`() {
+            // Arrange
+            var clicks = 0
+            val rate = EarnProductRate(fraction = BigDecimal("0.014"), type = EarnRateType.APY)
+            val actual = convert(incentiveRate = rate, onIncentiveClick = { clicks++ }).incentive
+
+            // Act
+            actual?.onClick?.invoke()
+
+            // Assert
+            assertThat(clicks).isEqualTo(1)
         }
 
         private fun provideTestModels() = listOf(
@@ -437,6 +455,7 @@ internal class EarnCalculatorConverterTest {
         result: EarnProjectionResult = projection.project(input.initialFiat, input.monthlyTopUpFiat, input.horizon),
         appCurrency: AppCurrency = AppCurrency.Default,
         incentiveRate: EarnProductRate? = null,
+        onIncentiveClick: () -> Unit = {},
         onInitialStep: (Int) -> Unit = {},
         onTopUpStep: (Int) -> Unit = {},
         onHorizonSelect: (EarnHorizon) -> Unit = {},
@@ -445,6 +464,7 @@ internal class EarnCalculatorConverterTest {
         input = input,
         appCurrency = appCurrency,
         incentiveRate = incentiveRate,
+        onIncentiveClick = onIncentiveClick,
         onInitialStep = onInitialStep,
         onTopUpStep = onTopUpStep,
         onHorizonSelect = onHorizonSelect,

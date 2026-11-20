@@ -9,8 +9,9 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.TangemPayBankWithdrawPreviewModel
@@ -38,6 +39,7 @@ internal class TangemPayBankWithdrawPreviewComponent(
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
         val onDestinationChanged: (OfframpDestination) -> Unit,
         val onNetworkFeeChanged: (BigDecimal) -> Unit,
+        val onQuoteChanged: (BankOfframpQuote) -> Unit,
         val onCompleted: () -> Unit,
         val onTransferOutcomeUnknown: () -> Unit,
         val onCloseFlow: () -> Unit,

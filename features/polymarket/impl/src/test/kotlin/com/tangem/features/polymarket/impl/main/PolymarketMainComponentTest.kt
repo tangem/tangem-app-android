@@ -170,6 +170,13 @@ internal class PolymarketMainComponentTest {
         observePolymarketSportsStateUseCase = mockk(),
             observePolymarketLiveQuotesUseCase = mockk(),
         receiveSheetFactory = mockk(),
-        polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
+        walletLinkGate = mockk { coEvery { ensureLinked(any()) } returns true },
+        fastTradingBannerSource = mockk {
+            every { observe(any(), any()) } returns flowOf(null)
+        },
+        polymarketFeatureToggles = mockk {
+            every { isPolymarketPhaseTwoEnabled } returns false
+            every { isPolymarketFastOrdersEnabled } returns false
+        },
     )
 }

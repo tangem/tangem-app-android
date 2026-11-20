@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.card.view
 
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.pay.model.TangemPayCardDetails
+import com.tangem.domain.tangempay.model.TangemPayCardDetails
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.transformer.Transformer
 

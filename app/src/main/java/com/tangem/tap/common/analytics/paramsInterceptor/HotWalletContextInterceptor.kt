@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.TrackingContextExcludedEvent
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
@@ -26,6 +27,7 @@ class HotWalletContextInterceptor(
             is Basic.CardWasScanned,
             -> false
             is SignIn.ErrorBiometricUpdated -> !event.isFromUnlockAll
+            is OnboardingAnalyticsEvent.Backup.ImportWalletRequest -> !event.isSelectedWalletUnrelated
             else -> true
         }
     }

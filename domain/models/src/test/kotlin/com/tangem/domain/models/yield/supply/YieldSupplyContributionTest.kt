@@ -2,22 +2,92 @@ package com.tangem.domain.models.yield.supply
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
  * Tests [YieldSupplyContribution] as a `BalanceContribution`.
  *
- * It is the one contribution that adds nothing: the supplied principal is already inside the network amount, so the
- * wrapper exists only to carry freshness and the partition data ("Axis 2") through the same generic channel as every
- * other extra balance. A non-zero delta here would double-count every supplied balance in the app, which is why the
- * zero is pinned rather than assumed.
+ * Supplied funds are spendable, so they never add to the total on top of `amount`: they are either already inside the
+ * network amount, or reach it through the spendable delta the provider resolved and the status factory folds in. A
+ * non-zero total delta would double-count every supplied balance in the app, which is why it is pinned rather than
+ * assumed.
  *
  * The wrapper also exists because [YieldSupplyStatus] carries no freshness of its own — [YieldSupplyContribution.source]
- * has to come from the network status it arrived with, so the pass-through is asserted with a non-default value.
+ * has to come from what delivered it, so the pass-through is asserted with a non-default value.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyContributionTest {
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a resolved delta WHEN deltas THEN spendable only while active and never on top of amount`(
+        model: SpendableModel,
+    ) {
+        // Arrange
+        val contribution = YieldSupplyContribution(
+            status = YieldSupplyStatus(
+                isActive = model.isActive,
+                isInitialized = true,
+                isAllowedToSpend = true,
+                effectiveProtocolBalance = BigDecimal("7"),
+            ),
+            source = StatusSource.ACTUAL,
+            spendableDelta = model.spendableDelta,
+        )
+
+        // Act
+        val actual = Deltas(
+            spendable = contribution.spendableDeltaCryptoAmount(),
+            total = contribution.totalDeltaCryptoAmount(),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Deltas(spendable = model.expectedSpendable, total = BigDecimal.ZERO))
+    }
+
+    @Suppress("unused")
+    private fun provideTestModels() = listOf(
+        SpendableModel(
+            name = "active, supplied inside the amount",
+            isActive = true,
+            spendableDelta = BigDecimal.ZERO,
+            expectedSpendable = BigDecimal.ZERO,
+        ),
+        SpendableModel(
+            name = "active, supplied outside the amount",
+            isActive = true,
+            spendableDelta = BigDecimal("7"),
+            expectedSpendable = BigDecimal("7"),
+        ),
+        SpendableModel(
+            name = "active, network amount ahead of the position",
+            isActive = true,
+            spendableDelta = BigDecimal("-2"),
+            expectedSpendable = BigDecimal("-2"),
+        ),
+        SpendableModel(
+            name = "inactive",
+            isActive = false,
+            spendableDelta = BigDecimal("7"),
+            expectedSpendable = BigDecimal.ZERO,
+        ),
+    )
+
+    data class SpendableModel(
+        val name: String,
+        val isActive: Boolean,
+        val spendableDelta: BigDecimal,
+        val expectedSpendable: BigDecimal,
+    ) {
+        override fun toString(): String = name
+    }
+
+    data class Deltas(val spendable: BigDecimal, val total: BigDecimal)
 
     @Test
     fun `GIVEN any yield supply WHEN totalDeltaCryptoAmount THEN zero`() {

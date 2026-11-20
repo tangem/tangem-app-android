@@ -7,6 +7,7 @@ import java.math.BigDecimal
 internal fun vaultBalance(amount: String, rate: String?) = CollectiblesVaultBalance(
     usdcToken = VAULT_TOKEN,
     usdcAmount = BigDecimal(amount),
+    vaultAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
     ataAddress = VAULT_ATA_ADDRESS,
     usdcFiatRate = rate?.let(::BigDecimal),
 )

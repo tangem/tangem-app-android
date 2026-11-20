@@ -4,9 +4,7 @@ import android.text.format.DateFormat
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.arrayItemReference
@@ -16,15 +14,16 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackDocument
-import com.tangem.domain.pay.model.CashbackHistory
-import com.tangem.domain.pay.model.CashbackPromotions
-import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.TangemPayCashback
-import com.tangem.domain.pay.repository.CashbackRepository
+import com.tangem.domain.tangempay.model.CashbackDisplayMode
+import com.tangem.domain.tangempay.model.CashbackDocument
+import com.tangem.domain.tangempay.model.CashbackHistory
+import com.tangem.domain.tangempay.model.CashbackPromotions
+import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.TangemPayCashback
+import com.tangem.domain.tangempay.repository.CashbackRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -46,15 +45,13 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Locale
 
-internal class TangemPayCashbackModelTest {
+internal class TangemPayCashbackModelTest : TangemPayModelTestBase() {
 
     private val defaultLocale = Locale.getDefault()
     private val userWalletId = UserWalletId("123")
 
-    private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val cashbackRepository: CashbackRepository = mockk()
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val isBalanceHidden = MutableStateFlow(false)
 
@@ -114,7 +111,7 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN promotions load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -126,7 +123,7 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN summary load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackSummary(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -184,8 +181,8 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN summary and promotions both return error WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackSummary(any()) } returns VisaApiError.Unspecified.left()
-        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns TangemPayApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -214,7 +211,7 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN docs load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -238,10 +235,64 @@ internal class TangemPayCashbackModelTest {
     }
 
     @Test
+    fun `GIVEN doc with trusted link WHEN doc clicked THEN doc is opened in app`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns listOf(doc(url = TRUSTED_LINK)).right()
+        val model = createModel()
+
+        // Act
+        model.accrualsSheet.value.docRows.single().onClick()
+
+        // Assert
+        verify(exactly = 1) { urlOpener.openUrl(TRUSTED_LINK) }
+    }
+
+    @Test
+    fun `GIVEN doc with app deep link WHEN doc clicked THEN nothing is opened`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns listOf(doc(url = DEEP_LINK)).right()
+        val model = createModel()
+
+        // Act
+        model.accrualsSheet.value.docRows.single().onClick()
+
+        // Assert
+        verify(exactly = 0) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
+    fun `GIVEN promo description with trusted link WHEN link clicked THEN link is opened in app`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns
+            promotions(additional = listOf(additionalPromo())).right()
+        val model = createModel()
+
+        // Act
+        requireNotNull(model.content().additionalCashback).onLinkClick(TRUSTED_LINK)
+
+        // Assert
+        verify(exactly = 1) { urlOpener.openUrl(TRUSTED_LINK) }
+    }
+
+    @Test
+    fun `GIVEN promo description with app deep link WHEN link clicked THEN nothing is opened`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns
+            promotions(additional = listOf(additionalPromo())).right()
+        val model = createModel()
+
+        // Act
+        requireNotNull(model.content().additionalCashback).onLinkClick(DEEP_LINK)
+
+        // Assert
+        verify(exactly = 0) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
     fun `GIVEN enabled summary AND history fails WHEN model created THEN error state`() {
         // Arrange
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary().right()
-        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -385,6 +436,8 @@ internal class TangemPayCashbackModelTest {
         CashbackDocument(id = "terms", title = "Full terms of cashback program", url = "https://x/terms.pdf"),
     )
 
+    private fun doc(url: String) = CashbackDocument(id = "terms", title = "Full terms of cashback program", url = url)
+
     private fun enabledSummary(
         payoutCurrency: String? = "USDC",
         confirmedAmount: BigDecimal = BigDecimal("32.15"),
@@ -421,5 +474,7 @@ internal class TangemPayCashbackModelTest {
 
     private companion object {
         const val DETAILS_ROWS_WITHOUT_PAYOUT = 4
+        const val TRUSTED_LINK = "https://tangem.com/docs/en/tangem-pay-cashback-terms.pdf"
+        const val DEEP_LINK = "tangem://wc?uri=wc:topic@2?relay-protocol=irn&symKey=secret"
     }
 }

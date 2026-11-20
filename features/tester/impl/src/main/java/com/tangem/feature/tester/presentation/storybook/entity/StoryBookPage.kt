@@ -196,6 +196,7 @@ internal data class TangemButtonStory(
     val isLoading: Boolean,
     val hasLoadingText: Boolean,
     val isEnabled: Boolean,
+    val isHoldToConfirm: Boolean,
     val hasIconStart: Boolean,
     val hasIconEnd: Boolean,
     val hasText: Boolean,
@@ -207,6 +208,8 @@ internal data class TangemButtonStory(
     val onLoadingToggle: () -> Unit,
     val onLoadingTextToggle: () -> Unit,
     val onEnabledToggle: () -> Unit,
+    val onHoldToConfirmToggle: () -> Unit,
+    val onHoldConfirm: () -> Unit,
     val onIconStartToggle: () -> Unit,
     val onIconEndToggle: () -> Unit,
     val onTextToggle: () -> Unit,
@@ -633,7 +636,7 @@ internal data class TangemTokenRowV2Story(
 ) : DsStoryBookPage {
 
     /** Which [com.tangem.core.ui.ds2.tokenrow.TangemTokenRow] variant/preset is rendered. */
-    enum class Variant { Default, Organize, Unreachable, NoAddress, Shimmer }
+    enum class Variant { Default, Network, Organize, Unreachable, NoAddress, Shimmer }
 }
 
 @Suppress("BooleanPropertyNaming")

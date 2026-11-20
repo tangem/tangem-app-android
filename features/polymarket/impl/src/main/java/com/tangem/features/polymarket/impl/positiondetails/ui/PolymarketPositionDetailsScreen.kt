@@ -49,6 +49,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
+import com.tangem.features.polymarket.impl.common.ui.PolymarketMarketClosedSheet
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.positiondetails.ui.preview.PolymarketPositionDetailsPreviewProvider
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM

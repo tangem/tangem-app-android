@@ -2,10 +2,16 @@ package com.tangem.data.walletmanager
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.solana.SolanaWalletManager
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessInstructionRule
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
@@ -20,6 +26,7 @@ import com.tangem.data.walletmanager.store.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -35,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
@@ -56,7 +64,6 @@ internal class DefaultWalletManagersFacadeTest {
         getCachedTokenInfoUseCase = mockk(),
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
     )
 
@@ -127,10 +134,10 @@ internal class DefaultWalletManagersFacadeTest {
         }
 
         @Test
-        fun `GIVEN yield send and toggle on and upgrade available WHEN estimateFee THEN estimates wrapped send`() =
+        fun `GIVEN yield send and upgrade available WHEN estimateFee THEN estimates wrapped send`() =
             runTest {
                 // Arrange
-                val facade = createFacade(isToggleEnabled = true)
+                val facade = createFacade()
 
                 // Act
                 facade.estimateFee(
@@ -147,7 +154,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN yield send and upgrade not allowed WHEN estimateFee THEN estimates bare send`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
 
             // Act
             facade.estimateFee(
@@ -161,25 +168,6 @@ internal class DefaultWalletManagersFacadeTest {
             assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
             coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
         }
-
-        @Test
-        fun `GIVEN yield send and toggle off WHEN estimateFee THEN estimates bare send without version check`() =
-            runTest {
-                // Arrange
-                val facade = createFacade(isToggleEnabled = false)
-
-                // Act
-                facade.estimateFee(
-                    amount = yieldSupplyAmount,
-                    userWalletId = userWalletId,
-                    network = ethereumNetwork,
-                    isYieldModuleUpgradeAllowed = true,
-                )
-
-                // Assert
-                assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
-                coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
-            }
     }
 
     @Nested
@@ -200,7 +188,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN fee estimated wrapped and version check fails now WHEN wrap THEN wrapped as estimated`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             facade.estimateFee(
                 amount = yieldSupplyAmount,
                 userWalletId = userWalletId,
@@ -222,7 +210,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN fee estimated bare after failed check and check passes now WHEN wrap THEN stays bare`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("RPC is down")
             facade.estimateFee(
                 amount = yieldSupplyAmount,
@@ -242,7 +230,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN no fee estimate WHEN wrap THEN checks module version now`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
 
             // Act
             val actual = facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
@@ -256,7 +244,7 @@ internal class DefaultWalletManagersFacadeTest {
         fun `GIVEN transfer built bare after failed check WHEN built again after check passes THEN stays bare`() =
             runTest {
                 // Arrange
-                val facade = createFacade(isToggleEnabled = true)
+                val facade = createFacade()
                 coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("RPC is down")
                 facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
                 stubUpgradeAvailable()
@@ -271,7 +259,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN decision reset after a sent upgrade WHEN wrap THEN checks module version again`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             facade.estimateFee(
                 amount = yieldSupplyAmount,
                 userWalletId = userWalletId,
@@ -291,7 +279,7 @@ internal class DefaultWalletManagersFacadeTest {
         @Test
         fun `GIVEN fee estimated with upgrade not allowed WHEN wrap THEN checks module version now`() = runTest {
             // Arrange
-            val facade = createFacade(isToggleEnabled = true)
+            val facade = createFacade()
             facade.estimateFee(
                 amount = yieldSupplyAmount,
                 userWalletId = userWalletId,
@@ -307,6 +295,92 @@ internal class DefaultWalletManagersFacadeTest {
             coVerify(exactly = 1) { walletManager.checkModuleVersionStatus() }
         }
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SolanaGasless {
+
+        private val solanaWalletManager: SolanaWalletManager = mockk()
+        private val solanaNetwork = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana).network
+        private val transactionData: TransactionData = mockk()
+        private val signer: TransactionSigner = mockk()
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(walletManagersStore, userWalletsListRepository, solanaWalletManager)
+            every { userWalletsListRepository.userWallets } returns
+                MutableStateFlow(listOf(SafeTestFixtures.hotWallet()))
+            coEvery {
+                walletManagersStore.getSyncOrNull(
+                    userWalletId = userWalletId,
+                    blockchain = Blockchain.Solana,
+                    derivationPath = solanaNetwork.derivationPath.value,
+                )
+            } returns solanaWalletManager
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN rent sponsorship flag WHEN signSolanaGaslessTransaction THEN SDK gets the matching rules`(
+            model: RulesModel,
+        ) = runTest {
+            // Arrange
+            val signed: Result<SolanaGaslessSignedTransaction> = mockk()
+            coEvery {
+                solanaWalletManager.signGaslessTransaction(transactionData, FEE_PAYER, signer, any())
+            } returns signed
+
+            // Act
+            val actual = facade.signSolanaGaslessTransaction(
+                userWalletId = userWalletId,
+                network = solanaNetwork,
+                transactionData = transactionData,
+                feePayer = FEE_PAYER,
+                signer = signer,
+                sponsorsRent = model.sponsorsRent,
+            )
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(signed)
+            coVerify(exactly = 1) {
+                solanaWalletManager.signGaslessTransaction(transactionData, FEE_PAYER, signer, model.expectedRules)
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN rent sponsorship flag WHEN simulateSolanaGaslessTransaction THEN SDK gets the matching rules`(
+            model: RulesModel,
+        ) = runTest {
+            // Arrange
+            val simulation = Result.Success(SolanaGaslessSimulation.Succeeded)
+            coEvery {
+                solanaWalletManager.simulateGaslessTransaction(transactionData, FEE_PAYER, any())
+            } returns simulation
+
+            // Act
+            val actual = facade.simulateSolanaGaslessTransaction(
+                userWalletId = userWalletId,
+                network = solanaNetwork,
+                transactionData = transactionData,
+                feePayer = FEE_PAYER,
+                sponsorsRent = model.sponsorsRent,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(simulation)
+            coVerify(exactly = 1) {
+                solanaWalletManager.simulateGaslessTransaction(transactionData, FEE_PAYER, model.expectedRules)
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            RulesModel(sponsorsRent = true, expectedRules = SolanaGaslessInstructionRule.ASSOCIATED_TOKEN_ACCOUNT),
+            RulesModel(sponsorsRent = false, expectedRules = emptyList()),
+        )
+    }
+
+    data class RulesModel(val sponsorsRent: Boolean, val expectedRules: List<SolanaGaslessInstructionRule>)
 
     private fun stubYieldModuleWalletManager() {
         clearMocks(walletManagersStore, userWalletsListRepository, walletManager)
@@ -330,7 +404,7 @@ internal class DefaultWalletManagersFacadeTest {
         )
     }
 
-    private fun createFacade(isToggleEnabled: Boolean) = DefaultWalletManagersFacade(
+    private fun createFacade() = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
         userWalletsListRepository = userWalletsListRepository,
         assetLoader = mockk(),
@@ -340,11 +414,11 @@ internal class DefaultWalletManagersFacadeTest {
         getCachedTokenInfoUseCase = mockk(),
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
         yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
     )
 
     private companion object {
+        const val FEE_PAYER = "FeePayer111111111111111111111111111111111111"
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val CURRENT_IMPLEMENTATION = "0x4444444444444444444444444444444444444444"
         const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"

@@ -158,7 +158,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         repository.updateMarkets()
 
         // Assert
-        val testnetIds = testnetChainIds.map(Int::toString)
+        val testnetIds = testnetChainIds.map(Long::toString)
         assertThat(plainChains.captured.split(",")).containsNoneIn(testnetIds)
         assertThat(incentivisedChains.captured.split(",")).containsNoneIn(testnetIds)
     }

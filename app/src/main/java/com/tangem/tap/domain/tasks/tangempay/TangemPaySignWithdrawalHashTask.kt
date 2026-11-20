@@ -1,0 +1,93 @@
+package com.tangem.tap.domain.tasks.tangempay
+
+import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
+import com.tangem.common.core.CardSession
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.CompletionCallback
+import com.tangem.common.core.TangemSdkError
+import com.tangem.core.error.ext.tangemError
+import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.card.common.tangempay.TangemPayUtilities
+import com.tangem.domain.tangempay.error.TangemPayActivationError
+import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
+import com.tangem.operations.sign.SignHashCommand
+
+class TangemPaySignWithdrawalHashTask(private val hash: ByteArray) : CardSessionRunnable<String> {
+
+    override fun run(session: CardSession, callback: CompletionCallback<String>) {
+        val card = session.environment.card ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+            return
+        }
+
+        proceedSign(card, session, callback)
+    }
+
+    private fun proceedSign(card: Card, session: CardSession, callback: CompletionCallback<String>) {
+        val derivationPath = TangemPayUtilities.customDerivationPath
+
+        val wallet = card.wallets.firstOrNull { it.curve == TangemPayUtilities.curve } ?: run {
+            callback(CompletionResult.Failure(TangemPayActivationError.MissingWallet.tangemError))
+            return
+        }
+
+        val publicKey = wallet.publicKey ?: run {
+            callback(CompletionResult.Failure(TangemPayActivationError.PublicKeyIsEmpty.tangemError))
+            return
+        }
+        val derivationTask = DeriveWalletPublicKeyTask(
+            walletPublicKey = publicKey,
+            derivationPath = derivationPath,
+        )
+
+        derivationTask.run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    signData(
+                        targetWalletPublicKey = publicKey,
+                        derivationPath = derivationPath,
+                        session = session,
+                        extendedPublicKey = result.data,
+                        callback = callback,
+                    )
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(result.error))
+                }
+            }
+        }
+    }
+
+    private fun signData(
+        targetWalletPublicKey: ByteArray,
+        derivationPath: DerivationPath?,
+        extendedPublicKey: ExtendedPublicKey,
+        session: CardSession,
+        callback: CompletionCallback<String>,
+    ) {
+        val signTask = SignHashCommand(
+            hash = hash,
+            walletPublicKey = targetWalletPublicKey,
+            derivationPath = derivationPath,
+        )
+
+        signTask.run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    val rsvSignature = TangemPayUtilities.unmarshallSignature(
+                        signature = result.data.signature,
+                        hash = hash,
+                        extendedPublicKey = extendedPublicKey,
+                    )
+
+                    callback(CompletionResult.Success(rsvSignature))
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(result.error))
+                }
+            }
+        }
+    }
+}

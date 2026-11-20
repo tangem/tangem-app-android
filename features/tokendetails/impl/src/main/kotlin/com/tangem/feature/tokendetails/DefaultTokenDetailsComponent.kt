@@ -25,11 +25,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.StakingRegionUnavailableBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.earn.api.EarnBannerComponent
 import com.tangem.features.jointaccount.slotbusy.JointOperationSlotBusyComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
-import com.tangem.features.rating.RatingComponent
-import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.JointCosignRequestsComponent
@@ -46,15 +45,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
-    expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     jointCosignRequestsComponentFactory: JointCosignRequestsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val jointOperationSlotBusyComponentFactory: JointOperationSlotBusyComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
-    private val ratingComponentFactory: RatingComponent.Factory,
     marketingBannerComponentFactory: MarketingBannerComponent.Factory,
+    earnBannerComponentFactory: EarnBannerComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -64,16 +62,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             userWalletId = params.userWalletId,
             currency = params.currency,
             openExplorer = model::onExploreClick,
-        ),
-    )
-
-    private val expressTransactionsComponent = expressTransactionsComponentFactory.create(
-        context = child("expressTransactionsComponent"),
-        params = ExpressTransactionsComponent.Params(
-            userWalletId = params.userWalletId,
-            currency = params.currency,
-            onRatingRequested = model::activateRatingForExpressTx,
-            onRatingDismiss = { model.ratingSlotNavigation.dismiss() },
         ),
     )
 
@@ -91,15 +79,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         serializer = TokenDetailsBottomSheetConfig.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
-    )
-
-    private val ratingSlot = childSlot(
-        key = RATING_SLOT_KEY,
-        source = model.ratingSlotNavigation,
-        serializer = null,
-        childFactory = { params, ctx ->
-            ratingComponentFactory.create(childByContext(ctx), params)
-        },
     )
 
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()
@@ -121,6 +100,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         ),
     )
 
+    private val earnBannerComponent = earnBannerComponentFactory.create(
+        context = child("earnBanner"),
+        params = EarnBannerComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = params.currency,
+        ),
+    )
+
     private val marketingBannerComponent = marketingBannerComponentFactory.create(
         context = child("tokenDetailsMarketingBanner"),
         params = MarketingBannerComponent.Params.Standalone(
@@ -132,7 +119,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        val ratingSlotState by ratingSlot.subscribeAsState()
         NavigationBar3ButtonsScrim()
 
         val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
@@ -142,14 +128,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             tokenMarketBlockComponent = tokenMarketBlockComponent,
             yieldSupplyComponent = yieldSupplyComponent,
             txHistoryComponent = txHistoryComponent,
-            expressTransactionsComponent = expressTransactionsComponent,
             jointCosignRequestsComponent = jointCosignRequestsComponent,
-            ratingComponent = ratingSlotState.child?.instance,
             marketingBannerComponent = marketingBannerComponent,
+            earnBannerComponent = earnBannerComponent,
             modifier = modifier,
         )
 
         bottomSheet.child?.instance?.BottomSheet()
+        earnBannerComponent.BottomSheet()
         txHistoryComponent.Content(modifier)
         jointCosignRequestsComponent.Content(modifier)
     }
@@ -226,9 +212,5 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             context: AppComponentContext,
             params: TokenDetailsComponent.Params,
         ): DefaultTokenDetailsComponent
-    }
-
-    companion object {
-        private const val RATING_SLOT_KEY = "ratingSlot"
     }
 }
