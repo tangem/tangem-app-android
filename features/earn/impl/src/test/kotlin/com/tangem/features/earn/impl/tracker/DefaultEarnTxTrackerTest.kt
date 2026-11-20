@@ -36,12 +36,14 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -344,7 +346,7 @@ internal class DefaultEarnTxTrackerTest {
         }
 
     @Test
-    fun `GIVEN the account list timed out WHEN resume again with the wallet unlocked THEN the record is tracked`() =
+    fun `GIVEN the account list timed out WHEN the account list comes later THEN the record is tracked without a restart`() =
         runTest {
             // Arrange
             val store = createStore()
@@ -355,17 +357,90 @@ internal class DefaultEarnTxTrackerTest {
                 flowOf(accountListWith(currency)),
             )
             every { session.track(ref) } returns statuses(TransactionStatus.Confirmed)
+
+            // Act
+            tracker.resume()
+            runCurrent()
+            advanceTimeBy(31.seconds)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(expectedConfirmed) }
+            assertThat(store.all()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN the wallets load after the lookup timeout WHEN they arrive THEN the record is tracked and reported`() =
+        runTest {
+            // Arrange
+            val store = createStore()
+            store.add(ref)
+            val tracker = createTracker(store)
+            val wallets = MutableStateFlow<List<UserWallet>?>(null)
+            every { userWalletsListRepository.userWallets } returns wallets
+            every { session.track(ref) } returns statuses(TransactionStatus.Confirmed)
             tracker.resume()
             runCurrent()
             advanceTimeBy(31.seconds)
             runCurrent()
 
             // Act
-            tracker.resume()
+            wallets.value = listOf(userWallet(USER_WALLET_ID))
             advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) { analyticsEventHandler.send(expectedConfirmed) }
+            confirmVerified(analyticsEventHandler)
+            assertThat(store.all()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN a locked wallet WHEN resume THEN the record stays without an account lookup or a wait`() = runTest {
+        // Arrange
+        val store = createStore()
+        store.add(ref)
+        val tracker = createTracker(store)
+        every { userWalletsListRepository.userWallets } returns
+            MutableStateFlow(listOf(userWallet(USER_WALLET_ID, isLocked = true)))
+
+        // Act
+        tracker.resume()
+        runCurrent()
+
+        // Assert
+        verify(exactly = 0) { accountListSupplier(any<UserWalletId>()) }
+        verify(exactly = 0) { session.track(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        assertThat(store.all()).containsExactly(ref)
+    }
+
+    @Test
+    fun `GIVEN a record kept for a locked wallet WHEN the wallet is unlocked twice THEN its result is sent once`() =
+        runTest {
+            // Arrange
+            val store = createStore()
+            store.add(ref)
+            val tracker = createTracker(store)
+            val locked = listOf(userWallet(USER_WALLET_ID, isLocked = true))
+            val unlocked = listOf(userWallet(USER_WALLET_ID))
+            val wallets = MutableStateFlow<List<UserWallet>?>(locked)
+            every { userWalletsListRepository.userWallets } returns wallets
+            every { session.track(ref) } returns statuses(TransactionStatus.Confirmed)
+            tracker.resume()
+            runCurrent()
+
+            // Act
+            wallets.value = unlocked
+            advanceUntilIdle()
+            wallets.value = locked
+            advanceUntilIdle()
+            wallets.value = unlocked
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { session.track(ref) }
+            verify(exactly = 1) { analyticsEventHandler.send(expectedConfirmed) }
+            confirmVerified(analyticsEventHandler)
             assertThat(store.all()).isEmpty()
         }
 
@@ -438,7 +513,8 @@ internal class DefaultEarnTxTrackerTest {
         userWalletsListRepository = userWalletsListRepository,
         accountListSupplier = accountListSupplier,
         analyticsEventHandler = analyticsEventHandler,
-        appScope = TestAppCoroutineScope(this),
+        // The unlock watch never completes: a job under the background scope ends it with the test instead of hanging it
+        appScope = TestAppCoroutineScope(coroutineContext + Job(parent = backgroundScope.coroutineContext.job)),
         clock = clock,
     )
 
@@ -454,7 +530,10 @@ internal class DefaultEarnTxTrackerTest {
     private fun statuses(vararg values: TransactionStatus): Flow<EarnTxStatus> =
         flowOf(*values.map(::EarnTxStatus).toTypedArray())
 
-    private fun userWallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
+    private fun userWallet(id: UserWalletId, isLocked: Boolean = false): UserWallet = mockk<UserWallet.Hot> {
+        every { walletId } returns id
+        every { this@mockk.isLocked } returns isLocked
+    }
 
     private fun accountListWith(currency: CryptoCurrency): AccountList =
         AccountList.empty(userWalletId = USER_WALLET_ID, cryptoCurrencies = listOf(currency))

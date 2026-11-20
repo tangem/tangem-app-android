@@ -5,6 +5,8 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCrypto
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.earn.impl.analytics.EarnTxResultAnalyticsEvent
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.product.api.product.EarnProduct
@@ -25,6 +27,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.days
@@ -45,6 +48,7 @@ internal class DefaultEarnTxTracker @Inject constructor(
 
     private val mutex = Mutex()
     private val trackedIds = mutableSetOf<String>()
+    private val isWatchingUnlocks = AtomicBoolean(false)
 
     override fun onSent(ref: EarnTxRef) {
         appScope.launch {
@@ -54,62 +58,62 @@ internal class DefaultEarnTxTracker @Inject constructor(
     }
 
     override fun resume() {
-        appScope.launch {
-            store.all().forEach { ref ->
-                launch { track(ref) }
-            }
-        }
+        appScope.launch { trackStored() }
+    }
+
+    private suspend fun trackStored(predicate: (EarnTxRef) -> Boolean = { true }) {
+        store.all().filter(predicate).forEach { ref -> appScope.launch { track(ref) } }
     }
 
     private suspend fun track(ref: EarnTxRef) {
         if (!claim(ref.id)) return
 
-        try {
+        val isWaitingForWallet = try {
             runSuspendCatching { follow(ref) }
                 .onFailure { TangemLogger.e("Earn tracker: tracking of ${ref.productId.value} failed, kept", it) }
+                .getOrDefault(false)
         } finally {
             withContext(NonCancellable) { release(ref.id) }
         }
+        // Started after the release: the first wallets emission may re-track this record at once
+        if (isWaitingForWallet) watchUnlocks()
     }
 
-    private suspend fun follow(ref: EarnTxRef) {
+    /** @return `true` when the record is kept until its wallet is loaded or unlocked */
+    private suspend fun follow(ref: EarnTxRef): Boolean {
         // A journal read made before another tracking resolved this record must not report it again
-        if (store.all().none { it.id == ref.id }) return
+        if (store.all().none { it.id == ref.id }) return false
 
         if (clock.now() - ref.createdAt > RECORD_TTL) {
             drop(ref, reason = "the result is still unknown after $RECORD_TTL")
-            return
+            return false
         }
 
         val product = registry.get().find(ref.productId)
         val factory = sessionFactories.get()[ref.productId.value]
         if (product == null || factory == null) {
             drop(ref, reason = "the product or its session is unknown")
-            return
+            return false
         }
 
         val wallets = withTimeoutOrNull(CURRENCY_TIMEOUT) {
             userWalletsListRepository.userWallets.filterNotNull().first()
         }
-        if (wallets == null) {
-            keep(ref, reason = "the wallets are not loaded")
-            return
-        }
+        if (wallets == null) return keepForWallet(ref, reason = "the wallets are not loaded")
         // The account list of a removed wallet never emits, it is only retried, so a removed wallet is checked here
-        if (wallets.none { it.walletId == ref.userWalletId }) {
+        val wallet = wallets.firstOrNull { it.walletId == ref.userWalletId }
+        if (wallet == null) {
             drop(ref, reason = "the wallet is removed")
-            return
+            return false
         }
+        if (wallet.isLocked) return keepForWallet(ref, reason = "the wallet is locked")
 
         val accountList = withTimeoutOrNull(CURRENCY_TIMEOUT) { accountListSupplier(ref.userWalletId).first() }
-        if (accountList == null) {
-            keep(ref, reason = "the account list of the wallet is unavailable")
-            return
-        }
+            ?: return keepForWallet(ref, reason = "the account list of the wallet is unavailable")
         val currency = accountList.getCryptoCurrency(ref.currencyId.value).getOrNull()
         if (currency == null) {
             drop(ref, reason = "the wallet has no such currency")
-            return
+            return false
         }
 
         val status = factory.create(EarnProduct.Params(userWalletId = ref.userWalletId, currency = currency))
@@ -118,6 +122,7 @@ internal class DefaultEarnTxTracker @Inject constructor(
             .firstOrNull { it != TxInfo.TransactionStatus.Unconfirmed }
 
         report(ref = ref, product = product, status = status)
+        return false
     }
 
     private suspend fun report(ref: EarnTxRef, product: EarnProduct, status: TxInfo.TransactionStatus?) {
@@ -148,6 +153,28 @@ internal class DefaultEarnTxTracker @Inject constructor(
 
     private fun keep(ref: EarnTxRef, reason: String) {
         TangemLogger.i("Earn tracker: ${ref.productId.value} record kept for the next start, $reason")
+    }
+
+    private fun keepForWallet(ref: EarnTxRef, reason: String): Boolean {
+        TangemLogger.i("Earn tracker: ${ref.productId.value} record kept until its wallet is available, $reason")
+        return true
+    }
+
+    /** A wallet that is loaded or unlocked later in the session gets its kept records tracked without a restart. */
+    private fun watchUnlocks() {
+        if (!isWatchingUnlocks.compareAndSet(false, true)) return
+
+        appScope.launch {
+            var unlocked = emptySet<UserWalletId>()
+            userWalletsListRepository.userWallets
+                .filterNotNull()
+                .map { wallets -> wallets.filterNot { it.isLocked }.mapTo(mutableSetOf()) { it.walletId } }
+                .collect { current ->
+                    val newlyUnlocked = current - unlocked
+                    unlocked = current
+                    if (newlyUnlocked.isNotEmpty()) trackStored { ref -> ref.userWalletId in newlyUnlocked }
+                }
+        }
     }
 
     private suspend fun claim(id: String): Boolean = mutex.withLock { trackedIds.add(id) }
