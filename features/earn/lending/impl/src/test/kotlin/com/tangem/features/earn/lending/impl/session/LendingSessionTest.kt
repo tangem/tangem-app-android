@@ -1181,7 +1181,7 @@ internal class LendingSessionTest {
                 // Assert
                 awaitItem()
                 val sent = awaitItem() as EarnSigningStep.Sent
-                val expectedRef = txRef(id = SMART_GAS_HASH, actionId = "withdraw", createdAt = sent.ref.createdAt)
+                val expectedRef = txRef(id = SMART_GAS_HASH, analytics = withdrawAnalytics(), createdAt = sent.ref.createdAt)
                 assertThat(awaitItem()).isEqualTo(EarnSigningStep.Done(expectedRef, smartGasWithdrawResult()))
                 awaitComplete()
             }
