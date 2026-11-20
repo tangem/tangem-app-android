@@ -16,12 +16,14 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.api.overview.EarnOverviewFetcher
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
+import com.tangem.features.earn.flow.api.EarnDepositCapacity
 import com.tangem.features.earn.impl.InnerEarnNavigator
 import com.tangem.features.earn.impl.analytics.EarnAddFundsSource
 import com.tangem.features.earn.impl.analytics.EarnNoFundsNoticeAnalytics
 import com.tangem.features.earn.impl.analytics.EarnPickerAnalyticsEvent
-import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
 import com.tangem.features.earn.impl.di.EarnHeroClip
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenSheetRequest
+import com.tangem.features.earn.impl.guardedBy
 import com.tangem.features.earn.impl.incentive.EarnIncentiveSheetRequest
 import com.tangem.features.earn.impl.overview.EarnHeadlineSelector
 import com.tangem.features.earn.impl.overview.EarnProductSummaries
@@ -40,6 +42,7 @@ import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnHorizon
+import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
@@ -48,6 +51,7 @@ import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnAction
+import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -62,19 +66,21 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -96,6 +102,7 @@ internal class EarnPickerModel @Inject constructor(
     @EarnHeroClip heroClipCache: RemoteClipCache,
     private val cta: EarnPickerCta,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val depositCapacity: EarnDepositCapacity,
 ) : Model(), EarnPickerClickIntents, EarnCalculatorComponent.ModelCallback {
 
     private val params: EarnYieldPickerComponent.Params = paramsContainer.require()
@@ -142,10 +149,13 @@ internal class EarnPickerModel @Inject constructor(
         .stateIn(modelScope, SharingStarted.Eagerly, null)
 
     /** `null` until the balance is known, and when the wallet has no status for the currency. */
-    private val ethBalance: Flow<BigDecimal?> = singleAccountStatusListSupplier(params.userWalletId)
+    private val ethBalance: StateFlow<BigDecimal?> = singleAccountStatusListSupplier(params.userWalletId)
         .map { it.getCryptoCurrencyStatus(params.cryptoCurrency).getOrNull()?.value?.amount }
-        .onStart { emit(null) }
+        .stateIn(modelScope, SharingStarted.Eagerly, null)
+
+    private val capacity: Flow<CapacityFrame> = combine(selection, ethBalance, ::capacityRequest)
         .distinctUntilChanged()
+        .flatMapLatest(::estimateCapacity)
 
     val projection: Flow<EarnProjection?> = selection
         .map { (it?.state as? EarnProductState.Ready)?.projection }
@@ -191,6 +201,7 @@ internal class EarnPickerModel @Inject constructor(
             flow2 = selection,
             flow3 = ethBalance,
             flow4 = selectedId,
+            flow5 = capacity,
             transform = ::createUiState,
         )
             .flowOn(dispatchers.default)
@@ -257,6 +268,7 @@ internal class EarnPickerModel @Inject constructor(
         selection: Selection?,
         ethBalance: BigDecimal?,
         selectedId: EarnProductId?,
+        capacityFrame: CapacityFrame,
     ): Frame {
         val currencySummaries = frame[params.cryptoCurrency.id]
         val isPending = frame.isPending(params.cryptoCurrency.id)
@@ -269,12 +281,18 @@ internal class EarnPickerModel @Inject constructor(
                 Frame(converter.initial(intents = this))
             else -> {
                 val state = selection?.takeIf { it.product.id == chosen.id }?.state ?: EarnProductState.Loading
+                val capacity = capacityOf(
+                    selection = selection?.takeIf { it.product.id == chosen.id },
+                    balance = ethBalance,
+                    frame = capacityFrame,
+                )
                 val um = converter.convert(
                     product = chosen,
                     state = state,
                     summaries = currencySummaries,
                     selectedId = chosen.id,
                     ethBalance = ethBalance,
+                    capacity = capacity,
                     intents = this,
                 )
                 Frame(
@@ -284,6 +302,7 @@ internal class EarnPickerModel @Inject constructor(
                         state = state,
                         summaries = currencySummaries,
                         ethBalance = ethBalance,
+                        capacity = capacity,
                     ),
                 )
             }
@@ -299,6 +318,44 @@ internal class EarnPickerModel @Inject constructor(
         isRedirected.get() ||
             params.shouldRedirectToActive &&
             (isPending && !hasSettled.get() || currencySummaries.any { it.position != null })
+
+    private fun capacityRequest(selection: Selection?, balance: BigDecimal?): CapacityRequest? {
+        val state = selection?.state as? EarnProductState.Ready ?: return null
+        val action = state.primary.action as? EarnFlowAction ?: return null
+        if (balance == null || balance.signum() <= 0 || balance < state.limits.minDeposit) return null
+        if (state.position != EarnPositionState.None || state.primary.guardedBy(state).block != null) return null
+        return CapacityRequest(productId = selection.product.id, action = action, balance = balance)
+    }
+
+    /** A failed or hung estimate leaves the button to the balance: a network error must not block deposits. */
+    private fun estimateCapacity(request: CapacityRequest?): Flow<CapacityFrame> {
+        if (request == null) return flowOf(CapacityFrame(request = null, value = EarnPickerDepositCapacity.Unknown))
+
+        return flow {
+            emit(CapacityFrame(request = request, value = EarnPickerDepositCapacity.Loading))
+            val result = withTimeoutOrNull(ESTIMATE_TIMEOUT) {
+                depositCapacity.availableMax(
+                    productId = request.productId,
+                    params = productParams,
+                    action = request.action,
+                    balance = request.balance,
+                )
+            }
+            if (result == null) TangemLogger.e("Earn picker: deposit capacity of ${request.productId.value} timed out")
+            val value = result?.getOrNull()?.let(EarnPickerDepositCapacity::Known) ?: EarnPickerDepositCapacity.Unknown
+            emit(CapacityFrame(request = request, value = value))
+        }
+    }
+
+    /** The UI frame can run before [capacity] reacts to a new balance or state: an older estimate must not decide. */
+    private fun capacityOf(
+        selection: Selection?,
+        balance: BigDecimal?,
+        frame: CapacityFrame,
+    ): EarnPickerDepositCapacity {
+        val request = capacityRequest(selection, balance) ?: return EarnPickerDepositCapacity.Unknown
+        return if (frame.request == request) frame.value else EarnPickerDepositCapacity.Loading
+    }
 
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
         currencySummaries.none { it.productId == chosen.id }
@@ -323,13 +380,17 @@ internal class EarnPickerModel @Inject constructor(
             )
         }
 
-        val isNoFunds = cta.kind(shown.state, shown.ethBalance) == EarnPickerCta.Kind.AddFunds
-        noFundsNotice.onCta(
-            EarnNoFundsNoticeAnalytics.Notice(
-                token = params.cryptoCurrency.symbol,
-                product = shown.product.analytics.product,
-            ).takeIf { isNoFunds },
-        )
+        when (cta.kind(shown.state, shown.ethBalance, shown.capacity)) {
+            // A re-estimate does not end the no-funds state the notice already reported
+            EarnPickerCta.Kind.Loading -> Unit
+            EarnPickerCta.Kind.AddFunds -> noFundsNotice.onCta(
+                EarnNoFundsNoticeAnalytics.Notice(
+                    token = params.cryptoCurrency.symbol,
+                    product = shown.product.analytics.product,
+                ),
+            )
+            else -> noFundsNotice.onCta(null)
+        }
     }
 
     private fun List<EarnProductSummary>.apyOf(id: EarnProductId): String? =
@@ -458,7 +519,20 @@ internal class EarnPickerModel @Inject constructor(
         val state: EarnProductState,
         val summaries: List<EarnProductSummary>,
         val ethBalance: BigDecimal?,
+        val capacity: EarnPickerDepositCapacity,
     )
 
     private data class Frame(val um: EarnPickerUM, val shown: Shown? = null)
+
+    private data class CapacityRequest(
+        val productId: EarnProductId,
+        val action: EarnFlowAction,
+        val balance: BigDecimal,
+    )
+
+    private data class CapacityFrame(val request: CapacityRequest?, val value: EarnPickerDepositCapacity)
+
+    private companion object {
+        val ESTIMATE_TIMEOUT = 10.seconds
+    }
 }

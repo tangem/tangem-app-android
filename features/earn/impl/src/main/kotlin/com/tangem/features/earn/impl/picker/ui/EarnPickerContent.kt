@@ -74,6 +74,7 @@ import com.tangem.features.earn.impl.fake.fakeSummary
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.picker.model.EarnPickerClickIntents
 import com.tangem.features.earn.impl.picker.model.EarnPickerConverter
+import com.tangem.features.earn.impl.picker.model.EarnPickerDepositCapacity
 import com.tangem.features.earn.impl.picker.model.EarnPickerCta
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
@@ -481,6 +482,7 @@ private fun Footer(cta: TangemButtonUM, modifier: Modifier = Modifier) {
             text = cta.text,
             isEnabled = cta.isEnabled,
             isDimmed = cta.isDimmed,
+            isLoading = cta.isLoading,
             onClick = cta.onClick,
         )
     }
@@ -580,6 +582,7 @@ private object PreviewData {
         summaries = summaries,
         selectedId = lending.id,
         ethBalance = ethBalance,
+        capacity = EarnPickerDepositCapacity.Unknown,
         intents = intents,
     )
 
