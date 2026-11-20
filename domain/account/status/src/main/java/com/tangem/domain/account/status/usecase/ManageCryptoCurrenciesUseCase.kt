@@ -123,7 +123,7 @@ class ManageCryptoCurrenciesUseCase(
         val userWalletId = accountId.userWalletId
         withContext(NonCancellable) {
             val accountStatus = getAccountStatus(accountId = accountId)
-            ensureAcceptsTokens(accountStatus)
+            ensureAcceptsTokens(accountStatus = accountStatus, add = add)
 
             var modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = add, remove = remove)
@@ -218,11 +218,17 @@ class ManageCryptoCurrenciesUseCase(
         }
     }
 
-    private fun Raise<Throwable>.ensureAcceptsTokens(accountStatus: AccountStatus.CryptoPortfolio) {
-        val isInactiveJoint = accountStatus is AccountStatus.Joint &&
-            accountStatus.value !is JointAccountStatusValue.Active
-        if (isInactiveJoint) {
+    private fun Raise<Throwable>.ensureAcceptsTokens(
+        accountStatus: AccountStatus.CryptoPortfolio,
+        add: List<CryptoCurrency>,
+    ) {
+        if (accountStatus !is AccountStatus.Joint) return
+
+        if (accountStatus.value !is JointAccountStatusValue.Active) {
             raise(IllegalStateException("A joint account takes tokens once it is active: ${accountStatus.accountId}"))
+        }
+        if (add.any(CryptoCurrency::isCustom)) {
+            raise(IllegalStateException("A joint account takes no custom tokens: ${accountStatus.accountId}"))
         }
     }
 

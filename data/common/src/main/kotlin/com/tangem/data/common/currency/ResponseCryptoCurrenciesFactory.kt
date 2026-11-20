@@ -39,7 +39,12 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             .toList()
     }
 
-    /** The currencies of a joint account: every token sits on the network at the owner key path [derivationPath]. */
+    /**
+     * The currencies of a joint account: every token sits on the network at the owner key path [derivationPath].
+     *
+     * A joint account takes no custom tokens, so one that reached its list from elsewhere is left out here and
+     * never becomes a currency.
+     */
     fun createCurrencies(
         tokens: List<UserTokensResponse.Token>,
         userWallet: UserWallet,
@@ -47,6 +52,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     ): List<CryptoCurrency> {
         return tokens
             .asSequence()
+            .filterNot { it.isCustomIn(derivationPath) }
             .mapNotNull { createCurrency(it, userWallet, derivationPath) }
             .distinctBy(CryptoCurrency::id)
             .toList()
@@ -168,4 +174,9 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             isCustom = isCustomToken(id, network),
         )
     }
+}
+
+/** Custom is a token the backend doesn't list (no id) or one that is not on the account's own path */
+fun UserTokensResponse.Token.isCustomIn(jointPath: Network.DerivationPath.Joint): Boolean {
+    return id.isNullOrBlank() || derivationPath != jointPath.value
 }

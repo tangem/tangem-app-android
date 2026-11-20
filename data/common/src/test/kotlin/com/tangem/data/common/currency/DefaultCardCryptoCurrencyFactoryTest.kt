@@ -207,6 +207,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             val personal = createWalletAccountsResponse(personalCurrencies, false, false)
             val jointTokens = jointCurrencies.map { currency ->
                 userTokensResponseFactory.createResponseToken(currency = currency, accountId = null)
+                    .copy(derivationPath = ownerPath.value)
             }
             val joint = WalletAccountDTO(
                 id = "joint_0",
