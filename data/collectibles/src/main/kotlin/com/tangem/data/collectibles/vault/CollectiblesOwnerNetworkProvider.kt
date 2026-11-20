@@ -3,6 +3,7 @@ package com.tangem.data.collectibles.vault
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
@@ -32,13 +33,12 @@ internal class CollectiblesOwnerNetworkProvider @Inject constructor(
             return GachaVaultError.WalletUnavailable.left()
         }
 
-        val blockchain = userWallet.collectiblesVaultBlockchain
         val network = networkFactory.create(
-            blockchain = blockchain,
+            blockchain = Blockchain.Solana,
             extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
             userWallet = userWallet,
         ) ?: run {
-            TangemLogger.d(messageString = "Collectibles vault: no network for $blockchain")
+            TangemLogger.d(messageString = "Collectibles vault: no network for Solana")
             return GachaVaultError.WalletUnavailable.left()
         }
 

@@ -166,7 +166,7 @@ internal class DefaultCollectiblesSessionKey @Inject constructor(
 
         val CURVE = EllipticCurve.Ed25519Slip0010
 
-        /** Mainnet path though the program is devnet: only the public key matters, and pinning it keeps it stable. */
+        /** Only the public key matters, and pinning the path keeps it stable. */
         val derivationPath: DerivationPath = requireNotNull(
             Blockchain.Solana.derivationPath(DerivationStyle.V3),
         ) {

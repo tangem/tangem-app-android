@@ -2,39 +2,32 @@ package com.tangem.features.collectibles.impl.main.model.converter
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
-import com.tangem.core.ui.res.generated.icons.ic_copy_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_mail_20
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 internal enum class CollectiblesMenuItem(val id: String) {
     ACTIVITY_LOG("activity_log"),
     DELIVERIES("deliveries"),
     HOW_IT_WORKS("how_it_works"),
     GET_ASSISTANCE("get_assistance"),
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    SESSION_KEY("session_key"),
 }
 
-/**
- * Builds the top bar menu closed; opening and dismissing it is a state update. The input is the base58 address of
- * the vault's `session_key`, null until it is read.
- */
+/** Builds the top bar menu closed; opening and dismissing it is a state update. */
 internal class CollectiblesMenuConverter(
     private val onMenuClick: () -> Unit,
     private val onDismiss: () -> Unit,
     private val onItemClick: (CollectiblesMenuItem) -> Unit,
-) : Converter<String?, CollectiblesMainUM.MenuUM> {
+) : Converter<Unit, CollectiblesMainUM.MenuUM> {
 
-    override fun convert(value: String?): CollectiblesMainUM.MenuUM = CollectiblesMainUM.MenuUM(
-        items = listOfNotNull(
+    override fun convert(value: Unit): CollectiblesMainUM.MenuUM = CollectiblesMainUM.MenuUM(
+        items = persistentListOf(
             item(
                 item = CollectiblesMenuItem.ACTIVITY_LOG,
                 icon = Icons.ic_clock_20,
@@ -56,17 +49,7 @@ internal class CollectiblesMenuConverter(
                 icon = Icons.ic_mail_20,
                 titleRef = TextReference.Res(R.string.collectibles_main_menu_get_assistance),
             ),
-
-            // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-            value?.let {
-                item(
-                    item = CollectiblesMenuItem.SESSION_KEY,
-                    icon = Icons.ic_copy_20,
-                    titleRef = stringReference("Session key address"),
-                    hasDividerAbove = true,
-                )
-            },
-        ).toPersistentList(),
+        ),
         isShown = false,
         onMenuClick = onMenuClick,
         onDismiss = onDismiss,

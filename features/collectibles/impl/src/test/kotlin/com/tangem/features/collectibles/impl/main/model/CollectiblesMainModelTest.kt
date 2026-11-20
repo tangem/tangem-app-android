@@ -8,7 +8,6 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -21,8 +20,6 @@ import com.tangem.domain.collectibles.models.CollectiblePendingPack
 import com.tangem.domain.collectibles.usecase.DismissCollectiblePendingPackUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectiblePendingPacksUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
-import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
-import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -81,8 +78,6 @@ internal class CollectiblesMainModelTest {
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
-    private val sessionKey: CollectiblesSessionKey = mockk()
-    private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val getPendingPacksUseCase: GetCollectiblePendingPacksUseCase = mockk()
     private val dismissPendingPackUseCase: DismissCollectiblePendingPackUseCase = mockk(relaxed = true)
 
@@ -108,8 +103,6 @@ internal class CollectiblesMainModelTest {
             accountStatusFetcher,
             getSelectedAppCurrencyUseCase,
             getBalanceHidingSettingsUseCase,
-            sessionKey,
-            clipboardManager,
             getPendingPacksUseCase,
             dismissPendingPackUseCase,
             getRegionStatusUseCase,
@@ -125,7 +118,6 @@ internal class CollectiblesMainModelTest {
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
-        coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SessionKeyPublicKey(SESSION_KEY)
         every { getPendingPacksUseCase(coldWallet.walletId) } returns pendingPacksFlow
     }
 
@@ -226,6 +218,19 @@ internal class CollectiblesMainModelTest {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Menu {
+
+        @Test
+        fun `GIVEN model created WHEN menu built THEN only the product items are listed`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.menu.items.map { it.id })
+                .containsExactly("activity_log", "deliveries", "how_it_works", "get_assistance")
+                .inOrder()
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN model created WHEN menu clicked THEN menu is shown`() = runTest {
@@ -483,40 +488,6 @@ internal class CollectiblesMainModelTest {
 
             // Assert
             verify(exactly = 1) { router.push(any<AppRoute.Swap>(), onComplete = any()) }
-            model.onDestroy()
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class SessionKey {
-
-        @Test
-        fun `GIVEN a session key WHEN its menu item clicked THEN the full address is copied`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            model.uiState.value.menu.items.single { it.id == "session_key" }.onClick()
-
-            // Assert
-            verify(exactly = 1) { clipboardManager.setText(text = SESSION_KEY, isSensitive = false) }
-            assertThat(model.uiState.value.menu.isShown).isFalse()
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN no session key WHEN menu built THEN the item is absent`() = runTest {
-            // Arrange
-            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns null
-
-            // Act
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.uiState.value.menu.items.none { it.id == "session_key" }).isTrue()
             model.onDestroy()
         }
     }
@@ -884,9 +855,7 @@ internal class CollectiblesMainModelTest {
             collectiblesAccountRepository = accountRepository,
             collectiblesAccountStatusFetcher = accountStatusFetcher,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-            sessionKey = sessionKey,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
-            clipboardManager = clipboardManager,
             getCollectiblePendingPacksUseCase = getPendingPacksUseCase,
             dismissCollectiblePendingPackUseCase = dismissPendingPackUseCase,
             getRegionStatusUseCase = getRegionStatusUseCase,
@@ -913,9 +882,6 @@ internal class CollectiblesMainModelTest {
     }
 
     private companion object {
-
-        const val SESSION_KEY = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
-
 
         val PAYMENT_IN_PROGRESS = CollectiblePendingPack.PaymentInProgress(txId = "payment")
         val READY_TO_OPEN = CollectiblePendingPack.ReadyToOpen(

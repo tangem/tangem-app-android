@@ -1,6 +1,5 @@
 package com.tangem.data.collectibles.vault
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -25,11 +24,3 @@ internal fun mockColdWallet(
         every { walletData } returns null
     }
 }
-
-/** The card kind and the chain the vault is then addressed on. */
-internal data class VaultChainModel(val isTestCard: Boolean, val blockchain: Blockchain)
-
-internal fun vaultChainModels() = listOf(
-    VaultChainModel(isTestCard = false, blockchain = Blockchain.Solana),
-    VaultChainModel(isTestCard = true, blockchain = Blockchain.SolanaTestnet),
-)
