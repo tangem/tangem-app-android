@@ -38,6 +38,14 @@ internal sealed class LendingAnalyticsEvent(
         params = transactionParams(operation, isWithUpgrade) + (AnalyticsParam.ERROR_CODE to errorCode),
     )
 
+    data class SignCancelled(
+        private val operation: LendingOperation,
+        private val isWithUpgrade: Boolean,
+    ) : LendingAnalyticsEvent(
+        event = "Error - Sign Cancelled",
+        params = transactionParams(operation, isWithUpgrade),
+    )
+
     private companion object {
         const val TRANSACTION_TYPE = "Transaction Type"
         const val WITH_UPGRADE = "With Upgrade"

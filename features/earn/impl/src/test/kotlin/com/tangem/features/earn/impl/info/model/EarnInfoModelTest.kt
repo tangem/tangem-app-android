@@ -1076,6 +1076,49 @@ internal class EarnInfoModelTest {
                 model.onDestroy()
             }
 
+        @Test
+        fun `GIVEN Info from the banner WHEN How it works is clicked THEN HowItWorksOpened is sent`() = runTest {
+            // Arrange
+            product.howItWorksContent = HOW_IT_WORKS
+            val model = createModel(source = EarnEntrySource.EarnBanner)
+            advanceUntilIdle()
+
+            // Act
+            requireNotNull(requireNotNull(model.uiState.value).myFunds.onHowItWorksClick).invoke()
+
+            // Assert
+            val expected = EarnInfoAnalyticsEvent.HowItWorksOpened(
+                category = "ETH Lending",
+                source = EarnEntrySource.EarnBanner,
+            )
+            verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnInfoAnalyticsEvent.HowItWorksOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Info from the banner WHEN Learn more is clicked THEN LearnMore is sent`() = runTest {
+            // Arrange
+            product.howItWorksContent = HOW_IT_WORKS
+            coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns BLOG_URL
+            val model = createModel(source = EarnEntrySource.EarnBanner)
+            advanceUntilIdle()
+            requireNotNull(requireNotNull(model.uiState.value).myFunds.onHowItWorksClick).invoke()
+
+            // Act
+            requireNotNull(model.howItWorks.value?.onLearnMoreClick).invoke()
+            advanceUntilIdle()
+
+            // Assert
+            val expected = EarnInfoAnalyticsEvent.LearnMore(
+                category = "ETH Lending",
+                source = EarnEntrySource.EarnBanner,
+            )
+            verify(exactly = 1) { analyticsEventHandler.send(expected) }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnInfoAnalyticsEvent.LearnMore>()) }
+            model.onDestroy()
+        }
+
         private fun EarnProductState.Ready.withPosition(cryptoAmount: BigDecimal, earned: BigDecimal?) =
             copy(
                 position = EarnPositionState.Known(

@@ -236,7 +236,7 @@ internal class LendingAnalyticsSenderTest {
         }
 
         @Test
-        fun `GIVEN user cancelled on the card WHEN onSendFailed THEN sends nothing`() {
+        fun `GIVEN user cancelled on the card WHEN onSendFailed THEN sends Sign Cancelled only`() {
             // Act
             sender.onSendFailed(
                 plan = depositPlan(),
@@ -245,7 +245,12 @@ internal class LendingAnalyticsSenderTest {
             )
 
             // Assert
-            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    LendingAnalyticsEvent.SignCancelled(operation = LendingOperation.Deposit, isWithUpgrade = false),
+                )
+            }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<LendingAnalyticsEvent.TransactionFailed>()) }
         }
     }
 

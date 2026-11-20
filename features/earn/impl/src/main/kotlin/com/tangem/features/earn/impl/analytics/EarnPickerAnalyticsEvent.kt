@@ -2,6 +2,7 @@ package com.tangem.features.earn.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.features.earn.api.EarnEntrySource
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenAction
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.analytics.toAnalyticsValue
@@ -117,6 +118,28 @@ internal sealed class EarnPickerAnalyticsEvent(
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             AnalyticsParam.SOURCE to source.value,
+        ),
+    )
+
+    class GetAssetSheetOpened(
+        token: String,
+        source: EarnAddFundsSource,
+    ) : EarnPickerAnalyticsEvent(
+        event = "Get Asset Sheet Opened",
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.SOURCE to source.value,
+        ),
+    )
+
+    class GetAssetMethod(
+        token: String,
+        method: EarnGetTokenAction,
+    ) : EarnPickerAnalyticsEvent(
+        event = "Button - Get Asset Method",
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            EarnAnalyticsParam.METHOD to method.toAnalyticsValue(),
         ),
     )
 }

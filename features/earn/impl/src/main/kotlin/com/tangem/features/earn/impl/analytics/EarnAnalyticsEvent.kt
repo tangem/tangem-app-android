@@ -27,4 +27,5 @@ internal object EarnAnalyticsParam {
     const val EARNED_BUCKET = "Earned Bucket"
     const val PERIOD = "Period"
     const val ACTION = "Action"
+    const val METHOD = "Method"
 }

@@ -500,11 +500,35 @@ internal class EarnPickerModelTest {
                 runCurrent()
 
                 // Assert
-                assertThat(requests).containsExactly(EarnGetTokenSheetRequest(USER_WALLET_ID, currency))
+                assertThat(requests).containsExactly(
+                    EarnGetTokenSheetRequest(USER_WALLET_ID, currency, EarnAddFundsSource.YieldPicker),
+                )
                 verify { router wasNot Called }
                 assertThat(lending.actionHandlerCalls).isEqualTo(0)
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN Add funds WHEN clicked THEN the Get token request carries the Yield Picker source`() = runTest {
+            // Arrange
+            stubBalance(BigDecimal.ZERO)
+            val requests = mutableListOf<EarnGetTokenSheetRequest>()
+            val model = createModel(
+                frames = MutableStateFlow(frame(summary(lending), summary(vault))),
+                preselected = lending.id,
+            )
+            backgroundScope.launch { model.getTokenSheetRequests.collect { requests += it } }
+            runCurrent()
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.cta.onClick()
+            runCurrent()
+
+            // Assert
+            assertThat(requests.map { it.source }).containsExactly(EarnAddFundsSource.YieldPicker)
+            model.onDestroy()
+        }
     }
 
     @Nested

@@ -1,6 +1,7 @@
 package com.tangem.features.earn.impl.analytics
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenAction
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.product.EarnHorizon
@@ -118,6 +119,27 @@ internal class EarnAnalyticsValuesTest {
         private fun provideTestModels() = listOf(
             ValueModel(EarnAddFundsSource.YieldPicker, "Yield Picker"),
             ValueModel(EarnAddFundsSource.InfoScreen, "Info Screen"),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetTokenActionValue {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN get token action WHEN toAnalyticsValue THEN spec string`(model: ValueModel<EarnGetTokenAction>) {
+            // Act
+            val actual = model.input.toAnalyticsValue()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            ValueModel(EarnGetTokenAction.Deposit, "Deposit"),
+            ValueModel(EarnGetTokenAction.Swap, "Swap"),
+            ValueModel(EarnGetTokenAction.Buy, "Buy"),
         )
     }
 

@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.analytics
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.features.earn.api.EarnEntrySource
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenAction
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.product.EarnHorizon
@@ -121,6 +122,26 @@ internal class EarnPickerAnalyticsEventTest {
             event = EarnPickerAnalyticsEvent.AddFunds(token = "ETH", source = EarnAddFundsSource.InfoScreen),
             expectedId = "[Earn] Button - Add Funds",
             expectedParams = mapOf("Token" to "ETH", "Source" to "Info Screen"),
+        ),
+        EventModel(
+            event = EarnPickerAnalyticsEvent.GetAssetSheetOpened(token = "ETH", source = EarnAddFundsSource.YieldPicker),
+            expectedId = "[Earn] Get Asset Sheet Opened",
+            expectedParams = mapOf("Token" to "ETH", "Source" to "Yield Picker"),
+        ),
+        EventModel(
+            event = EarnPickerAnalyticsEvent.GetAssetMethod(token = "ETH", method = EarnGetTokenAction.Deposit),
+            expectedId = "[Earn] Button - Get Asset Method",
+            expectedParams = mapOf("Token" to "ETH", "Method" to "Deposit"),
+        ),
+        EventModel(
+            event = EarnPickerAnalyticsEvent.GetAssetMethod(token = "ETH", method = EarnGetTokenAction.Swap),
+            expectedId = "[Earn] Button - Get Asset Method",
+            expectedParams = mapOf("Token" to "ETH", "Method" to "Swap"),
+        ),
+        EventModel(
+            event = EarnPickerAnalyticsEvent.GetAssetMethod(token = "ETH", method = EarnGetTokenAction.Buy),
+            expectedId = "[Earn] Button - Get Asset Method",
+            expectedParams = mapOf("Token" to "ETH", "Method" to "Buy"),
         ),
     )
 

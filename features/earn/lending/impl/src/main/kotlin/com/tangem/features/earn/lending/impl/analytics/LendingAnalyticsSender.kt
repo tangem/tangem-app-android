@@ -32,9 +32,13 @@ internal class LendingAnalyticsSender @Inject constructor(
         analyticsEventHandler.send(transactionSent(currency = currency, plan = plan))
     }
 
-    /** A refusal on the card is not a failed transaction */
     fun onSendFailed(plan: LendingPlan, operation: LendingOperation, error: SendTransactionError) {
-        if (error is SendTransactionError.UserCancelledError) return
+        if (error is SendTransactionError.UserCancelledError) {
+            analyticsEventHandler.send(
+                LendingAnalyticsEvent.SignCancelled(operation = operation, isWithUpgrade = plan.isWithUpgrade),
+            )
+            return
+        }
 
         analyticsEventHandler.send(
             LendingAnalyticsEvent.TransactionFailed(

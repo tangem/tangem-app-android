@@ -1,5 +1,6 @@
 package com.tangem.features.earn.impl.analytics
 
+import com.tangem.features.earn.impl.getfunds.EarnGetTokenAction
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorComponent
 import com.tangem.features.earn.product.api.product.EarnHorizon
@@ -35,4 +36,10 @@ internal fun EarnRowKind.toAnalyticsValue(): String = when (this) {
 internal fun EarnCalculatorComponent.Input.toAnalyticsValue(): String = when (this) {
     EarnCalculatorComponent.Input.InitialBalance -> "Initial Balance"
     EarnCalculatorComponent.Input.MonthlyTopUp -> "Monthly Top-Up"
+}
+
+internal fun EarnGetTokenAction.toAnalyticsValue(): String = when (this) {
+    EarnGetTokenAction.Deposit -> "Deposit"
+    EarnGetTokenAction.Swap -> "Swap"
+    EarnGetTokenAction.Buy -> "Buy"
 }

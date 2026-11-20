@@ -442,13 +442,9 @@ internal class EarnPickerModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
-        analyticsEventHandler.send(
-            EarnPickerAnalyticsEvent.AddFunds(
-                token = params.cryptoCurrency.symbol,
-                source = EarnAddFundsSource.YieldPicker,
-            ),
-        )
-        getTokenSheetRequests.tryEmit(EarnGetTokenSheetRequest(params.userWalletId, params.cryptoCurrency))
+        val source = EarnAddFundsSource.YieldPicker
+        analyticsEventHandler.send(EarnPickerAnalyticsEvent.AddFunds(params.cryptoCurrency.symbol, source))
+        getTokenSheetRequests.tryEmit(EarnGetTokenSheetRequest(params.userWalletId, params.cryptoCurrency, source))
     }
 
     override fun onCloseClick() {
