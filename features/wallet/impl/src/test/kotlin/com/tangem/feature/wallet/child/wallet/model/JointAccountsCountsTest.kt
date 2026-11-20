@@ -45,6 +45,27 @@ internal class JointAccountsCountsTest {
         assertThat(actual).isEqualTo(JointAccountsCounts(active = 1, pending = 0))
     }
 
+    @Test
+    fun `GIVEN crypto and joint accounts WHEN accounts counted THEN joint accounts are left out`() {
+        // Act
+        val actual = accountList.accountsCountWithoutJoint()
+
+        // Assert
+        assertThat(actual).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN no joint accounts WHEN accounts counted THEN every account is counted`() {
+        // Arrange
+        val cryptoOnly = MockAccounts.createAccountList(activeAccounts = 3)
+
+        // Act
+        val actual = cryptoOnly.accountsCountWithoutJoint()
+
+        // Assert
+        assertThat(actual).isEqualTo(cryptoOnly.accounts.size)
+    }
+
     private fun jointAccount(id: String, status: JointAccount.Status) = JointAccount(
         cryptoAccountId = id,
         membersCount = 3,
