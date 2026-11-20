@@ -14,7 +14,6 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -256,12 +255,7 @@ internal class CollectiblesMainModel @Inject constructor(
             actions = actionsConverter.convert(CollectiblesAccountStatusValue.Loading),
             collection = CollectiblesMainUM.CollectionUM(
                 subtitle = TextReference.Res(R.string.collectibles_account_collection_row_subtitle),
-                // TODO for 0 card collectibles_account_collection_empty
-                title = TextReference.PluralRes(
-                    R.plurals.collectibles_account_collection_cards_count,
-                    STUB_CARDS_COUNT,
-                    wrappedList(STUB_CARDS_COUNT),
-                ),
+                title = TextReference.Res(R.string.collectibles_account_collection_row_title),
                 onClick = ::onCollectionClick,
             ),
             isRegionRestricted = false,
@@ -439,10 +433,5 @@ internal class CollectiblesMainModel @Inject constructor(
         if (failure is CollectiblesAccountError.CardError || failure is CollectiblesAccountError.Cancelled) return
 
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
-    }
-
-    private companion object {
-
-        const val STUB_CARDS_COUNT = 25
     }
 }

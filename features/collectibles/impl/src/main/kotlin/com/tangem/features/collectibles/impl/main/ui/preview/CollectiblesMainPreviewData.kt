@@ -33,7 +33,7 @@ internal object CollectiblesMainPreviewData {
         ),
         collection = CollectiblesMainUM.CollectionUM(
             subtitle = stringReference("My collection"),
-            title = stringReference("25 cards"),
+            title = stringReference("View cards"),
             onClick = {},
         ),
         isRegionRestricted = false,
