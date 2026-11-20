@@ -72,6 +72,7 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
                     val response = tangemExpressApi.getAssets(
                         userWalletId = userWallet.walletId.stringValue,
                         refCode = expressUtils.getRefCode(userWallet),
+                        batchId = expressUtils.getBatchId(userWallet = userWallet),
                         body = AssetsRequestBody(tokensList = tokenList),
                     ).getOrThrow()
 

@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.cashback
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.paymentTransaction
@@ -64,26 +64,32 @@ internal class TangemPayCashbackDetailUmConverterTest {
 
     @Test
     fun `GIVEN fetch in flight WHEN convert THEN row is Loading`() {
+        // Act
         val result = convert(cashback = null, loadState = TransactionLoadState.Loading)
 
+        // Assert
         assertThat(result).isEqualTo(CashbackDetailUM.Loading)
     }
 
     @Test
     fun `GIVEN fetch failed WHEN convert THEN row is Error`() {
+        // Act
         val result = convert(cashback = null, loadState = TransactionLoadState.Error)
 
+        // Assert
         assertThat(result).isInstanceOf(CashbackDetailUM.Error::class.java)
     }
 
     @Test
     fun `GIVEN non-spend transaction WHEN convert THEN row is hidden`() {
+        // Act
         val result = convert(
             transaction = paymentTransaction(),
             cashback = cashback(),
             loadState = TransactionLoadState.Loaded,
         )
 
+        // Assert
         assertThat(result).isNull()
     }
 

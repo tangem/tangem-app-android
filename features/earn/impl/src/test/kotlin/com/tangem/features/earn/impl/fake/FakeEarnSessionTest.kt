@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnActionInput
 import com.tangem.features.earn.product.api.session.EarnAmount
@@ -85,8 +86,8 @@ internal class FakeEarnSessionTest {
                 ),
                 result = EarnResult(
                     title = stringReference("Deposited 0.5 ETH"),
-                    subtitle = null,
-                    chip = null,
+                    subtitle = stringReference("Your ETH in Main account is now earning in Aave"),
+                    chip = stringReference("Current 5.5% APY"),
                     rows = emptyList(),
                     primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
                     secondary = EarnResultButton(stringReference("Go to token"), EarnFlowExit.ToToken),
@@ -239,6 +240,30 @@ internal class FakeEarnSessionTest {
             }
 
         @Test
+        fun `GIVEN fee grown on verify WHEN fee reloaded and plan prepared again THEN grown fee is kept and verified`() =
+            runTest {
+                // Arrange
+                val session = createFakeEarnSession(
+                    preset = FakeEarnSessionPreset.Lending,
+                    behavior = FakeEarnSessionBehavior(isFeeGrowingOnVerify = true),
+                )
+                session.verify(session.prepareOrFail(Deposit(), amount))
+
+                // Act
+                val reloadedFee = session.loadFee(Deposit(), amount)
+                val replanned = session.prepareOrFail(
+                    action = Deposit(),
+                    amount = amount,
+                    selection = EarnFeeSelection(fee = grownFee, extended = null),
+                )
+                val actual = session.verify(replanned)
+
+                // Assert
+                assertThat(reloadedFee).isEqualTo(Either.Right(TransactionFee.Single(normal = grownFee)))
+                assertThat(actual).isInstanceOf(EarnVerification.Verified::class.java)
+            }
+
+        @Test
         fun `GIVEN plan not made by the session WHEN verify THEN rejected with failed error`() = runTest {
             // Act
             val actual = lending.verify(ForeignPlan(fee))
@@ -317,6 +342,22 @@ internal class FakeEarnSessionTest {
             val done = steps.filterIsInstance<EarnSigningStep.Done>().single()
             assertThat(plan.expectedAmount to done.result.title)
                 .isEqualTo(model.amount to stringReference(model.expectedTitle))
+        }
+
+        @Test
+        fun `GIVEN withdraw prepared with custom fee WHEN execute THEN result network fee follows plan fee`() = runTest {
+            // Arrange
+            val customFee = EarnFeeSelection(fee = ethFee("0.0009"), extended = null)
+            val plan = lending.prepare(Withdraw(), amount, customFee)
+                .getOrElse { error("Expected a plan but prepare failed with $it") }
+
+            // Act
+            val steps = lending.execute(lending.verifyOrFail(plan)).toList()
+
+            // Assert
+            val done = steps.filterIsInstance<EarnSigningStep.Done>().single()
+            assertThat(done.result.rows.last())
+                .isEqualTo(EarnRow(label = stringReference("Network fee"), value = EarnValue.Text(stringReference("0.0009 ETH"))))
         }
 
         private fun provideTestModels() = listOf(
@@ -406,7 +447,16 @@ internal class FakeEarnSessionTest {
                 EarnSigningStep.Sent(done.ref),
                 done,
             ).inOrder()
-            assertThat(done.result.title).isEqualTo(stringReference("Claimed"))
+            assertThat(done.result).isEqualTo(
+                EarnResult(
+                    title = stringReference("Claimed"),
+                    subtitle = null,
+                    chip = null,
+                    rows = emptyList(),
+                    primary = EarnResultButton(stringReference("Go to yield"), EarnFlowExit.ToYield),
+                    secondary = EarnResultButton(stringReference("Go to token"), EarnFlowExit.ToToken),
+                ),
+            )
         }
 
         private fun provideTestModels() = FakeEarnSessionPreset.entries.toList()
@@ -489,8 +539,11 @@ internal class FakeEarnSessionTest {
         }
     }
 
-    private suspend fun EarnSession.prepareOrFail(action: EarnFlowAction, amount: EarnAmount?): EarnPlan =
-        prepare(action, amount, feeSelection).getOrElse { error("Expected a plan but prepare failed with $it") }
+    private suspend fun EarnSession.prepareOrFail(
+        action: EarnFlowAction,
+        amount: EarnAmount?,
+        selection: EarnFeeSelection = feeSelection,
+    ): EarnPlan = prepare(action, amount, selection).getOrElse { error("Expected a plan but prepare failed with $it") }
 
     private suspend fun EarnSession.verifyOrFail(plan: EarnPlan): VerifiedPlan {
         val verification = verify(plan)

@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliatio
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyReconciliation.Unavailable
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.time.Duration
@@ -53,6 +54,28 @@ internal class PolymarketSessionKeyAssessorTest {
             Model(
                 case = "pending local key is enabling",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING))),
+                expected = Enabling(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING)),
+            ),
+            Model(
+                case = "local key renewed after revocation trades on its newest record",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.LOCAL, PolymarketSessionKeyStatus.REVOKED).copy(createdAt = NOW - Duration.ofDays(2)),
+                        key(Owner.LOCAL),
+                    ),
+                    signers = listOf(matching(key(Owner.LOCAL))),
+                ),
+                expected = Active(key(Owner.LOCAL), isRenewDue = false),
+            ),
+            Model(
+                case = "local key requested again matches its newest record ignoring case",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.LOCAL).copy(createdAt = NOW - Duration.ofDays(2)),
+                        key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING),
+                    ),
+                    localAddress = checksummed(Owner.LOCAL),
+                ),
                 expected = Enabling(key(Owner.LOCAL, PolymarketSessionKeyStatus.PENDING)),
             ),
             Model(
@@ -113,6 +136,39 @@ internal class PolymarketSessionKeyAssessorTest {
                 case = "failed local key without the exchange's list is enabled again",
                 snapshot = snapshot(keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)), signers = null),
                 expected = Reenable(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+            ),
+            Model(
+                case = "failed local key the exchange lists in another case is repaired by renewal",
+                snapshot = snapshot(
+                    keys = listOf(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+                    signers = listOf(
+                        matching(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED))
+                            .copy(address = checksummed(Owner.LOCAL)),
+                    ),
+                ),
+                expected = RepairByRenewal(key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)),
+            ),
+            Model(
+                case = "previous key whose newest record is revoked is not waited for",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING),
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.REVOKED).copy(createdAt = IN_THE_LAST_HOUR),
+                    ),
+                ),
+                expected = OfferEnable,
+            ),
+            Model(
+                case = "previous key renewed after its revoked record listed first is waited for",
+                snapshot = snapshot(
+                    keys = listOf(
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.REVOKED),
+                        key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING).copy(createdAt = IN_THE_LAST_HOUR),
+                    ),
+                ),
+                expected = WaitingForPrevious(
+                    key(Owner.PREVIOUS, PolymarketSessionKeyStatus.PENDING).copy(createdAt = IN_THE_LAST_HOUR),
+                ),
             ),
             Model(
                 case = "pending previous key of this device is waited for",
@@ -248,7 +304,70 @@ internal class PolymarketSessionKeyAssessorTest {
             val actual = PolymarketSessionKeyAssessor.assess(model.snapshot).reconciliation
 
             // Assert
-            assertThat(actual).isEqualTo(model.expected)
+            assertThat((actual as? Checked)?.copy(listedSigners = emptySet()) ?: actual).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN addresses differing only in case WHEN assess THEN signers match their records`() {
+            // Arrange
+            val other = key(Owner.OTHER_DEVICE).copy(address = checksummed(Owner.OTHER_DEVICE))
+            val ownFailed = key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)
+            val snapshot = snapshot(
+                keys = listOf(other, ownFailed),
+                signers = listOf(
+                    matching(other).copy(address = Owner.OTHER_DEVICE.address),
+                    matching(ownFailed).copy(address = checksummed(Owner.LOCAL)),
+                ),
+                localAddress = checksummed(Owner.LOCAL),
+            )
+
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                Checked(
+                    foreignSigners = emptyList(),
+                    missingOnExchange = emptySet(),
+                    listedSigners = setOf(Owner.OTHER_DEVICE.address, Owner.LOCAL.address),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN a renewed key listed after its revoked record WHEN assess THEN the newest record decides`() {
+            // Arrange
+            val revoked = key(Owner.OTHER_DEVICE, PolymarketSessionKeyStatus.REVOKED)
+            val renewed = key(Owner.OTHER_DEVICE).copy(createdAt = NOW - Duration.ofHours(1))
+            val snapshot = snapshot(keys = listOf(revoked, renewed), signers = listOf(matching(renewed)))
+
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+
+            // Assert
+            assertThat((actual as Checked).foreignSigners).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN the exchange's signers WHEN assess THEN every listed address is reported lowercased`() {
+            // Arrange
+            val ownFailed = key(Owner.LOCAL, PolymarketSessionKeyStatus.FAILED)
+            val other = key(Owner.OTHER_DEVICE)
+            val unrecorded = UNRECORDED.copy(address = UNRECORDED.address.uppercase())
+            val snapshot = snapshot(
+                keys = listOf(ownFailed, other),
+                signers = listOf(matching(ownFailed), matching(other), unrecorded),
+            )
+
+            // Act
+            val actual = PolymarketSessionKeyAssessor.assess(snapshot).reconciliation
+
+            // Assert
+            assertThat((actual as Checked).listedSigners).containsExactly(
+                Owner.LOCAL.address.lowercase(),
+                Owner.OTHER_DEVICE.address.lowercase(),
+                UNRECORDED.address.lowercase(),
+            )
         }
 
         private fun provideTestModels() = listOf(
@@ -496,6 +615,7 @@ internal class PolymarketSessionKeyAssessorTest {
         val ALMOST_EXPIRED: Instant = NOW + Duration.ofMinutes(9)
         val FRESH: Instant = NOW - Duration.ofMinutes(1)
         val IN_ONE_HOUR: Instant = NOW + Duration.ofHours(1)
+        val IN_THE_LAST_HOUR: Instant = NOW - Duration.ofHours(1)
 
         val UNRECORDED = PolymarketSessionSigner(
             address = "0xf0e1000000000000000000000000000000000009",
@@ -533,6 +653,8 @@ internal class PolymarketSessionKeyAssessorTest {
             createdAt = NOW - Duration.ofDays(1),
         )
 
+        fun checksummed(owner: Owner) = "0x" + owner.address.drop(2).uppercase()
+
         fun matching(key: PolymarketSessionKey) = PolymarketSessionSigner(
             address = key.address,
             scopes = key.scopes,
@@ -554,6 +676,6 @@ internal class PolymarketSessionKeyAssessorTest {
         fun checked(
             foreign: List<PolymarketSessionSigner> = emptyList(),
             missing: Set<String> = emptySet(),
-        ) = Checked(foreignSigners = foreign, missingOnExchange = missing)
+        ) = Checked(foreignSigners = foreign, missingOnExchange = missing, listedSigners = emptySet())
     }
 }

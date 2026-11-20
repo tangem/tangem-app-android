@@ -31,5 +31,6 @@ data class TesterMenuUM(
         BACKEND_AUTH_STATUS(R.string.backend_auth_status),
         SELL_REDIRECT_GENERATOR(R.string.sell_redirect_generator),
         SOCIAL_LOGIN(R.string.social_login),
+        EARN_FLOW(R.string.earn_flow),
     }
 }

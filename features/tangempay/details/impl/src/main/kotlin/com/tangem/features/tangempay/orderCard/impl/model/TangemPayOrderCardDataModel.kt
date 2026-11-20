@@ -9,14 +9,14 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.PlasticCardOrder
-import com.tangem.domain.pay.model.ShippingAddress
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
-import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.PlasticCardOrder
+import com.tangem.domain.tangempay.model.ShippingAddress
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.IssuePlasticCardUseCase
+import com.tangem.domain.tangempay.usecase.ReissuePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.common.TangemPayFormCharset
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
@@ -213,40 +213,41 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         )
     }
 
-    private fun createSubmitFailedMessage(error: VisaApiError, onRetry: () -> Unit): BottomSheetMessage {
+    private fun createSubmitFailedMessage(error: TangemPayApiError, onRetry: () -> Unit): BottomSheetMessage {
         return when (error) {
-            VisaApiError.CardIssueInvalidShippingAddress,
-            VisaApiError.CardReissuePlasticInvalidShippingAddress,
+            TangemPayApiError.CardIssueInvalidShippingAddress,
+            TangemPayApiError.CardReissuePlasticInvalidShippingAddress,
             -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_invalid_address),
             )
-            VisaApiError.CardIssueInvalidEmbossName,
-            VisaApiError.CardReissuePlasticInvalidEmbossName,
+            TangemPayApiError.CardIssueInvalidEmbossName,
+            TangemPayApiError.CardReissuePlasticInvalidEmbossName,
             -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_invalid_emboss_name),
             )
-            VisaApiError.CardIssueInsufficientBalance,
-            VisaApiError.CardReissuePlasticInsufficientBalance,
+            TangemPayApiError.CardIssueInsufficientBalance,
+            TangemPayApiError.CardReissuePlasticInsufficientBalance,
             -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_insufficient_balance),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardIssueActiveOrderExists,
-            VisaApiError.CardReissuePlasticActiveOrderExists,
+            TangemPayApiError.CardIssueActiveOrderExists,
+            TangemPayApiError.CardReissuePlasticActiveOrderExists,
             -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_active_order),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardIssueOfferNotAvailable,
-            VisaApiError.CardReissuePlasticNotAvailable,
+            TangemPayApiError.CardIssueOfferNotAvailable,
+            TangemPayApiError.CardReissuePlasticNotAvailable,
             -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_offer_unavailable),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardReissuePlasticInvalidSourceCard -> TangemPayMessagesFactory.createSubmitRejectedMessage(
-                title = resourceReference(R.string.tangempay_order_card_error_invalid_source_card),
-                onCloseClick = params.onClose,
-            )
+            TangemPayApiError.CardReissuePlasticInvalidSourceCard ->
+                TangemPayMessagesFactory.createSubmitRejectedMessage(
+                    title = resourceReference(R.string.tangempay_order_card_error_invalid_source_card),
+                    onCloseClick = params.onClose,
+                )
             else -> TangemPayMessagesFactory.createOrderFailedMessage(onRetry.takeIf { error.isRetryable() })
         }
     }

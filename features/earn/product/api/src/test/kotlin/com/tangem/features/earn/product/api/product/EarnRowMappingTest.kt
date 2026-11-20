@@ -1,7 +1,10 @@
 package com.tangem.features.earn.product.api.product
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.modal.TangemModalContentUM
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.ui.EarnRowUM
@@ -17,7 +20,7 @@ internal class EarnRowMappingTest {
         val received = mutableListOf<EarnTextBlock>()
 
         // Act
-        row.toUM(onInfoClick = received::add).onInfoClick?.invoke()
+        row.toUM(onInfoClick = received::add, onLinkClick = {}).onInfoClick?.invoke()
 
         // Assert
         assertThat(received).containsExactly(info)
@@ -30,7 +33,7 @@ internal class EarnRowMappingTest {
         val received = mutableListOf<EarnTextBlock>()
 
         // Act
-        row.toUM(onInfoClick = received::add)
+        row.toUM(onInfoClick = received::add, onLinkClick = {})
 
         // Assert
         assertThat(received).isEmpty()
@@ -44,7 +47,7 @@ internal class EarnRowMappingTest {
         val received = mutableListOf<EarnTextBlock>()
 
         // Act
-        val onInfoClick = row.toUM(onInfoClick = received::add).onInfoClick
+        val onInfoClick = row.toUM(onInfoClick = received::add, onLinkClick = {}).onInfoClick
         onInfoClick?.invoke()
         onInfoClick?.invoke()
 
@@ -60,7 +63,7 @@ internal class EarnRowMappingTest {
         val row = createRow(label = label, value = EarnValue.Text(value), info = null)
 
         // Act
-        val actual = row.toUM(onInfoClick = {})
+        val actual = row.toUM(onInfoClick = {}, onLinkClick = {})
 
         // Assert
         assertThat(actual).isEqualTo(EarnRowUM(label = label, value = value, onInfoClick = null))
@@ -74,7 +77,7 @@ internal class EarnRowMappingTest {
         val row = createRow(label = label, value = EarnValue.Text(value), info = createTextBlock())
 
         // Act
-        val actual = row.toUM(onInfoClick = {})
+        val actual = row.toUM(onInfoClick = {}, onLinkClick = {})
 
         // Assert
         val expected = EarnRowUM(label = label, value = value, onInfoClick = null)
@@ -94,6 +97,79 @@ internal class EarnRowMappingTest {
         val expected = TangemModalContentUM.Informer.Item(
             title = stringReference("Withdrawal"),
             description = stringReference("Takes up to 3 days"),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN row with link value WHEN toUM and value clicked THEN callback receives the url`() {
+        // Arrange
+        val row = createRow(value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com"))
+        val opened = mutableListOf<String>()
+
+        // Act
+        val actual = row.toUM(onInfoClick = {}, onLinkClick = opened::add)
+        actual.onValueClick?.invoke()
+
+        // Assert
+        assertThat(actual.value).isEqualTo(stringReference("Aave"))
+        assertThat(opened).containsExactly("https://aave.com")
+    }
+
+    @Test
+    fun `GIVEN row with link value WHEN toUM without click THEN the url is not opened`() {
+        // Arrange
+        val row = createRow(value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com"))
+        val opened = mutableListOf<String>()
+
+        // Act
+        row.toUM(onInfoClick = {}, onLinkClick = opened::add)
+
+        // Assert
+        assertThat(opened).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN row with link value WHEN toUM without link handler THEN value is not clickable`() {
+        // Arrange
+        val row = createRow(value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com"))
+
+        // Act
+        val actual = row.toUM(onInfoClick = {})
+
+        // Assert
+        assertThat(actual.onValueClick).isNull()
+        assertThat(actual.value).isEqualTo(stringReference("Aave"))
+    }
+
+    @Test
+    fun `GIVEN row with text value WHEN toUM THEN value is not clickable`() {
+        // Arrange
+        val row = createRow(value = EarnValue.Text(stringReference("Low")))
+
+        // Act
+        val actual = row.toUM(onInfoClick = {}, onLinkClick = {})
+
+        // Assert
+        assertThat(actual.onValueClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN text block with icon WHEN toUM THEN informer item carries only title and description`() {
+        // Arrange
+        val block = EarnTextBlock(
+            title = stringReference("No lock-ups"),
+            description = stringReference("Withdraw anytime"),
+            icon = TangemIconUM.Icon(Icons.ic_info_16),
+        )
+
+        // Act
+        val actual = block.toUM()
+
+        // Assert
+        val expected = TangemModalContentUM.Informer.Item(
+            title = stringReference("No lock-ups"),
+            description = stringReference("Withdraw anytime"),
         )
         assertThat(actual).isEqualTo(expected)
     }

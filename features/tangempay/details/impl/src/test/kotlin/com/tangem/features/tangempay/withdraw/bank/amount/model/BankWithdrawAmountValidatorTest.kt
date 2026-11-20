@@ -44,6 +44,38 @@ internal class BankWithdrawAmountValidatorTest {
         assertThat(actual).isEqualTo(balance)
     }
 
+    @ParameterizedTest
+    @CsvSource("9.99, OutOfRange", "10, Valid", "15000, Valid", "19999, Valid", "20000, NotEnoughFunds")
+    fun `GIVEN a minimum without a maximum WHEN validate THEN only the minimum and the balance bound it`(
+        amount: BigDecimal,
+        expected: String,
+    ) {
+        // Act
+        val actual = BankWithdrawAmountValidator.validate(
+            amount = amount,
+            minAmount = BigDecimal("10"),
+            maxAmount = null,
+            balance = BigDecimal("20000"),
+            fee = BigDecimal("1"),
+        )
+
+        // Assert
+        assertThat(actual.toString()).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN no maximum WHEN maxInputAmount THEN balance minus fee uncapped`() {
+        // Act
+        val actual = BankWithdrawAmountValidator.maxInputAmount(
+            maxAmount = null,
+            balance = BigDecimal("20000"),
+            fee = BigDecimal("1"),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(BigDecimal("19999"))
+    }
+
     @Test
     fun `GIVEN balance minus fee within limit WHEN maxInputAmount THEN balance minus fee`() {
         // Act

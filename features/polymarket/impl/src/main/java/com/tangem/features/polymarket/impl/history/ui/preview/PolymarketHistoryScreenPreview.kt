@@ -20,6 +20,7 @@ import com.tangem.features.polymarket.impl.history.ui.PolymarketHistoryScreen
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.Content
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.DateGroup
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Preview(name = "Light", widthDp = 390, heightDp = 800)
@@ -35,8 +36,9 @@ private fun PolymarketHistoryScreenPreview(@PreviewParameter(HistoryPreviewProvi
             HistoryPreviewCase.Data -> previewHistoryContent(groupCount = 2)
             HistoryPreviewCase.LongList -> previewHistoryContent(groupCount = 10)
         }
+        val tabs = if (case == HistoryPreviewCase.Empty) persistentListOf() else previewHistoryTabs()
         PolymarketHistoryScreen(
-            state = PolymarketHistoryUM(content = content, onBackClick = {}, tabs = previewHistoryTabs()),
+            state = PolymarketHistoryUM(content = content, onBackClick = {}, tabs = tabs),
         )
     }
 }

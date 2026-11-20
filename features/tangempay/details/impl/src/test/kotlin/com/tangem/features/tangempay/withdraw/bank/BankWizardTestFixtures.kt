@@ -8,15 +8,16 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.model.bankofframp.OfframpEta
-import com.tangem.domain.pay.model.bankofframp.OfframpFee
-import com.tangem.domain.pay.model.bankofframp.OfframpSource
-import com.tangem.domain.pay.model.bankofframp.OfframpToken
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
+import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
+import com.tangem.domain.tangempay.model.bankofframp.OfframpSource
+import com.tangem.domain.tangempay.model.bankofframp.OfframpToken
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
@@ -130,10 +131,12 @@ internal fun offrampDestination(
     rail: BankRail = BankRail.ACH,
     fee: BigDecimal = BigDecimal("1.00"),
     feeName: String? = null,
-    calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+    calculationType: FeeCalculationType = FeeCalculationType.FIXED,
     feeCurrency: String = "USD",
     minDays: Int = 1,
     maxDays: Int = 3,
+    fixedFeeAmount: BigDecimal? = null,
+    amountLimits: AmountLimits? = null,
 ): OfframpDestination = OfframpDestination(
     rail = rail,
     currency = "USD",
@@ -143,8 +146,10 @@ internal fun offrampDestination(
         amount = fee,
         currency = feeCurrency,
         description = null,
+        fixedAmount = fixedFeeAmount,
     ),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
+    amountLimits = amountLimits,
 )
 
 internal fun offrampOptions(
@@ -174,15 +179,19 @@ internal fun bankWithdrawOptions(
         offrampDestination(),
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
     ),
-    minAmount: BigDecimal = BigDecimal("1.00"),
-    maxAmount: BigDecimal = BigDecimal("10000.00"),
     currency: Currency = Currency.getInstance("USD"),
+    defaultAmountLimits: AmountLimits = AmountLimits(
+        min = BigDecimal("1.00"),
+        max = BigDecimal("10000.00"),
+        currency = currency.currencyCode,
+    ),
+    isLimitedPerRail: Boolean = false,
 ): BankWithdrawOptions = BankWithdrawOptions(
     sources = sources.toImmutableList(),
     destinations = destinations.toImmutableList(),
-    minAmount = minAmount,
-    maxAmount = maxAmount,
     currency = currency,
+    defaultAmountLimits = defaultAmountLimits,
+    isLimitedPerRail = isLimitedPerRail,
 )
 
 internal fun savedRecipientDraft(recipient: BankAccount? = bankAccount(id = "acc-1")): BankWithdrawDraft =

@@ -5,6 +5,7 @@ package com.tangem.features.tangempay.withdraw.bank.form.model
 internal fun BankWithdrawFormField.toAnalyticsName(): String = when (this) {
     BankWithdrawFormField.AccountNumber -> "Account Number"
     BankWithdrawFormField.RoutingNumber -> "Routing Number"
+    BankWithdrawFormField.Clabe -> "CLABE"
     BankWithdrawFormField.FirstName -> "First Name"
     BankWithdrawFormField.LastName -> "Last Name"
     BankWithdrawFormField.BusinessName -> "Business Name"

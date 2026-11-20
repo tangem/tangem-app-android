@@ -1,9 +1,10 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.model.AmountLimits
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.util.Currency
@@ -11,32 +12,36 @@ import java.util.Currency
 /** Turns the off-ramp's rails and the source account's tokens into the wizard's [BankWithdrawOptions]. */
 internal object BankWithdrawOptionsFactory {
 
-    /** The off-ramp options carry no bounds, so the withdrawal range agreed with the backend lives here. */
-    private val MIN_AMOUNT = BigDecimal("1.00")
-    private val MAX_AMOUNT = BigDecimal("10000.00")
-
-    private val ROUTE_RAILS = setOf(BankRail.ACH, BankRail.WIRE)
+    private val DEFAULT_MIN_AMOUNT = BigDecimal("1.00")
+    private val DEFAULT_MAX_AMOUNT = BigDecimal("10000.00")
 
     /**
-     * Null when a bank withdrawal cannot start: the off-ramp offers no fixed-fee ACH or wire rail, the account holds
-     * none of the tokens it accepts, or neither the account nor the rail names a currency the platform knows.
+     * Null when a bank withdrawal cannot start: the off-ramp offers no rail the account can take — a fixed-fee ACH or
+     * wire rail, or SPEI where [isSpeiOffered] — the account holds none of the tokens it accepts, or neither the
+     * account nor the rail names a currency the platform knows.
      */
     fun create(
         destinations: List<OfframpDestination>,
         sources: List<BankWithdrawSource>,
         balanceCurrencyCode: String?,
+        isLimitedPerRail: Boolean,
+        isSpeiOffered: Boolean,
     ): BankWithdrawOptions? {
-        val routeDestinations = destinations.filter(::isFixedFeeRouteRail)
-        if (routeDestinations.isEmpty() || sources.none(BankWithdrawSource::isAvailable)) return null
+        val offeredDestinations = destinations.filter { destination -> destination.isTakenBy(isSpeiOffered) }
+        if (offeredDestinations.isEmpty() || sources.none(BankWithdrawSource::isAvailable)) return null
         val currency = currencyOrNull(balanceCurrencyCode)
-            ?: currencyOrNull(routeDestinations.first().fee.currency)
+            ?: currencyOrNull(offeredDestinations.first().fee.currency)
             ?: return null
         return BankWithdrawOptions(
             sources = sources.sortedByAvailabilityAndSymbol().toImmutableList(),
-            destinations = routeDestinations.toImmutableList(),
-            minAmount = MIN_AMOUNT,
-            maxAmount = MAX_AMOUNT,
+            destinations = offeredDestinations.toImmutableList(),
             currency = currency,
+            defaultAmountLimits = AmountLimits(
+                min = DEFAULT_MIN_AMOUNT,
+                max = DEFAULT_MAX_AMOUNT,
+                currency = currency.currencyCode,
+            ),
+            isLimitedPerRail = isLimitedPerRail,
         )
     }
 
@@ -56,8 +61,10 @@ internal object BankWithdrawOptionsFactory {
         )
     }
 
-    private fun isFixedFeeRouteRail(destination: OfframpDestination): Boolean =
-        destination.rail in ROUTE_RAILS && destination.fee.calculationType == AccountFee.CalculationType.FIXED
+    private fun OfframpDestination.isTakenBy(isSpeiOffered: Boolean): Boolean = when (rail) {
+        BankRail.ACH, BankRail.WIRE -> fee.calculationType == FeeCalculationType.FIXED
+        BankRail.SPEI -> isSpeiOffered
+    }
 
     private fun currencyOrNull(code: String?): Currency? =
         code?.let { runCatching { Currency.getInstance(it) }.getOrNull() }

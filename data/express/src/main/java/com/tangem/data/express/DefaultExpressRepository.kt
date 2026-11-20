@@ -31,6 +31,7 @@ internal class DefaultExpressRepository(
                 val providers = tangemExpressApi.getProviders(
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
+                    batchId = expressUtils.getBatchId(userWallet = userWallet),
                 ).getOrThrow()
 
                 expressHistoryDao.upsertProviders(providers.map { it.toEntity() })

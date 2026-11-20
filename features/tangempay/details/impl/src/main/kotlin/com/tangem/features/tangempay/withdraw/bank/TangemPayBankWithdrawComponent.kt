@@ -19,7 +19,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
@@ -80,6 +80,7 @@ internal class TangemPayBankWithdrawComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawRecipientsComponent.Params(
                 sourceAccount = params.sourceAccount,
+                options = params.options,
                 onRecipientSelected = { account ->
                     model.onRecipientSelected(account)
                     pushNext(from = config)
@@ -126,6 +127,7 @@ internal class TangemPayBankWithdrawComponent(
                 onOrderCreated = model::onOrderCreated,
                 onDestinationChanged = model::onDestinationChanged,
                 onNetworkFeeChanged = model::onNetworkFeeChanged,
+                onQuoteChanged = model::onQuoteChanged,
                 onCompleted = ::onOrderSigned,
                 onTransferOutcomeUnknown = params.onWithdrawSent,
                 onCloseFlow = params.onCloseFlow,
@@ -234,6 +236,7 @@ internal class TangemPayBankWithdrawComponent(
 
     private fun recipientFields(): ImmutableList<BankWithdrawFormField> = BankWithdrawFormFields.recipientDetails(
         isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
+        rail = model.draft.value.destination?.rail,
     )
 
     private fun onOrderSigned() {

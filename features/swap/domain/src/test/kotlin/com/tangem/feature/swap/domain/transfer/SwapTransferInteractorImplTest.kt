@@ -19,7 +19,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
 import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
-import com.tangem.domain.pay.WithdrawalResult
+import com.tangem.domain.tangempay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
@@ -1781,6 +1781,7 @@ internal class SwapTransferInteractorImplTest {
             every { this@mockk.fiatRate } returns fiatRate
             every { this@mockk.networkAddress } returns networkAddress
             every { this@mockk.yieldSupplyStatus } returns null
+            every { this@mockk.contributions } returns emptyList()
             every { this@mockk.amount } returns amount
         }
         val status: CryptoCurrencyStatus = mockk {
@@ -1823,6 +1824,7 @@ internal class SwapTransferInteractorImplTest {
             every { this@mockk.fiatRate } returns BigDecimal.ZERO
             every { this@mockk.networkAddress } returns networkAddress
             every { this@mockk.yieldSupplyStatus } returns null
+            every { this@mockk.contributions } returns emptyList()
             every { this@mockk.amount } returns BigDecimal.ZERO
         }
         val status: CryptoCurrencyStatus = mockk {

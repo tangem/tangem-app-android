@@ -21,8 +21,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.earn.EarnBlock
 import com.tangem.common.ui.earn.EarnBlockUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -33,6 +31,7 @@ import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
@@ -45,10 +44,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
+import com.tangem.features.earn.api.EarnBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
-import com.tangem.features.rating.RatingComponent
-import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.JointCosignRequestsUM
@@ -56,7 +54,6 @@ import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,13 +71,11 @@ internal fun TokenDetailsScreen(
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
-    expressTransactionsComponent: ExpressTransactionsComponent,
     jointCosignRequestsComponent: JointCosignRequestsComponent,
-    ratingComponent: RatingComponent?,
     marketingBannerComponent: MarketingBannerComponent,
+    earnBannerComponent: EarnBannerComponent,
     modifier: Modifier = Modifier,
 ) {
-    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
     val jointCosignRequestsState by jointCosignRequestsComponent.state.collectAsStateWithLifecycle()
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val topBarTotalHeight = TopBarHeight + statusBarHeight
@@ -112,11 +107,10 @@ internal fun TokenDetailsScreen(
                     tokenDetailsUM = tokenDetailsUM,
                     yieldSupplyComponent = yieldSupplyComponent,
                     txHistoryComponent = txHistoryComponent,
-                    expressTransactionsComponent = expressTransactionsComponent,
-                    expressTransactionsToDisplay = expressState.transactionsToDisplay,
                     jointCosignRequestsComponent = jointCosignRequestsComponent,
                     jointCosignRequestsState = jointCosignRequestsState,
                     marketingBannerComponent = marketingBannerComponent,
+                    earnBannerComponent = earnBannerComponent,
                     rootBackground = rootBackground,
                     buttonsHazeState = buttonsHazeState,
                     topContentPadding = topBarTotalHeight,
@@ -133,10 +127,6 @@ internal fun TokenDetailsScreen(
                     onHeightChange = { marketBlockHeight = it },
                 )
             }
-
-            expressState.bottomSheetSlot?.content(
-                ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
-            )
         }
     }
 }
@@ -180,11 +170,10 @@ private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
-    expressTransactionsComponent: ExpressTransactionsComponent,
-    expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
     jointCosignRequestsComponent: JointCosignRequestsComponent,
     jointCosignRequestsState: JointCosignRequestsUM,
     marketingBannerComponent: MarketingBannerComponent,
+    earnBannerComponent: EarnBannerComponent,
     rootBackground: Color,
     buttonsHazeState: HazeState,
     topContentPadding: Dp,
@@ -196,10 +185,6 @@ private fun TokenDetailsBody(
     val itemModifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp)
-
-    val expressTransactionModifier = Modifier
-        .fillMaxWidth()
-        .padding(start = 16.dp, end = 16.dp, top = 16.dp)
 
     LazyColumn(
         modifier = modifier
@@ -245,6 +230,15 @@ private fun TokenDetailsBody(
                 )
             }
         }
+        item(key = "earn_banner_block") {
+            val isBelowNotifications =
+                tokenDetailsUM.earnBlockState == null && tokenDetailsUM.notifications.isNotEmpty()
+            earnBannerComponent.Content(
+                modifier = itemModifier
+                    .conditional(isBelowNotifications) { padding(top = 12.dp) }
+                    .padding(bottom = 8.dp),
+            )
+        }
         item(key = "yield_supply_block") {
             yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = 12.dp))
         }
@@ -266,12 +260,6 @@ private fun TokenDetailsBody(
                     modifier = itemModifier.padding(vertical = 8.dp),
                 )
             }
-        }
-        with(expressTransactionsComponent) {
-            expressTransactionsContent(
-                state = expressTransactionsToDisplay,
-                modifier = expressTransactionModifier,
-            )
         }
         with(jointCosignRequestsComponent) {
             jointCosignRequestsContent(state = jointCosignRequestsState)
@@ -345,12 +333,17 @@ private fun TokenDetailsScreen_Preview() {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
             },
-            expressTransactionsComponent = PreviewExpressTransactionsComponent,
             jointCosignRequestsComponent = PreviewJointCosignRequestsComponent,
-            ratingComponent = null,
             marketingBannerComponent = object : MarketingBannerComponent {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
+            },
+            earnBannerComponent = object : EarnBannerComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+
+                @Composable
+                override fun BottomSheet() = Unit
             },
         )
     }
@@ -370,20 +363,5 @@ private val PreviewJointCosignRequestsComponent = object : JointCosignRequestsCo
 
     @Composable
     override fun Content(modifier: Modifier) = Unit
-}
-
-private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
-    override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(
-        ExpressTransactionsBlockState(
-            transactions = persistentListOf(),
-            transactionsToDisplay = persistentListOf(),
-            bottomSheetSlot = null,
-        ),
-    )
-
-    override fun LazyListScope.expressTransactionsContent(
-        state: PersistentList<ExpressTransactionStateUM>,
-        modifier: Modifier,
-    ) = Unit
 }
 // endregion Preview

@@ -10,25 +10,26 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
-import com.tangem.domain.pay.model.recents.TokenTransferJournal
-import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.tangempay.model.recents.TokenTransferJournal
+import com.tangem.domain.tangempay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.tangempay.usecase.bankofframp.GetBankOfframpOptionsUseCase
+import com.tangem.domain.tangempay.usecase.bankofframp.GetRecentBankAccountsUseCase
+import com.tangem.domain.tangempay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSpeiAvailability
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSourcesObserver
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
@@ -68,6 +69,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
+    private val speiAvailability: BankWithdrawSpeiAvailability,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
@@ -152,7 +154,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private fun loadRecents() {
         state.update { it.copy(recents = RecentsState.Loading) }
         modelScope.launch {
-            val recents = getRecentBankAccountsUseCase(params.userWalletId).fold(
+            val recents = getRecentBankAccountsUseCase(
+                userWalletId = params.userWalletId,
+                includeSpeiRecipients = speiAvailability.isOffered(params.sourceAccount),
+            ).fold(
                 ifLeft = { RecentsState.Failed },
                 ifRight = { RecentsState.Loaded(accounts = it.recents, hasMoreAccounts = it.hasMoreAccounts) },
             )

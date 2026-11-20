@@ -40,6 +40,7 @@ import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
@@ -59,6 +60,7 @@ import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTran
 import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer.Section.PortfolioReview
 import com.tangem.features.foryou.impl.model.transformer.SetPortfolioReviewTransformer
 import com.tangem.features.foryou.model.ForYouPeriod
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -90,10 +92,12 @@ internal class ForYouModel @Inject constructor(
     private val earnErrorResolver: EarnErrorResolver,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
+    private val portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
     val portfolioSelectorController: PortfolioSelectorController,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletHeaderConverter: ForYouWalletHeaderConverter,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ForYouComponent.Params>()
@@ -177,6 +181,7 @@ internal class ForYouModel @Inject constructor(
                     }.toPersistentList().asSingleForYouGroup(),
                 ),
                 portfolioFilter = TangemFilterItemUM.Loading(id = ForYouPortfolioFilterConverter.ID),
+                isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData(
                         title = resourceReference(R.string.market_chart_can_not_load_data),
@@ -506,8 +511,13 @@ internal class ForYouModel @Inject constructor(
             analyticsParams = AddToPortfolioManager.AnalyticsParams(
                 source = AnalyticsParam.ScreensSources.Markets.value,
             ),
+            portfolioSelectorBridge = portfolioSelectorBridgeFactory.create(
+                mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
+                scope = managerScope,
+                isJointAccountsIncluded = false,
+            ),
         ).apply {
-            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio())
         }
 
         manager.onDismiss.receiveAsFlow()

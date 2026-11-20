@@ -9,7 +9,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.moneyaccount.yield.MoneyAccountYieldModeStatusProvider
+import com.tangem.domain.tangempay.TangemPayCurrencyFactory
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -22,6 +23,7 @@ class GetMoneyAccountBalanceUseCase(
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
+    private val yieldModeStatusProvider: MoneyAccountYieldModeStatusProvider,
 ) {
 
     suspend operator fun invoke(
@@ -45,6 +47,11 @@ class GetMoneyAccountBalanceUseCase(
                 depositAddress = verified.address.defaultAddress.value,
                 currencyCode = ACCOUNT_CURRENCY_CODE,
                 fiatRate = fiatRate.await(),
+                yieldSupplyStatus = yieldModeStatusProvider.get(
+                    userWalletId = userWalletId,
+                    token = token,
+                    networkStatus = verified,
+                ),
             )
         }
     }

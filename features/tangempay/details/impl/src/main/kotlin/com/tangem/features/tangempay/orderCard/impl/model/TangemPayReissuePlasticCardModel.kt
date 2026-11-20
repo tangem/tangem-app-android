@@ -7,10 +7,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM

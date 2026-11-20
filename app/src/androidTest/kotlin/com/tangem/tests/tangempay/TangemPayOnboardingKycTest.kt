@@ -30,6 +30,8 @@ import org.junit.Test
 @HiltAndroidTest
 class TangemPayOnboardingKycTest : BaseTestCase() {
 
+    private val moneyAccountScenario = "tangem_pay_money_account"
+
     @AllureId("9630")
     @DisplayName("Tangem Pay: existing customer authorization shows the tile on Main")
     @Test
@@ -114,6 +116,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     fun kycInProgressSheetClosesAndStatusRemainsOnMainTest() {
         val paeraCustomerState = "PaeraCustomer"
         val kycInProgressState = "InProgress"
+        val kycInProgressSummaryState = "KycInProgress"
         val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
         val viewStatusText = getResourceString(CoreResR.string.tangempay_kyc_in_progress_notification_button)
 
@@ -123,6 +126,9 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
             }
             step("Set WireMock scenario '$TANGEM_PAY_KYC_STATUS_SCENARIO' to '$kycInProgressState'") {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
+            }
+            step("Set WireMock scenario '$moneyAccountScenario' to '$kycInProgressSummaryState'") {
+                setWireMockScenarioState(moneyAccountScenario, kycInProgressSummaryState)
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
@@ -161,9 +167,13 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     fun kycRejectedStatusShownOnMainAndInSheetTest() {
         val paeraCustomerState = "PaeraCustomer"
         val kycDeclinedState = "Declined"
+        val kycDeclinedSummaryState = "KycDeclined"
         val kycRejectedTileText = getResourceString(CoreResR.string.tangempay_kyc_has_failed)
         val rejectedSheetTitle = getResourceString(CoreResR.string.tangempay_kyc_rejected)
+        val rejectedSheetMessage = getResourceString(CoreResR.string.tangempay_kyc_rejected_description) + " " +
+            getResourceString(CoreResR.string.tangempay_kyc_rejected_description_span)
         val goToSupportText = getResourceString(CoreResR.string.tangempay_go_to_support)
+        val hideStatusText = getResourceString(CoreResR.string.tangempay_kyc_rejected_button_text)
 
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$paeraCustomerState'") {
@@ -171,6 +181,9 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
             }
             step("Set WireMock scenario '$TANGEM_PAY_KYC_STATUS_SCENARIO' to '$kycDeclinedState'") {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycDeclinedState)
+            }
+            step("Set WireMock scenario '$moneyAccountScenario' to '$kycDeclinedSummaryState'") {
+                setWireMockScenarioState(moneyAccountScenario, kycDeclinedSummaryState)
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
@@ -185,8 +198,12 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
             }
             step("Assert KYC rejected sheet is displayed") {
                 onTangemPayKycSheet {
-                    title(rejectedSheetTitle).assertIsDisplayed()
+                    flakySafely { title(rejectedSheetTitle).assertIsDisplayed() }
+                    closeButton.assertIsDisplayed()
+                    icon.assertIsDisplayed()
+                    message(rejectedSheetMessage).assertIsDisplayed()
                     primaryButtonWithText(goToSupportText).assertIsDisplayed()
+                    secondaryButtonWithText(hideStatusText).assertIsDisplayed()
                 }
             }
         }

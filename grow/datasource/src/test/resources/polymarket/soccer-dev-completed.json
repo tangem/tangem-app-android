@@ -1,0 +1,2551 @@
+{
+  "event": {
+    "eventId": "1209076",
+    "slug": "epl-che-mun-2026-10-31",
+    "title": "Chelsea FC vs. Manchester United FC",
+    "description": "",
+    "polymarketRulesUrl": "https://help.polymarket.com/en/articles/13364518-how-are-prediction-markets-resolved",
+    "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+    "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+    "status": "closed",
+    "live": false,
+    "startTime": "2026-10-31T12:30:00Z",
+    "startDate": "2026-10-18T04:00:17Z",
+    "endDate": "2026-10-31T12:30:00Z",
+    "volume": 5133739.157338,
+    "volume24hr": 0.0,
+    "liquidity": 0.0,
+    "negRisk": true,
+    "gameId": "90114153",
+    "score": "2-0",
+    "period": "VFT",
+    "elapsed": null,
+    "ended": true,
+    "dataFetchedAt": "2026-11-11T19:55:52.695971636Z",
+    "league": {
+      "slug": "epl",
+      "name": "Premier League",
+      "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/league-icons/epl-24885021.png"
+    },
+    "resolutionSource": "https://www.premierleague.com/",
+    "sportOrdering": "home",
+    "teams": [
+      {
+        "name": "Chelsea FC",
+        "abbreviation": "che",
+        "alias": "Chelsea",
+        "logo": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Chelsea FC-a99798da02.png",
+        "ordering": "home"
+      },
+      {
+        "name": "Manchester United FC",
+        "abbreviation": "mun",
+        "alias": "Man Utd",
+        "logo": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Manchester United FC-05ec8891f0.png",
+        "ordering": "away"
+      }
+    ],
+    "tabs": [
+      {
+        "key": "game_lines",
+        "cards": [
+          {
+            "template": "three_way",
+            "key": "moneyline",
+            "sportsMarketType": "moneyline",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "5851323",
+                "assetId": "15290396180998198710310272736155640419943413721470664454665442922483962945384"
+              },
+              {
+                "side": "middle",
+                "label": "DRAW",
+                "marketId": "5851325",
+                "assetId": "11924499659940277990313763338145979800963868967390053504977336871911194083477"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "5851327",
+                "assetId": "42196822305561413344053691620811148871819514949401220664893881229065342159878"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851323",
+                "conditionId": "0x871c424db72644585e0791b16a865ff4c02118ea9673a00c5a2c7ecac785b582",
+                "eventId": "1209076",
+                "question": "Will Chelsea FC win on 2026-10-31?",
+                "slug": "epl-che-mun-2026-10-31-che",
+                "description": "",
+                "groupItemTitle": "Chelsea FC",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 1769427.6508079998,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "15290396180998198710310272736155640419943413721470664454665442922483962945384",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "102490352960826289878203626922376022882491041625339900488317693005473902922874",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "moneyline",
+                "line": null
+              },
+              {
+                "id": "5851325",
+                "conditionId": "0x2fe39e817a750c609d0a31056a0d73247bee81451759262ac5415713bc12322c",
+                "eventId": "1209076",
+                "question": "Will Chelsea FC vs. Manchester United FC end in a draw?",
+                "slug": "epl-che-mun-2026-10-31-draw",
+                "description": "",
+                "groupItemTitle": "Draw (Chelsea FC vs. Manchester United FC)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 100045.12517699998,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "11924499659940277990313763338145979800963868967390053504977336871911194083477",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "101126693323255545794574137630437895473686407287405597013546579634889144381807",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "moneyline",
+                "line": null
+              },
+              {
+                "id": "5851327",
+                "conditionId": "0x31ecee8e1727480f7a2f1b46de88bc8422410fe3ccab92a7bc1bf6b886e4ad37",
+                "eventId": "1209076",
+                "question": "Will Manchester United FC win on 2026-10-31?",
+                "slug": "epl-che-mun-2026-10-31-mun",
+                "description": "",
+                "groupItemTitle": "Manchester United FC",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 865709.0532620001,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "42196822305561413344053691620811148871819514949401220664893881229065342159878",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "111793439037232748644111795259361641293160219434292079751709464955147396430376",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "moneyline",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "side_picker",
+            "key": "spreads",
+            "sportsMarketType": "spreads",
+            "positions": [
+              {
+                "pickerLabel": "5.5",
+                "line": 5.5,
+                "isDefault": false,
+                "marketId": "5856820",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE +5.5",
+                    "marketId": "5856820",
+                    "assetId": "112294550399702300553286475332458901127087425304771888347915424838658092130705"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN -5.5",
+                    "marketId": "5856820",
+                    "assetId": "104562699705375016383789385098770043964698539354556413531332647400731703609769"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": -1.5,
+                "isDefault": true,
+                "marketId": "5856811",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE -1.5",
+                    "marketId": "5856811",
+                    "assetId": "70944895767458878833296908691612977763613689517991946611622285167800744901583"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN +1.5",
+                    "marketId": "5856811",
+                    "assetId": "11260808662533159764943309111875901661883945332197863850859484907185372485604"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856820",
+                "conditionId": "0x94ea08bb2e455059abc22114e7b4fa227334e7377b1a403e4d3444331d895876",
+                "eventId": "1209567",
+                "question": "Spread: Manchester United FC (-5.5)",
+                "slug": "epl-che-mun-2026-10-31-spread-away-5pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC (-5.5)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:02:20Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "104562699705375016383789385098770043964698539354556413531332647400731703609769",
+                    "label": "Manchester United FC",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "112294550399702300553286475332458901127087425304771888347915424838658092130705",
+                    "label": "Chelsea FC",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "spreads",
+                "line": -5.5
+              },
+              {
+                "id": "5856811",
+                "conditionId": "0x08bd66f1aa777f18d04a91c926369316bf87f9fd0ece91d27c063e2e63fcc495",
+                "eventId": "1209567",
+                "question": "Spread: Chelsea FC (-1.5)",
+                "slug": "epl-che-mun-2026-10-31-spread-home-1pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC (-1.5)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 119918.82136400002,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 5,
+                "outcomes": [
+                  {
+                    "assetId": "70944895767458878833296908691612977763613689517991946611622285167800744901583",
+                    "label": "Chelsea FC",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "11260808662533159764943309111875901661883945332197863850859484907185372485604",
+                    "label": "Manchester United FC",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "spreads",
+                "line": -1.5
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "totals",
+            "sportsMarketType": "totals",
+            "teamSide": null,
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": false,
+                "marketId": "5856821",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856821",
+                    "assetId": "13749005294366776760989922414126430519197196436071496722478935570490323292188"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856821",
+                    "assetId": "111894751277962700153178373735203215434810574839823608684968797001940650571064"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": 1.5,
+                "isDefault": true,
+                "marketId": "5856822",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 1.5",
+                    "marketId": "5856822",
+                    "assetId": "19805731535723309782446777706145942439483996586757314892154888035358891311580"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 1.5",
+                    "marketId": "5856822",
+                    "assetId": "110741344142811593228937743728617135323810458006693922898137433094269129460985"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856821",
+                "conditionId": "0x0e9f07c90b171568b96827dd302ef0b14d83e0eb0c62050c5504efa03c2a68f7",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-total-0pt5",
+                "description": "",
+                "groupItemTitle": "O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 230996.595332,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "13749005294366776760989922414126430519197196436071496722478935570490323292188",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "111894751277962700153178373735203215434810574839823608684968797001940650571064",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "totals",
+                "line": 0.5
+              },
+              {
+                "id": "5856822",
+                "conditionId": "0x03bc0208a07fe9c165c3b4a7403f099a72a064d7d17437d81abade681597cf3e",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: O/U 1.5",
+                "slug": "epl-che-mun-2026-10-31-total-1pt5",
+                "description": "",
+                "groupItemTitle": "O/U 1.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:02:21Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 105483.33532199998,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "19805731535723309782446777706145942439483996586757314892154888035358891311580",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "110741344142811593228937743728617135323810458006693922898137433094269129460985",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "totals",
+                "line": 1.5
+              }
+            ]
+          },
+          {
+            "template": "yes_no",
+            "key": "both_teams_to_score",
+            "sportsMarketType": "both_teams_to_score",
+            "buttons": [
+              {
+                "side": "yes",
+                "label": "YES",
+                "marketId": "5856830",
+                "assetId": "87606462827142428785398523526754618041393234636280312158621249068253416918182"
+              },
+              {
+                "side": "no",
+                "label": "NO",
+                "marketId": "5856830",
+                "assetId": "38865326428569126515732756229851490741825636067591758623507735496839226867543"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856830",
+                "conditionId": "0x7c6db90be599a405628df4ab4ac1e0e6fa52d6d4319f28420ff50fb377b67e42",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Both Teams to Score",
+                "slug": "epl-che-mun-2026-10-31-btts",
+                "description": "",
+                "groupItemTitle": "Both Teams to Score",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 124272.892949,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "87606462827142428785398523526754618041393234636280312158621249068253416918182",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "38865326428569126515732756229851490741825636067591758623507735496839226867543",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "both_teams_to_score",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "three_way",
+            "key": "first_to_score",
+            "sportsMarketType": "soccer_first_to_score",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "5851599",
+                "assetId": "11569220743426822675010909820750773171035250533420304766469543722969404225383"
+              },
+              {
+                "side": "middle",
+                "label": "NEITHER",
+                "marketId": "5851608",
+                "assetId": "52983818285050350068378944290569434590727208682652240819219747536849608354157"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "5851604",
+                "assetId": "33895457259261876422468839234530879383974353227152791748527554238054138500603"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851599",
+                "conditionId": "0xac46069cc0b92b492e8aa83edf01fd0b03130d2267325267558db836937ff4fc",
+                "eventId": "1209108",
+                "question": "Chelsea FC to score first vs. Manchester United FC?",
+                "slug": "epl-che-mun-2026-10-31-first-to-score-home",
+                "description": "",
+                "groupItemTitle": "Chelsea FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:23Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 486.39237699999995,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "11569220743426822675010909820750773171035250533420304766469543722969404225383",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "22568861445753529726026973539759538255785803489724549941914787452475998424263",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_to_score",
+                "line": null
+              },
+              {
+                "id": "5851608",
+                "conditionId": "0x33fc15a5d4a07b4effc23fdfe3e73cdb5fcabf7f19133c42d7b4b9b2a06a5758",
+                "eventId": "1209108",
+                "question": "Chelsea FC vs. Manchester United FC: Neither team to score first?",
+                "slug": "epl-che-mun-2026-10-31-first-to-score-neither",
+                "description": "",
+                "groupItemTitle": "Neither",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:23Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 96.877194,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "52983818285050350068378944290569434590727208682652240819219747536849608354157",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "7897504283142537244848710540747980144394675855940776448257558191082284011840",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_to_score",
+                "line": null
+              },
+              {
+                "id": "5851604",
+                "conditionId": "0x7924f5557bc6cf2ed754f3547e2840add8ca794dbe4e93a05bdf79da94950ce3",
+                "eventId": "1209108",
+                "question": "Manchester United FC to score first vs. Chelsea FC?",
+                "slug": "epl-che-mun-2026-10-31-first-to-score-away",
+                "description": "",
+                "groupItemTitle": "Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:23Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 343.62416099999996,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "33895457259261876422468839234530879383974353227152791748527554238054138500603",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "34966950999839349480297681355539333632106240399858888051149832859953269220603",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_to_score",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "team_totals",
+            "sportsMarketType": "soccer_team_totals",
+            "teamSide": "left",
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": false,
+                "marketId": "5856837",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856837",
+                    "assetId": "111703982524358819646304496685593215843855604083491599346579375716622087676313"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856837",
+                    "assetId": "105478456698610231644434051290386135971568016127864407224447447565486368232766"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": 1.5,
+                "isDefault": true,
+                "marketId": "5856838",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 1.5",
+                    "marketId": "5856838",
+                    "assetId": "110105103146584224763645462173076413308009332339536971192799207385926753750445"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 1.5",
+                    "marketId": "5856838",
+                    "assetId": "95028683253493699512932392590570005714181397126198436736958653694856553584788"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856837",
+                "conditionId": "0xa06e462977f7bfebee6e56c39f049395666a7b1e94ee1a272de61694bb62750d",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Chelsea FC O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-team-total-home-0pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 14389.325752,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "111703982524358819646304496685593215843855604083491599346579375716622087676313",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "105478456698610231644434051290386135971568016127864407224447447565486368232766",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_team_totals",
+                "line": 0.5
+              },
+              {
+                "id": "5856838",
+                "conditionId": "0xe4ca4c35e03b92966d9ae34f25ede8cb867f47d4bb86651e7100a0c42595a165",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Chelsea FC O/U 1.5",
+                "slug": "epl-che-mun-2026-10-31-team-total-home-1pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC O/U 1.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 27406.375532000002,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "110105103146584224763645462173076413308009332339536971192799207385926753750445",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "95028683253493699512932392590570005714181397126198436736958653694856553584788",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_team_totals",
+                "line": 1.5
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "team_totals",
+            "sportsMarketType": "soccer_team_totals",
+            "teamSide": "right",
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": true,
+                "marketId": "5856843",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856843",
+                    "assetId": "62474839395098705114627562577553897771702457964910735385188675416549995492773"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856843",
+                    "assetId": "43283133747040832652099181524815753373113701780770669879593519861542098133951"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856843",
+                "conditionId": "0x893ce154e376e559c69202b109f555c6a3c5540a9b72f2b44177543f89e2d6ba",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Manchester United FC O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-team-total-away-0pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 9292.093781,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "62474839395098705114627562577553897771702457964910735385188675416549995492773",
+                    "label": "Over",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "43283133747040832652099181524815753373113701780770669879593519861542098133951",
+                    "label": "Under",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_team_totals",
+                "line": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "exact_score",
+        "cards": [
+          {
+            "template": "list",
+            "key": "exact_score",
+            "sportsMarketType": "soccer_exact_score",
+            "rows": [
+              {
+                "side": "yes",
+                "label": "Chelsea FC 0 - 0 Manchester United FC",
+                "marketId": "5851474",
+                "assetId": "12530796803609638109825823017218093412199969500007394307015141718750165263582"
+              },
+              {
+                "side": "yes",
+                "label": "Any Other Score",
+                "marketId": "5851569",
+                "assetId": "42075622553609201149224642269100276252432034520469174297744220429317911747473"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851474",
+                "conditionId": "0x97a61f60432e50fc0eeaffe0e8a61b8d7696b7e9d380b667b25a1c9d44279cc8",
+                "eventId": "1209095",
+                "question": "Exact Score: Chelsea FC 0 - 0 Manchester United FC?",
+                "slug": "epl-che-mun-2026-10-31-exact-score-0-0",
+                "description": "",
+                "groupItemTitle": "Chelsea FC 0 - 0 Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:53Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 6436.165633999999,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "12530796803609638109825823017218093412199969500007394307015141718750165263582",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "55463146304740488179823882876890386204442064117858461547216829250699390488517",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_exact_score",
+                "line": null
+              },
+              {
+                "id": "5851569",
+                "conditionId": "0x5742b20f1c78a8e0594950f89173b8860a0ff12302ac82d1c22f434d82a77943",
+                "eventId": "1209095",
+                "question": "Exact Score: Any Other Score?",
+                "slug": "epl-che-mun-2026-10-31-exact-score-any-other",
+                "description": "",
+                "groupItemTitle": "Any Other Score",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:53Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 6633.428572,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 36,
+                "outcomes": [
+                  {
+                    "assetId": "42075622553609201149224642269100276252432034520469174297744220429317911747473",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "74668973543524783528334926979850619729795079878690348382992005911807859761891",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_exact_score",
+                "line": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "first_half",
+        "cards": [
+          {
+            "template": "three_way",
+            "key": "result",
+            "sportsMarketType": "soccer_halftime_result",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "5851413",
+                "assetId": "73603471612317624053359157174507479962522298845421110304171154760115873169359"
+              },
+              {
+                "side": "middle",
+                "label": "DRAW",
+                "marketId": "5851417",
+                "assetId": "100453986821311959389259830068927014958625384656913135730660399457773896524757"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "5851422",
+                "assetId": "69234785308746506379396730536780538325666436867330866999569871319936327347706"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851413",
+                "conditionId": "0xbf10272adc260d91c122e4a490729702ca701616c12523304e82a4df19d5acd6",
+                "eventId": "1209090",
+                "question": "Chelsea FC leading at halftime?",
+                "slug": "epl-che-mun-2026-10-31-halftime-result-home",
+                "description": "",
+                "groupItemTitle": "Chelsea FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:16Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 7652.310730000001,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "73603471612317624053359157174507479962522298845421110304171154760115873169359",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "51525478437975803645289069382253597638248113489823568025410031029335733245973",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_halftime_result",
+                "line": null
+              },
+              {
+                "id": "5851417",
+                "conditionId": "0xc7e8642a5ee80947a8e9a7aea03d4842d5f017e7eea1ef1939e8168fd03eb868",
+                "eventId": "1209090",
+                "question": "Chelsea FC vs. Manchester United FC: Draw at halftime?",
+                "slug": "epl-che-mun-2026-10-31-halftime-result-draw",
+                "description": "",
+                "groupItemTitle": "Draw",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:16Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 2670.8670060000004,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "100453986821311959389259830068927014958625384656913135730660399457773896524757",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "76602472969291526732492228173964856600928681010691945528159881007303500570602",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_halftime_result",
+                "line": null
+              },
+              {
+                "id": "5851422",
+                "conditionId": "0xe1cb7c2aec4f837507b44129f83daaf7ec72001aba063da4d74f0a2e2e432207",
+                "eventId": "1209090",
+                "question": "Manchester United FC leading at halftime?",
+                "slug": "epl-che-mun-2026-10-31-halftime-result-away",
+                "description": "",
+                "groupItemTitle": "Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:16Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 33128.729322,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "69234785308746506379396730536780538325666436867330866999569871319936327347706",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "74766651223090628046070505468601204998277195905888835080807909625350624779399",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_halftime_result",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "three_way",
+            "key": "first_to_score",
+            "sportsMarketType": "soccer_first_half_first_to_score",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "6082360",
+                "assetId": "57249224456854472599322254580085220197775201834995685542643623295260420947168"
+              },
+              {
+                "side": "middle",
+                "label": "NEITHER",
+                "marketId": "6082362",
+                "assetId": "14611223402581722238492400487606383408946495118683086559822032654779610950177"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "6082361",
+                "assetId": "66241378304586009018103225759151525001932582921153439338517947754427564445177"
+              }
+            ],
+            "markets": [
+              {
+                "id": "6082360",
+                "conditionId": "0x17a91152750bbae62e88a24b459ad07ff51ae977ada4f92a5cc3263b95ed584b",
+                "eventId": "1240743",
+                "question": "Chelsea FC to score first in the 1st half vs. Manchester United FC?",
+                "slug": "epl-che-mun-2026-10-31-first-half-first-to-score-home",
+                "description": "",
+                "groupItemTitle": "Chelsea FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:16Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": 208.333334,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "57249224456854472599322254580085220197775201834995685542643623295260420947168",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "98621933676279009775918240840791237889207088852499789845394217172701994696977",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_first_to_score",
+                "line": null
+              },
+              {
+                "id": "6082362",
+                "conditionId": "0xe558bbebaa420400343b5fc9b2d14e75b713b09c00782b0d5cb229b9f03d5f60",
+                "eventId": "1240743",
+                "question": "Chelsea FC vs. Manchester United FC: Neither team to score first in the 1st half?",
+                "slug": "epl-che-mun-2026-10-31-first-half-first-to-score-neither",
+                "description": "",
+                "groupItemTitle": "Neither",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:16Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "14611223402581722238492400487606383408946495118683086559822032654779610950177",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "84831314176961761494657195981601356514235714017852602490687203454821683423246",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_first_to_score",
+                "line": null
+              },
+              {
+                "id": "6082361",
+                "conditionId": "0x088962f0f8f0dc42126bb2e858ed4bbc0597352bd8227409648a8f57c6eec1b1",
+                "eventId": "1240743",
+                "question": "Manchester United FC to score first in the 1st half vs. Chelsea FC?",
+                "slug": "epl-che-mun-2026-10-31-first-half-first-to-score-away",
+                "description": "",
+                "groupItemTitle": "Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:16Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "66241378304586009018103225759151525001932582921153439338517947754427564445177",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "88915306702994391501266163548045617432581474937087457906236238828631026119347",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_first_to_score",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "side_picker",
+            "key": "spreads",
+            "sportsMarketType": "first_half_spreads",
+            "positions": [
+              {
+                "pickerLabel": "2.5",
+                "line": 2.5,
+                "isDefault": false,
+                "marketId": "6082330",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE +2.5",
+                    "marketId": "6082330",
+                    "assetId": "2459394810334340269522916512042796360164522847480618687320605939985154135526"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN -2.5",
+                    "marketId": "6082330",
+                    "assetId": "1820741346851508124305528624582719633220280935604151183392129525211078761706"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": 1.5,
+                "isDefault": true,
+                "marketId": "6082337",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE +1.5",
+                    "marketId": "6082337",
+                    "assetId": "51268034297024461829814256076890801329397362649380070137289312443801043683838"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN -1.5",
+                    "marketId": "6082337",
+                    "assetId": "37977497485625182105408290626182850079224395878690448688889450028310732448733"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "6082330",
+                "conditionId": "0xe25433869c28d8724f6f579789f50876008a624c0ef2a262f982b45b7f132084",
+                "eventId": "1209567",
+                "question": "1st Half Spread: Manchester United FC (-2.5)",
+                "slug": "epl-che-mun-2026-10-31-first-half-spread-away-2pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC 1st Half (-2.5)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:12Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "1820741346851508124305528624582719633220280935604151183392129525211078761706",
+                    "label": "Manchester United FC",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "2459394810334340269522916512042796360164522847480618687320605939985154135526",
+                    "label": "Chelsea FC",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "first_half_spreads",
+                "line": -2.5
+              },
+              {
+                "id": "6082337",
+                "conditionId": "0x7836a3369c7efb7c669f93a65b876caafe96f2746f601fb1831b3c37728daf14",
+                "eventId": "1209567",
+                "question": "1st Half Spread: Manchester United FC (-1.5)",
+                "slug": "epl-che-mun-2026-10-31-first-half-spread-away-1pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC 1st Half (-1.5)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:12Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": 1620.12192,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "37977497485625182105408290626182850079224395878690448688889450028310732448733",
+                    "label": "Manchester United FC",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "51268034297024461829814256076890801329397362649380070137289312443801043683838",
+                    "label": "Chelsea FC",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "first_half_spreads",
+                "line": -1.5
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "totals",
+            "sportsMarketType": "first_half_totals",
+            "teamSide": null,
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": true,
+                "marketId": "5856832",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856832",
+                    "assetId": "13005311283705892848211559015042697938197433144860147418987688618393374410017"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856832",
+                    "assetId": "108833600267121641212323262779209445035143128912317188537630652479576731972122"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856832",
+                "conditionId": "0x07e9b7ba01d8c3d929da8c3cd5c8d1eb488f9e66a14528536006038628935478",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: 1st Half O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-first-half-total-0pt5",
+                "description": "",
+                "groupItemTitle": "1st Half O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:02:20Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 47625.52176799999,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "13005311283705892848211559015042697938197433144860147418987688618393374410017",
+                    "label": "Over",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "108833600267121641212323262779209445035143128912317188537630652479576731972122",
+                    "label": "Under",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "first_half_totals",
+                "line": 0.5
+              }
+            ]
+          },
+          {
+            "template": "yes_no",
+            "key": "both_teams_to_score",
+            "sportsMarketType": "both_teams_to_score_first_half",
+            "buttons": [
+              {
+                "side": "yes",
+                "label": "YES",
+                "marketId": "5856831",
+                "assetId": "16693543934270788891639972722646832318210903188544618579887740265687588225598"
+              },
+              {
+                "side": "no",
+                "label": "NO",
+                "marketId": "5856831",
+                "assetId": "108179878254548058237519230907944965153741218279606697007821506740059135054681"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856831",
+                "conditionId": "0x76227ff5f9c06c405942ab07ae0e8cae60f444eba676417ff81da174707a0646",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Both Teams to Score in First Half",
+                "slug": "epl-che-mun-2026-10-31-btts-first-half",
+                "description": "",
+                "groupItemTitle": "Both Teams to Score in First Half",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 839.6179169999999,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "16693543934270788891639972722646832318210903188544618579887740265687588225598",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "108179878254548058237519230907944965153741218279606697007821506740059135054681",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "both_teams_to_score_first_half",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "list",
+            "key": "exact_score",
+            "sportsMarketType": "soccer_first_half_exact_score",
+            "rows": [
+              {
+                "side": "yes",
+                "label": "Chelsea FC 0 - 0 Manchester United FC",
+                "marketId": "6082351",
+                "assetId": "83740404019969164060365389688031087937980921691820726273622491266446770744294"
+              },
+              {
+                "side": "yes",
+                "label": "Any Other Score",
+                "marketId": "6082359",
+                "assetId": "55413671192144100952522211467405098885934308979674802226955685697444106439850"
+              }
+            ],
+            "markets": [
+              {
+                "id": "6082351",
+                "conditionId": "0xc983f8ae613d1e3974484d5583eb3ea4f00f873918e44366eb29698faa6d2271",
+                "eventId": "1240742",
+                "question": "1st Half Exact Score: Chelsea FC 0 - 0 Manchester United FC?",
+                "slug": "epl-che-mun-2026-10-31-first-half-exact-score-0-0",
+                "description": "",
+                "groupItemTitle": "Chelsea FC 0 - 0 Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:20Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": 20.0,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "83740404019969164060365389688031087937980921691820726273622491266446770744294",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "56495183907170972993582172041088224999165024199240427077939593578140748257251",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_exact_score",
+                "line": null
+              },
+              {
+                "id": "6082359",
+                "conditionId": "0x970c1a389a39e9f3ac5ae23df9278948a83e6046001b607b5e7d2766cc44e313",
+                "eventId": "1240742",
+                "question": "1st Half Exact Score: Any Other Score?",
+                "slug": "epl-che-mun-2026-10-31-first-half-exact-score-any-other",
+                "description": "",
+                "groupItemTitle": "Any Other Score",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:20Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 8,
+                "outcomes": [
+                  {
+                    "assetId": "55413671192144100952522211467405098885934308979674802226955685697444106439850",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "108726268034993804389610424376949170621701747174584421097066331118537672202754",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_exact_score",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "team_totals",
+            "sportsMarketType": "soccer_first_half_team_totals",
+            "teamSide": "left",
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": true,
+                "marketId": "5856849",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856849",
+                    "assetId": "51680812266671889525710776569969017072004798763356406755637988594768918182041"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856849",
+                    "assetId": "84204247256380752374797217333753761497009764109613339937181121964514432700564"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856849",
+                "conditionId": "0x5cb51e584dc8db5681b0dd43e1738e637cbc503759c5245bf11c1f6612a46085",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Chelsea FC 1st Half O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-first-half-team-total-home-0pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC 1st Half O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 521.0731089999999,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "51680812266671889525710776569969017072004798763356406755637988594768918182041",
+                    "label": "Over",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "84204247256380752374797217333753761497009764109613339937181121964514432700564",
+                    "label": "Under",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_team_totals",
+                "line": 0.5
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "team_totals",
+            "sportsMarketType": "soccer_first_half_team_totals",
+            "teamSide": "right",
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": true,
+                "marketId": "5856853",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856853",
+                    "assetId": "88745863342382521962067440082560787720319170448797391729747936842403239513763"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856853",
+                    "assetId": "30534279789885158242472256426223968885194593903340221693820257007092897653543"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856853",
+                "conditionId": "0x139a7a28ef0d0bd325d8041100a5ff1f8cd7ac40038ab00ae800e7d554e56ee9",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Manchester United FC 1st Half O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-first-half-team-total-away-0pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC 1st Half O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 203.95695800000001,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "88745863342382521962067440082560787720319170448797391729747936842403239513763",
+                    "label": "Over",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "30534279789885158242472256426223968885194593903340221693820257007092897653543",
+                    "label": "Under",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_first_half_team_totals",
+                "line": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "second_half",
+        "cards": [
+          {
+            "template": "three_way",
+            "key": "result",
+            "sportsMarketType": "soccer_second_half_result",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "5851449",
+                "assetId": "27836401615351308953353583285275510669819821562397766361442590387800116580957"
+              },
+              {
+                "side": "middle",
+                "label": "DRAW",
+                "marketId": "5851453",
+                "assetId": "79568466495227411352826343809032956440263195012245109057298322220871271516784"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "5851458",
+                "assetId": "41484991611230654891430667192731147787978680762237846794242760138264738821345"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5851449",
+                "conditionId": "0x8775cac653b41c2420f2e9380c49c1033fff8589f40455af7066901c2ff6c758",
+                "eventId": "1209093",
+                "question": "Chelsea FC to win the second half?",
+                "slug": "epl-che-mun-2026-10-31-second-half-result-home",
+                "description": "",
+                "groupItemTitle": "Chelsea FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 131.65681899999998,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "27836401615351308953353583285275510669819821562397766361442590387800116580957",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "55991256581110706629067833386739098651320097471855922499045195457979187662479",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_result",
+                "line": null
+              },
+              {
+                "id": "5851453",
+                "conditionId": "0x025d3669c5831a969175b859b7d5227512220755f89a044d0a4fe71ede6f5a90",
+                "eventId": "1209093",
+                "question": "Chelsea FC vs. Manchester United FC: Second half draw?",
+                "slug": "epl-che-mun-2026-10-31-second-half-result-draw",
+                "description": "",
+                "groupItemTitle": "Draw",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 16.0,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "79568466495227411352826343809032956440263195012245109057298322220871271516784",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "77791165345113687850491982723501204354876331071868340587443166549422879544862",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_result",
+                "line": null
+              },
+              {
+                "id": "5851458",
+                "conditionId": "0xca9eaf4da7a7a653e1cc7c81accbe234e142480bc8590767090c90e6596a6de2",
+                "eventId": "1209093",
+                "question": "Manchester United FC to win the second half?",
+                "slug": "epl-che-mun-2026-10-31-second-half-result-away",
+                "description": "",
+                "groupItemTitle": "Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T04:00:17Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 99.95,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "41484991611230654891430667192731147787978680762237846794242760138264738821345",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "40656847481521349497296269752335411989653920751083701906940870236653192153047",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_result",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "three_way",
+            "key": "first_to_score",
+            "sportsMarketType": "soccer_second_half_first_to_score",
+            "buttons": [
+              {
+                "side": "left",
+                "label": "CHE",
+                "marketId": "6082363",
+                "assetId": "85846056845863853977380917641982255803609888934802909266932942505245270250120"
+              },
+              {
+                "side": "middle",
+                "label": "NEITHER",
+                "marketId": "6082365",
+                "assetId": "87188688828696185714688498364913421785712144223481713026589174896613215916696"
+              },
+              {
+                "side": "right",
+                "label": "MUN",
+                "marketId": "6082364",
+                "assetId": "4923677455713434514187633986721893987132043631594202624848403573772176874280"
+              }
+            ],
+            "markets": [
+              {
+                "id": "6082363",
+                "conditionId": "0xc6fe4008d56e5d6e315c63dae384ccde4137486f5ba4ea89c6ad214604db6f00",
+                "eventId": "1240744",
+                "question": "Chelsea FC to score first in the 2nd half vs. Manchester United FC?",
+                "slug": "epl-che-mun-2026-10-31-second-half-first-to-score-home",
+                "description": "",
+                "groupItemTitle": "Chelsea FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:14Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "85846056845863853977380917641982255803609888934802909266932942505245270250120",
+                    "label": "Yes",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "61779912617665748400028165176145471759395827653495836279844658792539585906288",
+                    "label": "No",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_first_to_score",
+                "line": null
+              },
+              {
+                "id": "6082365",
+                "conditionId": "0x300743ced0ae9d1799e334402e42a39e45d0e08e8eb4282341d6f8fa77d44073",
+                "eventId": "1240744",
+                "question": "Chelsea FC vs. Manchester United FC: Neither team to score first in the 2nd half?",
+                "slug": "epl-che-mun-2026-10-31-second-half-first-to-score-neither",
+                "description": "",
+                "groupItemTitle": "Neither",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:14Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "87188688828696185714688498364913421785712144223481713026589174896613215916696",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "833654889384363260234986707338861516059006794910612977347681640650072672784",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_first_to_score",
+                "line": null
+              },
+              {
+                "id": "6082364",
+                "conditionId": "0xc372d452ed89749293c294721e063bba2f0f6935668c6c13335adf3506e66071",
+                "eventId": "1240744",
+                "question": "Manchester United FC to score first in the 2nd half vs. Chelsea FC?",
+                "slug": "epl-che-mun-2026-10-31-second-half-first-to-score-away",
+                "description": "",
+                "groupItemTitle": "Manchester United FC",
+                "image": null,
+                "icon": null,
+                "status": "closed",
+                "negRisk": true,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:14Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "4923677455713434514187633986721893987132043631594202624848403573772176874280",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "68134247716406236652450842845272598040742367167942042453871814101362480710176",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_first_to_score",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "side_picker",
+            "key": "spreads",
+            "sportsMarketType": "second_half_spreads",
+            "positions": [
+              {
+                "pickerLabel": "2.5",
+                "line": 2.5,
+                "isDefault": false,
+                "marketId": "6082347",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE +2.5",
+                    "marketId": "6082347",
+                    "assetId": "60832399498630402788155378500359621695035813535338934369523296333251360283185"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN -2.5",
+                    "marketId": "6082347",
+                    "assetId": "95293670190089622004218056378231758293772813963010753668416452881543855734506"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": -1.5,
+                "isDefault": true,
+                "marketId": "6082338",
+                "buttons": [
+                  {
+                    "side": "left",
+                    "label": "CHE -1.5",
+                    "marketId": "6082338",
+                    "assetId": "49016204399722233229592741170460562348628092933267315174452142708194605820856"
+                  },
+                  {
+                    "side": "right",
+                    "label": "MUN +1.5",
+                    "marketId": "6082338",
+                    "assetId": "63527156375159961662104187161772313199227070949515226465187602807392474954608"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "6082347",
+                "conditionId": "0xcc5b418827926c6627e7271bb6f5c42cc1ed070f723b7ed21e8120843aa0300f",
+                "eventId": "1209567",
+                "question": "2nd Half Spread: Manchester United FC (-2.5)",
+                "slug": "epl-che-mun-2026-10-31-second-half-spread-away-2pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC 2nd Half (-2.5)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:12Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "95293670190089622004218056378231758293772813963010753668416452881543855734506",
+                    "label": "Manchester United FC",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "60832399498630402788155378500359621695035813535338934369523296333251360283185",
+                    "label": "Chelsea FC",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "second_half_spreads",
+                "line": -2.5
+              },
+              {
+                "id": "6082338",
+                "conditionId": "0x960faaf6cf2792e09193040f87b8cdbb3a3354eeed090551b242b83a3026b5a5",
+                "eventId": "1209567",
+                "question": "2nd Half Spread: Chelsea FC (-1.5)",
+                "slug": "epl-che-mun-2026-10-31-second-half-spread-home-1pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC 2nd Half (-1.5)",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-23T13:59:12Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-23",
+                "endDateIso": "2026-10-31",
+                "volume": 25.0,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 2,
+                "outcomes": [
+                  {
+                    "assetId": "49016204399722233229592741170460562348628092933267315174452142708194605820856",
+                    "label": "Chelsea FC",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "63527156375159961662104187161772313199227070949515226465187602807392474954608",
+                    "label": "Manchester United FC",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "second_half_spreads",
+                "line": -1.5
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "totals",
+            "sportsMarketType": "second_half_totals",
+            "teamSide": null,
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": false,
+                "marketId": "5856858",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856858",
+                    "assetId": "23049471542765495603360961636373331188982508228471166976505076308467005695280"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856858",
+                    "assetId": "14043843040440008699803797576806358685118135770795239458050190499061227603712"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": 1.5,
+                "isDefault": true,
+                "marketId": "5856859",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 1.5",
+                    "marketId": "5856859",
+                    "assetId": "82484225734891231582741910195798029563419189591327039497973730307031891660842"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 1.5",
+                    "marketId": "5856859",
+                    "assetId": "64526003761002546321759735624647831538678879498266846981871877007332639907517"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856858",
+                "conditionId": "0xe0f01200c2e14747797eb2ef035ec523360e953ed48372eaf4fadcd82c26d314",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: 2nd Half O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-second-half-total-0pt5",
+                "description": "",
+                "groupItemTitle": "2nd Half O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "23049471542765495603360961636373331188982508228471166976505076308467005695280",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "14043843040440008699803797576806358685118135770795239458050190499061227603712",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "second_half_totals",
+                "line": 0.5
+              },
+              {
+                "id": "5856859",
+                "conditionId": "0x22c968084ffb3acd9e2ce9285946dcb75fbedd8320f5a5a4f976a31358fea994",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: 2nd Half O/U 1.5",
+                "slug": "epl-che-mun-2026-10-31-second-half-total-1pt5",
+                "description": "",
+                "groupItemTitle": "2nd Half O/U 1.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 100.0,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "82484225734891231582741910195798029563419189591327039497973730307031891660842",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "64526003761002546321759735624647831538678879498266846981871877007332639907517",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "second_half_totals",
+                "line": 1.5
+              }
+            ]
+          },
+          {
+            "template": "yes_no",
+            "key": "both_teams_to_score",
+            "sportsMarketType": "both_teams_to_score_second_half",
+            "buttons": [
+              {
+                "side": "yes",
+                "label": "YES",
+                "marketId": "5856857",
+                "assetId": "11980600231720899966308292220810491180385204998305667810290185962297290120870"
+              },
+              {
+                "side": "no",
+                "label": "NO",
+                "marketId": "5856857",
+                "assetId": "57790905601177451895455422425234599573782285297705570664313119795907243503948"
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856857",
+                "conditionId": "0x0e723e643a82a9e72acf5be004cd314a06fa4d30e8cf4b24d47ea35384080491",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Both Teams to Score in Second Half",
+                "slug": "epl-che-mun-2026-10-31-btts-second-half",
+                "description": "",
+                "groupItemTitle": "Both Teams to Score in Second Half",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": 25.5,
+                "volume24hr": null,
+                "liquidity": null,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "11980600231720899966308292220810491180385204998305667810290185962297290120870",
+                    "label": "Yes",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "57790905601177451895455422425234599573782285297705570664313119795907243503948",
+                    "label": "No",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "both_teams_to_score_second_half",
+                "line": null
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "team_totals",
+            "sportsMarketType": "soccer_second_half_team_totals",
+            "teamSide": "left",
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": false,
+                "marketId": "5856863",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856863",
+                    "assetId": "45699406743244724917377760762440061147597622769502823115276908320701413005030"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856863",
+                    "assetId": "113967046322343380188619581384281263605986675481928765080726077276407144129880"
+                  }
+                ]
+              },
+              {
+                "pickerLabel": "1.5",
+                "line": 1.5,
+                "isDefault": true,
+                "marketId": "5856864",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 1.5",
+                    "marketId": "5856864",
+                    "assetId": "26803817801010529959827148401404962529110168892531104018689655909817283347094"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 1.5",
+                    "marketId": "5856864",
+                    "assetId": "19735093392711828888338593962587449933458992017028095876038868585576009775047"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856863",
+                "conditionId": "0x8a7b12b637aa07ac177ba223e4f6987ec689839c574d02e85a136a152c60d4b9",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Chelsea FC 2nd Half O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-second-half-team-total-home-0pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC 2nd Half O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "45699406743244724917377760762440061147597622769502823115276908320701413005030",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "113967046322343380188619581384281263605986675481928765080726077276407144129880",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_team_totals",
+                "line": 0.5
+              },
+              {
+                "id": "5856864",
+                "conditionId": "0x74cf9bc5513dc32f6a7017023a82d9ed1636fa4f545d9a065f5e425ac1b29068",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Chelsea FC 2nd Half O/U 1.5",
+                "slug": "epl-che-mun-2026-10-31-second-half-team-total-home-1pt5",
+                "description": "",
+                "groupItemTitle": "Chelsea FC 2nd Half O/U 1.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 1,
+                "outcomes": [
+                  {
+                    "assetId": "26803817801010529959827148401404962529110168892531104018689655909817283347094",
+                    "label": "Over",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "19735093392711828888338593962587449933458992017028095876038868585576009775047",
+                    "label": "Under",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_team_totals",
+                "line": 1.5
+              }
+            ]
+          },
+          {
+            "template": "over_under_picker",
+            "key": "team_totals",
+            "sportsMarketType": "soccer_second_half_team_totals",
+            "teamSide": "right",
+            "positions": [
+              {
+                "pickerLabel": "0.5",
+                "line": 0.5,
+                "isDefault": true,
+                "marketId": "5856867",
+                "buttons": [
+                  {
+                    "side": "over",
+                    "label": "O 0.5",
+                    "marketId": "5856867",
+                    "assetId": "111742511945334298335087152215949802287111827912838158578160796713345221615226"
+                  },
+                  {
+                    "side": "under",
+                    "label": "U 0.5",
+                    "marketId": "5856867",
+                    "assetId": "20418313516657321796713677544409392188740424790947727126273596197615632318078"
+                  }
+                ]
+              }
+            ],
+            "markets": [
+              {
+                "id": "5856867",
+                "conditionId": "0x6954fc3552eb93ae85b1f2744145e1ccd49fad8d1d94c4ca0b1cbd2bb21a860e",
+                "eventId": "1209567",
+                "question": "Chelsea FC vs. Manchester United FC: Manchester United FC 2nd Half O/U 0.5",
+                "slug": "epl-che-mun-2026-10-31-second-half-team-total-away-0pt5",
+                "description": "",
+                "groupItemTitle": "Manchester United FC 2nd Half O/U 0.5",
+                "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/Repetitive-markets/premier+league.jpg",
+                "status": "closed",
+                "negRisk": false,
+                "acceptingOrders": false,
+                "startDate": "2026-10-18T05:01:48Z",
+                "endDate": "2026-10-31T12:30:00Z",
+                "startDateIso": "2026-10-18",
+                "endDateIso": "2026-10-31",
+                "volume": null,
+                "volume24hr": null,
+                "liquidity": 0.0,
+                "orderIndex": 0,
+                "outcomes": [
+                  {
+                    "assetId": "111742511945334298335087152215949802287111827912838158578160796713345221615226",
+                    "label": "Over",
+                    "probability": 0.0,
+                    "legacyAssetId": null
+                  },
+                  {
+                    "assetId": "20418313516657321796713677544409392188740424790947727126273596197615632318078",
+                    "label": "Under",
+                    "probability": 1.0,
+                    "legacyAssetId": null
+                  }
+                ],
+                "version": "v1",
+                "sportsMarketType": "soccer_second_half_team_totals",
+                "line": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

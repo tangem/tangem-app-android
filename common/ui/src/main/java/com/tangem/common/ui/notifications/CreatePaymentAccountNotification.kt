@@ -90,7 +90,7 @@ private fun CreatePaymentAccountNotification_Preview() {
         CreatePaymentAccountNotification(
             onClick = {},
             onCloseClick = {},
-            image = R.drawable.img_tangem_pay_visa_banner,
+            image = R.drawable.img_tangem_pay_banner,
             title = resourceReference(R.string.tangempay_onboarding_banner_title),
             subtitle = resourceReference(R.string.tangempay_onboarding_banner_description),
         )

@@ -2,13 +2,13 @@ package com.tangem.features.tangempay.withdraw.bank.preview.completion
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
-import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
-import com.tangem.domain.pay.repository.BankOfframpOrderRepository
+import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.repository.BankOfframpOrderRepository
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransfer
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransferError
@@ -47,7 +47,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
         val recipient = draft.toRecipient() ?: return
         onState(CompletionState.Sending)
         val route = createRoute(rail = destination.rail, recipient = recipient, onState = onState) ?: return
-        if (route.fee.calculationType != AccountFee.CalculationType.FIXED) {
+        if (route.fee.calculationType != FeeCalculationType.FIXED) {
             onNonFixedRouteFee(route = route, onState = onState)
             return
         }

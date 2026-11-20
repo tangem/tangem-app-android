@@ -20,9 +20,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.account.requireCardWithId
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.models.tangempay.TangemPayCardLimitPeriod
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R

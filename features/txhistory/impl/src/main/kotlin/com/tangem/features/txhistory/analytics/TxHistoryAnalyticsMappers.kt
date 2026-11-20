@@ -6,7 +6,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 import com.tangem.features.txhistory.converter.ExpressExchangeStatusToUiStatusConverter
 import com.tangem.features.txhistory.converter.ExpressOnrampStatusToUiStatusConverter
 import com.tangem.features.txhistory.converter.toUiStatus

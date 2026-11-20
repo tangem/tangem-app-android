@@ -2,12 +2,14 @@ package com.tangem.features.yield.supply.impl.subcomponents.notifications.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.extensions.networkIconResId
+import com.tangem.common.ui.notifications.NetworkFeeUnavailableNoticeAnalytics
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addHighFeeNotificationIfNoOther
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.NetworkFeeUnavailableAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -39,6 +41,10 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
 ) : Model() {
 
     private val params: YieldSupplyNotificationsComponent.Params = paramsContainer.require()
+    private val networkFeeUnavailableNoticeAnalytics = NetworkFeeUnavailableNoticeAnalytics(
+        analyticsEventHandler = analyticsEventHandler,
+        source = NetworkFeeUnavailableAnalyticsEvent.Source.Earning,
+    )
 
     val uiState: StateFlow<ImmutableList<NotificationUM>>
         field = MutableStateFlow(persistentListOf())
@@ -93,6 +99,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                 }
 
                 sendAnalytics(notifications, cryptoCurrencyStatus)
+                networkFeeUnavailableNoticeAnalytics.onNotificationsUpdated(notifications)
 
                 uiState.update { notifications.toPersistentList() }
 

@@ -2,35 +2,36 @@ package com.tangem.features.polymarket.impl.details.model.chart
 
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketMarketLifetime
 import com.tangem.domain.polymarket.model.PolymarketOutcome
+import com.tangem.domain.polymarket.model.PolymarketPriceInterval
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.polymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.SeriesColor
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import java.time.Instant
 import java.util.Locale
-import kotlin.time.Duration.Companion.days
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 data class PolymarketChartContent internal constructor(
     val eventId: String,
     val outcomes: ImmutableList<PolymarketChartOutcome>,
     val periods: ImmutableList<PolymarketChartPeriod>,
     val isLive: Boolean,
-    val isClosed: Boolean,
+    val lifetime: PolymarketMarketLifetime,
     val isComplementaryPair: Boolean,
     private val candidateKeys: Set<PolymarketChartOutcome.Key>,
     private val moneylineConditions: Set<String>?,
 ) {
+    val isClosed: Boolean get() = lifetime.isClosed
+
     val initialPeriod: PolymarketChartPeriod
         get() = if (isLive) PolymarketChartPeriod.Hour else PolymarketChartPeriod.Max
 
     companion object {
         private const val MAX_SERIES = 4
         private const val BINARY_OUTCOMES = 2
-        private val UNKNOWN_AGE = 60.days
-        private val MONTH_AGE = 30.days
         private val PALETTE = listOf(SeriesColor.Blue, SeriesColor.Green, SeriesColor.Red, SeriesColor.Yellow)
 
         /**
@@ -45,7 +46,8 @@ data class PolymarketChartContent internal constructor(
             previous: PolymarketChartContent? = null,
         ): PolymarketChartContent {
             val conditions = moneylineConditionIds?.map { it.lowercase(Locale.ROOT) }?.toSet()
-            val markets = event.markets.sortedBy { it.orderIndex }.filter {
+            val openMarkets = event.markets.filter { it.status != PolymarketStatus.CLOSED }
+            val markets = openMarkets.ifEmpty { event.markets }.sortedBy { it.orderIndex }.filter {
                 it.eventId == event.id && (conditions == null || it.conditionId?.lowercase(Locale.ROOT) in conditions)
             }
             val isSingle = event.totalMarketsCount == 1
@@ -63,11 +65,8 @@ data class PolymarketChartContent internal constructor(
                 ?.map { byKey.getValue(it.key) }
                 ?: candidates.sortedByDescending { it.outcome.probability }.take(MAX_SERIES)
             val selectedMarkets = selected.map { it.market }.distinctBy { it.id }
-            val isClosed = event.status == PolymarketStatus.CLOSED ||
-                selectedMarkets.isNotEmpty() && selectedMarkets.all { it.status == PolymarketStatus.CLOSED }
-            val start = selectedMarkets.mapNotNull { parseDate(it.startDateIso) ?: parseDate(it.startDate) }.minOrNull()
-                ?: parseDate(event.startDate)
-            val age = start?.let { nowMillis - it } ?: UNKNOWN_AGE.inWholeMilliseconds
+            val lifetime = marketLifetime(event, selectedMarkets)
+            val available = PolymarketPriceInterval.available(lifetime, Instant.ofEpochMilli(nowMillis))
             val outcomes = mapOutcomes(
                 selected = selected,
                 candidates = candidates,
@@ -77,12 +76,31 @@ data class PolymarketChartContent internal constructor(
             return PolymarketChartContent(
                 eventId = event.id,
                 outcomes = outcomes.toImmutableList(),
-                periods = availablePeriods(age, isClosed).toImmutableList(),
-                isLive = event.isLive && !isClosed,
-                isClosed = isClosed,
+                periods = PolymarketChartPeriod.entries.filter { it.interval in available }.toImmutableList(),
+                isLive = event.isLive && !lifetime.isClosed,
+                lifetime = lifetime,
                 isComplementaryPair = isComplementaryPair(selected, selectedMarkets),
                 candidateKeys = keys,
                 moneylineConditions = conditions,
+            )
+        }
+
+        private fun marketLifetime(event: PolymarketEvent, markets: List<PolymarketMarket>): PolymarketMarketLifetime {
+            val isClosed = event.status == PolymarketStatus.CLOSED ||
+                markets.isNotEmpty() && markets.all { it.status == PolymarketStatus.CLOSED }
+            val start = markets.mapNotNull { parseDate(it.startDateIso) ?: parseDate(it.startDate) }.minOrNull()
+                ?: parseDate(event.startDate)
+            return PolymarketMarketLifetime(
+                start = start,
+                status = if (isClosed) {
+                    PolymarketMarketLifetime.Status.Closed(
+                        closedAt = null,
+                        scheduledEnd = markets.mapNotNull { parseDate(it.endDateIso) ?: parseDate(it.endDate) }
+                            .maxOrNull() ?: parseDate(event.endDate),
+                    )
+                } else {
+                    PolymarketMarketLifetime.Status.Open
+                },
             )
         }
 
@@ -115,17 +133,6 @@ data class PolymarketChartContent internal constructor(
             }
         }
 
-        private fun availablePeriods(ageMillis: Long, isClosed: Boolean): List<PolymarketChartPeriod> {
-            if (isClosed) return listOf(PolymarketChartPeriod.Max)
-            return PolymarketChartPeriod.entries.filter { period ->
-                when (period) {
-                    PolymarketChartPeriod.Hour, PolymarketChartPeriod.Max -> true
-                    PolymarketChartPeriod.SixHours -> ageMillis < MONTH_AGE.inWholeMilliseconds
-                    else -> period.duration?.let { ageMillis >= it.inWholeMilliseconds } != false
-                }
-            }
-        }
-
         private fun PolymarketMarket.chartOutcomes(isSingle: Boolean): List<PolymarketOutcome> {
             if (isSingle || !hasYesNo()) return outcomes
             return outcomes.filter { it.title.trim().equals("Yes", ignoreCase = true) }
@@ -143,8 +150,8 @@ data class PolymarketChartContent internal constructor(
             PolymarketOutcomeAccent.Neutral -> SeriesColor.Neutral
         }
 
-        private fun parseDate(raw: String?): Long? = raw?.let {
-            runCatching { Instant.parse(it).toEpochMilli() }.getOrNull()
+        private fun parseDate(raw: String?): Instant? = raw?.let {
+            runCatching { Instant.parse(it) }.getOrNull()
         }
     }
 

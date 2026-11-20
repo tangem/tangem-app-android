@@ -5,7 +5,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.pay.model.CashbackPromotions
+import com.tangem.domain.tangempay.model.CashbackPromotions
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
 import io.mockk.clearMocks
 import io.mockk.every

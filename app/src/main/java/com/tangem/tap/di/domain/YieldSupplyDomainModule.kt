@@ -5,11 +5,13 @@ import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.promo.YieldPromoRepository
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.domain.yield.supply.promo.usecase.GetYieldBoostStatusUseCase
@@ -280,12 +282,16 @@ internal object YieldSupplyDomainModule {
         yieldSupplyRepository: YieldSupplyRepository,
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        yieldModuleStatusFetcher: YieldModuleStatusFetcher,
+        tokensFeatureToggles: TokensFeatureToggles,
         appScope: AppCoroutineScope,
     ): YieldSupplyPendingTracker {
         return YieldSupplyPendingTracker(
             yieldSupplyRepository = yieldSupplyRepository,
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            yieldModuleStatusFetcher = yieldModuleStatusFetcher,
+            tokensFeatureToggles = tokensFeatureToggles,
             coroutineScope = appScope,
         )
     }

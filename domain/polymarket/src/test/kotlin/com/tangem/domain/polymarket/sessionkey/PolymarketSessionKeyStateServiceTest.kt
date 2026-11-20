@@ -17,7 +17,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -694,6 +697,162 @@ internal class PolymarketSessionKeyStateServiceTest {
             }
         }
 
+    @Test
+    fun `GIVEN an observed wallet WHEN refresh and await THEN it returns after the next overview`() = runTest {
+        // Arrange
+        val active = overview(PolymarketSessionKeyStatus.ACTIVE)
+        val revoked = overview(PolymarketSessionKeyStatus.REVOKED)
+        coEvery { reconcile(USER_WALLET_ID) } returnsMany listOf(active.right(), revoked.right())
+        val service = service()
+        backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
+        runCurrent()
+
+        // Act
+        val started = testScheduler.currentTime
+        service.refreshAndAwait(USER_WALLET_ID)
+
+        // Assert
+        assertThat(testScheduler.currentTime - started).isEqualTo(0)
+        assertThat(service.observe(USER_WALLET_ID).first()).isEqualTo(revoked.right())
+        coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN a reconciliation in flight WHEN refresh and await THEN it waits for the requested one`() = runTest {
+        // Arrange
+        val active = overview(PolymarketSessionKeyStatus.ACTIVE)
+        val stale = overview(PolymarketSessionKeyStatus.PENDING)
+        val revoked = overview(PolymarketSessionKeyStatus.REVOKED)
+        val inFlight = CompletableDeferred<Unit>()
+        val requested = CompletableDeferred<Unit>()
+        var reconciles = 0
+        coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+            reconciles++
+            when (reconciles) {
+                1 -> active.right()
+                2 -> {
+                    inFlight.await()
+                    stale.right()
+                }
+                else -> {
+                    requested.await()
+                    revoked.right()
+                }
+            }
+        }
+        val service = service()
+        backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
+        runCurrent()
+        service.refresh(USER_WALLET_ID)
+        runCurrent()
+
+        // Act
+        val awaited = async { service.refreshAndAwait(USER_WALLET_ID) }
+        runCurrent()
+        inFlight.complete(Unit)
+        runCurrent()
+        val isDoneOnStaleOverview = awaited.isCompleted
+        requested.complete(Unit)
+        awaited.await()
+
+        // Assert
+        assertThat(isDoneOnStaleOverview).isFalse()
+        assertThat(reconciles).isEqualTo(3)
+        assertThat(service.observe(USER_WALLET_ID).first()).isEqualTo(revoked.right())
+    }
+
+    @Test
+    fun `GIVEN an unobserved wallet WHEN refresh and await THEN it reconciles without waiting`() = runTest {
+        // Arrange
+        coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        val service = service()
+
+        // Act
+        val started = testScheduler.currentTime
+        service.refreshAndAwait(USER_WALLET_ID)
+        runCurrent()
+
+        // Assert
+        assertThat(testScheduler.currentTime - started).isEqualTo(0)
+        coVerify(exactly = 1) { reconcile(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN the overview does not change WHEN refresh and await THEN it returns once the reconciliation ends`() =
+        runTest {
+            // Arrange
+            coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
+            val service = service()
+            backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
+            runCurrent()
+
+            // Act
+            val started = testScheduler.currentTime
+            service.refreshAndAwait(USER_WALLET_ID)
+
+            // Assert
+            assertThat(testScheduler.currentTime - started).isEqualTo(0)
+            coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN the reconciliation hangs WHEN refresh and await THEN it returns after the timeout`() = runTest {
+        // Arrange
+        var reconciles = 0
+        coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+            reconciles++
+            if (reconciles > 1) delay(REFRESH_AWAIT_TIMEOUT_MILLIS * 10)
+            overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        }
+        val service = service()
+        backgroundScope.launch { service.observe(USER_WALLET_ID).collect() }
+        runCurrent()
+
+        // Act
+        val started = testScheduler.currentTime
+        service.refreshAndAwait(USER_WALLET_ID)
+
+        // Assert
+        assertThat(testScheduler.currentTime - started).isEqualTo(REFRESH_AWAIT_TIMEOUT_MILLIS)
+    }
+
+    @Test
+    fun `GIVEN a pending record listed before the newest active one WHEN observed THEN it is not polled`() = runTest {
+        // Arrange
+        val settled = overview(listOf(PolymarketSessionKeyStatus.PENDING, PolymarketSessionKeyStatus.ACTIVE))
+        coEvery { reconcile(USER_WALLET_ID) } returns settled.right()
+
+        // Act
+        service().observe(USER_WALLET_ID).test {
+            val actual = awaitItem()
+            advanceTimeBy(POLL_INTERVAL_MILLIS * 10)
+            runCurrent()
+
+            // Assert
+            assertThat(actual).isEqualTo(settled.right())
+            expectNoEvents()
+            coVerify(exactly = 1) { reconcile(USER_WALLET_ID) }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN an active record listed before the newest pending one WHEN observed THEN it is polled`() = runTest {
+        // Arrange
+        val settling = overview(listOf(PolymarketSessionKeyStatus.ACTIVE, PolymarketSessionKeyStatus.PENDING))
+        val settled = overview(PolymarketSessionKeyStatus.ACTIVE)
+        coEvery { reconcile(USER_WALLET_ID) } returnsMany listOf(settling.right(), settled.right())
+
+        // Act
+        service().observe(USER_WALLET_ID).test {
+            // Assert
+            assertThat(awaitItem()).isEqualTo(settling.right())
+            assertThat(awaitItem()).isEqualTo(settled.right())
+            coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun TestScope.service() = PolymarketSessionKeyStateService(
         reconcile = reconcile,
         scope = backgroundScope,
@@ -710,32 +869,34 @@ internal class PolymarketSessionKeyStateServiceTest {
         val USER_WALLET_ID = UserWalletId("011")
         val OTHER_WALLET_ID = UserWalletId("022")
         const val POLL_INTERVAL_MILLIS = 3_000L
+        const val REFRESH_AWAIT_TIMEOUT_MILLIS = 5_000L
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
+        const val KEY_ADDRESS = "0x5e55000000000000000000000000000000000001"
 
         fun overview(
             status: PolymarketSessionKeyStatus,
             isTradable: Boolean = false,
             nextChangeAt: Instant? = null,
+        ): PolymarketSessionKeyOverview = overview(
+            statuses = listOf(status),
+            isTradable = isTradable,
+            nextChangeAt = nextChangeAt,
+        )
+
+        fun overview(
+            statuses: List<PolymarketSessionKeyStatus>,
+            isTradable: Boolean = false,
+            nextChangeAt: Instant? = null,
         ): PolymarketSessionKeyOverview {
-            val key = PolymarketSessionKey(
-                address = "0x5e55000000000000000000000000000000000001",
-                deviceId = "device",
-                deviceName = "Pixel",
-                isEnabled = true,
-                status = status,
-                scopes = listOf("CLOB"),
-                validUntil = NOW.plusSeconds(1_000_000),
-                renewAfter = null,
-                authorizedAt = null,
-                createdAt = NOW,
-            )
+            val keys = statuses.mapIndexed { index, status -> key(status, createdAt = NOW.plusSeconds(index.toLong())) }
             return PolymarketSessionKeyOverview(
                 wallet = PolymarketWalletState(
                     depositWalletAddress = "0x2222222222222222222222222222222222222222",
                     status = PolymarketWalletStatus.READY_TO_TRADE,
-                    sessionKeys = listOf(key),
+                    sessionKeys = keys,
                 ),
-                localKeyAddress = key.address,
+                localKeyAddress = KEY_ADDRESS,
+                deviceId = "this-device",
                 assessment = PolymarketSessionKeyAssessment(
                     deviceState = PolymarketSessionKeyDeviceState.OfferEnable,
                     reconciliation = PolymarketSessionKeyReconciliation.Unavailable,
@@ -744,5 +905,18 @@ internal class PolymarketSessionKeyStateServiceTest {
                 isTradable = isTradable,
             )
         }
+
+        fun key(status: PolymarketSessionKeyStatus, createdAt: Instant) = PolymarketSessionKey(
+            address = KEY_ADDRESS,
+            deviceId = "device",
+            deviceName = "Pixel",
+            isEnabled = true,
+            status = status,
+            scopes = listOf("CLOB"),
+            validUntil = NOW.plusSeconds(1_000_000),
+            renewAfter = null,
+            authorizedAt = null,
+            createdAt = createdAt,
+        )
     }
 }

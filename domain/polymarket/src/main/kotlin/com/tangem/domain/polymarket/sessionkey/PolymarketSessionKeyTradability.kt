@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.newestFor
 import java.time.Clock
 import java.time.Instant
 
@@ -47,8 +48,7 @@ internal suspend fun PolymarketSessionKeyTradingStore.tradability(
 private fun PolymarketWalletState.tradableValidUntil(sessionKeyAddress: String, now: Instant): Instant? {
     if (status != PolymarketWalletStatus.READY_TO_TRADE) return null
 
-    val record = sessionKeys.firstOrNull { it.address.equals(sessionKeyAddress, ignoreCase = true) }
-        ?: return null
+    val record = sessionKeys.newestFor(sessionKeyAddress) ?: return null
     val validUntil = record.validUntil ?: return null
     val isTradable = record.status == PolymarketSessionKeyStatus.ACTIVE &&
         record.isEnabled &&

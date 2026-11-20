@@ -23,6 +23,7 @@ internal class EarnSummaryOrder @Inject constructor(
 internal class EarnHeadlineSelector @Inject constructor(
     private val order: EarnSummaryOrder,
     private val rateBadgeConverter: EarnRateBadgeConverter,
+    private val registry: EarnProductsRegistry,
 ) {
 
     /** The rate is known, and the product is open or the user already has a position in it. */
@@ -35,19 +36,21 @@ internal class EarnHeadlineSelector @Inject constructor(
      * of the winner: the For You card opens it on click.
      */
     fun select(candidates: List<EarnProductSummary>): EarnHeadline? {
-        val winner = candidates
-            .filter { it.isLive }
-            .minWithOrNull(order)
-            ?: return null
+        val winner = winnerOf(candidates) ?: return null
         val rate = winner.rate ?: return null
 
         return EarnHeadline(
             rate = rate,
             isActive = winner.position != null,
             badge = rateBadgeConverter.convert(rate),
+            badgeAccent = registry.badgeAccentOf(winner.productId),
             route = winner.route,
         )
     }
+
+    /** The summary [select] builds the headline from: the rule is the same, the banner reads its product too. */
+    fun winnerOf(candidates: List<EarnProductSummary>): EarnProductSummary? =
+        candidates.filter { it.isLive }.minWithOrNull(order)
 
     /**
      * The best of the active products: the `Auto` redirect of the picker leads to it. Rate sources are not passed

@@ -1,0 +1,49 @@
+package com.tangem.data.tangempay
+
+import com.tangem.data.tangempay.repository.TangemPayRequestPerformer
+import com.tangem.data.tangempay.store.CashbackSummaryStore
+import com.tangem.data.tangempay.store.PaymentAccountStatusesStore
+import com.tangem.data.tangempay.store.TangemPayCustomerInfoStore
+import com.tangem.data.tangempay.store.TangemPayCustomerSummaryStore
+import com.tangem.data.tangempay.store.TangemPayStorage
+import com.tangem.spend.datasource.tangempay.store.TangemPayTxHistoryItemsStore
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.order.OrderPoller
+import com.tangem.domain.tangempay.order.OrdersStore
+import javax.inject.Inject
+
+@Suppress("LongParameterList")
+internal class TangemPayUserWalletDataCleaner @Inject constructor(
+    private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
+    private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
+    private val cashbackSummaryStore: CashbackSummaryStore,
+    private val tangemPayStorage: TangemPayStorage,
+    private val customerInfoStore: TangemPayCustomerInfoStore,
+    private val customerSummaryStore: TangemPayCustomerSummaryStore,
+    private val requestPerformer: TangemPayRequestPerformer,
+    private val orderPoller: OrderPoller,
+    private val ordersStore: OrdersStore,
+) : UserWalletDataCleaner {
+
+    override suspend fun clear(userWalletIds: List<UserWalletId>) {
+        orderPoller.stopPolling(userWalletIds)
+        userWalletIds.forEach { clearStoredData(it) }
+
+        paymentAccountStatusesStore.remove(userWalletIds)
+        txHistoryItemsStore.remove(userWalletIds.map { it.stringValue })
+        cashbackSummaryStore.remove(userWalletIds)
+        customerInfoStore.update { cache -> cache - userWalletIds }
+        customerSummaryStore.update { cache -> cache - userWalletIds }
+        requestPerformer.removeCachedCustomerWalletAddresses(userWalletIds)
+    }
+
+    private suspend fun clearStoredData(userWalletId: UserWalletId) {
+        // The auth tokens are keyed by the customer wallet address, so read it before clearAll wipes it.
+        val customerWalletAddress = tangemPayStorage.getCustomerWalletAddress(userWalletId)
+
+        tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = customerWalletAddress)
+        tangemPayStorage.clearIsTangemPayDeactivated(userWalletId)
+        ordersStore.clear(userWalletId)
+    }
+}

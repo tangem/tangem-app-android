@@ -25,6 +25,10 @@ internal class DefaultExpressUtils @Inject constructor(
         }
     }
 
+    override fun getBatchId(userWallet: UserWallet?): String? {
+        return (userWallet as? UserWallet.Cold)?.scanResponse?.card?.batchId
+    }
+
     private suspend fun isRing(selectedUserWallet: UserWallet.Cold): Boolean {
         val addedWalletsWithRings = appPreferencesStore.getSyncOrDefault(
             key = storePreferencesKeys.addedWalletsWithRingKey,

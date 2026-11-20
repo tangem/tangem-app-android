@@ -2,10 +2,10 @@ package com.tangem.domain.moneyaccount.usecase
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.*
-import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.model.*
+import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.tangempay.utils.TangemPayCustomerStateConverter
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

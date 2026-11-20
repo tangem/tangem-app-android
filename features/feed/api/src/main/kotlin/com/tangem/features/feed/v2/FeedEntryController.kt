@@ -2,6 +2,7 @@ package com.tangem.features.feed.v2
 
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 
 /**
  * Seam for opening the feed hub from outside it — today the `tangem://discover` deeplink.
@@ -33,4 +34,19 @@ interface FeedEntryController {
 
     /** Called by the addressed tab once it has applied the filter, or found it unresolvable. */
     fun consumeFilter()
+
+    /**
+     * Whether [filter] is still the latest request's own — by identity, so an identical link sent again
+     * is a new request. A newer one supersedes it: a picker it was still waiting to open must stay closed,
+     * or it would cover whatever that newer request opened.
+     */
+    fun isLatest(filter: FeedEntryFilter): Boolean
+}
+
+/**
+ * Suspends until the host has acted on the pending entry. A tab opening a screen on the hub's stack waits
+ * for this, since the host clears that stack back to the home screen while handling the entry.
+ */
+suspend fun FeedEntryController.awaitEntryHandled() {
+    pendingEntry.first { it == null }
 }

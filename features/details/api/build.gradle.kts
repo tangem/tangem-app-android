@@ -16,4 +16,7 @@ dependencies {
 
     /* Project - Domain */
     api(projects.domain.models)
+
+    /* Project - Features */
+    api(projects.features.introduction.api)
 }

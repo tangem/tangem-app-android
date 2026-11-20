@@ -3,10 +3,10 @@ package com.tangem.domain.moneyaccount.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityForCustomerUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.usecase.GetTangemPayProductsAvailabilityForCustomerUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -77,7 +77,7 @@ internal class GetTangemPayProductsAvailabilityUseCaseTest {
     @Test
     fun `GIVEN availability request fails WHEN invoke THEN returns error`() = runTest {
         // Arrange
-        val error: VisaApiError = mockk()
+        val error: TangemPayApiError = mockk()
         coEvery { getTangemPayProductsAvailabilityForCustomerUseCase(userWalletId) } returns error.left()
 
         // Act

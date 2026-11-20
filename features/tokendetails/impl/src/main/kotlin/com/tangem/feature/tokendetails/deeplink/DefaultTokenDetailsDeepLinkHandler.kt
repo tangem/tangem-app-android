@@ -2,6 +2,8 @@ package com.tangem.feature.tokendetails.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -29,20 +31,15 @@ import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnaly
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.utils.logging.TangemLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import javax.inject.Inject
 
 @Suppress("LongParameterList")
-internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
-    @Assisted private val scope: CoroutineScope,
-    @Assisted private val queryParams: Map<String, String>,
-    @Assisted private val isFromOnNewIntent: Boolean,
+internal class DefaultTokenDetailsDeepLinkHandler @Inject constructor(
     private val appRouter: AppRouter,
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
@@ -53,13 +50,17 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val singleAccountListFetcher: SingleAccountListFetcher,
     private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
-) : TokenDetailsDeepLinkHandler {
+) : DeepLinkHandler, TokenDetailsDeepLinkHandler {
 
-    init {
-        handleDeepLink()
+    override fun handle(request: DeepLinkRequest) {
+        handleDeepLink(
+            scope = request.scope,
+            queryParams = request.queryParams,
+            isFromOnNewIntent = request.isFromOnNewIntent,
+        )
     }
 
-    private fun handleDeepLink() {
+    private fun handleDeepLink(scope: CoroutineScope, queryParams: Map<String, String>, isFromOnNewIntent: Boolean) {
         val networkId = queryParams[NETWORK_ID_KEY]
         val tokenId = queryParams[TOKEN_ID_KEY]
         val type = NotificationType.getType(queryParams[TYPE_KEY])
@@ -75,6 +76,8 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 networkId = networkId,
                 tokenId = tokenId,
                 accountId = accountId,
+                derivationPath = queryParams[DERIVATION_PATH_KEY],
+                isFromOnNewIntent = isFromOnNewIntent,
             )
 
             if (cryptoCurrency == null) {
@@ -125,6 +128,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     NotificationType.JointMembers,
                     NotificationType.JointOverview,
                     NotificationType.JointTxSent,
+                    NotificationType.JointTokens,
                     NotificationType.SupportMessage,
                     NotificationType.Unknown,
                     -> Unit
@@ -172,15 +176,18 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         networkId: String?,
         tokenId: String?,
         accountId: String?,
+        derivationPath: String?,
+        isFromOnNewIntent: Boolean,
     ): CryptoCurrency? {
         if (userWallet.isMultiCurrency && (networkId.isNullOrBlank() || tokenId.isNullOrBlank())) return null
 
-        val wasRefreshed = refreshAccountsIfNeeded(userWallet)
+        val wasRefreshed = refreshAccountsIfNeeded(userWallet, isFromOnNewIntent)
         return findCryptoCurrency(
             userWallet = userWallet,
             networkId = networkId,
             tokenId = tokenId,
             accountId = accountId,
+            derivationPath = derivationPath,
             awaitOnMiss = wasRefreshed,
         )
     }
@@ -196,7 +203,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
      * @return `true` only when a refresh was actually performed and succeeded. Waiting for the refreshed
      * list (see [awaitCryptoCurrency]) makes sense only in that case; otherwise there is nothing to wait for.
      */
-    private suspend fun refreshAccountsIfNeeded(userWallet: UserWallet): Boolean {
+    private suspend fun refreshAccountsIfNeeded(userWallet: UserWallet, isFromOnNewIntent: Boolean): Boolean {
         if (isFromOnNewIntent && userWallet.isMultiCurrency) {
             return singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId = userWallet.walletId))
                 .onLeft { TangemLogger.e("Error on refreshing wallet accounts", it) }
@@ -223,6 +230,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         networkId: String?,
         tokenId: String?,
         accountId: String?,
+        derivationPath: String?,
         awaitOnMiss: Boolean,
     ): CryptoCurrency? {
         if (!userWallet.isMultiCurrency) {
@@ -230,7 +238,6 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 ?.mainAccount?.cryptoCurrencies?.first()
         }
 
-        val derivationPath = queryParams[DERIVATION_PATH_KEY]
         val isAccountScoped = !accountId.isNullOrBlank()
         val find = { currencies: List<CryptoCurrency> ->
             findCurrency(
@@ -300,18 +307,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         return isNetwork && isCurrency
     }
 
-    @AssistedFactory
-    interface Factory : TokenDetailsDeepLinkHandler.Factory {
-        override fun create(
-            coroutineScope: CoroutineScope,
-            queryParams: Map<String, String>,
-            isFromOnNewIntent: Boolean,
-        ): DefaultTokenDetailsDeepLinkHandler
-    }
-
-    companion object {
-        const val DEEPLINK_KEY = "tangem://token"
-
-        private const val TOKEN_APPEARANCE_TIMEOUT_MILLIS = 3_000L
+    private companion object {
+        const val TOKEN_APPEARANCE_TIMEOUT_MILLIS = 3_000L
     }
 }

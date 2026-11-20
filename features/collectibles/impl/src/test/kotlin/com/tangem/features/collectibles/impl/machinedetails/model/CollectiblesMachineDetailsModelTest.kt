@@ -274,7 +274,7 @@ internal class CollectiblesMachineDetailsModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.push(CollectiblesRoute.ConfirmOrder(externalId = EXTERNAL_ID, isTurboEnabled = isTurboEnabled))
+            router.push(CollectiblesRoute.ConfirmOrder(machineId = EXTERNAL_ID, isTurboEnabled = isTurboEnabled))
         }
     }
 
@@ -479,7 +479,7 @@ internal class CollectiblesMachineDetailsModelTest {
     )
 
     private fun usdc(amount: String) =
-        BigDecimal(amount).format { crypto(symbol = "USDC", decimals = 6).anyDecimals(minDecimals = 0) }
+        BigDecimal(amount).format { crypto(symbol = "USDC", decimals = 6, ignoreSymbolPosition = true).anyDecimals(minDecimals = 0) }
 
     /** The model is destroyed inside [runTest]: its closing advanceUntilIdle would spin on the never-idle polling. */
     private fun runModelTest(testBody: suspend TestScope.() -> Unit) = runTest {

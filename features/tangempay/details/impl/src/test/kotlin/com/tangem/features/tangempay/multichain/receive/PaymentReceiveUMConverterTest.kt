@@ -129,7 +129,7 @@ internal class PaymentReceiveUMConverterTest {
     }
 
     @Test
-    fun `WHEN convert THEN UM callbacks delegate to the constructor callbacks`() {
+    fun `GIVEN constructor callbacks WHEN convert THEN UM callbacks delegate to them`() {
         // Arrange
         val input = PaymentReceiveUMConverter.Input(
             networkName = "Solana",

@@ -7,9 +7,9 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem.Cashback.Status
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 import java.math.BigDecimal

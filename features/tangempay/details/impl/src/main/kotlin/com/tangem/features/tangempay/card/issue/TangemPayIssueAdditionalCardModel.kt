@@ -10,10 +10,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.pay.model.IssueAdditionalCardError
-import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
+import com.tangem.domain.tangempay.model.IssueAdditionalCardError
+import com.tangem.domain.tangempay.usecase.IssueAdditionalCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -75,7 +75,7 @@ internal class TangemPayIssueAdditionalCardModel @Inject constructor(
     private fun handleIssueError(error: IssueAdditionalCardError) {
         val isOutcomeUnknown = error.isOutcomeUnknown()
         if (!isOutcomeUnknown) issueIdempotencyKey = null
-        if (error is IssueAdditionalCardError.Other && error.cause == VisaApiError.CardIssueInsufficientBalance) {
+        if (error is IssueAdditionalCardError.Other && error.cause == TangemPayApiError.CardIssueInsufficientBalance) {
             uiState.update { it.copy(isLoading = false, isBalanceInsufficient = true) }
             return
         }

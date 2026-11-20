@@ -60,9 +60,11 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
     override fun BottomSheet() {
         val stack by contentStack.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
+        val blockaid by model.blockaidSheet.collectAsStateWithLifecycle()
 
         JointOperationContentSheet(
             state = uiState as? JointOperationUM.Content,
+            blockaid = blockaid,
             contentStack = stack,
             onBackClick = ::onChildBack,
             onCloseClick = ::dismiss,
@@ -72,6 +74,9 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
     override fun dismiss() = params.onDismiss()
 
     private fun onChildBack() {
+        val blockaid = model.blockaidSheet.value
+        if (blockaid != null) return blockaid.onClose()
+
         when (contentStack.value.active.configuration) {
             JointOperationRoutes.Signers -> model.onBackClick()
             JointOperationRoutes.Operation -> dismiss()

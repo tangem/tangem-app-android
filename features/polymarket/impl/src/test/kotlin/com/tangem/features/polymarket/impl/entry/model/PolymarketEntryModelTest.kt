@@ -11,10 +11,12 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.features.polymarket.impl.common.walletlink.PolymarketWalletLinkGate
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,6 +35,7 @@ internal class PolymarketEntryModelTest {
     private val portfolioSelectorController: PortfolioSelectorController = mockk()
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
+    private val walletLinkGate: PolymarketWalletLinkGate = mockk()
 
     private lateinit var isEnabledFlow: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
 
@@ -49,7 +52,9 @@ internal class PolymarketEntryModelTest {
             getEligibleWalletsUseCase,
             portfolioSelectorController,
             portfolioFetcherFactory,
+            walletLinkGate,
         )
+        coEvery { walletLinkGate.ensureLinked(any()) } returns true
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(null)
         isEnabledFlow = MutableStateFlow { _: UserWallet, _: AccountStatus -> true }
@@ -215,6 +220,41 @@ internal class PolymarketEntryModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN the settled wallet is not linked WHEN the entry route opens THEN the feature is popped AND nothing is handed over`() =
+        runTest {
+            // Arrange
+            coEvery { getEligibleWalletsUseCase() } returns listOf(walletA)
+            coEvery { walletLinkGate.ensureLinked(walletAId) } returns false
+
+            // Act
+            val model = createModel(testScope = this, userWalletId = walletAId)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.pop(onComplete = any()) }
+            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the selector emits a pick WHEN it is observed THEN the link gate checks that wallet`() = runTest {
+        // Arrange
+        coEvery { getEligibleWalletsUseCase() } returns listOf(walletA, walletB)
+        val selection = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(null)
+        every { portfolioSelectorController.selectedAccountWithData(any()) } returns selection
+        val model = createModel(testScope = this, userWalletId = null)
+        advanceUntilIdle()
+
+        // Act
+        selection.value = walletB to accountStatusB
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { walletLinkGate.ensureLinked(walletBId) }
+        model.onDestroy()
+    }
+
     /**
      * Predictions used to demand the deposit chain in the portfolio before it would onboard a wallet. The
      * owner key is derived on a hardened path that belongs to no network, so nothing about the portfolio can
@@ -244,6 +284,7 @@ internal class PolymarketEntryModelTest {
             paramsContainer = MutableParamsContainer(PolymarketComponent.Params(userWalletId = userWalletId)),
             router = router,
             getEligibleWalletsUseCase = getEligibleWalletsUseCase,
+            walletLinkGate = walletLinkGate,
             portfolioSelectorController = portfolioSelectorController,
             portfolioFetcherFactory = portfolioFetcherFactory,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),

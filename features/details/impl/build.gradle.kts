@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.onboardingV2.api)
     api(projects.features.wallet.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.introduction.api)
     implementation(projects.features.mcp.api)
 
     /* Project - Core */
@@ -34,7 +35,7 @@ dependencies {
     /* Project - Domain */
     api(projects.domain.card)
     api(projects.domain.feedback)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletConnect)
     api(projects.domain.wallets)
     implementation(projects.domain.common)

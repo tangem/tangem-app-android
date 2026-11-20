@@ -1,15 +1,16 @@
 package com.tangem.features.feed.deeplink
 
 import android.net.Uri
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeepLinkRequest
-import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -17,18 +18,18 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NewsWebDeepLinkHandlerTest {
 
-    private val newsDeepLinkHandlerFactory: NewsDeepLinkHandler.Factory = mockk(relaxed = true)
-    private val newsDetailsDeepLinkHandlerFactory: NewsDetailsDeepLinkHandler.Factory = mockk(relaxed = true)
-    private val scope: CoroutineScope = mockk()
+    private val newsDeepLinkHandler: NewsDeepLinkHandler = mockk(relaxed = true)
+    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val scope = TestScope(UnconfinedTestDispatcher())
 
     private val handler = NewsWebDeepLinkHandler(
-        newsDeepLinkHandlerFactory = newsDeepLinkHandlerFactory,
-        newsDetailsDeepLinkHandlerFactory = newsDetailsDeepLinkHandlerFactory,
+        newsDeepLinkHandler = newsDeepLinkHandler,
+        appRouter = appRouter,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(newsDeepLinkHandlerFactory, newsDetailsDeepLinkHandlerFactory)
+        clearMocks(newsDeepLinkHandler, appRouter)
     }
 
     @ParameterizedTest
@@ -38,29 +39,29 @@ internal class NewsWebDeepLinkHandlerTest {
         val uri = mockk<Uri> { every { path } returns model.path }
         val queryParams = mapOf("category_id" to "5")
 
+        val request = DeepLinkRequest(uri = uri, queryParams = queryParams, scope = scope, isFromOnNewIntent = false)
+
         // Act
-        handler.handle(
-            DeepLinkRequest(uri = uri, queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
-        )
+        handler.handle(request)
 
         // Assert
-        if (model.isArticle) {
-            verify { newsDetailsDeepLinkHandlerFactory.create(coroutineScope = scope, deeplinkUri = uri) }
-            verify(inverse = true) { newsDeepLinkHandlerFactory.create(any()) }
+        if (model.articleId != null) {
+            verify { appRouter.push(AppRoute.NewsDetails(newsId = model.articleId), any()) }
+            verify(inverse = true) { newsDeepLinkHandler.handle(any()) }
         } else {
-            verify { newsDeepLinkHandlerFactory.create(queryParams = queryParams) }
-            verify(inverse = true) { newsDetailsDeepLinkHandlerFactory.create(any(), any()) }
+            verify { newsDeepLinkHandler.handle(request) }
+            verify(inverse = true) { appRouter.push(any(), any()) }
         }
     }
 
-    data class HandleModel(val path: String, val isArticle: Boolean)
+    data class HandleModel(val path: String, val articleId: Int?)
 
     private fun provideTestModels() = listOf(
         // An article link opens the article
-        HandleModel(path = "/news/markets/42-some-slug", isArticle = true),
+        HandleModel(path = "/news/markets/42-some-slug", articleId = 42),
         // Article-less links open the news list
-        HandleModel(path = "/news", isArticle = false),
-        HandleModel(path = "/news/markets", isArticle = false),
-        HandleModel(path = "/news/markets/not-a-number", isArticle = false),
+        HandleModel(path = "/news", articleId = null),
+        HandleModel(path = "/news/markets", articleId = null),
+        HandleModel(path = "/news/markets/not-a-number", articleId = null),
     )
 }

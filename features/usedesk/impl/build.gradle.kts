@@ -13,7 +13,6 @@ android {
 dependencies {
     /** Core */
     api(projects.core.analytics)
-    implementation(projects.core.configToggles)
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.core.decompose)

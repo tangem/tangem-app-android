@@ -3,6 +3,7 @@ package com.tangem.domain.yield.supply
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -82,11 +83,8 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
         amount: BigDecimal?,
     ): TransactionData.Uncompiled
 
-    /**
-     * Whether new deposits of [token] into the module are suspended; false when the module is not deployed or predates
-     * the suspension. Throws when it cannot be read.
-     */
-    suspend fun isEntrySuspended(userWalletId: UserWalletId, token: CryptoCurrency.Token): Boolean
+    /** Version of the user's Yield Module on [network] against the latest one. Throws when it cannot be read. */
+    suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
 
     /** How much of [token] the Aave pool can pay out right now, which caps a withdrawal. Throws when it cannot be read. */
     suspend fun getWithdrawLiquidity(userWalletId: UserWalletId, token: CryptoCurrency.Token): BigDecimal

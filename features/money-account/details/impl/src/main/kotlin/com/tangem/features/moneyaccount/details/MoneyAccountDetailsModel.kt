@@ -22,7 +22,6 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -31,9 +30,10 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseC
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
+import com.tangem.domain.tangempay.model.BankCredentials
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
@@ -78,6 +78,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         onRefresh = ::onRefresh,
         onTxHistoryReload = ::onTxHistoryReload,
         onRenewSession = ::onRenewSession,
+        isYieldModeEnabled = moneyAccountFeatureToggles.isYieldModeEnabled,
     )
     val uiState: StateFlow<MoneyAccountDetailsUM>
         field = MutableStateFlow(stateFactory.createInitialState())
@@ -238,7 +239,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         }
     }
 
-    suspend fun retryBankCredentials(): Either<VisaApiError, Unit> {
+    suspend fun retryBankCredentials(): Either<TangemPayApiError, Unit> {
         analytics.send(MoneyAccountAnalyticsEvents.DetailsRetryTapped())
         return getMoneyAccountBankCredentialsUseCase(
             userWalletId = params.userWalletId,
@@ -278,7 +279,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         val customerId = currentState?.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase(
-                type = FeedbackEmailType.Visa.MoneyAccountRequest(
+                type = FeedbackEmailType.TangemPay.MoneyAccountRequest(
                     walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
                     customerId = customerId,
                 ),

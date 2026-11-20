@@ -12,19 +12,19 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
-import com.tangem.domain.pay.model.CachePolicy
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.CustomerSummary
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.model.CachePolicy
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.CustomerSummary
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.tangempay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -88,7 +88,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo().right()
         coEvery {
             onboardingRepository.fetchCustomerEligibility(USER_WALLET_ID)
-        } returns VisaApiError.ServerUnavailable.left()
+        } returns TangemPayApiError.ServerUnavailable.left()
     }
 
     @Test
@@ -112,7 +112,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     @Test
     fun `GIVEN summary request fails WHEN invoke THEN empty is stored without customer me`() = runTest {
         // Arrange
-        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns VisaApiError.Unspecified.left()
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -128,7 +128,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         // Arrange
         coEvery {
             onboardingRepository.getCustomerInfo(USER_WALLET_ID)
-        } returns VisaApiError.ServerUnavailable.left()
+        } returns TangemPayApiError.ServerUnavailable.left()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -196,7 +196,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     fun `GIVEN cached onboarding status AND summary request fails WHEN invoke THEN empty is stored`() = runTest {
         // Arrange
         mockCachedAccount(activating())
-        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns VisaApiError.Unspecified.left()
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -448,19 +448,19 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private fun provideTestModels() = listOf(
         ChannelsModel(
             channels = listOf(
-                TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT,
+                TangemPayEligibilityType.VIRTUAL_ACCOUNT,
                 TangemPayEligibilityType.BANK_OFFRAMP,
             ).right(),
             expected = true,
         ),
-        ChannelsModel(channels = listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT).right(), expected = false),
-        ChannelsModel(channels = VisaApiError.ServerUnavailable.left(), expected = null),
+        ChannelsModel(channels = listOf(TangemPayEligibilityType.VIRTUAL_ACCOUNT).right(), expected = false),
+        ChannelsModel(channels = TangemPayApiError.ServerUnavailable.left(), expected = null),
     )
 
     private fun provideCachedAccountErrorModels() = listOf(
         CachedAccountErrorModel(
             cached = active(),
-            error = VisaApiError.RefreshTokenExpired,
+            error = TangemPayApiError.RefreshTokenExpired,
             expected = active().copy(
                 source = StatusSource.ONLY_CACHE,
                 error = MoneyAccountStatusValue.Error.NotSynced,
@@ -468,7 +468,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         ),
         CachedAccountErrorModel(
             cached = active(),
-            error = VisaApiError.RefreshTokenExpired,
+            error = TangemPayApiError.RefreshTokenExpired,
             isOnline = false,
             expected = active().copy(
                 source = StatusSource.ONLY_CACHE,
@@ -477,7 +477,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         ),
         CachedAccountErrorModel(
             cached = active(),
-            error = VisaApiError.ServerUnavailable,
+            error = TangemPayApiError.ServerUnavailable,
             expected = active().copy(
                 source = StatusSource.ONLY_CACHE,
                 error = MoneyAccountStatusValue.Error.Unavailable,
@@ -485,7 +485,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         ),
         CachedAccountErrorModel(
             cached = active(),
-            error = VisaApiError.Unspecified,
+            error = TangemPayApiError.Unspecified,
             expected = active().copy(
                 source = StatusSource.ONLY_CACHE,
                 error = MoneyAccountStatusValue.Error.Unavailable,
@@ -495,13 +495,13 @@ internal class DefaultMoneyAccountStatusFetcherTest {
 
     data class CachedAccountErrorModel(
         val cached: MoneyAccountStatusValue.Account,
-        val error: VisaApiError,
+        val error: TangemPayApiError,
         val isOnline: Boolean = true,
         val expected: MoneyAccountStatusValue.Account,
     )
 
     data class ChannelsModel(
-        val channels: Either<VisaApiError, List<TangemPayEligibilityType>>,
+        val channels: Either<TangemPayApiError, List<TangemPayEligibilityType>>,
         val expected: Boolean?,
     )
 

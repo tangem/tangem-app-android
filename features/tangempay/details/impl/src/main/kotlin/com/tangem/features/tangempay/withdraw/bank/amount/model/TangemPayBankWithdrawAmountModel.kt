@@ -9,13 +9,14 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUMFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
+import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -45,6 +46,8 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
+
+    private val isEditing = params.step is TangemPayBankWithdrawInnerRoute.Edit
 
     private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
@@ -95,7 +98,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             flow3 = state,
             flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         ) { draft, options, amountState, isBalanceHidden ->
-            val selection = amountState.resolve(draft = draft, options = options)
+            val selection = amountState.resolve(draft = draft, options = options, isEditing = isEditing)
             trackInsufficientFunds(selection.validation)
             umFactory.create(
                 draft = draft,
@@ -210,7 +213,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     }
 
     private fun currentSelection(): AmountSelection =
-        state.value.resolve(draft = params.draft.value, options = params.options.value)
+        state.value.resolve(draft = params.draft.value, options = params.options.value, isEditing = isEditing)
 }
 
 private const val TAG = "TangemPayBankWithdrawAmountModel"

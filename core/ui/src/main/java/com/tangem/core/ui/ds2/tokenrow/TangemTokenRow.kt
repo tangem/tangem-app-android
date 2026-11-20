@@ -37,7 +37,7 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
  * badge, quote + price change, fiat/crypto balances and an optional message-bubble promo line
  * underneath. DS3 replacement for the legacy `ds/row/token` `TangemTokenRow`.
  *
- * Version: 1.2.3
+ * Version: 1.3.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5723-2473)
  *
@@ -144,7 +144,7 @@ fun TangemTokenRow(
 /** Public API surface of [TangemTokenRow]. */
 object TangemTokenRow {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 3)
+    val version = DsVersion(major = 1, minor = 3, patch = 0)
 
     /**
      * Badge shown after the title (e.g. an `"APY 5.47%"` chip). Always a tinted [TangemBadge].
@@ -233,6 +233,48 @@ object TangemTokenRow {
             val shouldShowContractWarning: Boolean = false,
             val shouldShowUpdateWarning: Boolean = false,
             val isQuoteFlickering: Boolean = false,
+            val isBalanceFlickering: Boolean = false,
+            val messageBubble: MessageBubble? = null,
+            val onClick: (() -> Unit)? = null,
+            val onLongClick: (() -> Unit)? = null,
+        ) : State()
+
+        /**
+         * Network variant — [Content] with a plain text line (e.g. the token's network) in place of
+         * the quote and price change.
+         *
+         * @param id Unique id.
+         * @param icon Token icon state.
+         * @param title Token name.
+         * @param network Text under the title (e.g. `"Bitcoin network"`).
+         * @param badge Badge after the title. `null` hides it. Hidden while [hasPending] is `true`.
+         * See [Badge].
+         * @param hasPending Shows the animated pending dots after the title while a transaction is
+         * pending. Takes priority over [badge].
+         * @param fiatBalance Primary balance at the end. `null` hides the line.
+         * @param cryptoBalance Secondary balance under [fiatBalance]. `null` hides it.
+         * @param shouldShowContractWarning Shows the contract-error warning before [fiatBalance].
+         * Hidden while [shouldShowUpdateWarning] is `true`.
+         * @param shouldShowUpdateWarning Shows the update-error icon before [fiatBalance]. Takes
+         * priority over [shouldShowContractWarning].
+         * @param isBalanceFlickering Runs the blade animation over the balances while they are
+         * being refreshed.
+         * @param messageBubble Message bubble under the row content. `null` hides it.
+         * @param onClick Row click handler. `null` with no [onLongClick] makes the row
+         * non-interactive.
+         * @param onLongClick Row long-press handler. `null` disables long-press.
+         */
+        data class Network(
+            override val id: String,
+            val icon: TangemTokenIcon.UiState,
+            val title: TextReference,
+            val network: TextReference,
+            val badge: Badge? = null,
+            val hasPending: Boolean = false,
+            val fiatBalance: TextReference? = null,
+            val cryptoBalance: TextReference? = null,
+            val shouldShowContractWarning: Boolean = false,
+            val shouldShowUpdateWarning: Boolean = false,
             val isBalanceFlickering: Boolean = false,
             val messageBubble: MessageBubble? = null,
             val onClick: (() -> Unit)? = null,
@@ -357,6 +399,11 @@ fun TangemTokenRow(
             onClick = state.onClick,
             onLongClick = state.onLongClick,
         )
+        is TangemTokenRow.State.Network -> NetworkRow(
+            state = state,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier,
+        )
         is TangemTokenRow.State.Organize -> TangemTokenRow.Organize(
             icon = state.icon,
             title = state.title,
@@ -390,6 +437,27 @@ fun TangemTokenRow(
     }
 }
 
+@Composable
+private fun NetworkRow(state: TangemTokenRow.State.Network, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+    TangemTokenRow.Network(
+        icon = state.icon,
+        title = state.title,
+        network = state.network,
+        modifier = modifier,
+        badge = state.badge,
+        hasPending = state.hasPending,
+        fiatBalance = state.fiatBalance,
+        cryptoBalance = state.cryptoBalance,
+        showContractWarning = state.shouldShowContractWarning,
+        showUpdateWarning = state.shouldShowUpdateWarning,
+        isBalanceHidden = isBalanceHidden,
+        isBalanceFlickering = state.isBalanceFlickering,
+        messageBubble = state.messageBubble?.let { bubble -> { TokenRowMessageBubble(bubble = bubble) } },
+        onClick = state.onClick,
+        onLongClick = state.onLongClick,
+    )
+}
+
 /** Renders the [TangemTokenRow.MessageBubble] model as a [TangemMessageBubble]. */
 @Composable
 private fun TokenRowMessageBubble(bubble: TangemTokenRow.MessageBubble) {
@@ -402,6 +470,70 @@ private fun TokenRowMessageBubble(bubble: TangemTokenRow.MessageBubble) {
         onClose = bubble.onClose,
         closeContentDescription = bubble.closeContentDescription,
         modifier = Modifier.padding(top = if (bubble.shouldShowTip) 0.dp else 8.dp),
+    )
+}
+
+/**
+ * Design-system v2 (DS3) **Token Row / Network** — the default row with a plain text line (e.g. the
+ * token's network) in place of the quote and price change.
+ *
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=15122-1268)
+ *
+ * @param icon Token icon state, rendered at 40dp.
+ * @param title Token name. Single line, ellipsized.
+ * @param network Text under the title (e.g. `"Bitcoin network"`), styled like the quote.
+ * @param modifier Modifier applied to the row container.
+ * @param badge Optional [TangemTokenRow.Badge] after the title. `null` hides it. Hidden while
+ * [hasPending] is `true`.
+ * @param hasPending Shows the animated pending dots after the title. Takes priority over [badge].
+ * @param fiatBalance Primary balance at the end. `null` hides the line.
+ * @param cryptoBalance Secondary balance under [fiatBalance]. `null` hides it.
+ * @param showContractWarning Shows the contract-error warning before [fiatBalance]. Hidden while
+ * [showUpdateWarning] is `true`.
+ * @param showUpdateWarning Shows the update-error icon before [fiatBalance]. Takes priority over
+ * [showContractWarning].
+ * @param isBalanceHidden When `true`, [fiatBalance] and [cryptoBalance] are masked with stars.
+ * @param isBalanceFlickering Runs the blade animation over the balances while they are being
+ * refreshed.
+ * @param messageBubble Optional slot below the row content — pass a [TangemMessageBubble].
+ * @param onClick Row click handler. `null` with no [onLongClick] makes the row non-interactive.
+ * @param onLongClick Row long-press handler. `null` disables long-press.
+ */
+@Suppress("LongParameterList")
+@Composable
+fun TangemTokenRow.Network(
+    icon: TangemTokenIcon.UiState,
+    title: TextReference,
+    network: TextReference,
+    modifier: Modifier = Modifier,
+    badge: TangemTokenRow.Badge? = null,
+    hasPending: Boolean = false,
+    fiatBalance: TextReference? = null,
+    cryptoBalance: TextReference? = null,
+    showContractWarning: Boolean = false,
+    showUpdateWarning: Boolean = false,
+    isBalanceHidden: Boolean = false,
+    isBalanceFlickering: Boolean = false,
+    messageBubble: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+) {
+    TangemTokenRow(
+        icon = icon,
+        title = title,
+        modifier = modifier,
+        badge = badge,
+        hasPending = hasPending,
+        quote = network,
+        fiatBalance = fiatBalance,
+        cryptoBalance = cryptoBalance,
+        showContractWarning = showContractWarning,
+        showUpdateWarning = showUpdateWarning,
+        isBalanceHidden = isBalanceHidden,
+        isBalanceFlickering = isBalanceFlickering,
+        messageBubble = messageBubble,
+        onClick = onClick,
+        onLongClick = onLongClick,
     )
 }
 
@@ -692,6 +824,13 @@ private fun TangemTokenRowPreview() {
 @Composable
 private fun TangemTokenRowStatesPreview() {
     PreviewContainer { icon ->
+        TangemTokenRow.Network(
+            icon = icon,
+            title = stringReference("Bitcoin"),
+            network = stringReference("Bitcoin network"),
+            fiatBalance = stringReference("$583.00"),
+            cryptoBalance = stringReference("0,000015 BTC"),
+        )
         TangemTokenRow.Unreachable(
             icon = icon,
             title = stringReference("Bitcoin"),

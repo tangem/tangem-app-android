@@ -33,19 +33,21 @@ class EmailMessageBodyResolver(
             is FeedbackEmailType.BiometricsAuthenticationFailed,
             is FeedbackEmailType.AppUpdateProblem,
             -> addPhoneInfoBody()
-            is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
-            is FeedbackEmailType.Visa.MoneyAccountRequest -> addUserRequestBody(type.walletMetaInfo)
-            is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
-            is FeedbackEmailType.Visa.Dispute -> addTangemPayDisputeRequestBody(type)
-            is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
-            is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
-            is FeedbackEmailType.Visa.KycRejected -> addTangemPayKycRejectedRequestBody(type)
+            is FeedbackEmailType.TangemPay.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.TangemPay.MoneyAccountRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.TangemPay.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
+            is FeedbackEmailType.TangemPay.Dispute -> addTangemPayDisputeRequestBody(type)
+            is FeedbackEmailType.TangemPay.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
+            is FeedbackEmailType.TangemPay.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
+            is FeedbackEmailType.TangemPay.KycRejected -> addTangemPayKycRejectedRequestBody(type)
         }
 
         return build()
     }
 
-    private fun FeedbackDataBuilder.addTangemPayFailedIssuingCardBody(type: FeedbackEmailType.Visa.FailedIssueCard) {
+    private fun FeedbackDataBuilder.addTangemPayFailedIssuingCardBody(
+        type: FeedbackEmailType.TangemPay.FailedIssueCard,
+    ) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
         addCustomerId(customerId = type.customerId)
@@ -54,7 +56,7 @@ class EmailMessageBodyResolver(
         }
     }
 
-    private fun FeedbackDataBuilder.addTangemPayDisputeRequestBody(type: FeedbackEmailType.Visa.Dispute) {
+    private fun FeedbackDataBuilder.addTangemPayDisputeRequestBody(type: FeedbackEmailType.TangemPay.Dispute) {
         addTangemPayPhoneInfoBody(type = type)
         addDelimiter()
         addTangemPayTxInfo(type.item)
@@ -65,7 +67,7 @@ class EmailMessageBodyResolver(
         }
     }
 
-    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(type: FeedbackEmailType.Visa) {
+    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(type: FeedbackEmailType.TangemPay) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
         addCustomerId(customerId = type.customerId)
@@ -74,14 +76,14 @@ class EmailMessageBodyResolver(
         }
     }
 
-    private fun FeedbackDataBuilder.addTangemPayKycRejectedRequestBody(type: FeedbackEmailType.Visa.KycRejected) {
+    private fun FeedbackDataBuilder.addTangemPayKycRejectedRequestBody(type: FeedbackEmailType.TangemPay.KycRejected) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
         addCustomerId(customerId = type.customerId)
     }
 
     private suspend fun FeedbackDataBuilder.addTangemPayWithdrawalRequestBody(
-        type: FeedbackEmailType.Visa.Withdrawal,
+        type: FeedbackEmailType.TangemPay.Withdrawal,
     ) {
         addUserWalletMetaInfo(type.walletMetaInfo)
         addDelimiter()
@@ -131,7 +133,7 @@ class EmailMessageBodyResolver(
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
-    private fun FeedbackDataBuilder.addTangemPayPhoneInfoBody(type: FeedbackEmailType.Visa) {
+    private fun FeedbackDataBuilder.addTangemPayPhoneInfoBody(type: FeedbackEmailType.TangemPay) {
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
         addTangemPayIssueType(type)
     }

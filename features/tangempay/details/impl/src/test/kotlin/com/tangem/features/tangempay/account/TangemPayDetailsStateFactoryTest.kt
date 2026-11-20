@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.account
 
-import com.tangem.domain.models.pay.TangemPayImage
+import com.tangem.domain.models.tangempay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -14,10 +14,10 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
@@ -33,11 +33,13 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayDetailsStateFactoryTest {
 
     private val intents: TangemPayDetailIntents = mockk(relaxed = true)
@@ -56,7 +58,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(intents)
+        clearMocks(intents, availableNetwork, notIssuedNetwork)
     }
 
     @Test
@@ -126,9 +128,13 @@ internal class TangemPayDetailsStateFactoryTest {
         val status = loadedStatus(statusSource = StatusSource.ACTUAL, statusError = null)
         val expected = resourceReference(R.string.tangempay_multinetwork)
 
-        // Act & Assert
-        assertThat(factory.getLoadingState().topBarConfig.subtitle).isEqualTo(expected)
-        assertThat(factory.getLoadedState(status).topBarConfig.subtitle).isEqualTo(expected)
+        // Act
+        val loadingSubtitle = factory.getLoadingState().topBarConfig.subtitle
+        val loadedSubtitle = factory.getLoadedState(status).topBarConfig.subtitle
+
+        // Assert
+        assertThat(loadingSubtitle).isEqualTo(expected)
+        assertThat(loadedSubtitle).isEqualTo(expected)
     }
 
     @ParameterizedTest
@@ -298,62 +304,33 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(state.withdrawButton.isEnabled).isEqualTo(case.expectedWithdrawEnabled)
     }
 
-    @Test
-    fun `GIVEN deactivated without a deposit address WHEN getDeactivatedState THEN only withdraw enabled`() {
+    @ParameterizedTest
+    @MethodSource("deactivatedButtonCases")
+    fun `GIVEN deactivated status WHEN getDeactivatedState THEN add funds gated by networks and withdraw by balance`(
+        case: DeactivatedButtonsCase,
+    ) {
         // Arrange
         val status = deactivatedStatus(
-            availableForWithdrawal = BigDecimal.ZERO,
-            statusBalance = balance(availableBalance = BigDecimal.TEN),
-            statusNetworks = emptyList(),
+            availableForWithdrawal = case.availableForWithdrawal,
+            statusBalance = balance(availableBalance = case.fiatBalance),
+            statusNetworks = case.networks,
         )
 
         // Act
         val state = factory.getDeactivatedState(status)
 
         // Assert
-        assertThat(state.addFundsButton.isEnabled).isFalse()
-        assertThat(state.withdrawButton.isEnabled).isTrue()
+        assertThat(state.addFundsButton.isEnabled).isEqualTo(case.expectedAddFundsEnabled)
+        assertThat(state.withdrawButton.isEnabled).isEqualTo(case.expectedWithdrawEnabled)
     }
 
-    @Test
-    fun `GIVEN deactivated with positive balance WHEN getDeactivatedState THEN withdraw enabled`() {
-        // Act
-        val state = factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.TEN))
-
-        // Assert
-        assertThat(state.addFundsButton.isEnabled).isTrue()
-        assertThat(state.withdrawButton.isEnabled).isTrue()
-    }
-
-    @Test
-    fun `GIVEN deactivated with zero balance WHEN getDeactivatedState THEN withdraw disabled`() {
-        // Act
-        val state = factory.getDeactivatedState(deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO))
-
-        // Assert
-        assertThat(state.addFundsButton.isEnabled).isTrue()
-        assertThat(state.withdrawButton.isEnabled).isFalse()
-    }
-
-    @Test
-    fun `GIVEN deactivated without issued networks WHEN getDeactivatedState THEN add funds disabled`() {
+    @ParameterizedTest
+    @MethodSource("deactivatedWithoutIssuedNetworkCases")
+    fun `GIVEN deactivated without an issued network WHEN getDeactivatedState THEN add funds disabled`(
+        case: NetworksCase,
+    ) {
         // Arrange
-        val status = deactivatedStatus(
-            availableForWithdrawal = BigDecimal.ZERO,
-            statusNetworks = listOf(notIssuedNetwork),
-        )
-
-        // Act
-        val state = factory.getDeactivatedState(status)
-
-        // Assert
-        assertThat(state.addFundsButton.isEnabled).isFalse()
-    }
-
-    @Test
-    fun `GIVEN deactivated without networks WHEN getDeactivatedState THEN add funds disabled`() {
-        // Arrange
-        val status = deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO, statusNetworks = emptyList())
+        val status = deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO, statusNetworks = case.networks)
 
         // Act
         val state = factory.getDeactivatedState(status)
@@ -540,24 +517,18 @@ internal class TangemPayDetailsStateFactoryTest {
             .doesNotContain(resourceReference(R.string.tangempay_current_plan_title))
     }
 
-    @Test
-    fun `GIVEN withdraw disabled WHEN getActionButtonsConfig THEN withdraw disabled and add funds enabled`() {
+    @ParameterizedTest
+    @MethodSource("actionButtonsConfigCases")
+    fun `GIVEN enabled flags WHEN getActionButtonsConfig THEN buttons follow the flags`(case: ActionButtonsConfigCase) {
         // Act
-        val buttons = factory.getActionButtonsConfig(isAddFundsEnabled = true, isWithdrawEnabled = false)
+        val buttons = factory.getActionButtonsConfig(
+            isAddFundsEnabled = case.isAddFundsEnabled,
+            isWithdrawEnabled = case.isWithdrawEnabled,
+        )
 
         // Assert
-        assertThat(buttons.addFundsButton.isEnabled).isTrue()
-        assertThat(buttons.withdrawButton.isEnabled).isFalse()
-    }
-
-    @Test
-    fun `GIVEN both enabled WHEN getActionButtonsConfig THEN both buttons enabled`() {
-        // Act
-        val buttons = factory.getActionButtonsConfig(isAddFundsEnabled = true, isWithdrawEnabled = true)
-
-        // Assert
-        assertThat(buttons.addFundsButton.isEnabled).isTrue()
-        assertThat(buttons.withdrawButton.isEnabled).isTrue()
+        assertThat(buttons.addFundsButton.isEnabled).isEqualTo(case.isAddFundsEnabled)
+        assertThat(buttons.withdrawButton.isEnabled).isEqualTo(case.isWithdrawEnabled)
     }
 
     @Test
@@ -725,6 +696,60 @@ internal class TangemPayDetailsStateFactoryTest {
             currency = "USD",
         ),
     )
+
+    private fun deactivatedButtonCases() = listOf(
+        DeactivatedButtonsCase(
+            name = "no deposit address, positive fiat balance -> only withdraw enabled",
+            availableForWithdrawal = BigDecimal.ZERO,
+            fiatBalance = BigDecimal.TEN,
+            networks = emptyList(),
+            expectedAddFundsEnabled = false,
+            expectedWithdrawEnabled = true,
+        ),
+        DeactivatedButtonsCase(
+            name = "issued network, positive withdrawable amount -> both enabled",
+            availableForWithdrawal = BigDecimal.TEN,
+            fiatBalance = BigDecimal.ZERO,
+            networks = listOf(availableNetwork),
+            expectedAddFundsEnabled = true,
+            expectedWithdrawEnabled = true,
+        ),
+        DeactivatedButtonsCase(
+            name = "issued network, zero withdrawable amount -> withdraw disabled",
+            availableForWithdrawal = BigDecimal.ZERO,
+            fiatBalance = BigDecimal.ZERO,
+            networks = listOf(availableNetwork),
+            expectedAddFundsEnabled = true,
+            expectedWithdrawEnabled = false,
+        ),
+    )
+
+    private fun deactivatedWithoutIssuedNetworkCases() = listOf(
+        NetworksCase(name = "only a not issued network", networks = listOf(notIssuedNetwork)),
+        NetworksCase(name = "no networks", networks = emptyList()),
+    )
+
+    private fun actionButtonsConfigCases() = listOf(
+        ActionButtonsConfigCase(isAddFundsEnabled = true, isWithdrawEnabled = false),
+        ActionButtonsConfigCase(isAddFundsEnabled = true, isWithdrawEnabled = true),
+    )
+
+    internal data class DeactivatedButtonsCase(
+        val name: String,
+        val availableForWithdrawal: BigDecimal,
+        val fiatBalance: BigDecimal,
+        val networks: List<PaymentNetworkStatus>,
+        val expectedAddFundsEnabled: Boolean,
+        val expectedWithdrawEnabled: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class NetworksCase(val name: String, val networks: List<PaymentNetworkStatus>) {
+        override fun toString(): String = name
+    }
+
+    internal data class ActionButtonsConfigCase(val isAddFundsEnabled: Boolean, val isWithdrawEnabled: Boolean)
 
     internal data class ButtonStateCase(
         val source: StatusSource,

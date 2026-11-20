@@ -32,7 +32,7 @@ import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.ui.components.ShtorkaSheetHeaderHeight
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
+import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent

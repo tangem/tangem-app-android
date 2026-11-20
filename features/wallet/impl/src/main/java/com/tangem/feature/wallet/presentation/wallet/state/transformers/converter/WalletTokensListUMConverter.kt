@@ -17,17 +17,17 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.isShown
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleCurrency
+import com.tangem.features.earn.api.overview.EarnOverviews
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -40,10 +40,12 @@ internal class WalletTokensListUMConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
-    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val earnOverviews: EarnOverviews,
     shouldShowMainPromo: Boolean,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
     private val isRedesignedAccountRowsEnabled: Boolean = false,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    private val isRedesignedTokenRowsEnabled: Boolean = false,
 ) : Converter<AccountStatusList, WalletTokensListUM> {
 
     private val jointAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -97,6 +99,10 @@ internal class WalletTokensListUMConverter(
     private val AccountStatus.isTokenlessAccountRow: Boolean
         get() = this is AccountStatus.Joint || this is AccountStatus.Collectibles && value.isShown
 
+    @RemoveWithToggle(
+        toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        description = "Also backs legacy portfolio rows until AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED is removed",
+    )
     private fun currencyRowConverter(
         accountId: AccountId,
         shouldShowPromo: Boolean,
@@ -106,7 +112,7 @@ internal class WalletTokensListUMConverter(
             accountId = accountId,
             shouldShowPromo = shouldShowPromo,
             yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             clickIntents = clickIntents,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
@@ -119,7 +125,7 @@ internal class WalletTokensListUMConverter(
             accountId = accountId,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
+            earnOverviews = earnOverviews,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
         )
@@ -159,7 +165,13 @@ internal class WalletTokensListUMConverter(
         accountStatus: AccountStatus.Personal,
         promoCryptoCurrency: CryptoCurrencyStatus?,
     ): Sequence<TokensListItemUM2> {
-        if (!isAccountsModeEnabled) return getTokenListItems(accountStatus, promoCryptoCurrency)
+        if (!isAccountsModeEnabled) {
+            return if (isRedesignedTokenRowsEnabled) {
+                getTokenListItemsV2(accountStatus, promoCryptoCurrency)
+            } else {
+                getTokenListItems(accountStatus, promoCryptoCurrency)
+            }
+        }
         return sequenceOf(portfolioItem(accountStatus, promoCryptoCurrency))
     }
 
@@ -197,6 +209,10 @@ internal class WalletTokensListUMConverter(
         )
     }
 
+    @RemoveWithToggle(
+        toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        description = "Also backs legacy portfolio rows until AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED is removed",
+    )
     private fun getTokenListItems(
         accountStatus: AccountStatus.CryptoPortfolio,
         promoCryptoCurrency: CryptoCurrencyStatus?,

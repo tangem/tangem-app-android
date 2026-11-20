@@ -13,6 +13,8 @@ data class FeedEntryRequest(
     val section: FeedSection? = null,
     val categoryId: String? = null,
     val earnType: PreselectedEarnType? = null,
+    val sheet: FeedFilterSheet? = null,
+    val isForYou: Boolean = false,
 )
 
 /**
@@ -24,4 +26,5 @@ data class FeedEntryFilter(
     val tabId: FeedTabId,
     val categoryId: String? = null,
     val earnType: PreselectedEarnType? = null,
+    val sheet: FeedFilterSheet? = null,
 )

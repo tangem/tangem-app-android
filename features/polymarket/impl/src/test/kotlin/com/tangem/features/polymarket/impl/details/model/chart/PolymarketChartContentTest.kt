@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.details.model.chart
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
+import com.tangem.domain.polymarket.model.PolymarketMarketLifetime
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.SeriesColor
 import com.tangem.features.polymarket.impl.createPolymarketEvent
@@ -13,6 +14,42 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.time.Instant
 
 internal class PolymarketChartContentTest {
+
+    @Test
+    fun `GIVEN closed leader among open markets WHEN selecting THEN only open outcomes are charted`() {
+        // Arrange
+        val event = createPolymarketEvent(markets = listOf(
+            market("closed", 0.9).copy(status = PolymarketStatus.CLOSED),
+            market("open", 0.4),
+        ))
+
+        // Act
+        val content = PolymarketChartContent.create(event, NOW)
+
+        // Assert
+        assertThat(content.outcomes.map { it.key.marketId }).containsExactly("open")
+        assertThat(content.isClosed).isFalse()
+    }
+
+    @Test
+    fun `GIVEN closed event with scheduled end WHEN mapping lifetime THEN scheduled end is not actual closure`() {
+        // Arrange
+        val start = Instant.ofEpochMilli(NOW - DAY_MILLIS)
+        val end = Instant.ofEpochMilli(NOW)
+        val event = createPolymarketEvent(
+            status = PolymarketStatus.CLOSED,
+            markets = listOf(market("closed", 0.9).copy(startDate = start.toString(), endDate = end.toString())),
+        )
+
+        // Act
+        val content = PolymarketChartContent.create(event, NOW)
+
+        // Assert
+        assertThat(content.lifetime).isEqualTo(PolymarketMarketLifetime(
+            start = start,
+            status = PolymarketMarketLifetime.Status.Closed(closedAt = null, scheduledEnd = end),
+        ))
+    }
 
     @Test
     fun `GIVEN six grouped markets WHEN selecting rows THEN four leaders keep their identity after prices change`() {

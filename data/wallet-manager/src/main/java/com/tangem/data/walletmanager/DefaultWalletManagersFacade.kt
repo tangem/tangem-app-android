@@ -7,6 +7,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessInstructionRule
 import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
 import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
 import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessTransactionSigner
@@ -54,7 +55,6 @@ import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -89,7 +89,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     private val yieldSendUpgradeDecisions: YieldSendUpgradeDecisions,
 ) : WalletManagersFacade {
 
@@ -572,9 +571,15 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         transactionData: TransactionData,
         feePayer: String,
         signer: TransactionSigner,
+        sponsorsRent: Boolean,
     ): Result<SolanaGaslessSignedTransaction>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(transactionData, feePayer, signer)
+        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(
+            transactionData = transactionData,
+            feePayer = feePayer,
+            signer = signer,
+            instructionRules = gaslessInstructionRules(sponsorsRent),
+        )
     }
 
     override suspend fun simulateSolanaGaslessTransaction(
@@ -582,10 +587,18 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         network: Network,
         transactionData: TransactionData,
         feePayer: String,
+        sponsorsRent: Boolean,
     ): Result<SolanaGaslessSimulation>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(transactionData, feePayer)
+        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(
+            transactionData = transactionData,
+            feePayer = feePayer,
+            instructionRules = gaslessInstructionRules(sponsorsRent),
+        )
     }
+
+    private fun gaslessInstructionRules(sponsorsRent: Boolean): List<SolanaGaslessInstructionRule> =
+        if (sponsorsRent) SolanaGaslessInstructionRule.ASSOCIATED_TOKEN_ACCOUNT else emptyList()
 
     override suspend fun getScaledUiAmountMultiplier(
         userWalletId: UserWalletId,
@@ -860,7 +873,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     destinationAddress = estimationFeeAddressFactory.makeAddress(blockchain),
                     amount = amount,
                 )
-                if (yieldModuleFeatureToggles.isYieldModuleV3Enabled && isYieldModuleUpgradeAllowed) {
+                if (isYieldModuleUpgradeAllowed) {
                     yieldSendUpgradeDecisions.remember(userWalletId, network) {
                         walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData)
                     }

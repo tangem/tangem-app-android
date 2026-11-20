@@ -345,7 +345,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
     data class CreateTangemPayAccount(val onClick: () -> Unit, val onCloseClick: () -> Unit) : WalletNotification(
         config = NotificationConfig(
             subtitle = resourceReference(R.string.tangempay_onboarding_banner_description),
-            iconResId = R.drawable.img_tangem_pay_visa_banner,
+            iconResId = R.drawable.img_tangem_pay_banner,
         ),
     )
 }

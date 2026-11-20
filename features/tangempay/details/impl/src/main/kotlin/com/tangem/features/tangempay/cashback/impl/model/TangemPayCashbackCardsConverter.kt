@@ -4,7 +4,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.pay.model.CashbackPromotions
+import com.tangem.domain.tangempay.model.CashbackPromotions
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 

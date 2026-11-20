@@ -22,6 +22,7 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -201,7 +202,26 @@ internal class EarnCalculatorModelTest {
 
         // Assert
         val actual = requireNotNull(model.uiState.value)
-        assertThat(actual.incentive?.text).isEqualTo(incentiveText("1.4%"))
+        assertThat(actual.incentive?.badge?.text).isEqualTo(incentiveText("1.4%"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN incentive rate WHEN the badge is clicked THEN the callback is notified once`() = runTest {
+        // Arrange
+        val callback: EarnCalculatorComponent.ModelCallback = mockk(relaxed = true)
+        val model = createModel(
+            projection = MutableStateFlow(projectionOf("0.0468")),
+            incentiveRate = MutableStateFlow(incentiveOf("0.014")),
+            callback = callback,
+        )
+        advanceUntilIdle()
+
+        // Act
+        requireNotNull(model.uiState.value?.incentive).onClick()
+
+        // Assert
+        verify(exactly = 1) { callback.onIncentiveClick() }
         model.onDestroy()
     }
 
@@ -228,7 +248,7 @@ internal class EarnCalculatorModelTest {
     @Test
     fun `GIVEN params without incentive WHEN incentive rate collected THEN it is null`() = runTest {
         // Act
-        val actual = EarnCalculatorComponent.Params(projection = flowOf(null)).incentiveRate.first()
+        val actual = EarnCalculatorComponent.Params(projection = flowOf(null), callback = mockk()).incentiveRate.first()
 
         // Assert
         assertThat(actual).isNull()
@@ -245,13 +265,18 @@ internal class EarnCalculatorModelTest {
         projection: Flow<EarnProjection?>,
         currency: Flow<AppCurrency> = MutableStateFlow(AppCurrency.Default),
         incentiveRate: Flow<EarnProductRate?> = flowOf(null),
+        callback: EarnCalculatorComponent.ModelCallback = mockk(relaxed = true),
     ): EarnCalculatorModel {
         every { getSelectedAppCurrency.invokeOrDefault() } returns currency
 
         return EarnCalculatorModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             paramsContainer = MutableParamsContainer(
-                EarnCalculatorComponent.Params(projection = projection, incentiveRate = incentiveRate),
+                EarnCalculatorComponent.Params(
+                    projection = projection,
+                    incentiveRate = incentiveRate,
+                    callback = callback,
+                ),
             ),
             getSelectedAppCurrency = getSelectedAppCurrency,
             converter = EarnCalculatorConverter(),

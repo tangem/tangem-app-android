@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +27,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TopAppBarTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -288,6 +290,7 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
                 }
 
                 Text(
+                    modifier = Modifier.testTag(TopAppBarTestTags.TITLE),
                     text = title.resolveAnnotatedReference(),
                     color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography2.headingSemibold17,

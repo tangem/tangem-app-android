@@ -20,9 +20,9 @@ import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialData
-import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.domain.tangempay.WithdrawalSignatureResult
+import com.tangem.domain.tangempay.model.TangemPayInitialData
+import com.tangem.domain.tangempay.model.MoneyAccountActivationData
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -235,7 +235,7 @@ class MockTangemSdkManager(
 
     // endregion
 
-    // region Visa-specific
+    // region Tangem Pay
 
     override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,

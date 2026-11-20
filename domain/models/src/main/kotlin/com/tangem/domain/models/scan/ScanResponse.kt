@@ -45,7 +45,4 @@ enum class ProductType {
 
     @Json(name = "Ring")
     Ring,
-
-    @Json(name = "Visa")
-    Visa,
 }

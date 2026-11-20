@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
@@ -22,7 +23,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -32,6 +33,7 @@ import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
@@ -157,7 +159,9 @@ internal open class SwapInteractorImplTestBase {
      */
     @BeforeEach
     open fun setupSolanaGaslessSwapResolverDefault() {
-        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns null
+        coEvery { solanaGaslessSwapResolver.resolveSponsorship(any(), any(), any()) } returns null
+        coEvery { solanaGaslessSwapResolver.resolveTransferSponsorship(any(), any()) } returns
+            SolanaGaslessError.ServiceUnavailable(code = null).left()
         coEvery { solanaGaslessSwapResolver.excludeUnsupportedProviders(any(), any(), any()) } answers { thirdArg() }
     }
 

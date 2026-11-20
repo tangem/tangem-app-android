@@ -46,6 +46,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
     implementation(projects.features.rating.api)
+    implementation(projects.features.earn.api)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
@@ -117,6 +118,6 @@ dependencies {
     api(deps.kotlin.coroutines)
     api(projects.domain.account)
     api(projects.domain.common)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletManager)
 }

@@ -3,10 +3,12 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.flow.CollectiblesActiveTxsFetcher
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.CollectibleTxState
@@ -35,17 +37,20 @@ import kotlin.time.Duration.Companion.seconds
  * Buys and opens one pack: the backend issues the spin, the vault pays for it on chain, the gacha sees the payment,
  * the pack is opened.
  *
- * Nothing is spent until the payment is sent; from that attempt on, a failure that may leave the pack paid for is
- * [OpenPackStep.Failed.PackUnopened], which [OpenPackRequest.Reopen] retries.
+ * Nothing is spent until the payment is sent. An expired purchase or a pack the gacha refuses ends as
+ * [OpenPackStep.Failed.OpenFailed]; any other failure to open is [OpenPackStep.Failed.PackUnopened], which
+ * [OpenPackRequest.Reopen] retries as many times as asked.
  *
  * The vault must still answer to this device's session key: it is checked before the spin is issued and again when
  * the payment fails, and a vault re-pointed by another phone marks the account for a relink.
  */
+@Suppress("LongParameterList")
 class OpenCollectiblePackUseCase @Inject constructor(
     private val collectiblesRepository: CollectiblesRepository,
     private val gachaVaultRepository: GachaVaultRepository,
     private val ownerDeriver: CollectiblesOwnerDeriver,
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val activeTxsFetcher: CollectiblesActiveTxsFetcher,
     private val accountRepository: CollectiblesAccountRepository,
     private val sessionKey: CollectiblesSessionKey,
 ) {
@@ -83,6 +88,7 @@ class OpenCollectiblePackUseCase @Inject constructor(
 
         coroutineScope {
             launch { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId)) }
+            launch { activeTxsFetcher(CollectiblesActiveTxsFetcher.Params(userWallet.walletId)) }
             emit(result.getOrElse { it })
         }
     }
@@ -125,8 +131,16 @@ class OpenCollectiblePackUseCase @Inject constructor(
             feeAmount = purchase.feeAmount,
             memo = purchase.memo,
         ).getOrElse { error ->
-            ensureSessionKeyLinked(userWallet)
-            fail(OpenPackStep.Failed.PurchaseFailed, cause = error)
+            when (error) {
+                is CollectiblesAccountError.MaybeSent -> {
+                    TangemLogger.e("open pack: payment maybe sent, txHash=${error.txHash}")
+                    return SentPurchase(txId = purchase.txId, txHash = error.txHash)
+                }
+                else -> {
+                    ensureSessionKeyLinked(userWallet)
+                    fail(OpenPackStep.Failed.PurchaseFailed, cause = error)
+                }
+            }
         }
 
         return SentPurchase(txId = purchase.txId, txHash = txHash)
@@ -162,14 +176,17 @@ class OpenCollectiblePackUseCase @Inject constructor(
         fail(OpenPackStep.Failed.PurchaseFailed, cause = "the vault answers to another session key")
     }
 
-    private suspend fun Raise<OpenPackStep.Failed>.reportTxHash(userWallet: UserWallet, sent: SentPurchase) {
+    /** Not fatal: the gacha finds the payment by its memo, so the wait for it goes on either way. */
+    private suspend fun reportTxHash(userWallet: UserWallet, sent: SentPurchase) {
+        val txHash = sent.txHash ?: return
+
         runSuspendCatching {
             collectiblesRepository.reportPurchaseTxSent(
                 userWalletId = userWallet.walletId,
                 txId = sent.txId,
-                txHash = sent.txHash,
+                txHash = txHash,
             )
-        }.getOrElse { fail(OpenPackStep.Failed.PackUnopened(sent.txId), cause = it) }
+        }.onFailure { TangemLogger.e("open pack: reporting the tx hash failed", it) }
     }
 
     /** A status request that fails is just another poll: only the deadline or a final status ends the wait. */
@@ -181,7 +198,7 @@ class OpenCollectiblePackUseCase @Inject constructor(
         val state = withTimeoutOrNull(PAYMENT_TIMEOUT) { pollUntilSettled(userWallet, txId, isTurboEnabled) }
             ?: fail(OpenPackStep.Failed.PackUnopened(txId), cause = "payment timeout")
 
-        failIfClosed(txId, state.status)
+        failIfClosed(state.status)
 
         return state
     }
@@ -209,12 +226,19 @@ class OpenCollectiblePackUseCase @Inject constructor(
                 txId = txId,
                 includeAutoBuyback = isTurboEnabled,
             )
-        }.getOrElse { fail(OpenPackStep.Failed.PackUnopened(txId), cause = it) }
+        }.getOrElse { cause ->
+            val failure = when (cause) {
+                is CollectibleException.PackOpeningRefused -> OpenPackStep.Failed.OpenFailed
+                is CollectibleException.RefundInProgress -> OpenPackStep.Failed.Refunding
+                else -> OpenPackStep.Failed.PackUnopened(txId)
+            }
+            fail(failure, cause = cause)
+        }
 
         if (state.status == CollectibleTxStatus.AUTO_BUYBACKED) return autoBuybacked(state)
 
         val pack = state.pack ?: run {
-            failIfClosed(txId, state.status)
+            failIfClosed(state.status)
             fail(OpenPackStep.Failed.PackUnopened(txId), cause = "no nftWon in ${state.status}")
         }
 
@@ -225,14 +249,17 @@ class OpenCollectiblePackUseCase @Inject constructor(
         val amount = state.autoBuybackAmount
             ?: fail(OpenPackStep.Failed.Unexpected, cause = "auto-buybacked without a payout")
 
-        return OpenPackStep.AutoBuybacked(amount)
+        return OpenPackStep.AutoBuybacked(amount = amount, pack = state.pack)
     }
 
-    private fun Raise<OpenPackStep.Failed>.failIfClosed(txId: String, status: CollectibleTxStatus) {
+    private fun Raise<OpenPackStep.Failed>.failIfClosed(status: CollectibleTxStatus) {
         when (status) {
-            CollectibleTxStatus.EXPIRED -> fail(OpenPackStep.Failed.Expired, cause = status)
+            CollectibleTxStatus.EXPIRED,
+            CollectibleTxStatus.PACK_OPENING_ERROR,
+            CollectibleTxStatus.PAUSED,
+            -> fail(OpenPackStep.Failed.OpenFailed, cause = status)
             CollectibleTxStatus.REFUNDED -> fail(OpenPackStep.Failed.Refunded, cause = status)
-            CollectibleTxStatus.PAUSED -> fail(OpenPackStep.Failed.PackUnopened(txId), cause = status)
+            CollectibleTxStatus.REFUNDING -> fail(OpenPackStep.Failed.Refunding, cause = status)
             CollectibleTxStatus.MANUALLY_BUYBACKED -> fail(OpenPackStep.Failed.Unexpected, cause = status)
             else -> Unit
         }
@@ -254,7 +281,7 @@ class OpenCollectiblePackUseCase @Inject constructor(
         raise(failure)
     }
 
-    private data class SentPurchase(val txId: String, val txHash: String)
+    private data class SentPurchase(val txId: String, val txHash: String?)
 
     private companion object {
 

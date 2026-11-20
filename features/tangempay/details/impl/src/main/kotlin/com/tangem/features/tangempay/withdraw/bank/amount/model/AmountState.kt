@@ -2,14 +2,17 @@ package com.tangem.features.tangempay.withdraw.bank.amount.model
 
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFee
+import com.tangem.features.tangempay.withdraw.bank.model.offeredDestinations
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -35,27 +38,29 @@ internal data class AmountState(
     val networkFee: NetworkFeeState = NetworkFeeState.Loading,
 ) {
 
-    fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
+    fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions, isEditing: Boolean): AmountSelection {
+        val destinations = draft.offeredDestinations(options = options, isEditing = isEditing)
         val preferredRail = draft.recipient?.details?.rail ?: selectedRail ?: draft.destination?.rail
-        val destination = options.destinations.firstOrNull { it.rail == preferredRail } ?: options.destinations.first()
+        val destination = destinations.firstOrNull { it.rail == preferredRail } ?: destinations.first()
         val preferredSourceId = selectedSourceId ?: draft.source?.id
         val source = options.sources.firstOrNull { it.isAvailable && it.id == preferredSourceId }
             ?: options.sources.first(BankWithdrawSource::isAvailable)
         val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
         val networkFee = (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
-        val fees = destination.fee.amount + networkFee
+        val fees = destination.totalFee(networkFee)
+        val limits = options.amountLimitsFor(destination)
         return AmountSelection(
             currency = options.currency,
-            minAmount = options.minAmount,
-            maxAmount = options.maxAmount,
+            minAmount = limits.min,
+            maxAmount = limits.max,
             maxInputAmount = BankWithdrawAmountValidator.maxInputAmount(
-                maxAmount = options.maxAmount,
+                maxAmount = limits.max,
                 balance = source.fiatBalance,
                 fee = fees,
             ),
             sources = options.sources,
-            destinations = options.destinations,
+            destinations = destinations.toImmutableList(),
             source = source,
             destination = destination,
             networkFee = networkFee,
@@ -64,8 +69,8 @@ internal data class AmountState(
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
                 amount = amount,
-                minAmount = options.minAmount,
-                maxAmount = options.maxAmount,
+                minAmount = limits.min,
+                maxAmount = limits.max,
                 balance = source.fiatBalance,
                 fee = fees,
             ).withNetworkFeeCoverage(),
@@ -91,7 +96,7 @@ internal data class AmountState(
 internal data class AmountSelection(
     val currency: Currency,
     val minAmount: BigDecimal,
-    val maxAmount: BigDecimal,
+    val maxAmount: BigDecimal?,
     val maxInputAmount: BigDecimal,
     val sources: ImmutableList<BankWithdrawSource>,
     val destinations: ImmutableList<OfframpDestination>,

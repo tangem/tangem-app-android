@@ -68,6 +68,8 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     // endregion
 
     implementation(projects.features.collectibles.api)

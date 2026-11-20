@@ -58,6 +58,7 @@ fetcher sees a trigger:
 | `WalletSelected` | `WalletModel`, on selected-wallet change | ✅ | ✅ |
 | `TokenDetailsOpen` | `TxHistoryModel.init` | ✅ | ✅ |
 | `TokenDetailsPTR` | `TxHistoryModel.reload()` (pull-to-refresh) | ✅ | ✅ |
+| `OnExpressOperationExecute` | `SwapModel` / `OnrampRedirectModel`, right after the deal is sent | ✅ | ❌ |
 | `JointHistoryPoll` | `JointHistoryPoller`, every 10 s | ❌ | ✅ |
 
 Routing lives in `DefaultWalletTxHistoryFetcher`:
@@ -180,6 +181,50 @@ tokenInfoRepository.fetchMissing(/* assets of both legs of the deal */)
 
 For the index see §2.6. `fetchMissing` pulls the metadata of unknown tokens so the row can show the
 icon and symbol of an asset that is not in the user's portfolio.
+
+#### Status polling
+
+Delta sync alone is not enough for a deal that is still running: the provider moves it through
+`confirming → exchanging → sending` on its own, and nothing tells the app when. So while a token
+details screen is open, every in-flight operation of its currency is re-read from the provider every
+10 s. `TokenDetailsOpen` / `TokenDetailsPTR` carry the screen's `modelScope`, and the polling is bound
+to it — it ends with the screen.
+
+The set of what to poll is **read from the database, not from a one-off query**:
+
+```
+observeActiveOperationIds(walletId, currency)        Room Flow, re-emits on every write
+        │                                            to express_exchange / express_onramp
+        │  Set<ExpressOperationId>  (Swap | Onramp, non-terminal statuses only)
+        ▼
+  per-currency collector        takes a hold on every id that entered the set,
+  (one per open screen)         drops it on every id that left it
+        ▼
+  pullStatusJobs: ConcurrentHashMap<ExpressOperationId, PullStatus>
+        │                       PullStatus(job, holders)
+        ▼
+  one job per operation:  while (isActive) { refreshActiveStatuses(walletId, id); delay(10s) }
+```
+
+Two properties this shape buys, and both are the reason it is not a plain `while` loop over a list
+taken once:
+
+- **A deal created after the screen opened starts being polled by itself.** Coming back from the swap
+  screen does not re-create the Decompose model, so no new trigger is sent; the Room `Flow` is what
+  notices the new row. A deal that reaches a terminal status leaves the set the same way, and its
+  polling stops.
+- **The same deal on two screens is polled once.** A swap shows up on both of its legs' token details,
+  so the job is reference-counted: `holders` counts the collectors that currently see the id, and the
+  job is cancelled when the last one lets go. `acquire` / `release` / `restart` all go through
+  `ConcurrentHashMap.compute`, which is what makes "start or take a hold" and "drop a hold or cancel"
+  atomic — the collectors run on `dispatchers.io`.
+
+A pull-to-refresh (`isForce`) cancels the currency's collector and restarts the jobs of whatever is
+already in flight, so the screen does not wait out the current 10 s interval; the hold count survives
+the restart, so other screens keep theirs.
+
+The poll jobs live in `fetcherScope`, not in the screen's scope — `pullStatusJobs` is shared between
+screens, so no single `modelScope` may own them. What ends them is the hold count reaching zero.
 
 ### 1.7 `DefaultJointOperationTxHistoryFetcher` — joint operation sync
 
