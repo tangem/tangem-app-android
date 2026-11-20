@@ -41,7 +41,7 @@ internal class OnrampStateFactory(
         currency: String,
         onClose: () -> Unit,
         openSettings: () -> Unit,
-        isCountryByIpEnabled: Boolean = false,
+        isNewDesignSystemEnabled: Boolean = false,
     ): OnrampMainComponentUM.InitialLoading {
         return OnrampMainComponentUM.InitialLoading(
             errorNotification = null,
@@ -52,7 +52,7 @@ internal class OnrampStateFactory(
                     onCloseClick = onClose,
                     enabled = true,
                 ),
-                endButtonUM = if (isCountryByIpEnabled) {
+                endButtonUM = if (isNewDesignSystemEnabled) {
                     null
                 } else {
                     TopAppBarButtonUM.Icon(
@@ -62,7 +62,7 @@ internal class OnrampStateFactory(
                     )
                 },
                 countryButtonUM = OnrampCountryButtonUM(flagUrl = null, isEnabled = false, onClick = openSettings)
-                    .takeIf { isCountryByIpEnabled },
+                    .takeIf { isNewDesignSystemEnabled },
             ),
         )
     }

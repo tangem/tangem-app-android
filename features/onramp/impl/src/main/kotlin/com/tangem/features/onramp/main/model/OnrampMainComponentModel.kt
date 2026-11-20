@@ -94,6 +94,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     val params = paramsContainer.require<OnrampMainComponent.Params>()
 
     private val isCountryByIpEnabled: Boolean = onrampFeatureToggles.isCountryByIpEnabled
+    private val isNewDesignSystemEnabled: Boolean = onrampFeatureToggles.isNewDesignSystemEnabled
 
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         OnrampAmountButtonUMStateFactory()
@@ -115,7 +116,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 currency = params.cryptoCurrency.name,
                 onClose = ::onCloseClick,
                 openSettings = ::openSettings,
-                isCountryByIpEnabled = isCountryByIpEnabled,
+                isNewDesignSystemEnabled = isNewDesignSystemEnabled,
             ),
         )
 
@@ -332,7 +333,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 currency = params.cryptoCurrency.name,
                 onClose = router::pop,
                 openSettings = ::openSettings,
-                isCountryByIpEnabled = isCountryByIpEnabled,
+                isNewDesignSystemEnabled = isNewDesignSystemEnabled,
             )
         }
         modelScope.launch {
@@ -540,7 +541,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifLeft = ::handleOnrampError,
                     ifRight = { country ->
                         if (country == null) return@onEach
-                        if (isCountryByIpEnabled) {
+                        if (isNewDesignSystemEnabled) {
                             state.update { stateFactory.getCountryFlagState(it, country.image, country.name) }
                         }
                         if (isCountryByIpEnabled && isIpCheckPending) awaitLatestAvailabilityCheck()
@@ -578,17 +579,16 @@ internal class OnrampMainComponentModel @Inject constructor(
             is OnrampMainComponentUM.InitialLoading ->
                 stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
         }
-        return if (isCountryByIpEnabled) {
-            withRegionRestriction(
-                stateFactory.getCountryFlagState(
-                    state = updatedState,
-                    flagUrl = country.image,
-                    countryName = country.name,
-                ),
+        val withFlag = if (isNewDesignSystemEnabled) {
+            stateFactory.getCountryFlagState(
+                state = updatedState,
+                flagUrl = country.image,
+                countryName = country.name,
             )
         } else {
             updatedState
         }
+        return if (isCountryByIpEnabled) withRegionRestriction(withFlag) else withFlag
     }
 
     /**

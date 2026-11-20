@@ -1713,6 +1713,7 @@ internal class OnrampMainComponentModelTest {
             scheduler = scheduler,
             quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
             isCountryByIpEnabled = false,
+            isNewDesignSystemEnabled = false,
         )
         scheduler.runCurrent()
 
@@ -1740,6 +1741,96 @@ internal class OnrampMainComponentModelTest {
 
         // Assert
         assertThat(settingsOpened).isTrue()
+    }
+
+    @Test
+    fun `GIVEN country by IP on and design system off WHEN model created THEN legacy header and IP logic`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+
+        // Act
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = true,
+            isNewDesignSystemEnabled = false,
+        )
+        scheduler.runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { checkOnrampAvailabilityUseCase.invoke(userWallet, true, any()) }
+        coVerify(exactly = 1) { resetOnrampCountryUseCase.invoke() }
+        assertThat(model.state.value.topBarConfig.countryButtonUM).isNull()
+        assertThat(model.state.value.topBarConfig.endButtonUM).isNotNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country by IP on and design system off WHEN openSettings THEN country selection opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        var settingsOpened = false
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = true,
+            isNewDesignSystemEnabled = false,
+            openSettings = { settingsOpened = true },
+        )
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = null)
+        scheduler.runCurrent()
+
+        // Act
+        model.openSettings()
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(bottomSheetSlot.config).isEqualTo(OnrampMainBottomSheetConfig.SelectCountry)
+        assertThat(settingsOpened).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country by IP off and design system on WHEN model created THEN new header shown`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+
+        // Act
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = false,
+            isNewDesignSystemEnabled = true,
+        )
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(model.state.value.topBarConfig.countryButtonUM).isNotNull()
+        assertThat(model.state.value.topBarConfig.endButtonUM).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country by IP off and design system on WHEN country emitted THEN flag shown`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        every { getOnrampCountryUseCase.invoke() } returns
+            flowOf(onrampCountry("USD").copy(name = "Country", image = "https://flag.png").right())
+
+        // Act
+        val model = createModel(
+            scheduler = scheduler,
+            quotesFlow = flowOf(emptyList<OnrampQuote>().right()),
+            isCountryByIpEnabled = false,
+            isNewDesignSystemEnabled = true,
+        )
+        scheduler.runCurrent()
+
+        // Assert
+        val countryButton = model.state.value.topBarConfig.countryButtonUM
+        assertThat(countryButton?.flagUrl).isEqualTo("https://flag.png")
+        assertThat(countryButton?.countryName).isEqualTo("Country")
+        model.onDestroy()
     }
 
     @Test
@@ -1840,6 +1931,7 @@ internal class OnrampMainComponentModelTest {
         scheduler: TestCoroutineScheduler,
         quotesFlow: Flow<Either<OnrampError, List<OnrampQuote>>>,
         isCountryByIpEnabled: Boolean = true,
+        isNewDesignSystemEnabled: Boolean = true,
         openSettings: () -> Unit = {},
         rampStateManager: RampStateManager = mockk {
             coEvery { availableForBuy(any(), any()) } returns ScenarioUnavailabilityReason.None
@@ -1850,6 +1942,7 @@ internal class OnrampMainComponentModelTest {
     ): OnrampMainComponentModel {
         every { getOnrampQuotesUseCase.invoke() } returns quotesFlow
         every { onrampFeatureToggles.isCountryByIpEnabled } returns isCountryByIpEnabled
+        every { onrampFeatureToggles.isNewDesignSystemEnabled } returns isNewDesignSystemEnabled
         val params = OnrampMainComponent.Params(
             userWalletId = USER_WALLET_ID,
             cryptoCurrency = cryptoCurrency,
