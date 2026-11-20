@@ -26,6 +26,8 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -71,11 +73,15 @@ internal fun TokenReceiveScreenContent(state: ReceiveScreenUM, modifier: Modifie
             SpacerH(32.dp)
         }
         Warnings(warnings = state.warnings)
+        val hapticManager = LocalHapticManager.current
         TangemButton(
             text = resourceReference(R.string.common_copy_address),
             iconEnd = TangemIconUM.Icon(Icons.ic_copy_24),
             size = TangemButton.Size.X12,
-            onClick = state.onCopyAddressClick,
+            onClick = {
+                hapticManager.perform(TangemHapticEffect.View.LongPress)
+                state.onCopyAddressClick()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
