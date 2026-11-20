@@ -22,6 +22,7 @@ import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
 import com.tangem.grow.datasource.collectibles.models.response.model.DefaultCollectiblesAuthProvider
 import com.tangem.grow.datasource.config.*
+import com.tangem.grow.datasource.earnvault.EarnVaultApi
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.express.DefaultExpressAuthProvider
 import com.tangem.grow.datasource.express.ExpressAuthProvider
@@ -262,6 +263,19 @@ internal object GrowDatasourceModule {
                 apiConfigId = YieldSupply.ID,
                 shouldApplyTimeoutAnnotations = true,
                 shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideEarnVaultApi(factory: RetrofitFactory): EarnVaultApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = YieldSupply.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+                serialization = ApiSerialization.KOTLINX,
             ),
         )
     }
