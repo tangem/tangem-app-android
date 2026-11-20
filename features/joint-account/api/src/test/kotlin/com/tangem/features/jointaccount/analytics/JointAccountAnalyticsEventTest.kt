@@ -287,8 +287,8 @@ internal class JointAccountAnalyticsEventTest {
         }
 
         private fun AppRoute.JointAccountCreation.Source.specValue(): String = when (this) {
-            AppRoute.JointAccountCreation.Source.AddAccount -> "Add Account"
-            AppRoute.JointAccountCreation.Source.MainScreen -> "Main Screen"
+            AppRoute.JointAccountCreation.Source.AddAccount -> "Settings"
+            AppRoute.JointAccountCreation.Source.MainScreen -> "Markets"
             AppRoute.JointAccountCreation.Source.AllServices -> "All Services"
         }
     }
