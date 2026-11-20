@@ -1,6 +1,6 @@
 package com.tangem.features.feed.components.v2.blocks
 
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,7 +66,8 @@ internal class CollectiblesBlockComponent(
                 imageVector = CollectiblesAccountIcon.imageVector,
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.staticDark,
-                modifier = Modifier.size(size = 24.dp),
+                // The illustration's 48 canvas keeps the glyph the size the 24 icons had in this badge
+                modifier = Modifier.requiredSize(48.dp),
             )
         }
     }

@@ -33,7 +33,7 @@ import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
  * coloured glyph or letter, a person's initial, an address identicon, a status glyph, a transaction's icon,
  * or an arbitrary image asset.
  *
- * Version: 1.3.2
+ * Version: 1.3.3
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9737-838)
  *
@@ -72,7 +72,7 @@ fun TangemAvatar(
 /** Public API surface of [TangemAvatar]. */
 object TangemAvatar {
 
-    val version = DsVersion(major = 1, minor = 3, patch = 2)
+    val version = DsVersion(major = 1, minor = 3, patch = 3)
 
     /** Fixed size presets: `X72` = 72dp … `X16` = 16dp. */
     enum class Size { X72, X44, X40, X16 }
@@ -134,9 +134,9 @@ object TangemAvatar {
 
         /**
          * Account variant. Pick the content through a constructor:
-         * - `iconRes` / `imageVector` with a [FillColor] — the Figma `Crypto` account: the colour fill with
-         *   the icon (half the avatar's side) tinted white at 80%. Pass a single-colour icon; its own colours
-         *   are replaced by the tint.
+         * - `imageVector` with a [FillColor] — the Figma `Crypto` account: the colour fill with an
+         *   `il_account_*` illustration over the whole avatar, tinted white at 80%. Pass a single-colour
+         *   illustration; its own colours are replaced by the tint.
          * - `letter` with a [FillColor] — a single letter, uppercased when drawn. The `TextReference` form
          *   takes the first character of the resolved text, so a name defined as a string resource can be
          *   passed whole, and shows only the fill when it resolves empty.
@@ -154,18 +154,11 @@ object TangemAvatar {
         ) : UiState() {
 
             constructor(
-                @DrawableRes iconRes: Int,
-                color: FillColor,
-                hasIndicator: Boolean = false,
-                shape: Shape = Shape.RoundedSquare,
-            ) : this(AvatarAccountGlyph.Icon(Either.Left(iconRes), color), hasIndicator, shape)
-
-            constructor(
                 imageVector: ImageVector,
                 color: FillColor,
                 hasIndicator: Boolean = false,
                 shape: Shape = Shape.RoundedSquare,
-            ) : this(AvatarAccountGlyph.Icon(Either.Right(imageVector), color), hasIndicator, shape)
+            ) : this(AvatarAccountGlyph.Icon(imageVector, color), hasIndicator, shape)
 
             constructor(
                 letter: Char,

@@ -220,7 +220,7 @@ private fun MoneyAccountPlaceholderIcon() {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.fillMaxSize(),
             imageVector = Icons.il_account_safe,
             tint = TangemTheme.colors3.icon.tertiary,
             contentDescription = null,
