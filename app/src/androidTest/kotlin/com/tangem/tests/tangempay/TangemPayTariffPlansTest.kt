@@ -108,10 +108,14 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 onTangemPaySelectPlanScreen { point(basicFeePoint).assertIsDisplayed() }
             }
             val ordersBefore = getTangemPayPlanOrderRequestCount()
-            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayBasicOrderPolling() }
+            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayOnboardingBasicCardIssuing() }
             step("Click on 'Select' button") {
                 onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
             }
+            step("Assert 'Tangem Pay is activating' screen is displayed") {
+                awaitSuccess { onTangemPayOnboardingSuccessScreen { title.assertIsDisplayed() } }
+            }
+            closeTangemPayOnboardingSuccessToPaymentAccount()
             step("Assert the card is being issued") { assertTangemPayIssuingCardBanner() }
             step("Assert 'Withdraw' button is disabled") {
                 onTangemPayMainScreen { withdrawButtonControl.assertIsNotEnabled() }
@@ -119,7 +123,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert the plan order request was sent once") {
                 assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
             }
-            step("Complete the '$basicPlan' card issuing") { completeTangemPayBasicPlanIssuing(planBasicState) }
+            step("Complete the '$basicPlan' card issuing") { completeTangemPayOnboardingBasicCardIssuing(planBasicState) }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan(assertMenuItems = true) }
             step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
         }
@@ -134,10 +138,14 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         setupHooks(additionalBeforeSection = { setTangemPayVerifiedOnboardingScenarios() }).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
-            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayBasicOrderPolling() }
+            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayOnboardingBasicCardIssuing() }
             step("Click on 'Select' button") {
                 onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
             }
+            step("Assert 'Tangem Pay is activating' screen is displayed") {
+                awaitSuccess { onTangemPayOnboardingSuccessScreen { title.assertIsDisplayed() } }
+            }
+            closeTangemPayOnboardingSuccessToPaymentAccount()
             step("Assert the card is being issued") { assertTangemPayIssuingCardBanner() }
             step("Click on system 'Back' button") { device.uiDevice.pressBack() }
             step("Assert Tangem Pay tile shows '$activatingStatus'") {
@@ -163,13 +171,17 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert '$basicPlan' plan name is displayed") {
                 onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) }
             }
-            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayBasicOrderPolling() }
+            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayOnboardingBasicCardIssuing() }
             step("Click on 'Select' button") {
                 onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
             }
+            step("Assert 'Tangem Pay is activating' screen is displayed") {
+                awaitSuccess { onTangemPayOnboardingSuccessScreen { title.assertIsDisplayed() } }
+            }
+            closeTangemPayOnboardingSuccessToPaymentAccount()
             step("Assert the card is being issued") { assertTangemPayIssuingCardBanner() }
             step("Complete the '$basicPlan' card issuing with a bank account") {
-                completeTangemPayBasicPlanIssuing(planBasicWithAccountState)
+                completeTangemPayOnboardingBasicCardIssuing(planBasicWithAccountState)
             }
             step("Open 'Add funds' with 'From a bank account' available") {
                 openTangemPayAddFundsWithBankTransferAvailable()
@@ -294,12 +306,16 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert '$plusPlan' plan name is displayed") {
                 awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) } }
             }
-            step("Put the plan fee order in 'awaiting deposit' in WireMock") {
-                stageTangemPayPlanFeeAwaitingDeposit()
+            step("Put the onboarding order in 'awaiting plan fee deposit' in WireMock") {
+                stageTangemPayOnboardingPlanFeeAwaitingDeposit()
             }
             step("Click on 'Select' button") {
                 onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
             }
+            step("Assert 'Tangem Pay is activating' screen is displayed") {
+                awaitSuccess { onTangemPayOnboardingSuccessScreen { title.assertIsDisplayed() } }
+            }
+            closeTangemPayOnboardingSuccessToPaymentAccount()
             step("Assert 'Top-up your account' banner is displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayMainScreen { awaitingDepositBannerTitle(plusFee).assertIsDisplayed() }

@@ -264,10 +264,9 @@ class TangemPayStateCachingTest : BaseTestCase() {
             step("Assert total balance shows the cached '$cachedTotalBalance'") {
                 flakySafely { onMainScreen { totalBalanceText.assertTextEquals(cachedTotalBalance) } }
             }
-            step("Assert 'Balances may be outdated' banner is displayed") {
+            step("Assert 'Some token balances couldn't be updated.' banner is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onOutdatedDataBanner {
-                        title.assertIsDisplayed()
                         message.assertIsDisplayed()
                     }
                 }

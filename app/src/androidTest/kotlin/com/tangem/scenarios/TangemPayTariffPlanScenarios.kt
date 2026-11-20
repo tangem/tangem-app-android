@@ -8,6 +8,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.utils.getWireMockRequestCount
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.screens.tangempay.*
@@ -35,6 +36,7 @@ private const val HISTORY_INITIAL_EMPTY_STATE = "InitialEmpty"
 private const val ORDERS_EMPTY_STATE = "Empty"
 private const val ORDERS_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDERS_PLUS_PROCESSING_STATE = "PlusProcessing"
+private const val ORDERS_BASIC_PROCESSING_STATE = "BasicProcessing"
 private const val ORDER_STARTED_STATE = "Started"
 private const val ORDER_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDER_COMPLETED_STATE = "Completed"
@@ -53,6 +55,7 @@ private const val PLAN_ONBOARDING_AWAITING_DEPOSIT_STATE = "OnboardingAwaitingDe
 private const val TRANSITIONS_ONBOARDING_STATE = "Onboarding"
 private const val KYC_APPROVED_NOT_STARTED_STATE = "KycApprovedNotStarted"
 private const val PAYMENT_ACCOUNT_AWAITING_DEPOSIT_STATE = "PaymentAccountAwaitingDeposit"
+private const val PAYMENT_ACCOUNT_ISSUING_STATE = "PaymentAccountIssuing"
 private const val SUMMARY_ENDPOINT = "/bff-v2/v1/customer/summary"
 private const val CANCEL_PENDING_TRANSITION_ENDPOINT = "/bff-v2/v1/customer/tariff-plan/pending-transition/cancel"
 
@@ -348,6 +351,21 @@ fun stageTangemPayOnboardingPlanFeeAwaitingDeposit() {
     step("Switch WireMock scenario '$MONEY_ACCOUNT_SCENARIO' to '$PAYMENT_ACCOUNT_AWAITING_DEPOSIT_STATE'") {
         setWireMockScenarioState(MONEY_ACCOUNT_SCENARIO, PAYMENT_ACCOUNT_AWAITING_DEPOSIT_STATE)
     }
+}
+
+fun stageTangemPayOnboardingBasicCardIssuing() {
+    stageTangemPayBasicOrderPolling()
+    step("Switch WireMock scenario '$ORDERS_SCENARIO' to '$ORDERS_BASIC_PROCESSING_STATE'") {
+        setWireMockScenarioState(ORDERS_SCENARIO, ORDERS_BASIC_PROCESSING_STATE)
+    }
+    step("Switch WireMock scenario '$MONEY_ACCOUNT_SCENARIO' to '$PAYMENT_ACCOUNT_ISSUING_STATE'") {
+        setWireMockScenarioState(MONEY_ACCOUNT_SCENARIO, PAYMENT_ACCOUNT_ISSUING_STATE)
+    }
+}
+
+fun BaseTestCase.completeTangemPayOnboardingBasicCardIssuing(plan: String) {
+    step("Reset WireMock scenario '$MONEY_ACCOUNT_SCENARIO'") { resetWireMockScenarioState(MONEY_ACCOUNT_SCENARIO) }
+    completeTangemPayBasicPlanIssuing(plan)
 }
 
 fun getTangemPaySummaryRequestCount(): Int = getWireMockRequestCount("GET", SUMMARY_ENDPOINT)

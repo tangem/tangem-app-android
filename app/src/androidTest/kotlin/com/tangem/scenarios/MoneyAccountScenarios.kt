@@ -22,6 +22,7 @@ import com.tangem.screens.onSwapSelectTokenScreen
 import com.tangem.screens.onSwapSuccessScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTxHistoryScreen
+import com.tangem.screens.tangempay.expandTangemPayGroupIfCollapsed
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawErrorScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawPreviewScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawSuccessScreen
@@ -290,13 +291,12 @@ fun BaseTestCase.returnToMainFromMoneyAccount() {
     }
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String, isMultiWallet: Boolean = false) {
     var rowWithBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithBalance = mainRowWithTextMatcher(balance) }
     step("Refresh 'Main' until the 'Money account' row shows '$balance'") {
         refreshMainUntil(isMultiWallet) {
-            composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
+            awaitMoneyAccountRowMatching(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
         }
     }
 }
@@ -433,11 +433,18 @@ private fun BaseTestCase.refreshMoneyAccountUntil(isChanged: () -> Boolean) {
     }
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.waitForMoneyAccountRowWithText(text: String, timeoutMillis: Long = WAIT_UNTIL_TIMEOUT_LONG) {
     var rowWithText: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithText = mainRowWithTextMatcher(text) }
-    composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithText), timeoutMillis)
+    awaitMoneyAccountRowMatching(checkNotNull(rowWithText), timeoutMillis)
+}
+
+// The row sits in the collapsed 'Pay' group until it is expanded, and the group may appear after the wait starts.
+private fun BaseTestCase.awaitMoneyAccountRowMatching(matcher: SemanticsMatcher, timeoutMillis: Long) {
+    composeTestRule.waitUntil(timeoutMillis = timeoutMillis) {
+        composeTestRule.expandTangemPayGroupIfCollapsed()
+        composeTestRule.onAllNodes(matcher).fetchSemanticsNodes(false).isNotEmpty()
+    }
 }
 
 fun BaseTestCase.waitForMoneyAccountRowWithTextNeverShowing(
