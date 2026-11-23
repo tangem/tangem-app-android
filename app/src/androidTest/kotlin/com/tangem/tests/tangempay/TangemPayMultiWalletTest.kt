@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.SINGLE_CARD_TILE_SUBTITLE
 import com.tangem.scenarios.addNewCardWallet
 import com.tangem.scenarios.assertMoneyAccountData
 import com.tangem.scenarios.assertMoneyAccountRowOfDisplayedWallet
@@ -40,7 +41,7 @@ class TangemPayMultiWalletTest : BaseTestCase() {
         val paeraCustomerState = "PaeraCustomer"
         val multiWalletScenario = "tangem_pay_multi_wallet"
         val twoCustomersState = "TwoCustomers"
-        val walletACardsSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 1, 1)
+        val walletACardsSubtitle = SINGLE_CARD_TILE_SUBTITLE
         val walletABalance = "\$10.00"
         val walletACardDigits = "4242"
         val walletATransaction = "Wallet A Shop"

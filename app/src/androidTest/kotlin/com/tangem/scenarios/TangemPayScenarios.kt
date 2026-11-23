@@ -69,6 +69,8 @@ val PAY_ACCOUNT_ROW_NAME: String
 
 private const val PAY_ACCOUNT_WALLET_ID_STUB = "00"
 
+const val SINGLE_CARD_TILE_SUBTITLE = "*4242"
+
 /** Endpoint the app calls to disable Tangem Pay for the wallet — the account-removal request. */
 private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
 
@@ -300,7 +302,8 @@ fun BaseTestCase.setTangemPayMultiNetworkWithdrawScenarios() {
 /** From Main, opens the 'Choose token' sheet behind the 'Add funds' button. */
 fun BaseTestCase.openAddFundsChooseTokenSheet() {
     step("Click on 'Add funds' button") {
-        onMainScreen { addFundsButton.clickWithAssertion() }
+        awaitSuccess { onMainScreen { addFundsButton.assertIsDisplayed() } }
+        onMainScreen { clickActionButtonViaOnClickAction(getResourceString(CoreResR.string.common_add_funds)) }
     }
     step("Assert 'Choose token' sheet is displayed") {
         awaitSuccess { onChooseTokenBottomSheet { title.assertIsDisplayed() } }
@@ -310,7 +313,8 @@ fun BaseTestCase.openAddFundsChooseTokenSheet() {
 /** From Main, opens the 'Choose token' sheet behind the 'Transfer' button — the same selector, Transfer flow. */
 fun BaseTestCase.openTransferChooseTokenSheet() {
     step("Click on 'Transfer' button") {
-        onMainScreen { transferButton.clickWithAssertion() }
+        awaitSuccess { onMainScreen { transferButton.assertIsDisplayed() } }
+        onMainScreen { clickActionButtonViaOnClickAction(getResourceString(CoreResR.string.common_transfer)) }
     }
     step("Assert 'Choose token' sheet is displayed") {
         awaitSuccess { onChooseTokenBottomSheet { title.assertIsDisplayed() } }
