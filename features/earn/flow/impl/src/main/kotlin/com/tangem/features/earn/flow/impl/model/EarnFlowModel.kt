@@ -45,6 +45,7 @@ import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
 import com.tangem.features.earn.product.api.analytics.EarnAnalyticsPercent
 import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
+import com.tangem.features.earn.product.api.analytics.toAnalyticsValue
 import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
@@ -644,7 +645,7 @@ internal class EarnFlowModel @Inject constructor(
             when (type) {
                 EarnTxType.Deposit -> EarnFlowAnalyticsEvent.DepositScreenOpened(
                     category = category,
-                    source = params.source,
+                    source = params.opener?.toAnalyticsValue() ?: params.source.toAnalyticsValue(),
                     currentApy = screen.rate?.toAnalyticsApy(),
                 )
                 EarnTxType.Withdraw -> EarnFlowAnalyticsEvent.WithdrawScreenOpened(

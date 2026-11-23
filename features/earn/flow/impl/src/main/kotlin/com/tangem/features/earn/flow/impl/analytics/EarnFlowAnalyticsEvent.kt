@@ -28,13 +28,13 @@ internal sealed class EarnFlowAnalyticsEvent(
 
     class DepositScreenOpened(
         category: String,
-        source: EarnEntrySource,
+        source: String,
         currentApy: String?,
     ) : EarnFlowAnalyticsEvent(
         category = category,
         event = "Deposit Screen Opened",
         params = buildMap {
-            put(AnalyticsParam.SOURCE, source.toAnalyticsValue())
+            put(AnalyticsParam.SOURCE, source)
             currentApy?.let { put(FlowParam.CURRENT_APY, it) }
         },
     )

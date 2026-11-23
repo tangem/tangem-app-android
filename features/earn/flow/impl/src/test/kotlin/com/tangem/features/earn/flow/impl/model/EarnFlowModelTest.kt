@@ -58,6 +58,7 @@ import com.tangem.features.earn.flow.impl.analytics.EarnTxType
 import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
+import com.tangem.features.earn.product.api.navigation.EarnFlowOpener
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRow
@@ -1885,7 +1886,7 @@ internal class EarnFlowModelTest {
                     analyticsEventHandler.send(
                         EarnFlowAnalyticsEvent.DepositScreenOpened(
                             category = "ETH Lending",
-                            source = EarnEntrySource.EarnBanner,
+                            source = "Earn Banner",
                             currentApy = "5.50",
                         ),
                     )
@@ -1893,6 +1894,29 @@ internal class EarnFlowModelTest {
                 verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN deposit opened by the Info screen WHEN created THEN deposit screen opened has that source`() = runTest {
+            // Act
+            val model = createModel(
+                action = Deposit(),
+                source = EarnEntrySource.YieldSheet,
+                opener = EarnFlowOpener.InfoScreen,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.DepositScreenOpened(
+                        category = "ETH Lending",
+                        source = "Info Screen",
+                        currentApy = null,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN deposit without a rate WHEN created THEN deposit screen opened omits the apy`() = runTest {
@@ -1905,7 +1929,7 @@ internal class EarnFlowModelTest {
                 analyticsEventHandler.send(
                     EarnFlowAnalyticsEvent.DepositScreenOpened(
                         category = "ETH Lending",
-                        source = EarnEntrySource.Markets,
+                        source = "Markets",
                         currentApy = null,
                     ),
                 )
@@ -3115,10 +3139,11 @@ internal class EarnFlowModelTest {
         ),
         flowProduct: EarnFlowProduct = testFlowProduct,
         source: EarnEntrySource = EarnEntrySource.TokenPage,
+        opener: EarnFlowOpener? = null,
     ): EarnFlowModel = EarnFlowModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
-            testParams(action, callback).copy(flowProduct = flowProduct, source = source),
+            testParams(action, callback).copy(flowProduct = flowProduct, source = source, opener = opener),
         ),
         sessionFactories = EarnSessionFactories(factories),
         statuses = EarnFlowStatuses(

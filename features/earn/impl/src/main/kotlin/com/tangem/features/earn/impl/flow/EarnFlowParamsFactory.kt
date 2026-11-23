@@ -32,6 +32,7 @@ internal class EarnFlowParamsFactory @Inject constructor(
             action = route.action,
             source = entry.source,
             callback = callback,
+            opener = route.opener,
         )
     }
 }

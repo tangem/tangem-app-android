@@ -34,7 +34,7 @@ internal class EarnFlowAnalyticsEventTest {
             EventModel(
                 event = EarnFlowAnalyticsEvent.DepositScreenOpened(
                     category = CATEGORY,
-                    source = EarnEntrySource.TokenPage,
+                    source = "Token Page",
                     currentApy = "5.50",
                 ),
                 expectedId = "[ETH Lending] Deposit Screen Opened",
@@ -43,7 +43,7 @@ internal class EarnFlowAnalyticsEventTest {
             EventModel(
                 event = EarnFlowAnalyticsEvent.DepositScreenOpened(
                     category = CATEGORY,
-                    source = EarnEntrySource.TokenPage,
+                    source = "Token Page",
                     currentApy = null,
                 ),
                 expectedId = "[ETH Lending] Deposit Screen Opened",

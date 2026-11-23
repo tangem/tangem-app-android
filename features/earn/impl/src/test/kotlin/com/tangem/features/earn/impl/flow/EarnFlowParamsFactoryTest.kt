@@ -13,6 +13,7 @@ import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
+import com.tangem.features.earn.product.api.navigation.EarnFlowOpener
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnLegal
@@ -37,6 +38,18 @@ internal class EarnFlowParamsFactoryTest {
     )
 
     private val callback: EarnFlowComponent.ModelCallback = mockk()
+
+    @Test
+    fun `GIVEN route opened by the picker WHEN create THEN params carry the opener`() {
+        // Arrange
+        val route = EarnFlowRoute(productId = lending.id, action = Deposit(), opener = EarnFlowOpener.YieldPicker)
+
+        // Act
+        val actual = factory.create(route = route, entry = entry, callback = callback)
+
+        // Assert
+        assertThat(actual?.opener).isEqualTo(EarnFlowOpener.YieldPicker)
+    }
 
     @Test
     fun `GIVEN route of a known product WHEN create THEN params carry the entry, the product and the route action`() {

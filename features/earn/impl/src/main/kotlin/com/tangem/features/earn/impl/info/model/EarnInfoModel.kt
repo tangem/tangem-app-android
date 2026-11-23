@@ -42,6 +42,7 @@ import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorSheetConfi
 import com.tangem.features.earn.impl.widgets.chart.EarnApyChartComponent
 import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
+import com.tangem.features.earn.product.api.navigation.EarnFlowOpener
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
@@ -110,7 +111,10 @@ internal class EarnInfoModel @Inject constructor(
 
     private val product: EarnProduct? = registry.find(params.productId)
 
-    private val actions: EarnActionHandler? = product?.actionHandler(productParams, InnerEarnNavigator(router))
+    private val actions: EarnActionHandler? = product?.actionHandler(
+        productParams,
+        InnerEarnNavigator(router, EarnFlowOpener.InfoScreen),
+    )
 
     private val isRedirected = AtomicBoolean(false)
 

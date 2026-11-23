@@ -2,7 +2,10 @@ package com.tangem.features.earn.impl
 
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.earn.EarnProductId
+import com.tangem.features.earn.product.api.navigation.EarnFlowOpener
+import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
+import com.tangem.features.earn.product.api.session.Deposit
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
@@ -14,7 +17,7 @@ import org.junit.jupiter.api.TestInstance
 internal class InnerEarnNavigatorTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val navigator = InnerEarnNavigator(router)
+    private val navigator = InnerEarnNavigator(router, EarnFlowOpener.InfoScreen)
 
     @BeforeEach
     fun resetMocks() {
@@ -31,5 +34,17 @@ internal class InnerEarnNavigatorTest {
 
         // Assert
         verify(exactly = 1) { router.push(route, any()) }
+    }
+
+    @Test
+    fun `GIVEN flow route WHEN navigate THEN router push with the screen that opened the flow`() {
+        // Arrange
+        val route = EarnFlowRoute(productId = EarnProductId("lending"), action = Deposit())
+
+        // Act
+        navigator.navigate(route)
+
+        // Assert
+        verify(exactly = 1) { router.push(route.copy(opener = EarnFlowOpener.InfoScreen), any()) }
     }
 }
