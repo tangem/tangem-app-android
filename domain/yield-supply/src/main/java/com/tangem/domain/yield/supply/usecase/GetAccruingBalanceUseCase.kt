@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.flowOn
 
 /**
  * Ticks the currency total while some of its extra balances accrue (a lending position); only those parts grow.
- *
- * Emits nothing when the growth of a tick stays below [MAX_FIAT_DECIMALS] fiat decimals: a small position next to a
- * large balance would otherwise show a long tail of digits on the whole total.
  */
 class GetAccruingBalanceUseCase(
     private val dispatcherProvider: CoroutineDispatcherProvider,
@@ -29,22 +26,15 @@ class GetAccruingBalanceUseCase(
             .map { Accrual(amount = it.totalDeltaCryptoAmount(), rate = it.accrualRate) }
         if (accruing.isEmpty()) return@flow
 
-        val fiatRate = status.value.fiatRate
-        if (fiatRate != null && RewardsBalanceTicker.fiatDecimals(accruing, fiatRate) > MAX_FIAT_DECIMALS) return@flow
-
         val fixedPart = amount + status.value.totalContributionsDeltaOrNull().orZero() - accruing.sumOf(Accrual::amount)
         emitAll(
             RewardsBalanceTicker.tick(
                 fixedPart = fixedPart,
                 accruing = accruing,
                 currency = status.currency,
-                fiatRate = fiatRate,
+                fiatRate = status.value.fiatRate,
                 appCurrency = appCurrency,
             ),
         )
     }.flowOn(dispatcherProvider.default)
-
-    private companion object {
-        const val MAX_FIAT_DECIMALS = 6
-    }
 }

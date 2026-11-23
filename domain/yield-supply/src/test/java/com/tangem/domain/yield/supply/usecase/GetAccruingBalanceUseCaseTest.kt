@@ -83,7 +83,7 @@ internal class GetAccruingBalanceUseCaseTest {
     }
 
     @Test
-    fun `GIVEN growth below visible fiat decimals WHEN invoke THEN emits nothing`() = runTest {
+    fun `GIVEN tiny position next to large balance WHEN invoke THEN ticks with 10 fiat and 14 crypto decimals`() = runTest {
         // Arrange
         val status = loadedStatus(
             amount = BigDecimal("10"),
@@ -93,10 +93,17 @@ internal class GetAccruingBalanceUseCaseTest {
         val useCase = GetAccruingBalanceUseCase(createTestingCoroutineDispatcherProvider())
 
         // Act
-        val emissions = useCase(status, appCurrency).toList()
+        val deferred = async { useCase(status, appCurrency).take(2).toList() }
+        runCurrent()
+        advanceTimeBy(TICK_MILLIS)
+        runCurrent()
 
         // Assert
-        assertThat(emissions).isEmpty()
+        val fiatRate = BigDecimal("3000")
+        assertThat(deferred.await()).containsExactly(
+            balance(crypto = "10.0001", fiatRate = fiatRate, fiatDecimals = 10, cryptoDecimals = 14),
+            balance(crypto = "10.000100000000064688", fiatRate = fiatRate, fiatDecimals = 10, cryptoDecimals = 14),
+        ).inOrder()
     }
 
     @Test
@@ -143,14 +150,20 @@ internal class GetAccruingBalanceUseCaseTest {
         return status.copy(value = (status.value as CryptoCurrencyStatus.Loaded).copy(contributions = contributions))
     }
 
-    /** Decimals of the 2 ETH position at 2.55%: 9 in crypto, 6 in fiat at 3000 */
-    private fun balance(crypto: String, fiatRate: BigDecimal?) = YieldSupplyRewardBalance(
+    private fun balance(
+        crypto: String,
+        fiatRate: BigDecimal?,
+        fiatDecimals: Int = 6,
+        cryptoDecimals: Int = 9,
+    ) = YieldSupplyRewardBalance(
         fiatBalance = fiatRate?.let { rate ->
             BigDecimal(crypto).multiply(rate).format {
-                fiat(appCurrency.code, appCurrency.symbol).anyDecimals(decimals = 6)
+                fiat(appCurrency.code, appCurrency.symbol).anyDecimals(decimals = fiatDecimals)
             }
         },
-        cryptoBalance = BigDecimal(crypto).format { crypto(coin).anyDecimals(maxDecimals = 9, minDecimals = 9) },
+        cryptoBalance = BigDecimal(crypto).format {
+            crypto(coin).anyDecimals(maxDecimals = cryptoDecimals, minDecimals = cryptoDecimals)
+        },
     )
 
     private fun stake(amount: BigDecimal): BalanceContribution = object : BalanceContribution {
