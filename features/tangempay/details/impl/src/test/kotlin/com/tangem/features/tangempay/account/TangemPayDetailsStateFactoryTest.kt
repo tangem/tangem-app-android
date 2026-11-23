@@ -282,6 +282,37 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(cardsBlockState?.isAddCardEnabled).isFalse()
     }
 
+    @Test
+    fun `GIVEN no cards and payment account issuing WHEN getLoadedState THEN ghost card, issuing banner and add card disabled`() {
+        // Arrange
+        val status = loadedStatus(
+            statusCards = emptyList(),
+            statusTariffPlan = tariffPlanState(),
+            isPaymentAccountIssuing = true,
+        )
+
+        val noOpClick = {}
+
+        // Act
+        val cardsBlockState = factory.getLoadedState(status).balanceBlockState.cardsBlockState
+
+        // Assert
+        assertThat(cardsBlockState?.cards?.map { it.copy(onClick = noOpClick) }).containsExactly(
+            TangemPayDetailsBalanceBlockState.Card(
+                id = "issuing_placeholder",
+                lastDigits = "",
+                imageUrl = null,
+                cardType = TangemPayCardType.UNDEFINED,
+                onClick = noOpClick,
+                isEnabled = false,
+                isFrozen = false,
+                state = TangemPayCardUiState.InProgress,
+            ),
+        )
+        assertThat(cardsBlockState?.progressBanner).isEqualTo(CardsProgressBannerUM.Issuing)
+        assertThat(cardsBlockState?.isAddCardEnabled).isFalse()
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun `GIVEN card removal animation flag WHEN getLoadedState THEN cards block carries the flag`(

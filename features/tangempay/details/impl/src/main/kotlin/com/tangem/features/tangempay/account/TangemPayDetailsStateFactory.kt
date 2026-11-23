@@ -85,46 +85,15 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
-        val isFresh = status.isFresh
-        val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
-        val isTariffAwaitingDeposit = status.cards.isEmpty() && status.tariffPlan?.isAwaitingDeposit == true
-        val isAddCardEnabled = isFresh && !hasIssuingCard && !isTariffAwaitingDeposit
         val balance = status.balance
         val hasWithdrawableBalance = status.hasWithdrawableAmount
         val canAddFunds = status.canAddFunds
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
-        val tiersNotificationType = status.tariffPlan?.let { plan ->
-            TangemPayTiersBannerType.fromPlan(plan)
-        }
+        val tiersNotificationType = status.tariffPlan?.let { plan -> TangemPayTiersBannerType.fromPlan(plan) }
         val isTopUpBannerShown = errorNotification == null && tiersNotification != null &&
             tiersNotificationType == TangemPayTiersBannerType.TopUpForTierUpgrade
-        val issueCardNotificationType = status.cards.resolveProgressBanner().takeIf { type ->
-            tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
-                type != CardsProgressBannerUM.Issuing
-        }
-        val cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-            cards = status.cards
-                .map { cardItem ->
-                    val isAwaitingActivation = cardItem.state.isAwaitingActivation
-                    TangemPayDetailsBalanceBlockState.Card(
-                        id = cardItem.id,
-                        lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
-                        imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
-                        cardType = cardItem.cardType,
-                        onClick = { intents.onCardClick(cardItem.id) },
-                        isEnabled = status.error == null,
-                        isFrozen = cardItem.isFrozen && !isAwaitingActivation,
-                        state = cardItem.state.toUiState(),
-                    )
-                }
-                .ifEmpty { listOfNotNull(issuingPlaceholderCard().takeIf { isTariffAwaitingDeposit }) }
-                .toImmutableList(),
-            onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
-            isAddCardEnabled = isAddCardEnabled,
-            progressBanner = issueCardNotificationType,
-            isCardRemovalAnimated = isCardRemovalAnimated,
-        )
+
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -139,10 +108,10 @@ internal class TangemPayDetailsStateFactory(
             ),
             balanceBlockState = getBalanceBlockState(
                 fiatBalance = balance?.fiatBalance,
-                cardsBlockState = cardsBlockState,
-                isMuted = !isFresh,
-                isAddFundsEnabled = isFresh && canAddFunds,
-                isWithdrawEnabled = isFresh && hasWithdrawableBalance,
+                cardsBlockState = getCardsBlockState(status, tiersNotificationType),
+                isMuted = !status.isFresh,
+                isAddFundsEnabled = status.isFresh && canAddFunds,
+                isWithdrawEnabled = status.isFresh && hasWithdrawableBalance,
                 isInactive = isTopUpBannerShown,
             ),
             isBalanceHidden = false,
@@ -151,6 +120,45 @@ internal class TangemPayDetailsStateFactory(
             bankTransferOnrampBanner = createBankTransferOnrampBanner(status.virtualAccount),
             kycAdditionalInfoBanner = MessageBannerUM(notificationFactory.createKycAdditionalInfoBannerState())
                 .takeIf { status.isKycAdditionalInfoActionRequired },
+        )
+    }
+
+    private fun getCardsBlockState(
+        status: PaymentAccountStatusValue.Loaded,
+        tiersNotificationType: TangemPayTiersBannerType?,
+    ): TangemPayDetailsBalanceBlockState.CardsBlockState {
+        val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
+
+        val isFirstCardIssuing = status.cards.isEmpty() &&
+            (status.isPaymentAccountIssuing || status.tariffPlan?.isAwaitingDeposit == true)
+
+        val issueCardNotification = status.cards.resolveProgressBanner()
+            ?: CardsProgressBannerUM.Issuing.takeIf { isFirstCardIssuing }
+
+        return TangemPayDetailsBalanceBlockState.CardsBlockState(
+            cards = status.cards
+                .map { cardItem ->
+                    val isAwaitingActivation = cardItem.state.isAwaitingActivation
+                    TangemPayDetailsBalanceBlockState.Card(
+                        id = cardItem.id,
+                        lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
+                        imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
+                        cardType = cardItem.cardType,
+                        onClick = { intents.onCardClick(cardItem.id) },
+                        isEnabled = status.error == null,
+                        isFrozen = cardItem.isFrozen && !isAwaitingActivation,
+                        state = cardItem.state.toUiState(),
+                    )
+                }
+                .ifEmpty { listOfNotNull(issuingPlaceholderCard().takeIf { isFirstCardIssuing }) }
+                .toImmutableList(),
+            onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
+            isAddCardEnabled = status.isFresh && !hasIssuingCard && !isFirstCardIssuing,
+            progressBanner = issueCardNotification.takeIf { type ->
+                tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
+                    type != CardsProgressBannerUM.Issuing
+            },
+            isCardRemovalAnimated = isCardRemovalAnimated,
         )
     }
 
