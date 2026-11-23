@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
+import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -56,6 +58,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 private val InitialTopBarHeight: Dp = 64.dp
+private const val TOP_FADE_MID_STOP = 0.8f
+private const val TOP_FADE_MID_ALPHA = 0.8f
 private const val UNAVAILABLE_BALANCE_ALPHA = 0.4f
 
 @Composable
@@ -92,7 +96,14 @@ internal fun MoneyAccountDetailsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .testTag(MoneyAccountTestTags.DETAILS_CONTENT),
+                    .testTag(MoneyAccountTestTags.DETAILS_CONTENT)
+                    .hazeSourceTangem(state = LocalHazeState.current)
+                    .topFade(
+                        height = topBarTotalHeight,
+                        0f to rootBackground,
+                        TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
+                        1f to Color.Transparent,
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 state = listState,
                 contentPadding = PaddingValues(
