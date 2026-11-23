@@ -1,7 +1,7 @@
 [
     {
         "name": "AND_18288_KOTLINX_DATASTORE_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
