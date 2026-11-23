@@ -8,7 +8,10 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,9 +28,23 @@ import com.tangem.features.earn.api.ui.EarnHowItWorksUM
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
+import com.tangem.features.earn.flow.impl.analytics.EarnDisplayCurrency
+import com.tangem.features.earn.flow.impl.analytics.EarnErrorPopupAction
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowAnalyticsEvent
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowNotice
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowNoticeAnalytics
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowScreen
+import com.tangem.features.earn.flow.impl.analytics.EarnTxType
+import com.tangem.features.earn.flow.impl.analytics.amountScreen
+import com.tangem.features.earn.flow.impl.analytics.isLiquidityCapped
+import com.tangem.features.earn.flow.impl.analytics.toResultDestination
+import com.tangem.features.earn.flow.impl.analytics.toTxType
 import com.tangem.features.earn.flow.impl.ui.state.EarnAmountUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnConfirmUM
 import com.tangem.features.earn.flow.impl.ui.state.EarnResultUM
+import com.tangem.features.earn.product.api.analytics.EarnAnalyticsPercent
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
+import com.tangem.features.earn.product.api.analytics.toAnalyticsApy
 import com.tangem.features.earn.product.api.product.EarnRowInfo
 import com.tangem.features.earn.product.api.product.toUM
 import com.tangem.features.earn.product.api.session.EarnActionInput
@@ -53,6 +70,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -77,6 +95,8 @@ internal class EarnFlowModel @Inject constructor(
     private val converter: EarnFlowConverter,
     private val support: EarnFlowSupport,
     private val links: EarnFlowLinks,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val usdValuation: EarnUsdValuation,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -91,6 +111,8 @@ internal class EarnFlowModel @Inject constructor(
     val action: EarnFlowAction = params.action
 
     private val amountSource: EarnActionInput.Amount.Source? = (action.input as? EarnActionInput.Amount)?.source
+
+    private val txType: EarnTxType? = action.toTxType()
 
     val initialStep: EarnFlowStep = if (amountSource != null) EarnFlowStep.Amount else EarnFlowStep.Confirm
 
@@ -116,7 +138,7 @@ internal class EarnFlowModel @Inject constructor(
             ),
             resultCallbacks = EarnResultCallbacks(
                 onInfoClick = ::showInfo,
-                onExit = ::finish,
+                onExit = ::onResultExit,
                 onExploreClick = links::open,
                 onShareClick = links::share,
             ),
@@ -125,6 +147,16 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     private val amountInput = EarnAmountInput(clickIntents = this)
+
+    // A load after Loading or Error resets the selector to its default fee: only a loaded-to-loaded change is a pick
+    private var lastFeeType: AnalyticsParam.FeeType? = null
+
+    private var lastFeeCurrencyId: CryptoCurrency.ID? = null
+
+    private val noticeAnalytics = EarnFlowNoticeAnalytics(
+        analyticsEventHandler = analyticsEventHandler,
+        category = params.flowProduct.analytics.category,
+    )
 
     private var feeJob: Job? = null
     private var prepareJob: Job? = null
@@ -151,6 +183,7 @@ internal class EarnFlowModel @Inject constructor(
             modelScope.launch(dispatchers.main) { finish(EarnFlowExit.Done) }
         } else {
             subscribeOnStatuses()
+            txType?.let(::subscribeOnNotices)
             if (amountSource != null) loadMaxAmount()
             val userWallet = wallet.userWallet(params.product)
             state.update { flowState ->
@@ -160,6 +193,7 @@ internal class EarnFlowModel @Inject constructor(
                 )
             }
             if (amountSource == EarnActionInput.Amount.Source.Wallet) loadSource(userWallet)
+            if (amountSource != null) sendAmountScreenOpened()
         }
     }
 
@@ -178,6 +212,7 @@ internal class EarnFlowModel @Inject constructor(
     fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
         rememberFeeTokenPick(feeSelectorUM)
         feeJob?.cancel()
+        val isPreviousFeeLoaded = state.value.fee is FeeSelectorUM.Content
         // A new fee on the confirmation outdates the plan at once, before the suspend calls below re-prepare it.
         state.update { current ->
             val isConfirming = current.step == EarnFlowStep.Confirm && !current.signing.isExecuting
@@ -186,6 +221,7 @@ internal class EarnFlowModel @Inject constructor(
                 isPreparing = prepareJob?.isActive == true || isConfirming && feeSelectorUM.isPrimaryButtonEnabled,
             )
         }
+        sendFeeSpeedIfPicked(isPreviousFeeLoaded)
         val selection = state.value.feeSelection ?: return
 
         feeJob = modelScope.launch {
@@ -210,13 +246,20 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
-        if (deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) return
-        amountInput.max(state.value)?.let(::updateAmount)
+        if (!deferShareUntilFee(EarnAmountInput.FULL_SHARE_PERCENT)) {
+            val amountState = amountInput.max(state.value) ?: return
+            updateAmount(amountState)
+        }
+        sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.Max(category, currentScreen(type)) }
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
         val amountState = amountInput.currency(state.value, isFiat) ?: return
         state.update { it.copy(amountState = amountState) }
+        val currency = if (isFiat) EarnDisplayCurrency.Fiat else EarnDisplayCurrency.Crypto
+        sendFlowEvent { category, type ->
+            EarnFlowAnalyticsEvent.CurrencyToggle(category, currency, currentScreen(type))
+        }
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -228,8 +271,11 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onPercentClick(percent: Int) {
-        if (deferShareUntilFee(percent)) return
-        amountInput.percent(state.value, percent)?.let(::updateAmount)
+        if (!deferShareUntilFee(percent)) {
+            val amountState = amountInput.percent(state.value, percent) ?: return
+            updateAmount(amountState)
+        }
+        sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.Percent(category, percent, currentScreen(type)) }
     }
 
     private fun isSameAmount(first: BigDecimal?, second: BigDecimal?): Boolean =
@@ -297,7 +343,13 @@ internal class EarnFlowModel @Inject constructor(
 
     private fun onHowItWorksClick() {
         val content = params.flowProduct.howItWorks ?: return
-        howItWorks.value = content.toUM(onLearnMoreClick = { post -> modelScope.launch { links.openBlogPost(post) } })
+        sendFlowEvent { category, _ -> EarnFlowAnalyticsEvent.HowItWorksOpened(category, params.source) }
+        howItWorks.value = content.toUM(
+            onLearnMoreClick = { post ->
+                sendFlowEvent { category, _ -> EarnFlowAnalyticsEvent.LearnMore(category, params.source) }
+                modelScope.launch { links.openBlogPost(post) }
+            },
+        )
     }
 
     private fun subscribeOnStatuses() {
@@ -311,6 +363,43 @@ internal class EarnFlowModel @Inject constructor(
             .onEach { appCurrency -> updateWithInitialAmount { it.copy(appCurrency = appCurrency) } }
             .launchIn(modelScope)
     }
+
+    private fun subscribeOnNotices(type: EarnTxType) {
+        state
+            .mapNotNull { current -> noticeFrame(type, current) }
+            .onEach { frame -> noticeAnalytics.update(frame.screen, frame.notices, frame.isFeeInFlight) }
+            .launchIn(modelScope)
+    }
+
+    /** The cards come from the same state: [amount] and [confirm] map it on their own and may lag a state behind. */
+    private fun noticeFrame(type: EarnTxType, current: EarnFlowState): NoticeFrame? {
+        val isFeeInFlight = current.fee is FeeSelectorUM.Loading
+        return when (current.step) {
+            EarnFlowStep.Amount -> NoticeFrame(
+                screen = type.amountScreen(),
+                notices = noticesOf(current, toAmountUM(current)?.notifications, checksAmount = true),
+                isFeeInFlight = isFeeInFlight,
+            )
+            EarnFlowStep.Confirm -> NoticeFrame(
+                screen = EarnFlowScreen.Confirm,
+                notices = noticesOf(current, toConfirmUM(current)?.notifications, checksAmount = false),
+                isFeeInFlight = isFeeInFlight,
+            )
+            EarnFlowStep.Result -> null
+        }
+    }
+
+    private fun noticesOf(
+        current: EarnFlowState,
+        notifications: List<NotificationUM>?,
+        checksAmount: Boolean,
+    ): Set<EarnFlowNotice> = buildSet {
+        if (checksAmount && current.isAmountAboveMax) add(EarnFlowNotice.InsufficientBalance)
+        if (notifications.orEmpty().any(::isFeeShortage)) add(EarnFlowNotice.InsufficientFee)
+    }
+
+    private fun isFeeShortage(notification: NotificationUM): Boolean =
+        notification is NotificationUM.Error.TotalExceedsBalance || notification is NotificationUM.Error.ExceedsBalance
 
     private fun loadMaxAmount() {
         modelScope.launch {
@@ -494,6 +583,7 @@ internal class EarnFlowModel @Inject constructor(
             )
         }
         moveTo(EarnFlowStep.Result)
+        sendSuccessScreenOpened()
 
         session.track(done.ref)
             .onEach { txStatus -> state.update { it.copy(txStatus = txStatus) } }
@@ -506,27 +596,120 @@ internal class EarnFlowModel @Inject constructor(
         if (error is SendTransactionError.UserCancelledError) return
 
         TangemLogger.e("Earn flow: ${action.id} failed: $error")
-        support.transactionErrorDialog(
+        val dialog = support.transactionErrorDialog(
             error = error,
             product = params.product,
             state = state::value,
             scope = modelScope,
             onClose = { finish(EarnFlowExit.Done) },
-        )?.let(messageSender::send)
+            onSupportClick = { sendErrorPopupButton(EarnErrorPopupAction.Support) },
+            onCancel = { sendErrorPopupButton(EarnErrorPopupAction.Close) },
+        ) ?: return
+        sendFlowEvent { category, type ->
+            EarnFlowAnalyticsEvent.ErrorPopup(category, type, error.getAnalyticsDescription())
+        }
+        messageSender.send(dialog)
     }
 
     /** The stack is not saved, while this model outlives the activity: a recreated stack starts from the kept step. */
     fun restoredStack(): List<EarnFlowStep> = state.value.stack(hasAmountStep = amountSource != null)
 
     private fun moveTo(step: EarnFlowStep) {
+        val isNewStep = state.value.step != step
         state.update { it.copy(step = step) }
         when (step) {
             EarnFlowStep.Result -> navigation.replaceAll(step)
             else -> navigation.pushNew(step)
         }
+        if (step == EarnFlowStep.Confirm && isNewStep) sendConfirmScreenOpened()
     }
 
     private fun finish(exit: EarnFlowExit) = params.callback.onFinished(exit)
+
+    private fun onResultExit(exit: EarnFlowExit) {
+        exit.toResultDestination()?.let { destination ->
+            sendFlowEvent { category, _ -> EarnFlowAnalyticsEvent.ResultAction(category, destination) }
+        }
+        finish(exit)
+    }
+
+    private fun sendAmountScreenOpened() {
+        launchFlowEvent { category, type ->
+            val screen = session.screenAnalytics(action)
+            when (type) {
+                EarnTxType.Deposit -> EarnFlowAnalyticsEvent.DepositScreenOpened(
+                    category = category,
+                    source = params.source,
+                    currentApy = screen.rate?.toAnalyticsApy(),
+                )
+                EarnTxType.Withdraw -> EarnFlowAnalyticsEvent.WithdrawScreenOpened(
+                    category = category,
+                    positionBucket = usdValuation.bucket(params.product.currency, screen.position),
+                    isLiquidityCapped = screen.isLiquidityCapped(),
+                )
+            }
+        }
+    }
+
+    /** The amount Confirm shows: a Max withdrawal resolves the entire position into the plan. */
+    private fun sendConfirmScreenOpened() {
+        val amount = state.value.plan?.expectedAmount ?: state.value.sendingAmount
+        launchFlowEvent { category, type ->
+            val screen = session.screenAnalytics(action)
+            EarnFlowAnalyticsEvent.ConfirmScreenOpened(
+                category = category,
+                type = type,
+                amountBucket = usdValuation.bucket(params.product.currency, amount),
+                currentApy = screen.rate?.toAnalyticsApy(),
+                performanceFee = screen.performanceFee?.let(EarnAnalyticsPercent::of),
+            )
+        }
+    }
+
+    private fun sendSuccessScreenOpened() {
+        launchFlowEvent { category, type ->
+            val screen = session.screenAnalytics(action)
+            EarnFlowAnalyticsEvent.SuccessScreenOpened(
+                category = category,
+                type = type,
+                currentApy = screen.rate?.toAnalyticsApy(),
+            )
+        }
+    }
+
+    private fun sendFeeSpeedIfPicked(isPreviousFeeLoaded: Boolean) {
+        val feeType = state.value.feeSelection?.feeType ?: return
+        val feeCurrencyId = (state.value.fee as? FeeSelectorUM.Content)
+            ?.feeExtraInfo
+            ?.feeCryptoCurrencyStatus
+            ?.currency
+            ?.id
+        val previous = lastFeeType
+        val isSameFeeToken = feeCurrencyId == lastFeeCurrencyId
+        val isSpeedPick = isPreviousFeeLoaded && isSameFeeToken
+        lastFeeType = feeType
+        lastFeeCurrencyId = feeCurrencyId
+        if (isSpeedPick && previous != null && previous != feeType) {
+            sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.FeeSpeed(category, feeType, currentScreen(type)) }
+        }
+    }
+
+    private fun sendErrorPopupButton(action: EarnErrorPopupAction) {
+        sendFlowEvent { category, type -> EarnFlowAnalyticsEvent.ErrorPopupButton(category, type, action) }
+    }
+
+    private fun currentScreen(type: EarnTxType): EarnFlowScreen =
+        if (state.value.step == EarnFlowStep.Confirm) EarnFlowScreen.Confirm else type.amountScreen()
+
+    private fun sendFlowEvent(event: (category: String, type: EarnTxType) -> EarnFlowAnalyticsEvent) {
+        val type = txType ?: return
+        analyticsEventHandler.send(event(params.flowProduct.analytics.category, type))
+    }
+
+    private fun launchFlowEvent(event: suspend (category: String, type: EarnTxType) -> EarnFlowAnalyticsEvent) {
+        val type = txType ?: return
+        modelScope.launch { analyticsEventHandler.send(event(params.flowProduct.analytics.category, type)) }
+    }
 
     private fun showSessionError(error: EarnSessionError) {
         TangemLogger.e("Earn flow: ${action.id} session error: $error")
@@ -547,3 +730,9 @@ internal class EarnFlowModel @Inject constructor(
         rowInfo.value = null
     }
 }
+
+private data class NoticeFrame(
+    val screen: EarnFlowScreen,
+    val notices: Set<EarnFlowNotice>,
+    val isFeeInFlight: Boolean,
+)

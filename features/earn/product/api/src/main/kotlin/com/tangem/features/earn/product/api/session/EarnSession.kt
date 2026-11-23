@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.product.EarnProduct
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
@@ -38,6 +39,9 @@ interface EarnSession {
     fun execute(plan: VerifiedPlan): Flow<EarnSigningStep>
 
     fun track(ref: EarnTxRef): Flow<EarnTxStatus>
+
+    /** Must not throw: the flow calls it without a catch. */
+    suspend fun screenAnalytics(action: EarnFlowAction): EarnScreenAnalytics = EarnScreenAnalytics()
 
     fun interface Factory {
 

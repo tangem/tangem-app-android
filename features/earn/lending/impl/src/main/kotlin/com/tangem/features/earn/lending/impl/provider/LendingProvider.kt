@@ -60,6 +60,7 @@ internal data class LendingAsset(
  * @property rate          rate with the provider's incentives; kept for a closed market since its position is visible
  * @property isOpen        the provider accepts deposits of the asset; a closed market does not hide the position
  * @property maxWithdraw   the position capped by the provider's liquidity; null while there is no position
+ * @property isLiquidityKnown the provider's liquidity was read, so [maxWithdraw] is capped by it
  * @property providerState read only by the provider's own transaction builder; null until read
  */
 internal data class LendingMarket(
@@ -68,6 +69,7 @@ internal data class LendingMarket(
     val deposit: LendingDepositGate,
     val position: LendingPosition?,
     val maxWithdraw: BigDecimal?,
+    val isLiquidityKnown: Boolean = false,
     val providerState: LendingProviderState?,
     val source: StatusSource,
     val rateSource: StatusSource = StatusSource.ACTUAL,

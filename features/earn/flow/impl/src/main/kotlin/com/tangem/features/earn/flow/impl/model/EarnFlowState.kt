@@ -84,6 +84,13 @@ internal data class EarnFlowState(
     val isAmountInvalid: Boolean
         get() = (amountState as? AmountState.Data)?.amountTextField?.isError == true
 
+    val isAmountAboveMax: Boolean
+        get() {
+            val entered = enteredAmount ?: return false
+            val max = availableMax ?: return false
+            return entered > max
+        }
+
     /** [enteredAmount] reduced by the fee when both do not fit into the balance, as Send and Staking do it. */
     val sendingAmount: BigDecimal?
         get() {

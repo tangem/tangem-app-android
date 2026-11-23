@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.res)

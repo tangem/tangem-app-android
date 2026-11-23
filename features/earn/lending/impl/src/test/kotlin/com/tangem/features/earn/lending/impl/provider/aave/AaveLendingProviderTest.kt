@@ -141,6 +141,7 @@ internal class AaveLendingProviderTest {
                 deposit = LendingDepositGate.Loading,
                 position = null,
                 maxWithdraw = null,
+                isLiquidityKnown = true,
                 providerState = AaveModuleRead(
                     status = null,
                     version = YieldModuleVersionStatus.UpToDate,
@@ -168,6 +169,7 @@ internal class AaveLendingProviderTest {
                 deposit = LendingDepositGate.Loading,
                 position = null,
                 maxWithdraw = null,
+                isLiquidityKnown = true,
                 providerState = AaveModuleRead(
                     status = null,
                     version = YieldModuleVersionStatus.UpToDate,
@@ -279,6 +281,7 @@ internal class AaveLendingProviderTest {
                 deposit = LendingDepositGate.Open,
                 position = LendingPosition(BigDecimal("1.5")),
                 maxWithdraw = BigDecimal("1.5"),
+                isLiquidityKnown = true,
                 providerState = AaveModuleRead(
                     status = wethStatus(balance = "1.5"),
                     version = YieldModuleVersionStatus.UpToDate,
@@ -327,6 +330,31 @@ internal class AaveLendingProviderTest {
         // Act & Assert
         provider.market(userWalletId, asset).test {
             assertThat(expectMostRecentItem().maxWithdraw).isEqualTo(BigDecimal("1.5"))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN liquidity read WHEN market THEN liquidity is known`() = runTest {
+        // Arrange
+        statuses.value = setOf(wethStatus(balance = "1.5"))
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().isLiquidityKnown).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN liquidity read fails WHEN market THEN liquidity is unknown`() = runTest {
+        // Arrange
+        statuses.value = setOf(wethStatus(balance = "1.5"))
+        coEvery { yieldTransactions.getWithdrawLiquidity(userWalletId, weth) } throws IllegalStateException("rpc")
+
+        // Act & Assert
+        provider.market(userWalletId, asset).test {
+            assertThat(expectMostRecentItem().isLiquidityKnown).isFalse()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -706,6 +734,7 @@ internal class AaveLendingProviderTest {
         deposit = LendingDepositGate.Loading,
         position = null,
         maxWithdraw = null,
+        isLiquidityKnown = true,
         providerState = AaveModuleRead(
             status = null,
             version = YieldModuleVersionStatus.UpToDate,

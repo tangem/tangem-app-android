@@ -21,6 +21,8 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.earn.api.EarnEntrySource
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
@@ -61,6 +63,8 @@ internal fun testStatus(
     fiatRate = fiatRate,
 )
 
+internal fun createRate(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)
+
 internal fun testFee(value: String): Fee =
     Fee.Common(Amount(currencySymbol = "ETH", value = BigDecimal(value), decimals = 18))
 
@@ -96,7 +100,7 @@ internal val testFlowProduct = EarnFlowProduct(
     productId = EarnProductId("lending"),
     title = stringReference("Lending on Aave"),
     provider = EarnProvider(title = stringReference("Aave"), icon = ImageReference.Res(0)),
-    analytics = EarnProductAnalytics(category = "Earn", product = "Lending"),
+    analytics = EarnProductAnalytics(category = "ETH Lending", product = "Lending"),
 )
 
 internal fun testParams(action: EarnFlowAction, callback: EarnFlowComponent.ModelCallback) = EarnFlowComponent.Params(
@@ -111,6 +115,14 @@ internal object TestClaim : EarnFlowAction {
     override val id: String = "claim"
     override val label: TextReference = stringReference("Claim")
     override val input: EarnActionInput = EarnActionInput.None
+    override val isGaslessAllowed: Boolean = false
+    override fun title(productTitle: TextReference): TextReference = productTitle
+}
+
+internal object TestTopUp : EarnFlowAction {
+    override val id: String = "top-up"
+    override val label: TextReference = stringReference("Top up")
+    override val input: EarnActionInput = EarnActionInput.Amount(EarnActionInput.Amount.Source.Wallet)
     override val isGaslessAllowed: Boolean = false
     override fun title(productTitle: TextReference): TextReference = productTitle
 }

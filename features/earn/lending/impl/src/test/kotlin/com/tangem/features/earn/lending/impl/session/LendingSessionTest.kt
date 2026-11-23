@@ -52,6 +52,7 @@ import com.tangem.features.earn.lending.impl.provider.LendingTxExpectation
 import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
 import com.tangem.features.earn.lending.impl.supplier.LendingSnapshot
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
+import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRow
@@ -1265,6 +1266,58 @@ internal class LendingSessionTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ScreenAnalytics {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a market with a position WHEN screenAnalytics THEN rate, fee, position, available and liquidity come from it`(
+            action: EarnFlowAction,
+        ) = runTest {
+            // Arrange
+            arrangeState(
+                assetState(
+                    position = POSITION,
+                    maxWithdraw = MAX_WITHDRAW,
+                    rate = BigDecimal("0.055"),
+                    isLiquidityKnown = true,
+                ),
+            )
+            val feeProvider = FakeLendingProvider(
+                assets = mapOf(eth.id to asset),
+                performanceFee = BigDecimal("0.15"),
+            )
+
+            // Act
+            val actual = createSession(feeProvider).screenAnalytics(action)
+
+            // Assert
+            val expected = EarnScreenAnalytics(
+                rate = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY),
+                performanceFee = BigDecimal("0.15"),
+                position = POSITION,
+                availableToWithdraw = MAX_WITHDRAW,
+                isLiquidityKnown = true,
+            )
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN no state WHEN screenAnalytics THEN empty`() = runTest {
+            // Arrange
+            arrangeSnapshot(emptyMap())
+
+            // Act
+            val actual = session.screenAnalytics(Withdraw())
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnScreenAnalytics())
+        }
+
+        private fun provideTestModels() = listOf<EarnFlowAction>(Deposit(), Withdraw())
+    }
+
+    @Nested
     inner class Track {
 
         @Test
@@ -1491,6 +1544,7 @@ internal class LendingSessionTest {
         providerState: LendingProviderState? = TestProviderState(PLAN_KEY),
         rate: BigDecimal? = null,
         fiatRate: BigDecimal? = null,
+        isLiquidityKnown: Boolean = false,
     ) = LendingAssetState(
         asset = asset,
         address = address,
@@ -1502,6 +1556,7 @@ internal class LendingSessionTest {
             deposit = LendingDepositGate.Open,
             position = position?.let(::LendingPosition),
             maxWithdraw = maxWithdraw,
+            isLiquidityKnown = isLiquidityKnown,
             providerState = providerState,
             source = StatusSource.ACTUAL,
         ),

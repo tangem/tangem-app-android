@@ -23,16 +23,23 @@ internal class EarnFlowSupport @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) {
 
+    @Suppress("LongParameterList")
     fun transactionErrorDialog(
         error: SendTransactionError,
         product: EarnProduct.Params,
         state: () -> EarnFlowState,
         scope: CoroutineScope,
         onClose: () -> Unit,
+        onSupportClick: () -> Unit,
+        onCancel: () -> Unit,
     ): DialogMessage? = transactionErrorDialogFactory.create(
         error = error,
         popBackStack = onClose,
-        onFailedTxEmailClick = { message -> scope.launch { sendFailedTxEmail(product, message, state()) } },
+        onFailedTxEmailClick = { message ->
+            onSupportClick()
+            scope.launch { sendFailedTxEmail(product, message, state()) }
+        },
+        onCancel = onCancel,
     )
 
     suspend fun sendFailedTxEmail(product: EarnProduct.Params, errorMessage: String, state: EarnFlowState) {

@@ -11,6 +11,7 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.ui.UiMessage
@@ -40,13 +41,23 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.earn.api.EarnEntrySource
 import com.tangem.features.earn.api.ui.EarnRowInfoUM
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.flow.impl.EarnSessionFactories
+import com.tangem.features.earn.flow.impl.analytics.EarnDisplayCurrency
+import com.tangem.features.earn.flow.impl.analytics.EarnErrorPopupAction
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowAnalyticsEvent
+import com.tangem.features.earn.flow.impl.analytics.EarnFlowScreen
+import com.tangem.features.earn.flow.impl.analytics.EarnResultDestination
+import com.tangem.features.earn.flow.impl.analytics.EarnTxType
+import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.product.EarnHowItWorks
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnRow
@@ -58,6 +69,7 @@ import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnFlowExit
+import com.tangem.features.earn.product.api.session.EarnResultButton
 import com.tangem.features.earn.product.api.session.EarnSession
 import com.tangem.features.earn.product.api.session.EarnSessionError
 import com.tangem.features.earn.product.api.session.EarnSigningStep
@@ -81,6 +93,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -126,6 +139,8 @@ internal class EarnFlowModelTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val usdValuation: EarnUsdValuation = mockk()
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -161,7 +176,11 @@ internal class EarnFlowModelTest {
             getUserWalletUseCase,
             getAccountCurrencyStatusUseCase,
             isAccountsModeEnabledUseCase,
+            analyticsEventHandler,
+            usdValuation,
         )
+        coEvery { usdValuation.bucket(currency = any(), cryptoAmount = any()) } returns "1K-5K"
+        coEvery { session.screenAnalytics(action = any()) } returns EarnScreenAnalytics()
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns none()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { blogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowYieldModeWorks) } returns TEST_LEARN_MORE_URL
@@ -1843,10 +1862,1213 @@ internal class EarnFlowModelTest {
         }
     }
 
-    private suspend fun TestScope.createConfirmedModel(): EarnFlowModel {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN deposit from the banner WHEN created THEN deposit screen opened is sent once with the rate`() =
+            runTest {
+                // Arrange
+                coEvery { session.screenAnalytics(action = Deposit()) } returns
+                    EarnScreenAnalytics(rate = createRate("0.055"))
+
+                // Act
+                val model = createModel(action = Deposit(), source = EarnEntrySource.EarnBanner)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.DepositScreenOpened(
+                            category = "ETH Lending",
+                            source = EarnEntrySource.EarnBanner,
+                            currentApy = "5.50",
+                        ),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN deposit without a rate WHEN created THEN deposit screen opened omits the apy`() = runTest {
+            // Act
+            val model = createModel(action = Deposit(), source = EarnEntrySource.Markets)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.DepositScreenOpened(
+                        category = "ETH Lending",
+                        source = EarnEntrySource.Markets,
+                        currentApy = null,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN withdraw WHEN created THEN withdraw screen opened carries the position bucket and the cap`(
+            model: LiquidityModel,
+        ) = runTest {
+            // Arrange
+            coEvery { session.screenAnalytics(action = Withdraw()) } returns EarnScreenAnalytics(
+                position = model.position,
+                availableToWithdraw = model.availableToWithdraw,
+                isLiquidityKnown = model.isLiquidityKnown,
+            )
+
+            // Act
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.WithdrawScreenOpened(
+                        category = "ETH Lending",
+                        positionBucket = "1K-5K",
+                        isLiquidityCapped = model.expectedCapped,
+                    ),
+                )
+            }
+            coVerify(exactly = 1) { usdValuation.bucket(currency = testEthereum, cryptoAmount = model.position) }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount entered WHEN submitted twice with a back in between THEN confirm screen opened is sent twice`() =
+            runTest {
+                // Arrange
+                coEvery { session.screenAnalytics(action = Deposit()) } returns EarnScreenAnalytics(
+                    rate = createRate("0.055"),
+                    performanceFee = BigDecimal("0.15"),
+                )
+                val model = createConfirmedModel()
+
+                // Act
+                model.onBack()
+                model.onSubmit()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
+                verify(exactly = 2) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.ConfirmScreenOpened(
+                            category = "ETH Lending",
+                            type = EarnTxType.Deposit,
+                            amountBucket = "1K-5K",
+                            currentApy = "5.50",
+                            performanceFee = "15.00",
+                        ),
+                    )
+                }
+                coVerify(exactly = 2) {
+                    usdValuation.bucket(
+                        currency = testEthereum,
+                        cryptoAmount = match { amount -> amount?.compareTo(BigDecimal("0.5")) == 0 },
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a plan amount other than the entered one WHEN confirm screen opened THEN the plan amount is bucketed`() =
+            runTest {
+                // Arrange
+                coEvery { session.prepare(action = any(), amount = any(), fee = any()) } returns
+                    TestPlan(expectedAmount = BigDecimal("0.48")).right()
+
+                // Act
+                val model = createConfirmedModel(amount = "0.5")
+
+                // Assert
+                coVerify(exactly = 1) {
+                    usdValuation.bucket(
+                        currency = testEthereum,
+                        cryptoAmount = match { amount -> amount?.compareTo(BigDecimal("0.48")) == 0 },
+                    )
+                }
+                coVerify(exactly = 0) {
+                    usdValuation.bucket(
+                        currency = testEthereum,
+                        cryptoAmount = match { amount -> amount?.compareTo(BigDecimal("0.5")) == 0 },
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the confirm screen WHEN Next arrives again THEN confirm screen opened is not sent again`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onSubmit()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Confirm)
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ConfirmScreenOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Done WHEN the result shows THEN success screen opened is sent with the rate`() = runTest {
+            // Arrange
+            coEvery { session.screenAnalytics(action = Deposit()) } returns
+                EarnScreenAnalytics(rate = createRate("0.055"))
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Result)
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.SuccessScreenOpened(
+                        category = "ETH Lending",
+                        type = EarnTxType.Deposit,
+                        currentApy = "5.50",
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideResultExitModels")
+        fun `GIVEN the result WHEN its button exits THEN the result action is sent only for a destination`(
+            model: ResultExitModel,
+        ) = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Done(txRef, testResult(primary = EarnResultButton(stringReference("Exit"), model.exit))),
+            )
+            val flow = createConfirmedModel()
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            flow.result.value?.primary?.onClick?.invoke()
+
+            // Assert
+            verify(exactly = 1) { callback.onFinished(model.exit) }
+            if (model.expectedDestination == null) {
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ResultAction>()) }
+            } else {
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.ResultAction(
+                            category = "ETH Lending",
+                            destination = model.expectedDestination,
+                        ),
+                    )
+                }
+            }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the result WHEN closed THEN no result action is sent`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            model.result.value?.onClose?.invoke()
+
+            // Assert
+            verify(exactly = 1) { callback.onFinished(EarnFlowExit.Done) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ResultAction>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN How it works WHEN opened and Learn more clicked THEN both events carry the entry source`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    flowProduct = testFlowProduct.copy(howItWorks = testHowItWorks),
+                    source = EarnEntrySource.YieldSheet,
+                )
+                advanceUntilIdle()
+
+                // Act
+                model.amount.value?.onHowItWorksClick?.invoke()
+                model.howItWorks.value?.onLearnMoreClick?.invoke()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.HowItWorksOpened(
+                            category = "ETH Lending",
+                            source = EarnEntrySource.YieldSheet,
+                        ),
+                    )
+                }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.LearnMore(
+                            category = "ETH Lending",
+                            source = EarnEntrySource.YieldSheet,
+                        ),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN product without How it works WHEN info pressed THEN no How it works event is sent`() = runTest {
+            // Arrange
+            val model = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            model.amount.value?.onHowItWorksClick?.invoke()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.HowItWorksOpened>()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an action that is neither deposit nor withdraw WHEN the flow runs to the result THEN no flow event is sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(action = TestClaim)
+                model.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Act
+                model.onConfirmClick()
+                advanceUntilIdle()
+                model.result.value?.primary?.onClick?.invoke()
+
+                // Assert
+                assertThat(model.state.value.step).isEqualTo(EarnFlowStep.Result)
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                coVerify(exactly = 0) { session.screenAnalytics(action = any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an action that is neither deposit nor withdraw WHEN fee speed changes and signing fails THEN no flow event is sent`() =
+            runTest {
+                // Arrange
+                every { session.execute(plan = any()) } returns flowOf(
+                    EarnSigningStep.Failed(SendTransactionError.BlockchainSdkError(code = 1, message = "rejected")),
+                )
+                coEvery { getWalletMetaInfoUseCase.invoke(userWalletId = testUserWalletId) } returns
+                    IllegalStateException().left()
+                val dialog = slot<UiMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createModel(action = TestClaim)
+                model.onFeeResult(choosableFeeContent(isFast = false))
+                advanceUntilIdle()
+
+                // Act
+                model.onFeeResult(choosableFeeContent(isFast = true))
+                advanceUntilIdle()
+                model.onConfirmClick()
+                advanceUntilIdle()
+                (dialog.captured as DialogMessage).firstAction.onClick()
+                (dialog.captured as DialogMessage).secondAction?.onClick?.invoke()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                model.onDestroy()
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideAmountScreenModels")
+        fun `GIVEN an amount above the max WHEN entered THEN InsufficientBalance is sent once for the amount screen`(
+            model: AmountScreenModel,
+        ) = runTest {
+            // Arrange
+            val flow = createModel(action = model.action)
+            advanceUntilIdle()
+
+            // Act
+            flow.onAmountValueChange("2.02")
+            flow.onAmountValueChange("2.03")
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.InsufficientBalance(category = "ETH Lending", screen = model.expectedScreen),
+                )
+            }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientBalance>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an amount above the max WHEN lowered to the max and raised again THEN InsufficientBalance is sent twice`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange("2.02")
+                advanceUntilIdle()
+
+                // Act
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                advanceUntilIdle()
+                flow.onAmountValueChange("2.02")
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 2) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientBalance(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a loaded fee WHEN the whole balance is entered THEN InsufficientBalance is sent once`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(testFeeContent("0.01"))
+            advanceUntilIdle()
+
+            // Act
+            flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+            advanceUntilIdle()
+
+            // Assert
+            val event = EarnFlowAnalyticsEvent.InsufficientBalance(category = "ETH Lending", screen = EarnFlowScreen.Deposit)
+            verify(exactly = 1) { analyticsEventHandler.send(event) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an amount within the max WHEN entered THEN no notice is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+            flow.onFeeResult(testFeeContent("0.00033"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientBalance>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN amount plus fee above the balance WHEN on Confirm THEN InsufficientFee(Confirm) is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createConfirmedModel(amount = TEST_BALANCE.toPlainString())
+
+                // Act
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.03"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Confirm),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientBalance>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN amount plus fee above the balance WHEN on the amount step THEN InsufficientFee(Deposit) is sent`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+
+                // Act
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN withdraw fee above the wallet balance WHEN amount entered THEN InsufficientFee(Withdraw) is sent`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+                } returns testStatus(amount = BigDecimal("0.0001")).right()
+                val flow = createModel(action = Withdraw())
+                advanceUntilIdle()
+
+                // Act
+                flow.onAmountValueChange("0.5")
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Withdraw),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN deposit fee shortage WHEN the fee reloads through Loading THEN InsufficientFee(Deposit) is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN withdraw fee shortage WHEN the fee reloads through Loading THEN InsufficientFee(Withdraw) is sent once`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(userWalletId = any(), cryptoCurrencyStatus = any())
+                } returns testStatus(amount = BigDecimal("0.0001")).right()
+                val flow = createModel(action = Withdraw())
+                advanceUntilIdle()
+                flow.onAmountValueChange("0.5")
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Withdraw),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN fee shortage on Confirm WHEN the fee reloads through Loading THEN InsufficientFee(Confirm) is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createConfirmedModel(amount = TEST_BALANCE.toPlainString())
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Confirm),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.InsufficientFee>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN fee shortage WHEN the fee reloads through Loading and the shortage is gone THEN InsufficientFee is sent again later`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 2) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.InsufficientFee(category = "ETH Lending", screen = EarnFlowScreen.Deposit),
+                    )
+                }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an action that is neither deposit nor withdraw WHEN the amount and fee exceed the balance THEN no notice is sent`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = TestTopUp)
+                advanceUntilIdle()
+
+                // Act
+                flow.onAmountValueChange("2.02")
+                flow.onFeeResult(testFeeContent("2.02"))
+                advanceUntilIdle()
+                flow.onAmountValueChange(TEST_BALANCE.toPlainString())
+                advanceUntilIdle()
+
+                // Assert
+                val notifications = flow.amount.value?.notifications.orEmpty()
+                assertThat(
+                    notifications.any {
+                        it is NotificationUM.Error.TotalExceedsBalance || it is NotificationUM.Error.ExceedsBalance
+                    },
+                ).isTrue()
+                verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent>()) }
+                flow.onDestroy()
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideCurrencyModels")
+        fun `GIVEN the amount step WHEN currency toggled THEN currency toggle carries the currency and the screen`(
+            model: CurrencyToggleModel,
+        ) = runTest {
+            // Arrange
+            val flow = createModel(action = model.action)
+            advanceUntilIdle()
+
+            // Act
+            flow.onCurrencyChangeClick(model.isFiat)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.CurrencyToggle(
+                        category = "ETH Lending",
+                        currency = model.expectedCurrency,
+                        screen = model.expectedScreen,
+                    ),
+                )
+            }
+            flow.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideAmountScreenModels")
+        fun `GIVEN the amount step WHEN Max pressed THEN max is sent for the amount screen`(
+            model: AmountScreenModel,
+        ) = runTest {
+            // Arrange
+            val flow = createModel(action = model.action)
+            advanceUntilIdle()
+
+            // Act
+            flow.onMaxValueClick()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.Max(category = "ETH Lending", screen = model.expectedScreen),
+                )
+            }
+            flow.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideAmountScreenModels")
+        fun `GIVEN the amount step WHEN 50 percent pressed THEN percent is sent for the amount screen`(
+            model: AmountScreenModel,
+        ) = runTest {
+            // Arrange
+            val flow = createModel(action = model.action)
+            advanceUntilIdle()
+
+            // Act
+            flow.onPercentClick(percent = 50)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.Percent(
+                        category = "ETH Lending",
+                        percent = 50,
+                        screen = model.expectedScreen,
+                    ),
+                )
+            }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the currency status is not loaded WHEN currency pressed THEN no toggle event is sent`() = runTest {
+            // Arrange
+            every { singleAccountStatusListSupplier.invoke(testUserWalletId) } returns MutableSharedFlow()
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            flow.onCurrencyChangeClick(isFiat = true)
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.CurrencyToggle>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no fee yet WHEN Max and percent pressed THEN both taps are sent while they wait for the fee`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+
+                // Act
+                flow.onMaxValueClick()
+                flow.onPercentClick(percent = 50)
+
+                // Assert
+                assertThat(flow.state.value.pendingSharePercent).isEqualTo(50)
+                val max = EarnFlowAnalyticsEvent.Max(category = "ETH Lending", screen = EarnFlowScreen.Deposit)
+                val percent = EarnFlowAnalyticsEvent.Percent(
+                    category = "ETH Lending",
+                    percent = 50,
+                    screen = EarnFlowScreen.Deposit,
+                )
+                verify(exactly = 1) { analyticsEventHandler.send(max) }
+                verify(exactly = 1) { analyticsEventHandler.send(percent) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN no max amount on withdraw WHEN Max and percent pressed THEN no button event is sent`() = runTest {
+            // Arrange
+            coEvery { session.maxAmount(action = any()) } returns EarnSessionError.Failed().left()
+            val flow = createModel(action = Withdraw())
+            advanceUntilIdle()
+
+            // Act
+            flow.onMaxValueClick()
+            flow.onPercentClick(percent = 50)
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.Max>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.Percent>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Normal fee loaded WHEN Max selected THEN fee speed Max is sent once`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            advanceUntilIdle()
+
+            // Act
+            flow.onFeeResult(choosableFeeContent(isFast = true))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.FeeSpeed(
+                        category = "ETH Lending",
+                        feeType = AnalyticsParam.FeeType.Max,
+                        screen = EarnFlowScreen.Deposit,
+                    ),
+                )
+            }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an ETH fee loaded WHEN the fee token is switched THEN no fee speed is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            advanceUntilIdle()
+            val tokenFee = testFeeContent("1.5").let { content ->
+                content.copy(
+                    feeExtraInfo = content.feeExtraInfo.copy(
+                        feeCryptoCurrencyStatus = MockYieldSupply.loadedStatus(
+                            currency = MockYieldSupply.token(),
+                            amount = BigDecimal("100"),
+                            fiatAmount = BigDecimal("100"),
+                            fiatRate = BigDecimal.ONE,
+                        ),
+                    ),
+                )
+            }
+
+            // Act
+            flow.onFeeResult(tokenFee)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the first fee load WHEN it arrives THEN no fee speed is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+
+            // Act
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN Max selected WHEN the fee reloads through Loading back to Max THEN no second fee speed is sent`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onFeeResult(choosableFeeContent(isFast = false))
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Max picked WHEN the fee reloads through Loading as the default Normal THEN no fee speed is sent for it`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onFeeResult(choosableFeeContent(isFast = false))
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                flow.onFeeResult(choosableFeeContent(isFast = false))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.FeeSpeed(
+                            category = "ETH Lending",
+                            feeType = AnalyticsParam.FeeType.Normal,
+                            screen = EarnFlowScreen.Deposit,
+                        ),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Max reset to Normal by a reload WHEN the user picks Max again THEN fee speed Max is sent once`() =
+            runTest {
+                // Arrange
+                val flow = createModel(action = Deposit())
+                advanceUntilIdle()
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                flow.onFeeResult(FeeSelectorUM.Loading)
+                flow.onFeeResult(choosableFeeContent(isFast = false))
+                advanceUntilIdle()
+
+                // Act
+                flow.onFeeResult(choosableFeeContent(isFast = true))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.FeeSpeed(
+                            category = "ETH Lending",
+                            feeType = AnalyticsParam.FeeType.Max,
+                            screen = EarnFlowScreen.Deposit,
+                        ),
+                    )
+                }
+                verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN Normal then a fee error WHEN the fee loads as Max THEN no fee speed is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            flow.onFeeResult(FeeSelectorUM.Error(GetFeeError.UnknownError))
+            advanceUntilIdle()
+
+            // Act
+            flow.onFeeResult(choosableFeeContent(isFast = true))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a fee with a disabled primary button WHEN its type differs THEN no fee speed is sent`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            advanceUntilIdle()
+
+            // Act
+            flow.onFeeResult(choosableFeeContent(isFast = true).copy(isPrimaryButtonEnabled = false))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.FeeSpeed>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the confirm step WHEN the fee speed changes THEN fee speed carries the Confirm screen`() = runTest {
+            // Arrange
+            val flow = createModel(action = Deposit())
+            advanceUntilIdle()
+            flow.onAmountValueChange("0.5")
+            flow.onFeeResult(choosableFeeContent(isFast = false))
+            advanceUntilIdle()
+            flow.onSubmit()
+            advanceUntilIdle()
+
+            // Act
+            flow.onFeeResult(choosableFeeContent(isFast = true))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(flow.state.value.step).isEqualTo(EarnFlowStep.Confirm)
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.FeeSpeed(
+                        category = "ETH Lending",
+                        feeType = AnalyticsParam.FeeType.Max,
+                        screen = EarnFlowScreen.Confirm,
+                    ),
+                )
+            }
+            flow.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSigningErrorModels")
+        fun `GIVEN signing failed WHEN the dialog shows THEN error popup carries the error description`(
+            model: SigningErrorModel,
+        ) = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(EarnSigningStep.Failed(model.error))
+            val flow = createConfirmedModel()
+
+            // Act
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            verifyOrder {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.ErrorPopup(
+                        category = "ETH Lending",
+                        type = EarnTxType.Deposit,
+                        errorCode = model.expectedErrorCode,
+                    ),
+                )
+                messageSender.send(any())
+            }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN withdraw signing failed WHEN the dialog shows THEN error popup carries the Withdraw type`() =
+            runTest {
+                // Arrange
+                every { session.execute(plan = any()) } returns flowOf(
+                    EarnSigningStep.Failed(
+                        SendTransactionError.TangemSdkError(code = 50001, messageRes = 0, args = emptyList()),
+                    ),
+                )
+                val flow = createModel(action = Withdraw())
+                advanceUntilIdle()
+                flow.onAmountValueChange("0.5")
+                flow.onFeeResult(testFeeContent("0.00033"))
+                advanceUntilIdle()
+                flow.onSubmit()
+                advanceUntilIdle()
+
+                // Act
+                flow.onConfirmClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        EarnFlowAnalyticsEvent.ErrorPopup(
+                            category = "ETH Lending",
+                            type = EarnTxType.Withdraw,
+                            errorCode = "TangemSdkError: code 50001",
+                        ),
+                    )
+                }
+                flow.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN signing failed with an error without a dialog WHEN it fails THEN no error popup is sent`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Failed(SendTransactionError.SolanaGasless(SolanaGaslessError.Disabled)),
+            )
+            val flow = createConfirmedModel()
+
+            // Act
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { messageSender.send(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ErrorPopup>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the user cancelled on the card WHEN signing fails THEN no error popup is sent`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Failed(SendTransactionError.UserCancelledError),
+            )
+            val flow = createConfirmedModel()
+
+            // Act
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ErrorPopup>()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ErrorPopupButton>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the error dialog WHEN Support pressed THEN the Support button event is sent`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Failed(SendTransactionError.BlockchainSdkError(code = 1, message = "rejected")),
+            )
+            coEvery { getWalletMetaInfoUseCase.invoke(userWalletId = testUserWalletId) } returns
+                IllegalStateException().left()
+            val dialog = slot<UiMessage>()
+            every { messageSender.send(capture(dialog)) } returns Unit
+            val flow = createConfirmedModel()
+            flow.onConfirmClick()
+            advanceUntilIdle()
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ErrorPopupButton>()) }
+
+            // Act
+            (dialog.captured as DialogMessage).firstAction.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.ErrorPopupButton(
+                        category = "ETH Lending",
+                        type = EarnTxType.Deposit,
+                        action = EarnErrorPopupAction.Support,
+                    ),
+                )
+            }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ErrorPopupButton>()) }
+            flow.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the error dialog WHEN Close pressed THEN the Close button event is sent`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Failed(SendTransactionError.BlockchainSdkError(code = 1, message = "rejected")),
+            )
+            val dialog = slot<UiMessage>()
+            every { messageSender.send(capture(dialog)) } returns Unit
+            val flow = createConfirmedModel()
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            (dialog.captured as DialogMessage).secondAction?.onClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    EarnFlowAnalyticsEvent.ErrorPopupButton(
+                        category = "ETH Lending",
+                        type = EarnTxType.Deposit,
+                        action = EarnErrorPopupAction.Close,
+                    ),
+                )
+            }
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnFlowAnalyticsEvent.ErrorPopupButton>()) }
+            flow.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = BigDecimal("1"),
+                isLiquidityKnown = true,
+                expectedCapped = true,
+            ),
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = BigDecimal("2"),
+                isLiquidityKnown = true,
+                expectedCapped = false,
+            ),
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = BigDecimal("1"),
+                isLiquidityKnown = false,
+                expectedCapped = null,
+            ),
+            LiquidityModel(
+                position = BigDecimal("2"),
+                availableToWithdraw = null,
+                isLiquidityKnown = true,
+                expectedCapped = null,
+            ),
+        )
+
+        private fun provideResultExitModels() = listOf(
+            ResultExitModel(exit = EarnFlowExit.ToYield, expectedDestination = EarnResultDestination.Yield),
+            ResultExitModel(exit = EarnFlowExit.ToToken, expectedDestination = EarnResultDestination.Token),
+            ResultExitModel(exit = EarnFlowExit.Done, expectedDestination = null),
+        )
+
+        private fun provideCurrencyModels() = listOf(
+            CurrencyToggleModel(
+                action = Deposit(),
+                isFiat = true,
+                expectedCurrency = EarnDisplayCurrency.Fiat,
+                expectedScreen = EarnFlowScreen.Deposit,
+            ),
+            CurrencyToggleModel(
+                action = Deposit(),
+                isFiat = false,
+                expectedCurrency = EarnDisplayCurrency.Crypto,
+                expectedScreen = EarnFlowScreen.Deposit,
+            ),
+            CurrencyToggleModel(
+                action = Withdraw(),
+                isFiat = true,
+                expectedCurrency = EarnDisplayCurrency.Fiat,
+                expectedScreen = EarnFlowScreen.Withdraw,
+            ),
+        )
+
+        private fun provideAmountScreenModels() = listOf(
+            AmountScreenModel(action = Deposit(), expectedScreen = EarnFlowScreen.Deposit),
+            AmountScreenModel(action = Withdraw(), expectedScreen = EarnFlowScreen.Withdraw),
+        )
+
+        private fun provideSigningErrorModels() = listOf(
+            SigningErrorModel(
+                error = SendTransactionError.TangemSdkError(code = 50001, messageRes = 0, args = emptyList()),
+                expectedErrorCode = "TangemSdkError: code 50001",
+            ),
+            SigningErrorModel(
+                error = SendTransactionError.BlockchainSdkError(code = 1, message = "rejected"),
+                expectedErrorCode = "BlockchainSdkError: 1",
+            ),
+            SigningErrorModel(
+                error = SendTransactionError.NetworkError(message = "timeout", code = "504"),
+                expectedErrorCode = "NetworkError: 504",
+            ),
+            SigningErrorModel(
+                error = SendTransactionError.UnknownError(),
+                expectedErrorCode = "UnknownError",
+            ),
+        )
+
+        private fun choosableFeeContent(isFast: Boolean): FeeSelectorUM.Content {
+            val slow = testFee("0.0001")
+            val market = testFee("0.0002")
+            val fast = testFee("0.0003")
+            val selected = if (isFast) FeeItem.Fast(fast) else FeeItem.Market(market)
+            return testFeeContent("0.0003").copy(
+                fees = TransactionFee.Choosable(minimum = slow, normal = market, priority = fast),
+                feeItems = persistentListOf(FeeItem.Slow(slow), FeeItem.Market(market), FeeItem.Fast(fast)),
+                selectedFeeItem = selected,
+            )
+        }
+    }
+
+    private suspend fun TestScope.createConfirmedModel(amount: String = "0.5"): EarnFlowModel {
         val model = createModel(action = Deposit())
         advanceUntilIdle()
-        model.onAmountValueChange("0.5")
+        model.onAmountValueChange(amount)
         model.onFeeResult(testFeeContent("0.00033"))
         advanceUntilIdle()
         model.onSubmit()
@@ -1875,9 +3097,12 @@ internal class EarnFlowModelTest {
             testFlowProduct.productId.value to EarnSession.Factory { session },
         ),
         flowProduct: EarnFlowProduct = testFlowProduct,
+        source: EarnEntrySource = EarnEntrySource.TokenPage,
     ): EarnFlowModel = EarnFlowModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(testParams(action, callback).copy(flowProduct = flowProduct)),
+        paramsContainer = MutableParamsContainer(
+            testParams(action, callback).copy(flowProduct = flowProduct, source = source),
+        ),
         sessionFactories = EarnSessionFactories(factories),
         statuses = EarnFlowStatuses(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -1905,6 +3130,8 @@ internal class EarnFlowModelTest {
             getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
             blogUrlBuilder = blogUrlBuilder,
         ),
+        analyticsEventHandler = analyticsEventHandler,
+        usdValuation = usdValuation,
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
@@ -1912,6 +3139,26 @@ internal class EarnFlowModelTest {
     data class PercentModel(val percent: Int, val expected: String)
 
     data class PositionAmountModel(val entered: String?, val expected: EarnAmount)
+
+    data class LiquidityModel(
+        val position: BigDecimal,
+        val availableToWithdraw: BigDecimal?,
+        val isLiquidityKnown: Boolean,
+        val expectedCapped: Boolean?,
+    )
+
+    data class ResultExitModel(val exit: EarnFlowExit, val expectedDestination: EarnResultDestination?)
+
+    data class CurrencyToggleModel(
+        val action: EarnFlowAction,
+        val isFiat: Boolean,
+        val expectedCurrency: EarnDisplayCurrency,
+        val expectedScreen: EarnFlowScreen,
+    )
+
+    data class AmountScreenModel(val action: EarnFlowAction, val expectedScreen: EarnFlowScreen)
+
+    data class SigningErrorModel(val error: SendTransactionError, val expectedErrorCode: String)
 }
 
 private const val MAX_AMOUNT_DELAY_MS = 1_000L
