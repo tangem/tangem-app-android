@@ -82,6 +82,7 @@ import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.yield.MockYieldSupply
@@ -144,6 +145,7 @@ internal class EarnFlowModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val usdValuation: EarnUsdValuation = mockk()
     private val txTracker: EarnTxTracker = mockk(relaxed = true)
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -182,6 +184,7 @@ internal class EarnFlowModelTest {
             analyticsEventHandler,
             usdValuation,
             txTracker,
+            txHistoryContentUpdateEmitter,
         )
         coEvery { usdValuation.bucket(currency = any(), cryptoAmount = any()) } returns "1K-5K"
         coEvery { session.screenAnalytics(action = any()) } returns EarnScreenAnalytics()
@@ -1772,6 +1775,54 @@ internal class EarnFlowModelTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TokenHistory {
+
+        @Test
+        fun `GIVEN signing WHEN Sent arrives THEN the token history is updated once`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN signing ends before Sent WHEN confirm THEN the token history is not updated`(
+            model: SigningFailureModel,
+        ) = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = EarnTxAnalytics()),
+                EarnSigningStep.Failed(model.error),
+            )
+            val flow = createConfirmedModel()
+
+            // Act
+            flow.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            flow.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            SigningFailureModel(
+                name = "send failed",
+                error = SendTransactionError.BlockchainSdkError(code = 1, message = "reverted"),
+            ),
+            SigningFailureModel(name = "cancelled by the user", error = SendTransactionError.UserCancelledError),
+        )
+    }
+
+    @Nested
     inner class HowItWorks {
 
         @Test
@@ -3175,7 +3226,12 @@ internal class EarnFlowModelTest {
         analyticsEventHandler = analyticsEventHandler,
         usdValuation = usdValuation,
         txTracker = txTracker,
+        txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
     )
+
+    data class SigningFailureModel(val name: String, val error: SendTransactionError) {
+        override fun toString(): String = name
+    }
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
 
