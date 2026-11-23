@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.staking.model.NetworkType
@@ -12,12 +13,16 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.GetActionsUseCase
+import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitRequest
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
+import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
@@ -25,6 +30,7 @@ import com.tangem.features.staking.impl.fixtures.p2pIntegration
 import com.tangem.features.staking.impl.fixtures.stakeKitIntegration
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.staking.MockStaking
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -42,6 +48,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -69,6 +76,8 @@ internal class StakingBalanceUpdaterTest {
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxed = true)
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher = mockk(relaxed = true)
     private val fetchStakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase = mockk(relaxed = true)
+    private val singleStakingBalanceSupplier: SingleStakingBalanceSupplier = mockk()
+    private val stakingIdFactory: StakingIdFactory = mockk()
     private val solanaStatus = status(currency = solanaCoin)
     private val ethStatus = status(currency = ethereumCoin)
     private var fetchActionsCalls = 0
@@ -83,6 +92,8 @@ internal class StakingBalanceUpdaterTest {
             fetchPendingTransactionsUseCase,
             fetchStakingYieldBalanceUseCase,
             txHistoryContentUpdateEmitter,
+            singleStakingBalanceSupplier,
+            stakingIdFactory,
         )
         coEvery { getTxHistoryItemsCountUseCase(any(), any()) } returns 0.right()
         fetchActionsCalls = 0
@@ -407,6 +418,226 @@ internal class StakingBalanceUpdaterTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class P2PEthPoolBalancePolling {
+
+        private val p2pStakingId = MockStaking.stakingId(MockStaking.P2P_ID, SOURCE_ADDRESS)
+        private var fetchBalanceCalls = 0
+
+        @BeforeEach
+        fun setUpP2PEthPoolBalancePolling() {
+            every { getActionsUseCase(any(), any()) } returns flowOf(emptyList<StakingAction>().right())
+            coEvery {
+                stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
+            } returns p2pStakingId.right()
+            fetchBalanceCalls = 0
+            coEvery { fetchStakingYieldBalanceUseCase(any(), any()) } coAnswers {
+                fetchBalanceCalls++
+                Unit.right()
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN p2p balances after transaction WHEN updateAfterTransaction THEN polls until position changes`(
+            model: PollingModel,
+        ) = runTest {
+            // Arrange
+            coEvery {
+                singleStakingBalanceSupplier.getSyncOrNull(any(), any())
+            } returnsMany listOf(model.balanceBeforeIndexing) + model.polledBalances
+            val updater = createP2PUpdater(testScope = this)
+
+            // Act
+            updater.updateAfterTransaction()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(fetchBalanceCalls).isEqualTo(model.expectedFetches)
+        }
+
+        @Test
+        fun `GIVEN p2p position never changes and slow fetches WHEN five minutes pass THEN polling stops`() = runTest {
+            // Arrange
+            coEvery { singleStakingBalanceSupplier.getSyncOrNull(any(), any()) } returns emptyBalance()
+            val fetchDuration = 10_000L
+            coEvery { fetchStakingYieldBalanceUseCase(any(), any()) } coAnswers {
+                delay(fetchDuration)
+                fetchBalanceCalls++
+                Unit.right()
+            }
+            val updater = createP2PUpdater(testScope = this)
+
+            // Act
+            updater.updateAfterTransaction()
+            advanceTimeBy(fetchDuration + 300_001)
+            runCurrent()
+            val fetchesAtDeadline = fetchBalanceCalls
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(fetchesAtDeadline).isGreaterThan(1)
+            assertThat(fetchBalanceCalls).isEqualTo(fetchesAtDeadline)
+        }
+
+        @Test
+        fun `GIVEN p2p position not changed WHEN fifteen seconds pass THEN next fetch happens`() = runTest {
+            // Arrange
+            coEvery { singleStakingBalanceSupplier.getSyncOrNull(any(), any()) } returns emptyBalance()
+            val updater = createP2PUpdater(testScope = this)
+
+            // Act
+            updater.updateAfterTransaction()
+            runCurrent()
+            advanceTimeBy(14_999)
+            runCurrent()
+            val fetchesBeforeInterval = fetchBalanceCalls
+            advanceTimeBy(1)
+            runCurrent()
+            val fetchesAtInterval = fetchBalanceCalls
+
+            // Assert
+            assertThat(fetchesBeforeInterval).isEqualTo(1)
+            assertThat(fetchesAtInterval).isEqualTo(2)
+        }
+
+        @Test
+        fun `GIVEN staking id unavailable WHEN updateAfterTransaction THEN balance fetched once without polling`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
+                } returns StakingIdFactory.Error.UnsupportedCurrency.left()
+                val updater = createP2PUpdater(testScope = this)
+
+                // Act
+                updater.updateAfterTransaction()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(fetchBalanceCalls).isEqualTo(1)
+                coVerify(exactly = 0) { singleStakingBalanceSupplier.getSyncOrNull(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN stakeKit integration WHEN updateAfterTransaction THEN p2p balance is not polled`() = runTest {
+            // Arrange
+            val updater = createUpdater(
+                testScope = this,
+                integration = stakeKitIntegration(StakingIntegrationID.StakeKit.Coin.Solana),
+                status = solanaStatus,
+            )
+
+            // Act
+            updater.updateAfterTransaction()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(fetchBalanceCalls).isEqualTo(1)
+            coVerify(exactly = 0) { singleStakingBalanceSupplier.getSyncOrNull(any(), any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            PollingModel(
+                label = "deposit indexed on third poll",
+                balanceBeforeIndexing = emptyBalance(),
+                polledBalances = listOf(emptyBalance(), emptyBalance(), p2pBalance(staked = BigDecimal("0.06"))),
+                expectedFetches = 4,
+            ),
+            PollingModel(
+                label = "error and no emission keep polling",
+                balanceBeforeIndexing = emptyBalance(),
+                polledBalances = listOf(StakingBalance.Error(p2pStakingId), null, p2pBalance(staked = BigDecimal.ONE)),
+                expectedFetches = 4,
+            ),
+            PollingModel(
+                label = "same position in another scale keeps polling",
+                balanceBeforeIndexing = p2pBalance(staked = BigDecimal.ONE),
+                polledBalances = listOf(p2pBalance(staked = BigDecimal("1.0")), p2pBalance(staked = BigDecimal.TEN)),
+                expectedFetches = 3,
+            ),
+            PollingModel(
+                label = "reward-only update keeps polling",
+                balanceBeforeIndexing = p2pBalance(staked = BigDecimal.ONE),
+                polledBalances = listOf(
+                    p2pBalance(staked = BigDecimal("1.01"), earned = BigDecimal("0.01")),
+                    p2pBalance(staked = BigDecimal("2.01"), earned = BigDecimal("0.01")),
+                ),
+                expectedFetches = 3,
+            ),
+            PollingModel(
+                label = "unstake moves stake to exit queue",
+                balanceBeforeIndexing = p2pBalance(staked = BigDecimal.ONE),
+                polledBalances = listOf(
+                    p2pBalance(staked = BigDecimal.ZERO, exitRequests = listOf(exitRequest(isClaimable = false))),
+                ),
+                expectedFetches = 2,
+            ),
+            PollingModel(
+                label = "exit request maturing keeps polling",
+                balanceBeforeIndexing = p2pBalance(
+                    staked = BigDecimal.ONE,
+                    exitRequests = listOf(exitRequest(isClaimable = false)),
+                ),
+                polledBalances = listOf(
+                    p2pBalance(staked = BigDecimal.ONE, exitRequests = listOf(exitRequest(isClaimable = true))),
+                    p2pBalance(staked = BigDecimal.TEN, exitRequests = listOf(exitRequest(isClaimable = true))),
+                ),
+                expectedFetches = 3,
+            ),
+            PollingModel(
+                label = "withdraw all empties position",
+                balanceBeforeIndexing = p2pBalance(
+                    staked = BigDecimal.ZERO,
+                    exitRequests = listOf(exitRequest(isClaimable = true)),
+                ),
+                polledBalances = listOf(emptyBalance()),
+                expectedFetches = 2,
+            ),
+            PollingModel(
+                label = "balance before indexing unavailable falls back to status",
+                balanceBeforeIndexing = null,
+                polledBalances = listOf(p2pBalance(staked = BigDecimal.ONE)),
+                expectedFetches = 2,
+            ),
+        )
+
+        private fun createP2PUpdater(testScope: TestScope) = createUpdater(
+            testScope = testScope,
+            integration = p2pIntegration(),
+            status = ethStatus,
+        )
+
+        private fun emptyBalance() = StakingBalance.Empty(stakingId = p2pStakingId, source = StatusSource.ACTUAL)
+
+        private fun p2pBalance(
+            staked: BigDecimal,
+            earned: BigDecimal = BigDecimal.ZERO,
+            exitRequests: List<P2PEthPoolExitRequest> = emptyList(),
+        ) = MockStaking.p2pBalance(
+            accounts = listOf(MockStaking.p2pAccount(staked = staked, earned = earned, exitRequests = exitRequests)),
+            address = SOURCE_ADDRESS,
+        )
+
+        private fun exitRequest(isClaimable: Boolean) = P2PEthPoolExitRequest(
+            ticket = "ticket",
+            totalAssets = BigDecimal.ONE,
+            timestamp = Instant.fromEpochMilliseconds(0),
+            withdrawalTimestamp = null,
+            isClaimable = isClaimable,
+        )
+    }
+
+    internal data class PollingModel(
+        val label: String,
+        val balanceBeforeIndexing: StakingBalance?,
+        val polledBalances: List<StakingBalance?>,
+        val expectedFetches: Int,
+    ) {
+        override fun toString(): String = label
+    }
+
     private fun createUpdater(
         testScope: TestScope,
         integration: StakingIntegration = stakeKitIntegration(StakingIntegrationID.StakeKit.Coin.Solana),
@@ -420,6 +651,8 @@ internal class StakingBalanceUpdaterTest {
         txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
         cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
         fetchStakingYieldBalanceUseCase = fetchStakingYieldBalanceUseCase,
+        singleStakingBalanceSupplier = singleStakingBalanceSupplier,
+        stakingIdFactory = stakingIdFactory,
         coroutineScope = object : AppCoroutineScope {
             override val coroutineContext: CoroutineContext = testScope.coroutineContext
         },

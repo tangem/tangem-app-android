@@ -37,9 +37,6 @@ internal object RewardsBalanceTicker {
     /** @property rate yearly growth as a fraction */
     internal data class Accrual(val amount: BigDecimal, val rate: BigDecimal)
 
-    fun fiatDecimals(accruing: List<Accrual>, fiatRate: BigDecimal): Int =
-        calculateMinVisibleDecimals(tickGrowth(accruing).multiply(fiatRate), FIAT_MAX_DECIMALS)
-
     fun tick(
         fixedPart: BigDecimal,
         accruing: List<Accrual>,
@@ -48,7 +45,9 @@ internal object RewardsBalanceTicker {
         appCurrency: AppCurrency,
     ): Flow<YieldSupplyRewardBalance> = flow {
         val cryptoDecimals = calculateMinVisibleDecimals(tickGrowth(accruing), currency.decimals)
-        val fiatDecimals = fiatRate?.let { fiatDecimals(accruing, it) }
+        val fiatDecimals = fiatRate?.let { rate ->
+            calculateMinVisibleDecimals(tickGrowth(accruing).multiply(rate), FIAT_MAX_DECIMALS)
+        }
 
         var parts = accruing
         while (true) {
