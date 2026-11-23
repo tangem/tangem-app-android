@@ -64,11 +64,9 @@ import com.tangem.features.earn.product.api.session.VerifiedPlan
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -82,7 +80,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Runs one [EarnFlowAction] of a product through its [EarnSession]: amount, confirmation and result. The flow knows
@@ -105,7 +102,6 @@ internal class EarnFlowModel @Inject constructor(
     private val usdValuation: EarnUsdValuation,
     private val txTracker: EarnTxTracker,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
-    private val appScope: AppCoroutineScope,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -565,16 +561,9 @@ internal class EarnFlowModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    /**
-
-     * Runs on the app scope: "Go to token" closes the flow long before the second reload.
-     */
+    /** The token screen under the flow is not re-created, and its history shows a sent transaction only on a reload */
     private fun updateTokenHistory() {
-        appScope.launch {
-            txHistoryContentUpdateEmitter.triggerUpdate()
-            delay(EXPLORER_INDEXING_DELAY)
-            txHistoryContentUpdateEmitter.triggerUpdate()
-        }
+        modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
     }
 
     /**
@@ -753,11 +742,6 @@ internal class EarnFlowModel @Inject constructor(
 
     fun onRowInfoDismiss() {
         rowInfo.value = null
-    }
-
-    private companion object {
-        // A transaction mined at once leaves the pending list before the explorer has indexed it
-        val EXPLORER_INDEXING_DELAY = 11.seconds
     }
 }
 

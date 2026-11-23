@@ -16,6 +16,7 @@ dependencies {
     api(projects.features.earn.product.api)
     implementation(projects.features.earn.flow.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.txhistory.api)
 
     /** Common */
     implementation(projects.common)

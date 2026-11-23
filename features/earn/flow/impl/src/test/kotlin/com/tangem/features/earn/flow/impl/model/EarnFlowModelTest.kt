@@ -84,7 +84,6 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
@@ -105,7 +104,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -121,7 +119,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 internal class EarnFlowModelTest {
@@ -1784,12 +1781,14 @@ internal class EarnFlowModelTest {
     inner class TokenHistory {
 
         @Test
-        fun `GIVEN signing WHEN Sent arrives THEN the token history reloads at once`() = runTest {
+        fun `GIVEN signing WHEN Sent arrives THEN the token history reloads once and not again later`() = runTest {
             // Arrange
             val model = createConfirmedModel()
 
             // Act
             model.onConfirmClick()
+            runCurrent()
+            advanceTimeBy(12.seconds)
             runCurrent()
 
             // Assert
@@ -1798,56 +1797,7 @@ internal class EarnFlowModelTest {
         }
 
         @Test
-        fun `GIVEN Sent WHEN less than 11 s pass THEN the token history does not reload again`() = runTest {
-            // Arrange
-            val model = createConfirmedModel()
-            model.onConfirmClick()
-            runCurrent()
-
-            // Act
-            advanceTimeBy(11.seconds - 1.milliseconds)
-            runCurrent()
-
-            // Assert
-            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN Sent WHEN 11 s pass THEN the token history reloads a second time`() = runTest {
-            // Arrange
-            val model = createConfirmedModel()
-            model.onConfirmClick()
-            runCurrent()
-
-            // Act
-            advanceTimeBy(11.seconds)
-            runCurrent()
-
-            // Assert
-            coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN the flow destroyed before 11 s after Sent WHEN 11 s pass THEN the token history still reloads`() =
-            runTest {
-                // Arrange
-                val model = createConfirmedModel()
-                model.onConfirmClick()
-                runCurrent()
-                model.onDestroy()
-
-                // Act
-                advanceTimeBy(11.seconds)
-                runCurrent()
-
-                // Assert
-                coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
-            }
-
-        @Test
-        fun `GIVEN Failed after Sent WHEN confirm THEN only the two reloads of Sent happen`() = runTest {
+        fun `GIVEN Failed after Sent WHEN confirm THEN only the reload of Sent happens`() = runTest {
             // Arrange
             every { session.execute(plan = any()) } returns flowOf(
                 EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = EarnTxAnalytics()),
@@ -1861,7 +1811,7 @@ internal class EarnFlowModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
             model.onDestroy()
         }
 
@@ -3300,7 +3250,6 @@ internal class EarnFlowModelTest {
         usdValuation = usdValuation,
         txTracker = txTracker,
         txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
-        appScope = TestAppCoroutineScope(StandardTestDispatcher(testScheduler)),
     )
 
     data class SigningFailureModel(val name: String, val error: SendTransactionError) {

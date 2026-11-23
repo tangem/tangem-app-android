@@ -22,6 +22,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.EarnSession
 import com.tangem.features.earn.product.api.session.EarnTxRef
 import com.tangem.features.earn.product.api.session.EarnTxStatus
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.DelayedReadDataStore
@@ -30,6 +31,7 @@ import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
+import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -55,6 +57,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -63,6 +66,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class DefaultEarnTxTrackerTest {
 
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val accountListSupplier: SingleAccountListSupplier = mockk()
     private val session: EarnSession = mockk()
@@ -84,6 +88,7 @@ internal class DefaultEarnTxTrackerTest {
     fun setUp() {
         clearMocks(
             analyticsEventHandler,
+            txHistoryContentUpdateEmitter,
             userWalletsListRepository,
             accountListSupplier,
             session,
@@ -495,6 +500,111 @@ internal class DefaultEarnTxTrackerTest {
             assertThat(store.all()).isEmpty()
         }
 
+    @ParameterizedTest
+    @MethodSource("provideSettledStatuses")
+    fun `GIVEN onSent WHEN track gives a settled status THEN the token history reloads at once`(
+        status: TransactionStatus,
+    ) = runTest {
+        // Arrange
+        val tracker = createTracker(createStore())
+        every { session.track(ref) } returns statuses(TransactionStatus.Unconfirmed, status)
+
+        // Act
+        tracker.onSent(ref)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSettledStatuses")
+    fun `GIVEN a settled status WHEN less than 10 s pass THEN the token history does not reload again`(
+        status: TransactionStatus,
+    ) = runTest {
+        // Arrange
+        val tracker = createTracker(createStore())
+        every { session.track(ref) } returns statuses(status)
+        tracker.onSent(ref)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(10.seconds - 1.milliseconds)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSettledStatuses")
+    fun `GIVEN a settled status WHEN 10 s pass THEN the token history reloads a second time`(
+        status: TransactionStatus,
+    ) = runTest {
+        // Arrange
+        val tracker = createTracker(createStore())
+        every { session.track(ref) } returns statuses(status)
+        tracker.onSent(ref)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(10.seconds)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
+    }
+
+    @Test
+    fun `GIVEN analytics send throws WHEN track gives Confirmed THEN the token history still reloads`() = runTest {
+        // Arrange
+        val tracker = createTracker(createStore())
+        every { session.track(ref) } returns statuses(TransactionStatus.Confirmed)
+        every { analyticsEventHandler.send(any()) } throws IllegalStateException("analytics")
+
+        // Act
+        tracker.onSent(ref)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
+    }
+
+    @Test
+    fun `GIVEN Unconfirmed until the stream ends WHEN onSent THEN the token history does not reload`() = runTest {
+        // Arrange
+        val tracker = createTracker(createStore())
+        every { session.track(ref) } returns statuses(TransactionStatus.Unconfirmed, TransactionStatus.Unconfirmed)
+
+        // Act
+        tracker.onSent(ref)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a record that cannot be followed WHEN resume THEN the token history does not reload`(
+        model: DropModel,
+    ) = runTest {
+        // Arrange
+        val store = createStore()
+        store.add(model.dropped)
+        val tracker = createTracker(store)
+
+        // Act
+        tracker.resume()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
+        assertThat(store.all()).isEmpty()
+    }
+
+    private fun provideSettledStatuses() = listOf(TransactionStatus.Confirmed, TransactionStatus.Failed)
+
     private fun provideTestModels() = listOf(
         DropModel(name = "unknown product", dropped = createRef(id = "0xccc", productId = EarnProductId("vault"))),
         DropModel(name = "no session factory", dropped = createRef(id = "0xccc", productId = STAKING_ID)),
@@ -513,6 +623,7 @@ internal class DefaultEarnTxTrackerTest {
         userWalletsListRepository = userWalletsListRepository,
         accountListSupplier = accountListSupplier,
         analyticsEventHandler = analyticsEventHandler,
+        txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
         // The unlock watch never completes: a job under the background scope ends it with the test instead of hanging it
         appScope = TestAppCoroutineScope(coroutineContext + Job(parent = backgroundScope.coroutineContext.job)),
         clock = clock,
