@@ -330,7 +330,10 @@ internal class UpdateStakingNotificationTransformer(
     }
 
     private fun rewardRateReference(): TextReference? {
-        val rewardInfo = stakingAvailability.optionOrNull?.displayRewardInfo ?: return null
+        val option = stakingAvailability.optionOrNull ?: return null
+        val stakedValidatorRewardInfo = (option as? StakingOption.StakeKit)
+            ?.stakedValidatorRewardInfo(cryptoCurrencyStatus.value.stakingBalanceData as? StakingBalance.Data.StakeKit)
+        val rewardInfo = stakedValidatorRewardInfo ?: option.displayRewardInfo ?: return null
         val rateTypeResId = when (rewardInfo.type) {
             RewardType.APR -> CoreResR.string.staking_details_apr
             RewardType.APY,
@@ -361,6 +364,14 @@ private fun StakingBalance.Data?.getRewardAmount(): BigDecimal = when (this) {
     is StakingBalance.Data.StakeKit -> getRewardStakingBalance()
     is StakingBalance.Data.P2PEthPool -> totalRewards
     null -> BigDecimal.ZERO
+}
+
+private fun StakingOption.StakeKit.stakedValidatorRewardInfo(balance: StakingBalance.Data.StakeKit?): RewardInfo? {
+    val validatorsByAddress = yield.validators.associateBy { it.address }
+    return balance?.balance
+        ?.items
+        ?.mapNotNull { it.validatorAddress }
+        ?.firstNotNullOfOrNull { address -> validatorsByAddress[address]?.rewardInfo }
 }
 
 private val StakingOption.displayRewardInfo: RewardInfo?
