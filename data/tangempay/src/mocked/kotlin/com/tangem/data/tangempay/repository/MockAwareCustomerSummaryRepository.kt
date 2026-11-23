@@ -15,6 +15,8 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,6 +29,8 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
     private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
     private val derivationsRepository: DerivationsRepository,
 ) : CustomerSummaryRepository {
+
+    private val derivationMutex = Mutex()
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
@@ -52,13 +56,16 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
             null -> return
         }
 
-        runSuspendCatching {
-            val currency = moneyAccountCurrencyFactory.create(userWalletId)
-            val missing = derivationsRepository.findMissingDerivations(userWalletId, listOf(currency))
-            if (missing.isNotEmpty()) {
-                derivationsRepository.derivePublicKeysByNetworks(userWalletId, listOf(currency.network))
-            }
-        }.onFailure { TangemLogger.e("Mock money account key derivation failed for $userWalletId", it) }
+        // Concurrent fetches would each request the access code, and the second prompt is never dismissed
+        derivationMutex.withLock {
+            runSuspendCatching {
+                val currency = moneyAccountCurrencyFactory.create(userWalletId)
+                val missing = derivationsRepository.findMissingDerivations(userWalletId, listOf(currency))
+                if (missing.isNotEmpty()) {
+                    derivationsRepository.derivePublicKeysByNetworks(userWalletId, listOf(currency.network))
+                }
+            }.onFailure { TangemLogger.e("Mock money account key derivation failed for $userWalletId", it) }
+        }
     }
 
     companion object {
