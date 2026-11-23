@@ -97,7 +97,7 @@ fun StatusTangemButton(
 @Composable
 private fun TangemButtonType.getStatusColor() = when (this) {
     TangemButtonType.Accent -> TangemTheme.colors3.bg.accent.blue
-    TangemButtonType.Positive -> TangemTheme.colors3.bg.accent.blue
+    TangemButtonType.Positive -> TangemTheme.colors3.bg.status.success
     else -> TangemTheme.colors3.bg.inverse
 }
 
