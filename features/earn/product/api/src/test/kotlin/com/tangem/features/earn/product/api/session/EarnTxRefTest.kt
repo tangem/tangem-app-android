@@ -47,6 +47,15 @@ internal class EarnTxRefTest {
 
     private fun provideTestModels() = listOf(
         RoundTripModel(name = "deposit with analytics", ref = createRef()),
+        RoundTripModel(
+            name = "analytics with confirmed params",
+            ref = createRef(
+                analytics = EarnTxAnalytics(
+                    params = mapOf("Transaction Type" to "Withdraw", "With Upgrade" to "false"),
+                    confirmedParams = mapOf("Amount Bucket" to "250-1K", "Withdraw Type" to "Full"),
+                ),
+            ),
+        ),
         RoundTripModel(name = "empty analytics", ref = createRef(analytics = EarnTxAnalytics())),
         RoundTripModel(name = "vault product", ref = createRef(productId = EarnProductId("vault"))),
         RoundTripModel(

@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.local)
     implementation(projects.core.media)
     implementation(projects.core.media.ui)
     implementation(projects.core.navigation)
@@ -57,6 +58,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization)
 
     /** Compose */
     implementation(deps.compose.foundation)

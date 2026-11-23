@@ -25,6 +25,7 @@ import com.tangem.features.earn.lending.impl.supplier.LendingAssetState
 import com.tangem.features.earn.lending.impl.supplier.LendingSupplier
 import com.tangem.features.earn.product.api.analytics.EarnScreenAnalytics
 import com.tangem.features.earn.product.api.analytics.EarnTxAnalytics
+import com.tangem.features.earn.product.api.analytics.EarnUsdValuation
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.EarnAmount
 import com.tangem.features.earn.product.api.session.EarnFeeSelection
@@ -62,6 +63,7 @@ internal class LendingSession @AssistedInject constructor(
     private val analyticsSender: LendingAnalyticsSender,
     private val accountNames: LendingAccountNames,
     private val gaslessFees: LendingGaslessFees,
+    private val usdValuation: EarnUsdValuation,
 ) : EarnSession {
 
     override suspend fun loadFee(action: EarnFlowAction, amount: EarnAmount?): Either<GetFeeError, TransactionFee> =
@@ -128,7 +130,8 @@ internal class LendingSession @AssistedInject constructor(
             return@flow
         }
 
-        val analytics = lendingTxAnalytics(lendingPlan.action)
+        val amountBucket = usdValuation.bucket(params.currency, lendingPlan.amount)
+        val analytics = lendingTxAnalytics(lendingPlan, amountBucket)
         emit(EarnSigningStep.AwaitingConfirmation(stepLabel = null, tx = analytics))
         sender.send(params.userWalletId, params.currency, lendingPlan).fold(
             ifLeft = { error ->

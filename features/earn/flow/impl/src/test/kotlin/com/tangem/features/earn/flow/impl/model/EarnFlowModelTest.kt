@@ -75,6 +75,7 @@ import com.tangem.features.earn.product.api.session.EarnSessionError
 import com.tangem.features.earn.product.api.session.EarnSigningStep
 import com.tangem.features.earn.product.api.session.EarnTxRef
 import com.tangem.features.earn.product.api.session.EarnTxStatus
+import com.tangem.features.earn.product.api.session.EarnTxTracker
 import com.tangem.features.earn.product.api.session.EarnVerification
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
@@ -141,6 +142,7 @@ internal class EarnFlowModelTest {
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val usdValuation: EarnUsdValuation = mockk()
+    private val txTracker: EarnTxTracker = mockk(relaxed = true)
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -178,6 +180,7 @@ internal class EarnFlowModelTest {
             isAccountsModeEnabledUseCase,
             analyticsEventHandler,
             usdValuation,
+            txTracker,
         )
         coEvery { usdValuation.bucket(currency = any(), cryptoAmount = any()) } returns "1K-5K"
         coEvery { session.screenAnalytics(action = any()) } returns EarnScreenAnalytics()
@@ -2078,6 +2081,20 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN signing WHEN Sent arrives THEN the tracker gets the reference once`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { txTracker.onSent(txRef) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the result WHEN closed THEN no result action is sent`() = runTest {
             // Arrange
             val model = createConfirmedModel()
@@ -3132,6 +3149,7 @@ internal class EarnFlowModelTest {
         ),
         analyticsEventHandler = analyticsEventHandler,
         usdValuation = usdValuation,
+        txTracker = txTracker,
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
