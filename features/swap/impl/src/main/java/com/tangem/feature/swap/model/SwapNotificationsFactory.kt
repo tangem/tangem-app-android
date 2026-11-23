@@ -402,6 +402,8 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeError: GetFeeError?,
     ) {
+        // A restricted DEX quote has no exchange-data to estimate the fee from, and the swap can't run anyway.
+        if (quoteModel.isRestricted) return
         if (
             feeError == null || feeCryptoCurrencyStatus == null ||
             quoteModel.permissionState !is PermissionDataState.Empty
