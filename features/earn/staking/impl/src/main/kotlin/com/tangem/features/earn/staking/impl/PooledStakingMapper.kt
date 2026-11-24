@@ -140,10 +140,9 @@ internal class PooledStakingMapper @Inject constructor() {
 
         return listOf(
             RISK.detailsRow(),
-            // The p2p.org link needs a link value in the contract; plain text until it exists.
-            row(
+            EarnRow(
                 label = resourceReference(R.string.staking_validator),
-                value = stringReference(VALIDATOR_VALUE),
+                value = EarnValue.Link(text = stringReference(VALIDATOR_VALUE), url = VALIDATOR_URL),
                 kind = EarnRowKind.Protocol,
             ),
             row(
@@ -200,5 +199,6 @@ internal class PooledStakingMapper @Inject constructor() {
 
         // The validator is a brand name, not a translated text.
         const val VALIDATOR_VALUE = "P2P"
+        const val VALIDATOR_URL = "https://p2p.org/"
     }
 }
