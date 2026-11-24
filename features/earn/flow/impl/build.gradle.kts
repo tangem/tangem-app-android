@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.earn.flow.api)
     implementation(projects.features.earn.product.api)
     implementation(projects.features.send.api)
+    implementation(projects.features.txhistory.api)
 
     /** Common */
     implementation(projects.common)

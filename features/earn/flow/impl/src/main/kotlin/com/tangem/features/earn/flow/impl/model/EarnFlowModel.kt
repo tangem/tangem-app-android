@@ -63,6 +63,7 @@ import com.tangem.features.earn.product.api.session.EarnVerification
 import com.tangem.features.earn.product.api.session.VerifiedPlan
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
@@ -100,6 +101,7 @@ internal class EarnFlowModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val usdValuation: EarnUsdValuation,
     private val txTracker: EarnTxTracker,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -546,6 +548,7 @@ internal class EarnFlowModel @Inject constructor(
                     // A sent transaction consumed the plan: confirming again needs a fresh prepare.
                     is EarnSigningStep.Sent -> {
                         txTracker.onSent(step.ref)
+                        updateTokenHistory()
                         state.update {
                             it.copy(plan = null, planFee = null, sentAmount = expectedAmount, sentPlan = plan.plan)
                         }
@@ -556,6 +559,11 @@ internal class EarnFlowModel @Inject constructor(
             }
             .onUnfinished(::onSigningUnfinished)
             .launchIn(modelScope)
+    }
+
+    /** The token screen under the flow is not re-created, and its history shows a sent transaction only on a reload */
+    private fun updateTokenHistory() {
+        modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
     }
 
     /**

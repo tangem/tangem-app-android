@@ -13,11 +13,13 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.session.EarnSession
 import com.tangem.features.earn.product.api.session.EarnTxRef
 import com.tangem.features.earn.product.api.session.EarnTxTracker
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -42,6 +44,7 @@ internal class DefaultEarnTxTracker @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val accountListSupplier: SingleAccountListSupplier,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val appScope: AppCoroutineScope,
     private val clock: EarnTxClock,
 ) : EarnTxTracker {
@@ -141,9 +144,20 @@ internal class DefaultEarnTxTracker @Inject constructor(
             }
         }
 
+        reloadTokenHistory()
+
         // Removed before sending: a crash in between loses the event instead of sending it twice
         store.remove(ref.id)
         analyticsEventHandler.send(event)
+    }
+
+    /** A settled transaction leaves the pending rows, and the explorer lists it only a little later */
+    private fun reloadTokenHistory() {
+        appScope.launch {
+            txHistoryContentUpdateEmitter.triggerUpdate()
+            delay(EXPLORER_LAG)
+            txHistoryContentUpdateEmitter.triggerUpdate()
+        }
     }
 
     private suspend fun drop(ref: EarnTxRef, reason: String) {
@@ -186,5 +200,8 @@ internal class DefaultEarnTxTracker @Inject constructor(
     private companion object {
         val CURRENCY_TIMEOUT = 30.seconds
         val RECORD_TTL = 7.days
+
+        // The explorer may index a settled transaction a few seconds after the node reports it
+        val EXPLORER_LAG = 10.seconds
     }
 }
