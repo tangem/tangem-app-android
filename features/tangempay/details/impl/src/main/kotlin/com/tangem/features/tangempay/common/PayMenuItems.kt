@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.common
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
@@ -15,19 +15,24 @@ import com.tangem.features.tangempay.details.impl.R
 
 internal object PayMenuItems {
 
-    fun currentPlan(tariffPlan: TangemPayTariffPlanState, onClick: () -> Unit): TangemMenu.UiState.Item {
+    private val changePlanLabel = resourceReference(R.string.tangempay_current_plan_change)
+
+    fun changePlan(tariffPlan: TangemPayTariffPlanState, onClick: () -> Unit): TangemMenu.UiState.Item {
         val isPlanChanging = tariffPlan.isPlanTransitioningState
         return TangemMenu.UiState.Item(
-            label = resourceReference(R.string.tangempay_current_plan_title),
+            label = changePlanLabel,
             onClick = onClick,
             description = if (isPlanChanging) {
                 resourceReference(R.string.tangempay_changing_plan)
             } else {
-                stringReference(tariffPlan.tariff.plan.name)
+                resourceReference(R.string.tangempay_plan_menu_subtitle, wrappedList(tariffPlan.tariff.plan.name))
             },
             iconStart = if (isPlanChanging) Icons.ic_arrow_refresh_20 else Icons.ic_info_20,
         )
     }
+
+    fun isChangePlan(entry: TangemMenu.UiState.Entry): Boolean =
+        (entry as? TangemMenu.UiState.Item)?.label == changePlanLabel
 
     fun cashback(label: TextReference, onClick: () -> Unit): TangemMenu.UiState.Item = TangemMenu.UiState.Item(
         label = label,

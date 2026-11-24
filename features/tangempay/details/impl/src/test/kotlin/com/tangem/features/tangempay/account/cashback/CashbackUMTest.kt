@@ -13,7 +13,9 @@ import com.tangem.features.tangempay.account.CashbackBlockUM
 import com.tangem.features.tangempay.account.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.account.TangemPayDetailsTopBarConfig
 import com.tangem.features.tangempay.account.TangemPayDetailsUM
+import com.tangem.features.tangempay.common.PayMenuItems
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
+import com.tangem.features.tangempay.tariffPlanState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.junit.jupiter.api.Test
@@ -74,16 +76,16 @@ internal class CashbackUMTest {
     }
 
     @Test
-    fun `GIVEN ds menu with current plan WHEN withCashback THEN cashback entry inserted right below current plan`() {
+    fun `GIVEN ds menu with change plan WHEN withCashback THEN cashback entry inserted right below change plan`() {
         // Arrange
-        val state = detailsState(currentPlanItem, supportItem).withDsMenu(DS_CURRENT_PLAN_ENTRY, DS_SUPPORT_ENTRY)
+        val state = detailsState(currentPlanItem, supportItem).withDsMenu(DS_CHANGE_PLAN_ENTRY, DS_SUPPORT_ENTRY)
 
         // Act
         val actual = state.withCashback(CashbackUM(menuItem = cashbackItem))
 
         // Assert
         assertThat(actual.topBarConfig.menu?.entries)
-            .containsExactly(DS_CURRENT_PLAN_ENTRY, dsCashbackEntry(), DS_SUPPORT_ENTRY)
+            .containsExactly(DS_CHANGE_PLAN_ENTRY, dsCashbackEntry(), DS_SUPPORT_ENTRY)
             .inOrder()
     }
 
@@ -147,10 +149,7 @@ internal class CashbackUMTest {
     )
 
     private companion object {
-        val DS_CURRENT_PLAN_ENTRY = TangemMenu.UiState.Item(
-            label = resourceReference(R.string.tangempay_current_plan_title),
-            onClick = {},
-        )
+        val DS_CHANGE_PLAN_ENTRY = PayMenuItems.changePlan(tariffPlan = tariffPlanState(), onClick = {})
         val DS_SUPPORT_ENTRY = TangemMenu.UiState.Item(
             label = resourceReference(R.string.tangempay_pay_support),
             onClick = {},

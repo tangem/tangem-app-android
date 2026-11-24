@@ -2,10 +2,12 @@ package com.tangem.features.tangempay.account
 
 import com.tangem.domain.models.tangempay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
@@ -501,7 +503,7 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN ds menu enabled WHEN getLoadedState THEN menu has current plan and support`() {
+    fun `GIVEN ds menu enabled WHEN getLoadedState THEN menu has change plan and support`() {
         // Arrange
         val planState = tariffPlanState()
 
@@ -511,14 +513,14 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(menu?.withoutClicks()).isEqualTo(
             menuOf(
-                DS_CURRENT_PLAN_ITEM.copy(description = stringReference(planState.tariff.plan.name)),
+                DS_CHANGE_PLAN_ITEM.copy(description = planMenuSubtitle(planState)),
                 DS_SUPPORT_ITEM,
             ),
         )
     }
 
     @Test
-    fun `GIVEN ds menu enabled and plan transition WHEN getLoadedState THEN current plan shows changing plan`() {
+    fun `GIVEN ds menu enabled and plan transition WHEN getLoadedState THEN change plan shows changing plan`() {
         // Arrange
         val planState = tariffPlanState(order = awaitingDepositOrder())
 
@@ -528,7 +530,7 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(menu?.withoutClicks()).isEqualTo(
             menuOf(
-                DS_CURRENT_PLAN_ITEM.copy(
+                DS_CHANGE_PLAN_ITEM.copy(
                     description = resourceReference(R.string.tangempay_changing_plan),
                     iconStart = Icons.ic_arrow_refresh_20,
                 ),
@@ -600,6 +602,9 @@ internal class TangemPayDetailsStateFactoryTest {
         verify(exactly = 2) { intents.onContactSupportClicked() }
         verify(exactly = 1) { intents.onRemoveAccount() }
     }
+
+    private fun planMenuSubtitle(plan: TangemPayTariffPlanState): TextReference =
+        resourceReference(R.string.tangempay_plan_menu_subtitle, wrappedList(plan.tariff.plan.name))
 
     private fun menuOf(vararg entries: TangemMenu.UiState.Entry) = TangemMenu.UiState(entries = persistentListOf(*entries))
 
@@ -1095,8 +1100,8 @@ internal class TangemPayDetailsStateFactoryTest {
     private companion object {
         val NO_OP_CLICK: () -> Unit = {}
 
-        val DS_CURRENT_PLAN_ITEM = TangemMenu.UiState.Item(
-            label = resourceReference(R.string.tangempay_current_plan_title),
+        val DS_CHANGE_PLAN_ITEM = TangemMenu.UiState.Item(
+            label = resourceReference(R.string.tangempay_current_plan_change),
             onClick = NO_OP_CLICK,
             iconStart = Icons.ic_info_20,
         )

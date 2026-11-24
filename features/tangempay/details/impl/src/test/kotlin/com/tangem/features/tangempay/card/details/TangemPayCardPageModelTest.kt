@@ -31,7 +31,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
@@ -905,14 +905,14 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
                 PlanMenuModel(
                     tariffPlan = plan,
                     expected = menuOf(
-                        PAY_PLAN_ITEM.copy(description = stringReference(plan.tariff.plan.name)),
+                        PAY_CHANGE_PLAN_ITEM.copy(description = planMenuSubtitle(plan)),
                         PAY_SUPPORT_ITEM,
                     ),
                 ),
                 PlanMenuModel(
                     tariffPlan = changingPlan,
                     expected = menuOf(
-                        PAY_PLAN_ITEM.copy(
+                        PAY_CHANGE_PLAN_ITEM.copy(
                             description = resourceReference(R.string.tangempay_changing_plan),
                             iconStart = Icons.ic_arrow_refresh_20,
                         ),
@@ -941,7 +941,7 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
                 // Assert
                 assertThat(pageModel.payMenuWithoutClicks()).isEqualTo(
                     menuOf(
-                        PAY_PLAN_ITEM.copy(description = stringReference(plan.tariff.plan.name)),
+                        PAY_CHANGE_PLAN_ITEM.copy(description = planMenuSubtitle(plan)),
                         PAY_CASHBACK_ITEM,
                         PAY_SUPPORT_ITEM,
                     ),
@@ -963,7 +963,7 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
         }
 
         @Test
-        fun `GIVEN plan item WHEN clicked THEN current plan opened and click reported`() = runTest {
+        fun `GIVEN change plan item WHEN clicked THEN current plan opened and click reported`() = runTest {
             // Arrange
             val plan = tariffPlanState()
             every { loadedStatus.tariffPlan } returns plan
@@ -972,7 +972,7 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
             runCurrent()
 
             // Act
-            pageModel.payMenuItem(R.string.tangempay_current_plan_title).onClick()
+            pageModel.payMenuItem(R.string.tangempay_current_plan_change).onClick()
 
             // Assert
             verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked()) }
@@ -1033,6 +1033,9 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
             checkNotNull(uiState.value.payMenu).entries
                 .filterIsInstance<TangemMenu.UiState.Item>()
                 .first { it.label == resourceReference(label) }
+
+        private fun planMenuSubtitle(plan: TangemPayTariffPlanState): TextReference =
+            resourceReference(R.string.tangempay_plan_menu_subtitle, wrappedList(plan.tariff.plan.name))
     }
 
     internal data class CashbackMenuModel(val summary: CashbackSummary?, val expected: TangemMenu.UiState)
@@ -1193,8 +1196,8 @@ internal class TangemPayCardPageModelTest : TangemPayModelTestBase() {
             isEnabled = false,
         )
 
-        val PAY_PLAN_ITEM = TangemMenu.UiState.Item(
-            label = resourceReference(R.string.tangempay_current_plan_title),
+        val PAY_CHANGE_PLAN_ITEM = TangemMenu.UiState.Item(
+            label = resourceReference(R.string.tangempay_current_plan_change),
             onClick = NO_OP_CLICK,
             iconStart = Icons.ic_info_20,
         )

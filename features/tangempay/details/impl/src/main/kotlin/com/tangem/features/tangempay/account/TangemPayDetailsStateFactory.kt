@@ -323,7 +323,7 @@ internal class TangemPayDetailsStateFactory(
         if (!isDsMenuEnabled) return null
         return TangemMenu.UiState(
             entries = listOfNotNull(
-                tariffPlan?.let { plan -> PayMenuItems.currentPlan(plan) { intents.onClickCurrentPlan(plan) } },
+                tariffPlan?.let { plan -> PayMenuItems.changePlan(plan) { intents.onClickCurrentPlan(plan) } },
                 PayMenuItems.support(intents::onContactSupportClicked),
             ).toPersistentList(),
         )

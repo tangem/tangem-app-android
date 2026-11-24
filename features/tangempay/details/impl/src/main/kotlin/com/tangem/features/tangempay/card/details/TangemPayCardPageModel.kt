@@ -588,7 +588,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun buildPayMenu(status: AccountStatus.Payment, cashbackSummary: CashbackSummary?): TangemMenu.UiState =
         TangemMenu.UiState(
             entries = listOfNotNull(
-                status.tariffPlanState?.let { plan -> PayMenuItems.currentPlan(plan) { onClickCurrentPlan(plan) } },
+                status.tariffPlanState?.let { plan -> PayMenuItems.changePlan(plan) { onClickCurrentPlan(plan) } },
                 PayMenuItems.cashback(
                     label = resourceReference(R.string.tangempay_cashback_title),
                     onClick = ::onClickCashback,
