@@ -65,6 +65,43 @@ internal class QrContentClassifierTest {
         assertThat((result as ClassifiedQrContent.WalletConnect).uri).isEqualTo(dAppUrl)
     }
 
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "tangem://wc?uri=wc%3Af4532%402%3FsymKey%3Dab12%26methods%3D%255Bwc_sessionPropose%255D%26expiryTimestamp%3D17",
+            "tangem://wc/?uri=wc%3Af4532%402%3FsymKey%3Dab12%26methods%3D%255Bwc_sessionPropose%255D%26expiryTimestamp%3D17",
+        ],
+    )
+    fun `GIVEN Tangem wc deep link WHEN parse THEN WalletConnect with decoded wc uri`(link: String) {
+        // Arrange
+        val expected = ClassifiedQrContent.WalletConnect(
+            uri = "wc:f4532@2?symKey=ab12&methods=%5Bwc_sessionPropose%5D&expiryTimestamp=17",
+        )
+
+        // Act
+        val result = classifier.parse(link, listOf(bitcoinCoin))
+
+        // Assert
+        assertThat(result).isEqualTo(expected)
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "tangem://wc",
+            "tangem://wc?foo=bar",
+            "tangem://wc?uri=https%3A%2F%2Fother.com",
+            "tangem://wcfoo?uri=wc%3Af4532%402",
+        ],
+    )
+    fun `GIVEN Tangem link without wc uri WHEN parse THEN not WalletConnect`(link: String) {
+        // Act
+        val result = classifier.parse(link, listOf(bitcoinCoin))
+
+        // Assert
+        assertThat(result).isNotInstanceOf(ClassifiedQrContent.WalletConnect::class.java)
+    }
+
     @Test
     fun `HTTP URL without wc uri param is not classified as WalletConnect`() {
         val url = "https://example.com/page?foo=bar"

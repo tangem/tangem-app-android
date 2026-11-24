@@ -9,6 +9,7 @@ import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
@@ -26,6 +27,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import kotlinx.coroutines.test.runTest
@@ -256,6 +258,31 @@ internal class DefaultWcPairUseCaseTest {
             }
             assertEquals(errorState, awaitItem())
             awaitComplete()
+        }
+    }
+
+    @Test
+    fun `GIVEN expired pairing URI WHEN pair THEN sends session failed with expired code`() = runTest {
+        // Arrange
+        val error = WcPairError.UriExpired("Pairing URI expired: f453")
+        coEvery { sdkDelegate.pair(url) } returns error.left()
+        val expectedParams = mapOf(
+            "Error Code" to "107 001 006",
+            "Error Description" to "Pairing URI expired: f453",
+        )
+
+        // Act
+        useCaseFactory().invoke().test {
+            assertEquals(loading, awaitItem())
+            assertEquals(WcPairState.Error(error), awaitItem())
+            awaitComplete()
+        }
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                match<AnalyticsEvent> { it.id == "[Wallet Connect] Session Failed" && it.params == expectedParams },
+            )
         }
     }
 

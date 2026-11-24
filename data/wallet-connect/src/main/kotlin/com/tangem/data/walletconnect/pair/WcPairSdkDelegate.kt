@@ -141,7 +141,8 @@ internal class WcPairSdkDelegate(
     }
 
     private fun Throwable.toPairError() = when {
-        pairingExpiredMessages.any { message.orEmpty().contains(it) } -> WcPairError.UriAlreadyUsed(message.orEmpty())
+        message.orEmpty().contains(PAIRING_URI_EXPIRED_MESSAGE) -> WcPairError.UriExpired(message.orEmpty())
+        pairingUsedMessages.any { message.orEmpty().contains(it) } -> WcPairError.UriAlreadyUsed(message.orEmpty())
         else -> WcPairError.PairingFailed(this.localizedMessage.orEmpty())
     }
 
@@ -149,9 +150,11 @@ internal class WcPairSdkDelegate(
 
     companion object {
         private const val CALLBACK_TIMEOUT = 15
-        // com.reown.android.pairing.engine.domain.PairingEngine.pair
-        private val pairingExpiredMessages = listOf(
-            "Pairing URI expired",
+        // "Pairing URI expired": the URI's own expiryTimestamp has passed, whether or not it was scanned before.
+        private const val PAIRING_URI_EXPIRED_MESSAGE = "Pairing URI expired"
+
+        // Both need a previous scan of the same URI: its stored pairing has expired, or its proposal was already used.
+        private val pairingUsedMessages = listOf(
             "Pairing expired",
             "No proposal or pending session authenticate request for pairing topic",
         )

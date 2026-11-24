@@ -39,6 +39,8 @@ internal sealed class WcAppInfoRoutes : Route {
 
         @Serializable data object UriAlreadyUsed : Alert()
 
+        @Serializable data object UriExpired : Alert()
+
         @Serializable data object TimeoutException : Alert()
     }
 }

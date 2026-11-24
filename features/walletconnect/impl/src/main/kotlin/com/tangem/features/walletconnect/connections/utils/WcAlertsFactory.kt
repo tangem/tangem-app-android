@@ -133,6 +133,24 @@ internal object WcAlertsFactory {
         }
     }
 
+    fun createUriExpiredAlert(onDismiss: () -> Unit): MessageBottomSheetUM {
+        return messageBottomSheetUM {
+            infoBlock {
+                icon(R.drawable.ic_wallet_connect_24) {
+                    type = Type.Informative
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.wc_errors_proposal_expired_title)
+                body = resourceReference(R.string.wc_errors_proposal_expired_subtitle)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { onDismiss() }
+            }
+            onDismissRequest = onDismiss
+        }
+    }
+
     fun createTimeoutExceptionAlert(onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {

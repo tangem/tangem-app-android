@@ -359,6 +359,7 @@ internal class WcPairModel @Inject constructor(
             is WcPairError.UnsupportedDApp -> WcAppInfoRoutes.Alert.UnsupportedDApp(error.appName)
             is WcPairError.UnsupportedBlockchains -> WcAppInfoRoutes.Alert.UnsupportedNetwork(error.appName)
             is WcPairError.UriAlreadyUsed -> WcAppInfoRoutes.Alert.UriAlreadyUsed
+            is WcPairError.UriExpired -> WcAppInfoRoutes.Alert.UriExpired
             is WcPairError.TimeoutException -> WcAppInfoRoutes.Alert.TimeoutException
             else -> {
                 messageSender.send(SnackbarMessage(message = stringReference(error.message)))
