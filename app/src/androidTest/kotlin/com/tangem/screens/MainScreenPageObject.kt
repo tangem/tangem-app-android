@@ -127,13 +127,21 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
-    /** Scrolls to [accountName] via ScrollToIndex semantics, not a touch swipe — a bottom-edge drag is stolen by the Markets sheet's nested scroll. */
+    /** Scrolls to [accountName] via ScrollToIndex semantics, not a touch swipe — a bottom-edge drag is stolen by the Markets sheet's nested scroll. The account row is clickable, so it merges its title: match the row's own text, not a descendant. */
     @OptIn(ExperimentalTestApi::class)
     fun scrollToAccount(accountName: String) {
         semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
             .performScrollToNode(
-                withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and hasAnyDescendant(withText(accountName)),
+                withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and withText(accountName),
             )
+    }
+
+    /** Brings the 'Synchronize addresses' button up into the clear: collapsing the header first lifts it above the Markets sheet's bottom overlap, so its tap isn't swallowed by the sheet. */
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToSynchronizeAddressesButton() {
+        collapseHeader()
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(withText(getResourceString(R.string.common_generate_addresses)))
     }
 
     @OptIn(ExperimentalTestApi::class)

@@ -17,6 +17,7 @@ import com.tangem.screens.onOrganizeTokensScreen
 import com.tangem.screens.onWarningBottomSheet
 import io.qameta.allure.kotlin.Allure.step
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import java.math.BigDecimal
 
 private const val ACCOUNT_EXPAND_ATTEMPTS = 3
@@ -40,9 +41,13 @@ fun BaseTestCase.openOrganizeTokensScreen() {
 fun BaseTestCase.getMainScreenTokensOrder(): List<String> {
     var tokens: List<String> = emptyList()
     step("Read displayed token titles from 'Main' screen") {
+        onMainScreen { collapseOnScreenPageHeader() }
+        var previous: List<String> = emptyList()
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             onMainScreen { tokens = getDisplayedTokenTitles() }
-            require(tokens.isNotEmpty()) { "No token titles found on the main screen" }
+            val settled = tokens.isNotEmpty() && tokens == previous
+            previous = tokens
+            require(settled) { "Token list not settled yet: $tokens" }
         }
     }
     return tokens
@@ -63,9 +68,16 @@ fun BaseTestCase.assertOrganizeTokensMatch(expectedTokens: List<String>) {
     }
     step("Assert 'Organize tokens' list matches the main screen order") {
         onOrganizeTokensScreen {
-            // 'Organize tokens' appends the currency symbol to the name ("Bitcoin BTC"), the main screen doesn't.
-            val organizeTokens = getDisplayedTokenTitles().map { it.substringBeforeLast(delimiter = ' ') }
-            assertEquals(expectedTokens, organizeTokens)
+            // Legacy rows append the symbol ("Bitcoin BTC"); redesigned rows are name-only, and a name may
+            // itself contain a space ("POL (ex-MATIC)"). Match on name, tolerating a trailing symbol.
+            val organizeTokens = getDisplayedTokenTitles()
+            assertEquals(expectedTokens.size, organizeTokens.size)
+            expectedTokens.zip(organizeTokens).forEach { (mainTitle, organizeTitle) ->
+                assertTrue(
+                    "Organize token '$organizeTitle' does not match main-screen title '$mainTitle'",
+                    organizeTitle == mainTitle || organizeTitle.startsWith("$mainTitle "),
+                )
+            }
         }
     }
     step("Return to 'Main' screen") {

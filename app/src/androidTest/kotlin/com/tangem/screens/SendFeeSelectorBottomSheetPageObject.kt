@@ -11,6 +11,9 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.hasText as withText
 
 /**
@@ -37,10 +40,9 @@ class SendFeeSelectorBottomSheetPageObject(semanticsProvider: SemanticsNodeInter
         useUnmergedTree = true
     }
 
-    fun feeTokenItem(tokenName: String): KNode = child {
-        hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
-        hasAnyChild(withText(tokenName))
-        useUnmergedTree = true
+    fun feeTokenItem(tokenName: String): KNode {
+        val rowMatcher = hasAnyAncestor(isDialog()) and hasClickAction() and withText(tokenName, substring = true)
+        return child { addSemanticsMatcher(rowMatcher) }
     }
 
     fun feeSpeedItemTitle(speed: String): KNode = child {

@@ -15,11 +15,13 @@ import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.content.TwinsMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -392,8 +394,10 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Buy' button in bottom sheet") {
                 onGetTokenBottomSheet { buyButton.performClick() }
             }
-            step("Assert top app bar title contains '$tokenTitle'") {
-                onBuyTokenDetailsScreen { topBarTitle.assertTextContains("Buy $tokenTitle") }
+            step("Assert top app bar title contains 'Buy $tokenTitle'") {
+                onBuyTokenDetailsScreen {
+                    topBarTitle.assertTextContains("${getResourceString(CoreResR.string.common_buy)} $tokenTitle")
+                }
             }
             step("Assert fiat currency text field is displayed") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.assertIsDisplayed() }
