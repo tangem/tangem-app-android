@@ -90,9 +90,9 @@ internal class PooledStakingMapperStateTest {
             ),
             details = listOf(
                 EarnRisk.Low.detailsRow(),
-                row(
+                EarnRow(
                     label = resourceReference(R.string.staking_validator),
-                    value = stringReference("P2P"),
+                    value = EarnValue.Link(text = stringReference("P2P"), url = "https://p2p.org/"),
                     kind = EarnRowKind.Protocol,
                 ),
                 row(
