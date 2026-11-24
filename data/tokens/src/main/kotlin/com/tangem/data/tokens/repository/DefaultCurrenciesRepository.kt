@@ -46,7 +46,6 @@ internal class DefaultCurrenciesRepository(
                 outgoingTransactions.isNotEmpty()
             }
 
-            blockchain.isEvm() -> false
             blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet -> false
             else -> {
                 val walletManager = walletManagersFacade.getOrCreateWalletManager(
