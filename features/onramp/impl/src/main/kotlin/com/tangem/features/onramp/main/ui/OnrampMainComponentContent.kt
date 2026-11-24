@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
@@ -22,6 +23,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
@@ -67,7 +69,11 @@ private fun OnrampTopNavigationDs(
         startButton = { CountryButtonDs(state = countryButton) },
         endButton = { CloseButtonDs(state = config.startButtonUM) },
         contentColumn = {
-            TangemNavigationText(text = config.title, role = TangemNavigationText.Role.Title)
+            TangemNavigationText(
+                text = config.title,
+                role = TangemNavigationText.Role.Title,
+                modifier = Modifier.testTag(TopAppBarTestTags.TITLE),
+            )
             SpacerH(4.dp)
             TangemNavigationText(text = config.subtitle, role = TangemNavigationText.Role.Subtitle)
         },

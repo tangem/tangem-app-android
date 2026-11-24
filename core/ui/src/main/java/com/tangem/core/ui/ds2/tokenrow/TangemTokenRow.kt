@@ -39,7 +39,7 @@ import com.tangem.core.ui.test.TokenElementsTestTags
  * badge, quote + price change, fiat/crypto balances and an optional message-bubble promo line
  * underneath. DS3 replacement for the legacy `ds/row/token` `TangemTokenRow`.
  *
- * Version: 1.3.0
+ * Version: 1.3.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5723-2473)
  *
@@ -100,7 +100,8 @@ fun TangemTokenRow(
             hasPending = hasPending,
             modifier = Modifier
                 .layoutId(layoutId = TokenRowLayoutId.START_TOP)
-                .padding(end = 8.dp),
+                .padding(end = 8.dp)
+                .testTag(TokenElementsTestTags.TOKEN_TITLE),
         )
         if (quote != null || priceChange != null) {
             TokenRowSubtitleContent(
@@ -109,7 +110,8 @@ fun TangemTokenRow(
                 isFlickering = isQuoteFlickering,
                 modifier = Modifier
                     .layoutId(layoutId = TokenRowLayoutId.START_BOTTOM)
-                    .padding(end = 8.dp),
+                    .padding(end = 8.dp)
+                    .testTag(TokenElementsTestTags.TOKEN_PRICE),
             )
         }
         if (fiatBalance != null) {
@@ -119,7 +121,9 @@ fun TangemTokenRow(
                 showUpdateWarning = showUpdateWarning,
                 isFlickering = isBalanceFlickering,
                 isBalanceHidden = isBalanceHidden,
-                modifier = Modifier.layoutId(layoutId = TokenRowLayoutId.END_TOP),
+                modifier = Modifier
+                    .layoutId(layoutId = TokenRowLayoutId.END_TOP)
+                    .testTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
             )
         }
         if (cryptoBalance != null) {
@@ -148,7 +152,7 @@ fun TangemTokenRow(
 /** Public API surface of [TangemTokenRow]. */
 object TangemTokenRow {
 
-    val version = DsVersion(major = 1, minor = 3, patch = 0)
+    val version = DsVersion(major = 1, minor = 3, patch = 1)
 
     /**
      * Badge shown after the title (e.g. an `"APY 5.47%"` chip). Always a tinted [TangemBadge].
