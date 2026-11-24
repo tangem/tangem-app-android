@@ -1895,7 +1895,9 @@ internal class SwapModel @Inject constructor(
                         )
                         sendSwapInProgressEvent()
                         openPredictionFundingWindow()
-                        notifySwapExecuted(fromSwapCurrencyStatus.userWalletId)
+                        lastLoadedQuotesState.swapDataModel?.transaction?.txId?.let { txId ->
+                            notifySwapExecuted(userWalletId = fromSwapCurrencyStatus.userWalletId, txId = txId)
+                        }
 
                         router.replaceAll(SwapRoute.Success)
                     }
@@ -2108,7 +2110,7 @@ internal class SwapModel @Inject constructor(
             onExploreClick = { urlOpener.openUrl(txUrl) },
         )
 
-        notifySwapExecuted(fromSwapCurrencyStatus.userWalletId)
+        notifySwapExecuted(fromSwapCurrencyStatus.userWalletId, cexTransaction.txId)
         router.replaceAll(SwapRoute.Success)
     }
 
@@ -2398,7 +2400,10 @@ internal class SwapModel @Inject constructor(
                         txUrl = txUrl.orEmpty(),
                         onExploreClick = { if (txUrl != null) urlOpener.openUrl(txUrl) },
                     )
-                    notifySwapExecuted(swapTransactionState.storeData.fromSwapCurrencyStatus.userWalletId)
+                    notifySwapExecuted(
+                        userWalletId = swapTransactionState.storeData.fromSwapCurrencyStatus.userWalletId,
+                        txId = swapTransactionState.storeData.swapDataModel.transaction.txId,
+                    )
                     router.replaceAll(SwapRoute.Success)
                 }
             }
@@ -3502,11 +3507,12 @@ internal class SwapModel @Inject constructor(
      * The express deal exists on the backend from the moment the swap is sent, so the history sync is asked for
      * it right away instead of waiting for the next screen open — its status is polled from the local rows.
      */
-    private fun notifySwapExecuted(userWalletId: UserWalletId) {
+    private fun notifySwapExecuted(userWalletId: UserWalletId, txId: String) {
         appTxHistoryFetcher.invoke(
             TxHistoryFetchTrigger.OnExpressOperationExecute(
                 walletId = userWalletId,
                 type = TxHistoryFetchTrigger.OnExpressOperationExecute.Swap,
+                txId = txId,
             ),
         )
     }

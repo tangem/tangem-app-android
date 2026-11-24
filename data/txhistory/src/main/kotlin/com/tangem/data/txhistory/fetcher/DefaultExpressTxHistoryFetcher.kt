@@ -6,6 +6,7 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receive
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
 import com.tangem.data.txhistory.repository.ExpressOperationId
+import com.tangem.data.txhistory.repository.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.ExpressTxHistoryFetcher
@@ -66,12 +67,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
                         fetchExchange()
                         fetchOnramp()
                     }
-                    is TxHistoryFetchTrigger.OnExpressOperationExecute -> {
-                        when (trigger.type) {
-                            TxHistoryFetchTrigger.OnExpressOperationExecute.Onramp -> fetchOnramp()
-                            TxHistoryFetchTrigger.OnExpressOperationExecute.Swap -> fetchExchange()
-                        }
-                    }
+                    is TxHistoryFetchTrigger.OnExpressOperationExecute -> refreshExecutedOperation(trigger)
                 }
             }
         defaultLaunchIn(receiveFlow)
@@ -177,6 +173,25 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
             expressHistoryRepository.refreshActiveStatuses(walletId, id)
             delay(POLL_INTERVAL)
         }
+    }
+
+    /**
+     * The deal is requested by its id instead of waiting for it in the history delta: the backend puts a fresh deal
+     * into the delta a moment later than the request for it is made, so the delta asked right away comes back
+     * without it. The answer is written into the local database, which is what starts the status polling.
+     */
+    private fun refreshExecutedOperation(trigger: TxHistoryFetchTrigger.OnExpressOperationExecute) {
+        val type = when (trigger.type) {
+            TxHistoryFetchTrigger.OnExpressOperationExecute.Onramp -> ExpressOperationType.Onramp
+            TxHistoryFetchTrigger.OnExpressOperationExecute.Swap -> ExpressOperationType.Swap
+        }
+        val flow = flow {
+            expressHistoryRepository.refreshActiveStatuses(
+                userWalletId = trigger.walletId,
+                activeId = ExpressOperationId(id = trigger.txId, type = type),
+            ).let { emit(it) }
+        }
+        defaultLaunchIn(flow)
     }
 
     private fun fetchExchange() {

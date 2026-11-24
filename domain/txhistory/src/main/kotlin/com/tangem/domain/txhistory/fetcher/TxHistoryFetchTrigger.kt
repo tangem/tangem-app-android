@@ -27,6 +27,7 @@ sealed interface TxHistoryFetchTrigger {
     data class OnExpressOperationExecute(
         override val walletId: UserWalletId,
         val type: Operation,
+        val txId: String,
     ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger {
         sealed interface Operation
         data object Swap : Operation
