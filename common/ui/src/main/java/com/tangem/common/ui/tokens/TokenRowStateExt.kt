@@ -7,6 +7,7 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.test.TokenElementsTestTags
 import java.math.BigDecimal
 
 fun BigDecimal.toPriceChangeState(): TangemPriceChange.State = TangemPriceChange.State(
@@ -31,6 +32,7 @@ private fun CurrencyIconState.tokenIcon(url: String?): TangemTokenIcon.UiState =
         url = url,
         topIcon = topBadgeIconResId,
         isGrayscale = isGrayscale,
-        indicator = TangemTokenIcon.State.Indicator().takeIf { shouldShowCustomBadge },
+        indicator = TangemTokenIcon.State.Indicator(testTag = TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
+            .takeIf { shouldShowCustomBadge },
     ),
 )

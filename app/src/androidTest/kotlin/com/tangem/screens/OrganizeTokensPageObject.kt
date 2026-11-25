@@ -7,7 +7,6 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.displayedTextsInVisualOrder
-import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
 import com.tangem.core.ui.test.TokenElementsTestTags
@@ -19,8 +18,6 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasAnyAncestor as withAnyAncestor
-import androidx.compose.ui.test.hasAnyChild as withAnyChild
-import androidx.compose.ui.test.hasAnySibling as withAnySibling
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -90,10 +87,13 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
         }
     }
 
+    // The redesigned rows carry LazyListItemPosition on the draggable wrapper, one level above the
+    // tagged TOKEN_LIST_ITEM node, so match the item by tag and title and read the position off its
+    // ancestor instead of expecting both on one node.
     fun tokenWithTitleAndPosition(tokenTitle: String, index: Int): KNode {
         return lazyList.child {
-            hasLazyListItemPosition(index)
             hasTestTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyAncestor(SemanticsMatcher.expectValue(LazyListItemPositionSemantics, index))
             hasAnyDescendant(withText(text = tokenTitle, substring = true))
             useUnmergedTree = true
         }
@@ -108,28 +108,13 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
             useUnmergedTree = true,
         ).displayedTextsInVisualOrder()
 
-    fun tokenDraggableButton(tokenTitle: String): KNode {
-        return lazyList.child {
-            hasTestTag(OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE)
-            useUnmergedTree = true
-            hasParent(
-                withTestTag(TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK)
-                    .and(
-                        withAnySibling(
-                            withTestTag(TokenElementsTestTags.TOKEN_TITLE)
-                                .and(withAnyChild(withText(tokenTitle)))
-                        )
-                    )
-            )
-        }
-    }
-
-    // Reorder by synthesizing a drag on the source row's handle: down, hold, step to the destination
-    // centre, lift — a single `swipe` won't engage the reorder detector. Only valid within one network
-    // group (isValidDropTarget), so source and destination must share a group.
+    // Reorder a row by a long press on it followed by a vertical drag onto the destination row, then
+    // lift. The redesigned list has no drag handle: the whole row carries the reorder gesture, which
+    // only engages after the long-press timeout, so hold in place before moving or it reads as a scroll.
+    // Only valid within one network group (isValidDropTarget), so source and destination must share a group.
     fun dragToken(source: String, destination: String) {
-        val sourceHandle = semanticsProvider.onNode(dragHandleMatcher(source), useUnmergedTree = true)
-        val sourceNode = sourceHandle.fetchSemanticsNode()
+        val sourceItem = semanticsProvider.onNode(tokenItemMatcher(source), useUnmergedTree = true)
+        val sourceNode = sourceItem.fetchSemanticsNode()
         val destinationNode = semanticsProvider
             .onNode(tokenItemMatcher(destination), useUnmergedTree = true)
             .fetchSemanticsNode()
@@ -139,30 +124,26 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
         val start = sourceNode.boundsInRoot.center - origin
         val end = destinationNode.boundsInRoot.center - origin
 
-        sourceHandle.performTouchInput {
+        sourceItem.performTouchInput {
             down(start)
-            advanceEventTime(DRAG_HOLD_MS)
+            advanceEventTime(LONG_PRESS_HOLD_MS)
             repeat(times = DRAG_STEPS) { step ->
                 moveTo(lerp(start = start, stop = end, fraction = (step + 1).toFloat() / DRAG_STEPS))
                 advanceEventTime(DRAG_STEP_MS)
             }
+            moveTo(end)
+            advanceEventTime(DRAG_STEP_MS)
             up()
         }
     }
-
-    // The drag handle sits under an untagged wrapper inside TOKEN_NON_FIAT_BLOCK, so anchor on the
-    // enclosing TOKEN_LIST_ITEM (one handle + one title per item) instead of the direct parent.
-    private fun dragHandleMatcher(tokenTitle: String): SemanticsMatcher =
-        withTestTag(OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE) and
-            withAnyAncestor(tokenItemMatcher(tokenTitle))
 
     private fun tokenItemMatcher(tokenTitle: String): SemanticsMatcher =
         withTestTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenTitle))
 
     private companion object {
-        const val DRAG_HOLD_MS = 200L
+        const val LONG_PRESS_HOLD_MS = 800L
         const val DRAG_STEPS = 16
-        const val DRAG_STEP_MS = 16L
+        const val DRAG_STEP_MS = 24L
     }
 }
 

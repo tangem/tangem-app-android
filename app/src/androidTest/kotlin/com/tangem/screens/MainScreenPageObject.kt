@@ -634,16 +634,24 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
+    // The custom-derivation badge renders a beat after the row (it waits on the derivation/balance load)
+    // and the wallet pager mounts the row on two pages, so scroll the on-screen page to the token first
+    // (the row can sit below the fold) and then assert the badge on the on-screen copy. performScrollToNode
+    // walks the merged tree, where a clickable token row carries its title as its own text, so match that.
     @OptIn(ExperimentalTestApi::class)
-    fun tokenWithCustomDerivationIcon(tokenTitle: String): KNode {
-        collapseHeader()
-        return lazyList.childWith<LazyListItemNode> {
-            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasText(tokenTitle)
-            useUnmergedTree = true
-        }.child<KNode> {
-            hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
-            useUnmergedTree = true
+    fun assertTokenCustomDerivationIconDisplayed(tokenTitle: String) {
+        runCatching {
+            checkNotNull(onScreenPage()) { "No wallet page is on screen" }
+                .performScrollToNode(
+                    withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and withText(tokenTitle, substring = true),
+                )
+        }
+        val icon = onScreenPageChild(
+            withTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON) and
+                hasAnyAncestor(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenTitle))),
+        )
+        if (icon == null || runCatching { icon.assertIsDisplayed() }.isFailure) {
+            throw AssertionError("Custom derivation icon for '$tokenTitle' is not displayed on the main screen")
         }
     }
 
@@ -711,12 +719,40 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             .performScrollToNode(withTestTag(MainScreenTestTags.NFT_BLOCK))
     }
 
-    fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
-        collapseHeader()
-        return lazyList.child {
-            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasAnyChild(withText(tokenNetwork))
-            useUnmergedTree = true
+    // The grouped network header is a TOKEN_LIST_ITEM whose own text is the network name, and the wallet
+    // pager keeps the adjacent page composed. Scroll the on-screen page's list to the header (it can sit
+    // above the fold after returning from Organize) and assert the on-screen copy is displayed.
+    @OptIn(ExperimentalTestApi::class)
+    fun assertNetworkGroupTitleDisplayed(tokenNetwork: String) {
+        val page = onScreenPage() ?: throw AssertionError("No wallet page is on screen")
+        val header = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and withText(tokenNetwork, substring = true)
+        val displayed = runCatching {
+            page.performScrollToNode(header)
+            checkNotNull(onScreenPageChild(header)).assertIsDisplayed()
+        }.isSuccess
+        if (!displayed) {
+            throw AssertionError("Network group '$tokenNetwork' is not displayed on the main screen")
+        }
+    }
+
+    // Absence is confirmed only by a verified no-match while scrolling the on-screen page's full lazy list:
+    // performScrollToNode throws a "no node found" AssertionError when the header is nowhere in the
+    // scrollable, which is the single outcome we accept as absence. Any other failure (no scroll action,
+    // stale node, Compose sync error) is not a verified absence, so it propagates and flakySafely retries
+    // rather than passing a false 'not displayed'. A missing page is not absence either, so require one.
+    @OptIn(ExperimentalTestApi::class)
+    fun assertNetworkGroupTitleNotDisplayed(tokenNetwork: String) {
+        val page = onScreenPage() ?: throw AssertionError("No wallet page is on screen")
+        val header = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and withText(tokenNetwork, substring = true)
+        val present = try {
+            page.performScrollToNode(header)
+            true
+        } catch (e: AssertionError) {
+            if (e.message?.contains("No node found", ignoreCase = true) != true) throw e
+            false
+        }
+        if (present) {
+            throw AssertionError("Network group '$tokenNetwork' is still present on the main screen")
         }
     }
 

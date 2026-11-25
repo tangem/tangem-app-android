@@ -118,7 +118,7 @@ class AddCustomTokenTest : BaseTestCase() {
                 )
             }
             step("Assert custom derivation indicator for '$tokenTitle' is displayed on Main") {
-                flakySafely { onMainScreen { tokenWithCustomDerivationIcon(tokenTitle).assertIsDisplayed() } }
+                flakySafely { onMainScreen { assertTokenCustomDerivationIconDisplayed(tokenTitle) } }
             }
         }
     }
