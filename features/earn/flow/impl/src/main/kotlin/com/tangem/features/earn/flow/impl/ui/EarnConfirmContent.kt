@@ -73,9 +73,6 @@ internal fun EarnConfirmContent(
             contentPadding = contentPadding,
         ) {
             item(key = "amount") { Amount(state) }
-            state.notice?.let { notice ->
-                item(key = "notice") { EarnNotice(text = notice, modifier = Modifier.padding(vertical = 12.dp)) }
-            }
             item(key = "details") { Details(state = state, feeBlock = feeBlock) }
         }
     }
@@ -122,6 +119,7 @@ private fun Details(state: EarnConfirmUM, feeBlock: FeeSelectorBlockComponent?) 
             )
         }
         feeBlock?.Content(Modifier.fillMaxWidth())
+        state.notice?.let { notice -> EarnNotice(text = notice) }
         EarnNotifications(state.notifications)
     }
 }
