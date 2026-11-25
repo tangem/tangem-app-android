@@ -53,12 +53,12 @@ internal fun EarnAmountContent(
                 )
             }
             item(key = "fee") { feeBlock?.Content(Modifier.fillMaxWidth()) }
-            state.notice?.let { notice -> item(key = "notice") { EarnNotice(notice) } }
             if (state.notifications.isNotEmpty()) {
                 item(key = "notifications") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { EarnNotifications(state.notifications) }
                 }
             }
+            state.notice?.let { notice -> item(key = "notice") { EarnNotice(notice) } }
         }
     }
 }
