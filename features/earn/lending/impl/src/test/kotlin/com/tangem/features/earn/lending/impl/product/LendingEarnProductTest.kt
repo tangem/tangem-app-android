@@ -148,7 +148,7 @@ internal class LendingEarnProductTest {
                         ),
                     ),
                     footnote = resourceReference(R.string.earn_how_it_works_audited_by, wrappedList("Pessimistic")),
-                    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
+                    learnMore = TangemBlogUrlBuilder.Post.LendingOnAave,
                 ),
             )
         }
@@ -162,7 +162,7 @@ internal class LendingEarnProductTest {
             val actual = product.howItWorks.learnMore
 
             // Assert
-            assertThat(actual).isEqualTo(TangemBlogUrlBuilder.Post.HowYieldModeWorks)
+            assertThat(actual).isEqualTo(TangemBlogUrlBuilder.Post.LendingOnAave)
             verify(exactly = 0) { lendingSupplier(any<UserWalletId>()) }
         }
 

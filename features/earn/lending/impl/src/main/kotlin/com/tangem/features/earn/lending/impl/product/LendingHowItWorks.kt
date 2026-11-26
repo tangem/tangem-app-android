@@ -35,5 +35,5 @@ internal fun lendingHowItWorks(performanceFee: BigDecimal): EarnHowItWorks = Ear
         ),
     ),
     footnote = resourceReference(R.string.earn_how_it_works_audited_by, wrappedList(AUDITOR)),
-    learnMore = TangemBlogUrlBuilder.Post.HowYieldModeWorks,
+    learnMore = TangemBlogUrlBuilder.Post.LendingOnAave,
 )
