@@ -1,6 +1,9 @@
 package com.tangem.features.earn.impl.picker.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,10 +13,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -21,11 +22,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,16 +46,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.media.VideoSurfaceState
+import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.earn.EarnProductId
@@ -62,9 +72,9 @@ import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeReadyState
 import com.tangem.features.earn.impl.fake.fakeSummary
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.model.EarnPickerClickIntents
 import com.tangem.features.earn.impl.picker.model.EarnPickerConverter
+import com.tangem.features.earn.impl.picker.model.EarnPickerDepositCapacity
 import com.tangem.features.earn.impl.picker.model.EarnPickerCta
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
@@ -72,10 +82,10 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.ui.EarnDetailRow
 import com.tangem.features.earn.impl.ui.EarnIncentiveBadge
 import com.tangem.features.earn.impl.ui.EarnIncentiveUM
-import com.tangem.features.earn.impl.widgets.calculator.EarnCalculatorTexts
 import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
-import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.session.EarnAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -85,8 +95,17 @@ import java.math.BigDecimal
 
 /** The page is the haze source: the calculator's horizon menu blurs what is behind it. */
 @Composable
-internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifier, calculator: @Composable () -> Unit) {
+internal fun EarnPickerContent(
+    state: EarnPickerUM,
+    heroVideo: VideoSurfaceState?,
+    onHeroVisibilityChange: (isVisible: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    calculator: @Composable () -> Unit,
+) {
     val listState = rememberLazyListState()
+    val isHeroVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    val currentOnHeroVisibilityChange by rememberUpdatedState(onHeroVisibilityChange)
+    LaunchedEffect(isHeroVisible) { currentOnHeroVisibilityChange(isHeroVisible) }
     var heroHeightPx by remember { mutableIntStateOf(0) }
     var barHeightPx by remember { mutableIntStateOf(0) }
     var tabsHeightPx by remember { mutableIntStateOf(0) }
@@ -111,6 +130,7 @@ internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifie
         sections = sections,
         firstSectionIndex = firstSectionIndex,
         headerHeightPx = { barHeightPx + tabsHeightPx },
+        onTabClick = (state.content as? ContentUM.Ready)?.onTabClick ?: {},
     )
 
     Box(
@@ -122,10 +142,13 @@ internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifie
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceTangem(),
+                .hazeSourceTangem()
+                .background(TangemTheme.colors3.bg.primary),
             contentPadding = PaddingValues(bottom = with(LocalDensity.current) { footerHeightPx.toDp() }),
         ) {
-            item(key = "hero") { EarnPickerHero(modifier = Modifier.onSizeChanged { heroHeightPx = it.height }) }
+            item(key = "hero") {
+                EarnPickerHero(video = heroVideo, modifier = Modifier.onSizeChanged { heroHeightPx = it.height })
+            }
             item(key = "title") { EarnPickerTitle(title = state.title, subtitle = state.subtitle) }
             if (state.products.isNotEmpty()) {
                 item(key = "products") { EarnProductCards(products = state.products) }
@@ -143,7 +166,6 @@ internal fun EarnPickerContent(state: EarnPickerUM, modifier: Modifier = Modifie
         )
         Footer(
             cta = state.cta,
-            hint = state.ctaHint,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onSizeChanged { footerHeightPx = it.height },
@@ -206,19 +228,22 @@ private fun rememberSectionTabs(
     sections: ImmutableList<EarnPickerTab>,
     firstSectionIndex: Int,
     headerHeightPx: () -> Int,
+    onTabClick: (EarnPickerTab) -> Unit,
 ): ImmutableList<TangemTabItemUM> {
     val scope = rememberCoroutineScope()
-    val active by remember(sections, firstSectionIndex) {
-        derivedStateOf { listState.activeSection(sections, firstSectionIndex, headerHeightPx().toFloat()) }
+    val reached by remember(sections, firstSectionIndex) {
+        derivedStateOf { listState.reachedSection(sections, firstSectionIndex, headerHeightPx().toFloat()) }
     }
 
-    return remember(sections, active, firstSectionIndex) {
+    return remember(sections, reached, firstSectionIndex, onTabClick) {
+        val active = reached ?: sections.firstOrNull()
         sections.mapIndexed { position, section ->
             TangemTabItemUM.Content(
                 id = section.name,
-                label = EarnPickerTexts.tab(section),
+                label = section.label(),
                 isSelected = section == active,
                 onClick = {
+                    if (section != reached) onTabClick(section)
                     scope.launch {
                         listState.animateScrollToItem(
                             index = firstSectionIndex + position,
@@ -229,6 +254,12 @@ private fun rememberSectionTabs(
             )
         }.toImmutableList()
     }
+}
+
+private fun EarnPickerTab.label(): TextReference = when (this) {
+    EarnPickerTab.Calculator -> resourceReference(R.string.earn_yield_picker_calculator)
+    EarnPickerTab.Benefits -> resourceReference(R.string.lending_position_benefits)
+    EarnPickerTab.Details -> resourceReference(R.string.lending_position_details)
 }
 
 @Suppress("LongParameterList")
@@ -243,73 +274,60 @@ private fun PinnedHeader(
     modifier: Modifier = Modifier,
 ) {
     val titleAlpha = ((barProgress - TITLE_FADE_START) / (1f - TITLE_FADE_START)).coerceIn(0f, 1f)
-    val pageColor = TangemTheme.colors3.bg.primary
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .drawBehind {
-                drawHeaderFade(
-                    color = pageColor,
-                    alpha = barProgress,
-                    overshoot = if (tabs != null) FADE_OVERSHOOT else 0.dp,
-                )
-            },
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onSizeChanged { onBarHeightChange(it.height) }
-                .statusBarsPadding()
-                .padding(bottom = BAR_BOTTOM_PADDING)
-                .heightIn(min = BAR_HEIGHT),
-        ) {
-            Text(
-                text = barTitle.resolveReference(),
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .graphicsLayer {
-                        alpha = titleAlpha
-                        translationY = (1f - titleAlpha) * TITLE_SHIFT.toPx()
-                    },
+    Box(modifier = modifier.fillMaxWidth()) {
+        PinnedFade(isPinned = tabs != null, modifier = Modifier.matchParentSize())
+        Column {
+            TangemTopNavigation(
+                modifier = Modifier.onSizeChanged { onBarHeightChange(it.height) },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                fadeEnabled = barProgress > 0f && tabs == null,
+                endButton = { TangemButton.Close(onClick = onClose) },
+                contentColumn = {
+                    TangemNavigationText(
+                        text = barTitle,
+                        role = TangemNavigationText.Role.Title,
+                        modifier = Modifier.graphicsLayer {
+                            alpha = titleAlpha
+                            translationY = (1f - titleAlpha) * TITLE_SHIFT.toPx()
+                        },
+                    )
+                },
             )
-            TangemButton.Close(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 16.dp),
-                onClick = onClose,
-            )
-        }
-        if (tabs != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged { onTabsHeightChange(it.height) }
-                    .padding(vertical = TABS_VERTICAL_PADDING),
-            ) {
-                TangemTabNavigation(tabs = tabs, contentPadding = PaddingValues(horizontal = PAGE_MARGIN))
+            if (tabs != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { onTabsHeightChange(it.height) }
+                        .padding(vertical = TABS_VERTICAL_PADDING),
+                ) {
+                    TangemTabNavigation(tabs = tabs, contentPadding = PaddingValues(horizontal = PAGE_MARGIN))
+                }
             }
         }
     }
 }
 
-private fun DrawScope.drawHeaderFade(color: Color, alpha: Float, overshoot: Dp) {
-    val total = size.height + overshoot.toPx()
-    val solid = color.copy(alpha = FADE_ALPHA * alpha)
-    drawRect(
-        brush = Brush.verticalGradient(
-            colorStops = arrayOf(
-                0f to solid,
-                (total - FADE_GRADIENT_HEIGHT.toPx()) / total to solid,
-                1f to Color.Transparent,
-            ),
-            startY = 0f,
-            endY = total,
-        ),
-        size = Size(width = size.width, height = total),
+/** A haze source above the list's: the glass buttons and the pill sample the fade instead of punching holes in it. */
+@Composable
+private fun PinnedFade(isPinned: Boolean, modifier: Modifier = Modifier) {
+    val fadeOutAlpha by animateFloatAsState(
+        targetValue = if (isPinned) 1f else 0f,
+        animationSpec = if (isPinned) snap() else spring(),
+        label = "EarnPicker.pinnedFadeAlpha",
     )
+    val isBlurred by remember(isPinned) { derivedStateOf { isPinned || fadeOutAlpha > 0f } }
+
+    Box(modifier = modifier.hazeSourceTangem(zIndex = 1f)) {
+        TangemFade(
+            position = TangemFade.Position.Top,
+            variant = TangemFade.Variant.Hard,
+            blur = isBlurred,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = if (isPinned) 1f else fadeOutAlpha },
+        )
+    }
 }
 
 /** 0 while the hero fills the top, 1 once it is under the bar. */
@@ -326,8 +344,8 @@ private fun LazyListState.isItemAbove(key: String, index: Int, limitPx: Float): 
     return if (info != null) info.offset <= limitPx else firstVisibleItemIndex > index
 }
 
-/** The last section that has reached the pinned header; the last one when the page cannot scroll further. */
-private fun LazyListState.activeSection(
+/** The last section that has reached the pinned header (the last one at the end of the page), `null` before any. */
+private fun LazyListState.reachedSection(
     sections: List<EarnPickerTab>,
     firstSectionIndex: Int,
     headerBottomPx: Float,
@@ -338,7 +356,6 @@ private fun LazyListState.activeSection(
     return sections.withIndex()
         .lastOrNull { (position, section) -> isItemAbove(section.name, firstSectionIndex + position, headerBottomPx) }
         ?.value
-        ?: sections.first()
 }
 
 @Composable
@@ -360,7 +377,7 @@ private fun Description(description: TextReference, incentive: EarnIncentiveUM?)
 
 @Composable
 private fun CalculatorSection(calculator: @Composable () -> Unit) {
-    Section(title = EarnCalculatorTexts.title) {
+    Section(title = resourceReference(R.string.earn_calculator_title)) {
         Box(
             modifier = Modifier
                 .padding(horizontal = PAGE_MARGIN)
@@ -376,7 +393,7 @@ private fun CalculatorSection(calculator: @Composable () -> Unit) {
 
 @Composable
 private fun BenefitsSection(content: ContentUM.Ready) {
-    Section(title = EarnPickerTexts.benefitsSection) {
+    Section(title = resourceReference(R.string.lending_position_benefits)) {
         Column(
             modifier = Modifier.padding(start = PAGE_MARGIN, end = PAGE_MARGIN, top = 12.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -389,7 +406,7 @@ private fun BenefitsSection(content: ContentUM.Ready) {
 /** The rows keep 8 dp of the page margin and 16 dp of their own: their text lines up with the heading. */
 @Composable
 private fun DetailsSection(content: ContentUM.Ready) {
-    Section(title = EarnPickerTexts.detailsSection) {
+    Section(title = resourceReference(R.string.earn_product_details_more_details)) {
         Column(modifier = Modifier.padding(horizontal = 8.dp)) {
             content.details.forEachIndexed { index, row ->
                 EarnDetailRow(state = row, divider = index < content.details.lastIndex)
@@ -434,21 +451,21 @@ private fun UnavailableBody(onRetryClick: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = EarnPickerTexts.unavailable.resolveReference(),
+            text = stringResourceSafe(R.string.common_unable_to_load),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         TangemButton(
             variant = TangemButton.Variant.Secondary,
-            text = EarnPickerTexts.retry,
+            text = resourceReference(R.string.common_retry),
             onClick = onRetryClick,
         )
     }
 }
 
 @Composable
-private fun Footer(cta: TangemButtonUM, hint: TextReference?, modifier: Modifier = Modifier) {
+private fun Footer(cta: TangemButtonUM, modifier: Modifier = Modifier) {
     val pageColor = TangemTheme.colors3.bg.primary
 
     Column(
@@ -458,22 +475,14 @@ private fun Footer(cta: TangemButtonUM, hint: TextReference?, modifier: Modifier
             .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        hint?.let { hintText ->
-            Text(
-                text = hintText.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
-                textAlign = TextAlign.Center,
-            )
-        }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             size = TangemButton.Size.X12,
             text = cta.text,
             isEnabled = cta.isEnabled,
             isDimmed = cta.isDimmed,
+            isLoading = cta.isLoading,
             onClick = cta.onClick,
         )
     }
@@ -502,12 +511,7 @@ private fun DrawScope.drawFooterFade(color: Color) {
 
 private val LOADING_BODY_HEIGHT = 240.dp
 
-private val BAR_HEIGHT = 44.dp
-private val BAR_BOTTOM_PADDING = 16.dp
-
 private const val FADE_ALPHA = 0.95f
-private val FADE_GRADIENT_HEIGHT = 40.dp
-private val FADE_OVERSHOOT = 2.dp
 private val FOOTER_FADE_OVERSHOOT = 16.dp
 private val FOOTER_RAMP_HEIGHT = 24.dp
 private const val FOOTER_RAMP_STOP_1 = 0.3f
@@ -530,6 +534,8 @@ private fun PreviewContent(state: EarnPickerUM) {
     TangemThemePreviewRedesign {
         EarnPickerContent(
             state = state,
+            heroVideo = null,
+            onHeroVisibilityChange = {},
             calculator = {
                 Box(
                     modifier = Modifier
@@ -557,8 +563,9 @@ private object PreviewData {
         override fun onRetryClick(product: EarnProduct) = Unit
         override fun onOverviewRetryClick() = Unit
         override fun onIncentiveClick() = Unit
-        override fun onInfoClick(block: EarnTextBlock) = Unit
-        override fun onLinkClick(url: String) = Unit
+        override fun onTabClick(tab: EarnPickerTab) = Unit
+        override fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?) = Unit
+        override fun onLinkClick(url: String, row: EarnRowKind?) = Unit
         override fun onCloseClick() = Unit
     }
     private val summaries = listOf(
@@ -575,6 +582,7 @@ private object PreviewData {
         summaries = summaries,
         selectedId = lending.id,
         ethBalance = ethBalance,
+        capacity = EarnPickerDepositCapacity.Unknown,
         intents = intents,
     )
 

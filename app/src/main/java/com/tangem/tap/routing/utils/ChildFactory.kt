@@ -11,6 +11,7 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
+import com.tangem.features.account.CryptoAccountIntroComponent
 import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.allservices.api.AllServicesComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
@@ -44,6 +45,7 @@ import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.survey.NativeSurveyComponent
 import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -124,6 +126,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val allServicesComponentFactory: AllServicesComponent.Factory,
+    private val cryptoAccountIntroComponentFactory: CryptoAccountIntroComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
     private val moneyAccountDetailsComponentFactory: MoneyAccountDetailsComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
@@ -134,6 +137,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayVerifiedComponentFactory: TangemPayVerifiedComponent.Factory,
     private val tangemPayOnboardingSuccessComponentFactory: TangemPayOnboardingSuccessComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
+    private val nativeSurveyComponentFactory: NativeSurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val earnEntryComponentFactory: EarnEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
@@ -216,6 +220,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletHardwareBackupComponent.Params(
                         userWalletId = route.userWalletId,
+                        source = route.source,
                     ),
                     componentFactory = walletHardwareBackupComponentFactory,
                 )
@@ -664,6 +669,13 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = accountCreateEditComponentFactory,
                 )
             }
+            is AppRoute.CryptoAccountIntro -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = cryptoAccountIntroComponentFactory,
+                )
+            }
             is AppRoute.JointAccountCreation -> {
                 createComponentChild(
                     context = context,
@@ -724,6 +736,7 @@ internal class ChildFactory @Inject constructor(
                     params = TangemPayDetailsContainerComponent.Params(
                         initialStatus = route.status,
                         initialRoute = route.initialRoute,
+                        isOpenedFromKycPush = route.isOpenedFromKycPush,
                     ),
                     componentFactory = tangemPayDetailsContainerComponentFactory,
                 )
@@ -774,6 +787,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = MoneyAccountDetailsComponent.Params(
                         userWalletId = route.userWalletId,
+                        isOpenedFromKycPush = route.isOpenedFromKycPush,
                     ),
                     componentFactory = moneyAccountDetailsComponentFactory,
                 )
@@ -788,10 +802,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayEligibility -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayEligibilityComponent.Params(
-                        product = route.product,
-                        userWalletId = route.userWalletId,
-                    ),
+                    params = TangemPayEligibilityComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = tangemPayEligibilityComponentFactory,
                 )
             }
@@ -805,7 +816,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayOnboardingSuccess -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = TangemPayOnboardingSuccessComponent.Params(product = route.product),
                     componentFactory = tangemPayOnboardingSuccessComponentFactory,
                 )
             }
@@ -816,6 +827,21 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = surveyComponentFactory,
                 )
             }
+            is AppRoute.NativeSurvey -> {
+                createComponentChild(
+                    context = context,
+                    params = NativeSurveyComponent.Params(
+                        surveyId = route.surveyId,
+                        source = route.source,
+                        stage = route.stage,
+                        repeatAfterDays = route.repeatAfterDays,
+                        userWalletId = route.userWalletId,
+                        isAlreadyAnswered = route.isAlreadyAnswered,
+                        isFromCache = route.isFromCache,
+                    ),
+                    componentFactory = nativeSurveyComponentFactory,
+                )
+            }
             is AppRoute.YieldSupplyEntry -> {
                 createComponentChild(
                     context = context,
@@ -823,6 +849,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
                         apy = route.apy,
+                        account = route.account,
                     ),
                     componentFactory = yieldSupplyEntryComponentFactory,
                 )

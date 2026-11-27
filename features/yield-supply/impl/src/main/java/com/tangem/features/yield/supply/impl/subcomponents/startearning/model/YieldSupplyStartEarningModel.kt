@@ -18,9 +18,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -44,6 +42,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelector
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencyChoice
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
@@ -79,7 +78,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val analytics: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val yieldSupplyStartEarningUseCase: YieldSupplyStartEarningUseCase,
     private val yieldSupplyEstimateEnterFeeUseCase: YieldSupplyEstimateEnterFeeUseCase,
@@ -166,8 +165,16 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
+    }
+
     private suspend fun calculateMinAmount(cryptoCurrencyStatus: CryptoCurrencyStatus): BigDecimal {
-        return yieldSupplyMinAmountUseCase(userWalletId, cryptoCurrencyStatus).getOrElse { BigDecimal.ZERO }
+        return yieldSupplyMinAmountUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
+        ).getOrElse { BigDecimal.ZERO }
     }
 
     private suspend fun onLoadFee(load: Int) {
@@ -178,8 +185,17 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFee = yieldSupplyGetMaxFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
-        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+        val isHeldOutsidePortfolio = isHeldOutsidePortfolio()
+        val maxFee = yieldSupplyGetMaxFeeUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio,
+        ).getOrNull()
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio,
+        ).getOrNull()
 
         if (estimatedFee == null || maxFee == null) {
             showFeeUnknownError()
@@ -375,9 +391,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             userWalletId = userWalletId,
             feeTokenId = fee.feeTokenId,
             network = cryptoCurrency.network,
+            account = params.account,
         )
         if (feeTokenStatus == null) {
-            TangemLogger.e("Yield Mode Smart Gas fee token ${fee.feeTokenId} is not in the portfolio")
+            TangemLogger.e("Yield Mode Smart Gas fee token ${fee.feeTokenId} is not in the ${params.account} account")
             return null
         }
         return YieldSupplySmartGasFee(
@@ -532,6 +549,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 cryptoCurrency = cryptoCurrency,
                 txIds = txsData,
                 depositContext = depositContext,
+                isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
             )
             yieldSupplyTxHistoryUpdater.scheduleUpdates(userWalletId, cryptoCurrency, txsData)
             params.callback.onTransactionSent()
@@ -585,8 +603,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     }
 
     private fun getCurrenciesStatusUpdates() {
-        singleAccountStatusListSupplier(params.userWalletId)
-            .map { it.getCryptoCurrencyStatus(currency = cryptoCurrency) }
+        currencyStatusResolver.observe(
+            userWalletId = params.userWalletId,
+            currency = cryptoCurrency,
+            account = params.account,
+        )
             .distinctUntilChanged()
             .onEach { maybeCryptoCurrency ->
                 maybeCryptoCurrency.fold(
@@ -596,6 +617,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                             feeCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
                                 userWalletId = userWalletId,
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
                             ).getOrNull() ?: cryptoCurrencyStatus,
                         )
                     },

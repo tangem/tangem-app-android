@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * @property products summaries of products in [EarnSummaryOrder]: the bottom sheet, the picker, `bestActive` and the
- * banner (without products that have a legacy block) read them
+ * banner read them
  * @property rateSources summaries of rate sources (Yield Mode, StakeKit) in the same order: only the headline reads
  * them
  */
@@ -18,9 +18,13 @@ internal data class EarnProductSummaries(
     val products: Map<CryptoCurrency.ID, List<EarnProductSummary>>,
     val rateSources: Map<CryptoCurrency.ID, List<EarnProductSummary>>,
     val source: StatusSource,
+    val isAwaitingProducts: Boolean = false,
+    val pendingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
 ) {
 
     operator fun get(id: CryptoCurrency.ID): List<EarnProductSummary> = products[id].orEmpty()
+
+    fun isPending(id: CryptoCurrency.ID): Boolean = isAwaitingProducts || id in pendingCurrencies
 }
 
 internal interface EarnProductSummaryProducer : FlowProducer<EarnProductSummaries> {

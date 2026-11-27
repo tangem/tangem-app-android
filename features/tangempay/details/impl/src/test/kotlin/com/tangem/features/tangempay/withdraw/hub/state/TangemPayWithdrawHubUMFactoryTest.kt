@@ -15,6 +15,8 @@ import com.tangem.domain.tangempay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
+import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.bank.speiDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
 import com.tangem.features.tangempay.withdraw.hub.model.RecentsState
@@ -90,7 +92,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         // Assert
         assertThat((actual.bankSection as BankSectionUM.Content).toPersonalAccount.title)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_hub_to_personal_account))
-        assertThat((actual.bankSection as BankSectionUM.Content).toBusinessAccount.title)
+        assertThat((actual.bankSection as BankSectionUM.Content).toBusinessAccount?.title)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_hub_to_business_account))
         assertThat((actual.bankSection as BankSectionUM.Content).recents).isEqualTo(RecentsUM.Loading)
     }
@@ -131,13 +133,42 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         verify(exactly = 1) { onToPersonalAccountClick() }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideBusinessCardModels")
+    fun `GIVEN offered rails WHEN create THEN the business card shows only when a US rail is offered`(
+        model: BusinessCardModel,
+    ) {
+        // Act
+        val actual = create(options = model.options).bankSection as BankSectionUM.Content
+
+        // Assert
+        assertThat(actual.toBusinessAccount != null).isEqualTo(model.isShown)
+    }
+
+    private fun provideBusinessCardModels() = listOf(
+        BusinessCardModel(options = OptionsState.Ready(bankWithdrawOptions()), isShown = true),
+        BusinessCardModel(
+            options = OptionsState.Ready(
+                bankWithdrawOptions(destinations = listOf(offrampDestination(), speiDestination())),
+            ),
+            isShown = true,
+        ),
+        BusinessCardModel(
+            options = OptionsState.Ready(bankWithdrawOptions(destinations = listOf(speiDestination()))),
+            isShown = false,
+        ),
+        BusinessCardModel(options = OptionsState.Unavailable, isShown = true),
+    )
+
+    data class BusinessCardModel(val options: OptionsState, val isShown: Boolean)
+
     @Test
     fun `GIVEN created state WHEN to business account clicked THEN callback invoked`() {
         // Arrange
         val state = create()
 
         // Act
-        (state.bankSection as BankSectionUM.Content).toBusinessAccount.onClick()
+        requireNotNull((state.bankSection as BankSectionUM.Content).toBusinessAccount).onClick()
 
         // Assert
         verify(exactly = 1) { onToBusinessAccountClick() }

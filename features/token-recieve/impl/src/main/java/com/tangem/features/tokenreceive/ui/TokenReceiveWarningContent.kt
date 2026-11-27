@@ -52,7 +52,7 @@ internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
             iconSize = 72.dp,
         )
         SpacerH(32.dp)
-        WarningBlock(networkName = warningUM.network)
+        WarningBlock(networkName = warningUM.network, networkLabel = warningUM.networkLabel)
         SpacerH(8.dp)
         Text(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -78,7 +78,7 @@ internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
 }
 
 @Composable
-private fun WarningBlock(networkName: String, modifier: Modifier = Modifier) {
+private fun WarningBlock(networkName: String, networkLabel: String?, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -92,7 +92,11 @@ private fun WarningBlock(networkName: String, modifier: Modifier = Modifier) {
 
         Text(
             textAlign = TextAlign.Center,
-            text = stringResourceSafe(R.string.domain_receive_assets_onboarding_network_name, networkName),
+            text = if (networkLabel != null) {
+                stringResourceSafe(R.string.receive_network_with_label, networkName, networkLabel)
+            } else {
+                stringResourceSafe(R.string.domain_receive_assets_onboarding_network_name, networkName)
+            },
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
         )

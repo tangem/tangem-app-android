@@ -4,11 +4,6 @@ import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.utils.NetworksCleaner
-import com.tangem.domain.nft.utils.NFTCleaner
-import com.tangem.domain.staking.utils.StakingCleaner
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -22,26 +17,14 @@ import kotlinx.coroutines.withContext
  * Each feature owns its removal logic and registers it as a [CryptoCurrencyDataCleaner].
  *
  * @property currencyDataCleaners Cleaners registered by features that keep per-currency data.
- * @property tokensFeatureToggles Toggles switching between the registered cleaners and the legacy hard-wired ones.
- * @property networksCleaner Utility to clean network-related data.
- * @property stakingCleaner Utility to clean staking-related data.
- * @property nftCleaner Utility to clean NFT-related data.
  * @property dispatchers Coroutine dispatchers for managing threading.
  *
  * @see <a href="https://www.notion.so/tangem/2be5d34eb67880008f95cb779dcafac9">Notion</a>
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
 class CryptoCurrencyMetadataCleaner(
     private val currencyDataCleaners: Set<CryptoCurrencyDataCleaner>,
-    private val tokensFeatureToggles: TokensFeatureToggles,
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private val networksCleaner: NetworksCleaner,
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private val stakingCleaner: StakingCleaner,
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private val nftCleaner: NFTCleaner,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletDataCleaner {
 
@@ -55,11 +38,6 @@ class CryptoCurrencyMetadataCleaner(
      */
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
         if (userWalletIds.isEmpty()) return
-
-        if (!tokensFeatureToggles.isPluggableBalanceSourcesEnabled) {
-            clearLegacy(userWalletIds)
-            return
-        }
 
         clearAll { it.clear(userWalletIds) }
     }
@@ -83,11 +61,6 @@ class CryptoCurrencyMetadataCleaner(
     suspend operator fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
 
-        if (!tokensFeatureToggles.isPluggableBalanceSourcesEnabled) {
-            invokeLegacy(userWalletId = userWalletId, currencies = currencies)
-            return
-        }
-
         clearAll { it(userWalletId = userWalletId, currencies = currencies) }
     }
 
@@ -105,38 +78,5 @@ class CryptoCurrencyMetadataCleaner(
     private suspend fun clearSafely(target: String, clear: suspend () -> Unit) {
         runSuspendCatching { clear() }
             .onFailure { TangemLogger.e("Failed to clear $target metadata", it) }
-    }
-
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private suspend fun clearLegacy(userWalletIds: List<UserWalletId>) {
-        withContext(dispatchers.default) {
-            awaitAll(
-                async { clearSafely(target = "networks") { networksCleaner.clear(userWalletIds) } },
-                async { clearSafely(target = "staking") { stakingCleaner.clear(userWalletIds) } },
-            )
-        }
-    }
-
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private suspend fun invokeLegacy(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        withContext(dispatchers.default) {
-            awaitAll(
-                async { networksCleaner(userWalletId = userWalletId, currencies = currencies) },
-                async { clearStaking(userWalletId = userWalletId, currencies = currencies) },
-                async { clearNFTs(userWalletId = userWalletId, currencies = currencies) },
-            )
-        }
-    }
-
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private suspend fun clearStaking(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        stakingCleaner(userWalletId = userWalletId, currencies = currencies)
-    }
-
-    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
-    private suspend fun clearNFTs(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        val networks = currencies.mapTo(destination = hashSetOf(), transform = CryptoCurrency::network)
-
-        nftCleaner(userWalletId = userWalletId, networks = networks)
     }
 }

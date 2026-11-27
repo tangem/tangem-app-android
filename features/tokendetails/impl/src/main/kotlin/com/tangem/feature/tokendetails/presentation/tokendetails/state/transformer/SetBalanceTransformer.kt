@@ -13,6 +13,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.accruingContributions
 import com.tangem.domain.models.yield.supply.yieldSupply
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
@@ -83,7 +84,8 @@ internal class SetBalanceTransformer(
 
         val totalCryptoAmount = computeTotal(status.value.amount, stakingCryptoAmount)
 
-        val isYieldSupplyActive = status.value.yieldSupply?.isActive == true
+        val isBalanceTicking = status.value.yieldSupply?.isActive == true ||
+            status.value.accruingContributions().isNotEmpty()
         val prevContent = prev as? TokenDetailsBalanceBlockUM.Content
 
         return TokenDetailsBalanceBlockUM.Content(
@@ -109,12 +111,12 @@ internal class SetBalanceTransformer(
             isBalanceFlickering = status.value.sources.total == StatusSource.CACHE,
             isBalanceZero = totalCryptoAmount.isNullOrZero(),
             // Preserve the ticking yield balance produced by SetYieldSupplyBalanceTransformer across status updates
-            displayYieldSupplyFiatBalance = if (isYieldSupplyActive) {
+            displayYieldSupplyFiatBalance = if (isBalanceTicking) {
                 prevContent?.displayYieldSupplyFiatBalance
             } else {
                 null
             },
-            displayYieldSupplyCryptoBalance = if (isYieldSupplyActive) {
+            displayYieldSupplyCryptoBalance = if (isBalanceTicking) {
                 prevContent?.displayYieldSupplyCryptoBalance
             } else {
                 null

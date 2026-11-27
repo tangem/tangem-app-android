@@ -71,8 +71,13 @@ internal fun FeeSelectorBlockContent(
     if (state is FeeSelectorUM.Error && state.isHidden) {
         return
     }
-    if (appearance == FeeSelectorParams.BlockAppearance.Row) {
-        FeeSelectorRowContent(state = state, modifier = modifier)
+    val isIconRow = appearance == FeeSelectorParams.BlockAppearance.IconRow
+    if (appearance == FeeSelectorParams.BlockAppearance.Row || isIconRow) {
+        FeeSelectorRowContent(
+            state = state,
+            isInHostCard = isIconRow,
+            modifier = modifier,
+        )
         return
     }
     val isPlain = appearance == FeeSelectorParams.BlockAppearance.Plain
@@ -285,15 +290,27 @@ private fun FeeSelectorUM.Content.feeAmountText(): String {
 }
 
 @Composable
-private fun FeeSelectorRowContent(state: FeeSelectorUM, modifier: Modifier = Modifier) {
+private fun FeeSelectorRowContent(state: FeeSelectorUM, isInHostCard: Boolean, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .background(color = TangemTheme.colors3.bg.secondary, shape = FeeSelectorRowShape)
+            .conditionalCompose(!isInHostCard) {
+                Modifier.background(color = TangemTheme.colors3.bg.secondary, shape = FeeSelectorRowShape)
+            }
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .testTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        if (isInHostCard) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp)
+                    .testTag(FeeSelectorBlockTestTags.ICON),
+                painter = painterResource(R.drawable.ic_fee_new_24),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.accent.blue,
+            )
+        }
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography3.body.medium,
@@ -302,6 +319,7 @@ private fun FeeSelectorRowContent(state: FeeSelectorUM, modifier: Modifier = Mod
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .weight(1f)
+                .conditionalCompose(isInHostCard) { Modifier.padding(start = 4.dp) }
                 .testTag(FeeSelectorBlockTestTags.TITLE),
         )
         when (state) {
@@ -342,6 +360,24 @@ private fun FeeSelectorBlockContent_Row_Preview(@PreviewParameter(FeeSelectorUMP
             state = state,
             onReadMoreClick = {},
             appearance = FeeSelectorParams.BlockAppearance.Row,
+        )
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun FeeSelectorBlockContent_IconRow_Preview(
+    @PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM,
+) {
+    TangemThemePreviewRedesign {
+        FeeSelectorBlockContent(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors3.bg.secondary),
+            state = state,
+            onReadMoreClick = {},
+            appearance = FeeSelectorParams.BlockAppearance.IconRow,
         )
     }
 }

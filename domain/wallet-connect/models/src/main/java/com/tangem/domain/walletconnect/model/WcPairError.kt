@@ -11,6 +11,7 @@ sealed class WcPairError(
 
     data class UnsupportedDApp(val appName: String) : WcPairError(code = "107 001 004")
     data class UnsupportedBlockchains(val chains: Set<String>, val appName: String) : WcPairError(code = "107 001 005")
+    data class UriExpired(override val message: String) : WcPairError(code = "107 001 006")
 
     data class ApprovalFailed(override val message: String) : WcPairError(code = "107 002 003")
     data class Unknown(override val message: String) : WcPairError(code = "107 003 001")

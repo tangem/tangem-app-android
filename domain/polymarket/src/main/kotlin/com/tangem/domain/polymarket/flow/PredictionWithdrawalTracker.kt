@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.flow
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
+import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionWithdrawError
 import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
@@ -32,9 +33,29 @@ class PredictionWithdrawalTracker(
     }
 
     private suspend fun run(userWalletId: UserWalletId) {
-        val record = readRecord(userWalletId) ?: return
-        val transactionId = record.transactionId ?: resend(userWalletId) ?: return
+        val transactionId = awaitTransactionId(userWalletId) ?: return
         poll(userWalletId = userWalletId, transactionId = transactionId)
+    }
+
+    private suspend fun awaitTransactionId(userWalletId: UserWalletId): String? {
+        repeat(config.maxAttempts) { attempt ->
+            if (attempt > 0) delay(config.interval)
+            val record = readRecord(userWalletId) ?: return null
+            record.transactionId?.let { return it }
+            val resent = submitInteractor.resend(userWalletId = userWalletId, walletId = userWalletId.stringValue)
+            if (resent.leftOrNull() != PredictionWithdrawalFailure.WalletBusy) {
+                return resent.fold(
+                    ifLeft = { failure ->
+                        TangemLogger.e("The recorded withdrawal could not be resent: $failure")
+                        null
+                    },
+                    ifRight = { receipt -> receipt.transactionId.takeUnless { release(userWalletId, receipt) } },
+                )
+            }
+            TangemLogger.i("The recorded withdrawal waits for a session key operation to release the wallet")
+        }
+        TangemLogger.e("The recorded withdrawal was not resent: the wallet stayed busy")
+        return null
     }
 
     private suspend fun readRecord(userWalletId: UserWalletId): PredictionWithdrawalRecord? =
@@ -42,17 +63,6 @@ class PredictionWithdrawalTracker(
             TangemLogger.e("The stored withdrawal could not be read", cause)
             null
         }
-
-    private suspend fun resend(userWalletId: UserWalletId): String? = submitInteractor.resend(
-        userWalletId = userWalletId,
-        walletId = userWalletId.stringValue,
-    ).fold(
-        ifLeft = { failure ->
-            TangemLogger.e("The recorded withdrawal could not be resent: $failure")
-            null
-        },
-        ifRight = { receipt -> receipt.transactionId.takeUnless { release(userWalletId, receipt) } },
-    )
 
     private suspend fun poll(userWalletId: UserWalletId, transactionId: String) {
         repeat(config.maxAttempts) {

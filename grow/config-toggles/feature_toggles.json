@@ -16,15 +16,15 @@
         "version": "undefined"
     },
     {
-        "name": "AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED",
-        "version": "6.8"
-    },
-    {
         "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
         "version": "undefined"
     },
     {
         "name": "TWI_1881_POLYMARKET_FAST_ORDERS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1882_POLYMARKET_CRYPTO_UP_DOWN_ENABLED",
         "version": "undefined"
     },
     {
@@ -36,15 +36,15 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1906_EXPRESS_V2_ENABLED",
-        "version": "6.8"
-    },
-    {
         "name": "TWI_1948_YIELD_CONTRIBUTION_ENABLED",
         "version": "6.9"
     },
     {
         "name": "TWI_1676_EARN_ENABLED",
+        "version": "6.10"
+    },
+    {
+        "name": "TWI_1869_GAUNTLET_VAULT_ENABLED",
         "version": "undefined"
     },
     {
@@ -53,10 +53,14 @@
     },
     {
         "name": "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED",
-        "version": "undefined"
+        "version": "6.10"
     },
     {
         "name": "AND_18953_EARN_UPDATE_ASSET_SELECTION",
         "version": "6.9"
+    },
+    {
+        "name": "AND_18957_MONEY_ACCOUNT_BANNER_ENABLED",
+        "version": "undefined"
     }
 ]

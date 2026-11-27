@@ -50,11 +50,11 @@ internal class CollectibleTxStatusConverterTest {
     internal data class ErrorCodeModel(val wire: String, val code: String?, val expected: CollectibleTxStatus)
 
     private fun errorCodeModels() = listOf(
-        ErrorCodeModel(wire = "pack-opening-error", code = "3999", expected = CollectibleTxStatus.REFUNDING),
-        ErrorCodeModel(wire = "pack-opening-error", code = "3120", expected = CollectibleTxStatus.PACK_OPENING_ERROR),
+        ErrorCodeModel(wire = "pack-opening-error", code = "4201", expected = CollectibleTxStatus.REFUNDING),
+        ErrorCodeModel(wire = "pack-opening-error", code = "4200", expected = CollectibleTxStatus.PACK_OPENING_ERROR),
         ErrorCodeModel(wire = "pack-opening-error", code = null, expected = CollectibleTxStatus.PACK_OPENING_ERROR),
         ErrorCodeModel(wire = "pack-opening-error", code = "oops", expected = CollectibleTxStatus.PACK_OPENING_ERROR),
-        ErrorCodeModel(wire = "pack-purchased", code = "3999", expected = CollectibleTxStatus.PACK_PURCHASED),
+        ErrorCodeModel(wire = "pack-purchased", code = "4201", expected = CollectibleTxStatus.PACK_PURCHASED),
     )
 
     private fun provideTestModels() = listOf(

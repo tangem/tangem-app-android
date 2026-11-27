@@ -2,6 +2,7 @@ package com.tangem.features.moneyaccount.main.component
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -30,9 +31,20 @@ internal class DefaultMoneyAccountMainBlockComponent @AssistedInject constructor
             MoneyAccountMainBlockContent(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
+                isGrouped = false,
                 modifier = modifier.animateContentSize(),
             )
         }
+    }
+
+    @Composable
+    override fun GroupedRow(state: MoneyAccountMainUM, isBalanceHidden: Boolean, modifier: Modifier) {
+        MoneyAccountMainBlockContent(
+            state = state,
+            isBalanceHidden = isBalanceHidden,
+            isGrouped = true,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory

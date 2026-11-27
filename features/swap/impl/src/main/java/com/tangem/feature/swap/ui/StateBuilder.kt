@@ -605,6 +605,7 @@ internal class StateBuilder(
         }
         val priceImpact = quoteModel.priceImpact
         val isTangemPayWithdrawal = fromSwapCurrencyStatus.account is Account.Payment
+        val isCollectiblesWithdrawal = fromSwapCurrencyStatus.account is Account.Collectibles
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = sendInput,
@@ -664,6 +665,7 @@ internal class StateBuilder(
                     priceImpact = priceImpact,
                     swapFee = swapFee,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
+                    isCollectiblesWithdrawal = isCollectiblesWithdrawal,
                 ),
                 isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
@@ -784,8 +786,9 @@ internal class StateBuilder(
         priceImpact: PriceImpact,
         swapFee: SwapFee?,
         isTangemPayWithdrawal: Boolean,
+        isCollectiblesWithdrawal: Boolean,
     ): Boolean {
-        val isSwapTxReady = isTangemPayWithdrawal || swapFee != null
+        val isSwapTxReady = isTangemPayWithdrawal || isCollectiblesWithdrawal || swapFee != null
         return isSwapTxReady && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
@@ -1172,6 +1175,47 @@ internal class StateBuilder(
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
                 toTokenAmount = stringReference(swapTransactionState.toAmount.orEmpty()),
+                fromTokenFiatAmount = fromFiatAmount,
+                toTokenFiatAmount = toFiatAmount,
+                fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
+                toTokenIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
+                navigationUM = swapSuccessNavigation(txUrl = txUrl, exploreClick = onExploreClick),
+                onStatusButtonClick = {},
+            ),
+        )
+    }
+
+    fun createCollectiblesWithdrawalSuccessState(
+        uiState: SwapStateHolder,
+        swapTransactionState: SwapTransactionState.CollectiblesWithdrawalData,
+        dataState: SwapProcessDataState,
+        txUrl: String,
+        onExploreClick: () -> Unit,
+    ): SwapStateHolder {
+        val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
+        val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
+        val fromAmount = swapTransactionState.amount.value
+        val toAmount = swapTransactionState.swapData.toTokenAmount.value
+        val providerState = uiState.providerState as? ProviderState.Content
+
+        val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
+        val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
+
+        return uiState.copy(
+            successState = SwapSuccessStateHolder(
+                timestamp = System.currentTimeMillis(),
+                txUrl = txUrl,
+                providerName = stringReference(providerState?.name.orEmpty()),
+                providerType = stringReference(providerState?.type.orEmpty()),
+                shouldShowStatusButton = false,
+                isTransferMode = false,
+                providerIcon = providerState?.iconUrl.orEmpty(),
+                rate = providerState?.subtitle ?: TextReference.EMPTY,
+                fee = TextReference.EMPTY,
+                fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
+                toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
+                fromTokenAmount = stringReference(swapTransactionState.fromAmount),
+                toTokenAmount = stringReference(swapTransactionState.toAmount),
                 fromTokenFiatAmount = fromFiatAmount,
                 toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),

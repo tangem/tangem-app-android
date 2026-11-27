@@ -20,8 +20,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -46,6 +44,7 @@ import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.YieldSupplyWithdrawalClaimBatching
@@ -82,7 +81,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val urlOpener: UrlOpener,
     private val router: Router,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
@@ -121,13 +120,14 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private var appCurrency = AppCurrency.Default
 
+    // Banner deeplinks open portfolio screens (e.g. Onramp) for the currency, which a Money flow doesn't have
     val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
         MarketingBannerRequest(
             screen = MarketingScreen.Yield(
                 networkId = params.cryptoCurrency.network.rawId,
                 contractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-        ),
+        ).takeUnless { isHeldOutsidePortfolio() },
     )
 
     val uiState: StateFlow<YieldSupplyActiveContentUM>
@@ -295,6 +295,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
      */
     fun onGoToTokenClick() {
         onClaimResultDismiss()
+        // Outside the portfolio (Money) the screen beneath is the account screen, not a token screen
+        if (isHeldOutsidePortfolio()) {
+            router.pop()
+            return
+        }
         // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
         router.popToOrReplaceCurrent(
             route = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency),
@@ -350,8 +355,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    singleAccountStatusListSupplier(params.userWalletId)
-                        .map { it.getCryptoCurrencyStatus(currency = cryptoCurrency) }
+                    currencyStatusResolver.observe(
+                        userWalletId = params.userWalletId,
+                        currency = cryptoCurrency,
+                        account = params.account,
+                    )
                         .distinctUntilChanged()
                         .onEach { maybeCryptoCurrency ->
                             maybeCryptoCurrency.fold(
@@ -471,11 +479,16 @@ internal class YieldSupplyActiveModel @Inject constructor(
         }
     }
 
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
+    }
+
     private fun loadMinAmount() {
         modelScope.launch(dispatchers.default) {
             yieldSupplyMinAmountUseCase(
-                userWalletId,
-                cryptoCurrencyStatusFlow.value,
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value,
+                isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
             ).onRight { minAmount ->
                 val dustAmount = yieldSupplyGetDustMinAmountUseCase(
                     minAmountTokenCurrency = minAmount,
@@ -506,15 +519,18 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private fun loadFees() {
         modelScope.launch(dispatchers.default) {
             val cryptoStatus = cryptoCurrencyStatusFlow.value
+            val isHeldOutsidePortfolio = isHeldOutsidePortfolio()
 
             val currentFee = yieldSupplyGetCurrentFeeUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoStatus,
+                isHeldOutsidePortfolio = isHeldOutsidePortfolio,
             ).getOrNull()
 
             val maxFee = yieldSupplyGetMaxFeeUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoStatus,
+                isHeldOutsidePortfolio = isHeldOutsidePortfolio,
             ).getOrNull()
 
             if (currentFee != null && maxFee != null) {

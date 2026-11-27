@@ -1,7 +1,11 @@
 package com.tangem.features.earn.staking.impl
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -26,11 +30,15 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.product.detailsRow
 import java.math.BigDecimal
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
 internal class PooledStakingMapper @Inject constructor() {
 
@@ -45,9 +53,11 @@ internal class PooledStakingMapper @Inject constructor() {
 
         return EarnProductSummary(
             productId = POOLED_STAKING_ID,
-            // Temporary plain text: becomes a resource taking the rate as an argument, and the APY suffix goes with it.
-            rateText = stringReference("${option.apy.format { percent(canBeLower = true) }} APY"),
-            risk = EarnRisk.Low,
+            rateText = resourceReference(
+                id = R.string.earn_apy_value,
+                formatArgs = wrappedList(option.apy.format { percent(canBeLower = true) }),
+            ),
+            risk = RISK,
             availability = if (availability is StakingAvailability.Full) {
                 ProductAvailability.Full
             } else {
@@ -74,10 +84,15 @@ internal class PooledStakingMapper @Inject constructor() {
 
         return EarnProductState.Ready(
             rate = EarnProductRate(fraction = option.apy, type = EarnRateType.APY),
-            description = stringReference(DESCRIPTION),
+            description = resourceReference(R.string.earn_yield_picker_pooled_staking_description),
             projection = DefaultEarnProjection(netRate = bestVault.netRate()),
-            benefits = listOf(textBlock(BENEFIT_TITLE, BENEFIT_TEXT)),
-            howItWorks = null,
+            benefits = listOf(
+                EarnTextBlock(
+                    title = resourceReference(R.string.earn_product_details_staking_benefit_title),
+                    description = resourceReference(R.string.earn_product_details_staking_benefit_subtitle),
+                    icon = TangemIconUM.Icon(CoreUiR.drawable.ic_staking_24),
+                ),
+            ),
             details = details(feePercent = bestVault.feePercent.stripTrailingZeros().toPlainString()),
             limits = EarnLimits(minDeposit = P2PEthPoolIntegration.DEFAULT_MINIMUM_STAKE, remainingCap = null),
             apyPeriods = emptyList(),
@@ -118,58 +133,72 @@ internal class PooledStakingMapper @Inject constructor() {
         else -> EarnPositionState.None
     }
 
-    // Temporary plain text: the fee texts become resources taking the fee as an argument.
-    private fun details(feePercent: String): List<EarnRow> = listOf(
-        row(RISK_LABEL, RISK_VALUE),
-        // The p2p.org link needs a link value in the contract; plain text until it exists.
-        row(VALIDATOR_LABEL, VALIDATOR_VALUE),
-        row(WITHDRAWALS_LABEL, WITHDRAWALS_VALUE, info = textBlock(WITHDRAWALS_LABEL, WITHDRAWALS_INFO)),
-        row(
-            label = FEE_LABEL,
-            value = "$feePercent% of yield",
-            info = textBlock(title = FEE_LABEL, description = "$feePercent$FEE_INFO_SUFFIX"),
-        ),
-    )
+    private fun details(feePercent: String): List<EarnRow> {
+        val percent = "$feePercent%"
+        val withdrawalsLabel = resourceReference(R.string.earn_product_details_withdrawals)
+        val feeLabel = resourceReference(R.string.earn_product_details_performance_fee)
 
-    private fun row(label: String, value: String, info: EarnTextBlock? = null): EarnRow = EarnRow(
-        label = stringReference(label),
-        value = EarnValue.Text(stringReference(value)),
+        return listOf(
+            RISK.detailsRow(),
+            EarnRow(
+                label = resourceReference(R.string.staking_validator),
+                value = EarnValue.Link(text = stringReference(VALIDATOR_VALUE), url = VALIDATOR_URL),
+                kind = EarnRowKind.Protocol,
+            ),
+            row(
+                label = withdrawalsLabel,
+                value = resourceReference(R.string.earn_product_details_staking_withdrawals_value),
+                info = EarnRowInfo.Text(
+                    title = withdrawalsLabel,
+                    text = resourceReference(R.string.earn_product_details_staking_withdrawals_info),
+                ),
+                kind = EarnRowKind.Withdrawals,
+            ),
+            row(
+                label = feeLabel,
+                value = resourceReference(R.string.earn_product_details_performance_fee_value, wrappedList(percent)),
+                info = EarnRowInfo.Text(
+                    title = feeLabel,
+                    text = resourceReference(
+                        id = R.string.earn_product_details_performance_fee_info,
+                        formatArgs = wrappedList(percent),
+                    ),
+                ),
+                kind = EarnRowKind.PerformanceFee,
+            ),
+        )
+    }
+
+    private fun row(
+        label: TextReference,
+        value: TextReference,
+        info: EarnRowInfo? = null,
+        kind: EarnRowKind,
+    ): EarnRow = EarnRow(
+        label = label,
+        value = EarnValue.Text(value),
         info = info,
-    )
-
-    private fun textBlock(title: String, description: String): EarnTextBlock = EarnTextBlock(
-        title = stringReference(title),
-        description = stringReference(description),
+        kind = kind,
     )
 
     /** A stake that is known or could not be read: "Start earning" must not be offered over a possible balance. */
     private fun hasPossibleStake(position: StakingBalance.Data.P2PEthPool?, isBalanceFailed: Boolean): Boolean =
         position != null || isBalanceFailed
 
-    private fun buttonLabel(hasPossibleStake: Boolean): TextReference =
-        stringReference(if (hasPossibleStake) MANAGE_LABEL else START_EARNING_LABEL)
+    private fun buttonLabel(hasPossibleStake: Boolean): TextReference = if (hasPossibleStake) {
+        resourceReference(R.string.eth_yield_manage)
+    } else {
+        resourceReference(R.string.eth_yield_start_earning)
+    }
 
     private companion object {
 
         const val PERCENT_SHIFT = 2
 
-        // Temporary plain strings: they become Lokalise resources in a separate strings task, and these constants go.
-        const val START_EARNING_LABEL = "Start earning"
-        const val MANAGE_LABEL = "Manage"
-        const val DESCRIPTION = "Earn variable yield on ETH by staking with P2P, a professional validator that helps " +
-            "secure Ethereum. Withdrawals take up to 5 days, and a small risk of loss applies if the validator is " +
-            "penalised by the network."
-        const val BENEFIT_TITLE = "Yield from Ethereum itself."
-        const val BENEFIT_TEXT = "You earn from securing the network, not from lending."
-        const val RISK_LABEL = "Risk"
-        const val RISK_VALUE = "Low"
-        const val VALIDATOR_LABEL = "Validator"
+        val RISK = EarnRisk.Low
+
+        // The validator is a brand name, not a translated text.
         const val VALIDATOR_VALUE = "P2P"
-        const val WITHDRAWALS_LABEL = "Withdrawals"
-        const val WITHDRAWALS_VALUE = "Up to 5 days"
-        const val WITHDRAWALS_INFO = "Withdrawals take up to 5 days, because Ethereum releases staked ETH through an " +
-            "exit queue."
-        const val FEE_LABEL = "Performance fee"
-        const val FEE_INFO_SUFFIX = "% of the yield you earn. It is not charged on the amount you deposit."
+        const val VALIDATOR_URL = "https://p2p.org/"
     }
 }

@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.common.ui.account.AccountIconUM
@@ -30,7 +31,13 @@ import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
@@ -45,6 +52,7 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -89,12 +97,17 @@ internal class JointAccountMembersModelTest {
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val issueJointAccountInviteUseCase: IssueJointAccountInviteUseCase = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
+    private val userWallet: UserWallet = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val clock = FakeCurrentTimeProvider()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val compositionVerifier: JointAccountCompositionVerifier = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk(relaxed = true)
+    private val pushPermissionPrompt: JointAccountPushPermissionPrompt = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
@@ -110,11 +123,15 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher,
             pollingCoordinator,
             issueJointAccountInviteUseCase,
+            analyticsEventHandler,
+            getUserWalletUseCase,
+            ensureWalletLinkedUseCase,
             ownerAddressResolver,
             singleAccountSupplier,
             compositionVerifier,
             jointAccountCompromisedAlert,
             singleAccountListSupplier,
+            pushPermissionPrompt,
         )
         val localAccount = mockk<Account.Joint> {
             every { accountId } returns AccountId.forJointAccount(USER_WALLET_ID, ACCOUNT_ID).getOrNull()!!
@@ -127,6 +144,8 @@ internal class JointAccountMembersModelTest {
         every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
         coEvery { ownerAddressResolver.resolve(userWalletId = any(), ownerKeyIndex = any()) } returns null.right()
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns userWallet.right()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns true
     }
 
     @Test
@@ -289,6 +308,87 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
+    fun `GIVEN linked wallet WHEN invite clicked THEN the link is ensured before the invite is issued`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        coEvery { issueJointAccountInviteUseCase(accountId = any(), slot = any()) } returns ISSUED_INVITE.right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            ensureWalletLinkedUseCase(userWallet)
+            issueJointAccountInviteUseCase(accountId = any(), slot = 1)
+        }
+    }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN invite clicked THEN no invite is issued and the button is back`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns false
+        val model = createModel()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { issueJointAccountInviteUseCase(accountId = any(), slot = any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        assertThat(openedSheets).isEmpty()
+        assertThat(model.uiState.value.freeSlots.first().action?.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN wallet link sheet is open WHEN any slot is clicked again THEN it is ignored and the slot shows a loader`() =
+        runTest {
+            // Arrange
+            stub(account = pendingAccount(members = listOf(creator)))
+            stubAccountRecord()
+            val linking = CompletableDeferred<Boolean>()
+            coEvery { ensureWalletLinkedUseCase(userWallet) } coAnswers { linking.await() }
+            val model = createModel()
+            val (firstSlot, secondSlot) = model.uiState.value.freeSlots.map { it.action }
+
+            // Act
+            firstSlot.click()
+            runCurrent()
+            firstSlot.click()
+            secondSlot.click()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.freeSlots.map { it.action?.isLoading }).containsExactly(true, false).inOrder()
+            coVerify(exactly = 1) { ensureWalletLinkedUseCase(userWallet) }
+            linking.complete(false)
+        }
+
+    @Test
+    fun `GIVEN wallet not found WHEN invite clicked THEN the invite is issued without the link check`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        coEvery { issueJointAccountInviteUseCase(accountId = any(), slot = any()) } returns ISSUED_INVITE.right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { issueJointAccountInviteUseCase(accountId = any(), slot = 1) }
+        coVerify(exactly = 0) { ensureWalletLinkedUseCase(any()) }
+    }
+
+    @Test
     fun `GIVEN an invite being issued WHEN any slot is clicked again THEN it is ignored and the slot shows a loader`() =
         runTest {
             // Arrange
@@ -349,11 +449,12 @@ internal class JointAccountMembersModelTest {
     fun `GIVEN issuing fails WHEN invite clicked THEN error snackbar, no sheet and the button is back`() =
         runTest {
             // Arrange
+            val failure = IllegalStateException("offline")
             stub(account = pendingAccount(members = listOf(creator)))
             stubAccountRecord()
             coEvery {
                 issueJointAccountInviteUseCase(accountId = any(), slot = any())
-            } returns JointAccountInviteIssueError.Failed(cause = IllegalStateException("offline")).left()
+            } returns JointAccountInviteIssueError.Failed(cause = failure).left()
             val model = createModel()
             val openedSheets = model.bottomSheetNavigation.trackSlot()
             val message = slot<SnackbarMessage>()
@@ -370,6 +471,9 @@ internal class JointAccountMembersModelTest {
                     onDismissRequest = NO_OP,
                 ),
             )
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Invite, cause = failure))
+            }
             assertThat(openedSheets).isEmpty()
             assertThat(model.uiState.value.freeSlots.first().action)
                 .isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
@@ -392,6 +496,7 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
         assertThat(openedSheets).isEmpty()
         assertThat(model.uiState.value.freeSlots.first().action)
             .isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
@@ -768,6 +873,63 @@ internal class JointAccountMembersModelTest {
             verify(exactly = 0) { onActivated() }
         }
 
+    @Test
+    fun `GIVEN account updated twice WHEN model created THEN push permission is prompted once for it`() = runTest {
+        // Arrange
+        val accounts = MutableStateFlow(listOf(pendingAccount(members = listOf(creator))))
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+        createModel()
+
+        // Act
+        accounts.value = listOf(pendingAccount(members = listOf(creator, member)))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { pushPermissionPrompt.promptOnce(userWalletId = any(), cryptoAccountId = any()) }
+        coVerify(exactly = 1) {
+            pushPermissionPrompt.promptOnce(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN no account id in params WHEN account resolved THEN push permission is prompted for its id`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+
+        // Act
+        createModel(cryptoAccountId = null)
+
+        // Assert
+        coVerify(exactly = 1) {
+            pushPermissionPrompt.promptOnce(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN no account WHEN model created THEN push permission is not prompted`() = runTest {
+        // Arrange
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(emptyList())
+
+        // Act
+        createModel()
+
+        // Assert
+        coVerify(exactly = 0) { pushPermissionPrompt.promptOnce(userWalletId = any(), cryptoAccountId = any()) }
+    }
+
+    @Test
+    fun `GIVEN permission result WHEN passed to model THEN prompt receives it`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        val model = createModel()
+
+        // Act
+        model.onPushPermissionResult(PushPermissionResult.Blocked)
+
+        // Assert
+        verify(exactly = 1) { pushPermissionPrompt.onSystemRequestResult(PushPermissionResult.Blocked) }
+    }
+
     private fun confirmingAccount() = pendingAccount(members = listOf(creator, member))
         .copy(status = JointAccount.Status.CONFIRMING, membersCount = 2, safeAddress = SAFE_ADDRESS)
 
@@ -803,11 +965,15 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher = jointAccountListFetcher,
             pollingCoordinator = pollingCoordinator,
             issueJointAccountInviteUseCase = issueJointAccountInviteUseCase,
+            analyticsEventHandler = analyticsEventHandler,
+            getUserWalletUseCase = getUserWalletUseCase,
+            ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
             ownerAddressResolver = ownerAddressResolver,
             singleAccountSupplier = singleAccountSupplier,
             stateController = JointAccountMembersStateController(),
             inviteSharing = JointAccountInviteSharing(shareManager = shareManager),
             currentTimeProvider = clock,
+            pushPermissionPrompt = pushPermissionPrompt,
             compromiseWatcher = JointAccountCompromiseWatcher(
                 singleAccountListSupplier = singleAccountListSupplier,
                 compositionVerifier = compositionVerifier,

@@ -61,6 +61,7 @@ import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreview
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsHint
 import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsTooltip
 import com.tangem.feature.wallet.presentation.wallet.ui.components.ShtorkaSheetHeader
@@ -359,6 +360,8 @@ private fun WalletContent(
                                         walletBalanceUM = currentWallet.walletsBalanceUM,
                                         buttons = currentWallet.buttons,
                                         isBalanceHidden = state.isHidingMode,
+                                        permanentUpgradeBannerUM = (currentWallet as? WalletUM.Content)
+                                            ?.permanentUpgradeBannerUM,
                                         modifier = Modifier.height(balanceBlockHeight),
                                         onSubtitleBottomChange = { newValue ->
                                             if (pullToRefreshContentOffset == 0.dp && newValue > subtitleBottom) {
@@ -672,6 +675,9 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                     modifier: Modifier,
                 ) {
                 }
+
+                @Composable
+                override fun GroupedRow(state: TangemPayMainUM, isBalanceHidden: Boolean, modifier: Modifier) = Unit
             },
             moneyAccountComponent = object : MoneyAccountMainBlockComponent {
                 override fun LazyListScope.moneyAccountMainContent(
@@ -680,6 +686,9 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                     modifier: Modifier,
                 ) {
                 }
+
+                @Composable
+                override fun GroupedRow(state: MoneyAccountMainUM, isBalanceHidden: Boolean, modifier: Modifier) = Unit
             },
             polymarketComponent = object : PolymarketWalletBlockComponent {
                 override fun LazyListScope.polymarketWalletBlockContent(

@@ -14,6 +14,7 @@ internal class TangemPayVerifiedUMFactory(
     private val onChoosePlanClick: () -> Unit,
     private val onOpenMoneyAccountClick: () -> Unit,
     private val onCloseClick: () -> Unit,
+    private val isColdWallet: Boolean,
 ) {
 
     fun create(availableProducts: Set<TangemPayProduct>): TangemPayVerifiedUM.Content {
@@ -56,7 +57,7 @@ internal class TangemPayVerifiedUMFactory(
             else -> resourceReference(R.string.common_close)
         },
         iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
-            .takeIf { isMoneyAccountAvailable && !isPaymentAccountAvailable },
+            .takeIf { isColdWallet && isMoneyAccountAvailable && !isPaymentAccountAvailable },
         onClick = when {
             isPaymentAccountAvailable -> onChoosePlanClick
             isMoneyAccountAvailable -> onOpenMoneyAccountClick

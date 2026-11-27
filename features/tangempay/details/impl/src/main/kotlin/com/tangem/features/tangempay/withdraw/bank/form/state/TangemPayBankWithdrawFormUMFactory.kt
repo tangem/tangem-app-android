@@ -11,6 +11,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldE
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldKind
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.FormState
+import com.tangem.features.tangempay.withdraw.bank.form.model.canSuggestSavedRecipients
 import com.tangem.features.tangempay.withdraw.bank.form.model.kindIn
 import com.tangem.features.tangempay.withdraw.bank.form.model.placeholderIn
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
@@ -65,10 +66,10 @@ internal class TangemPayBankWithdrawFormUMFactory(
         state: FormState,
         accounts: List<BankAccount>,
     ): ImmutableList<SuggestionUM> {
-        val field = BankWithdrawFormField.AccountNumber
-        if (field !in fields || state.focusedField != field) return persistentListOf()
+        val field = state.focusedField?.takeIf { it in fields && it.canSuggestSavedRecipients }
+            ?: return persistentListOf()
         val prefix = values[field].orEmpty().trim()
-        return BankAccountSuggestions.match(accounts = accounts, prefix = prefix)
+        return BankAccountSuggestions.match(accounts = accounts, field = field, prefix = prefix)
             .map { account ->
                 SuggestionUM(
                     id = account.id,
@@ -93,6 +94,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
             value = values[field].orEmpty(),
             placeholder = field.placeholderIn(values),
             error = error,
+            helperText = field.helperText,
             keyboardOptions = KeyboardOptions(
                 capitalization = kind.capitalization,
                 keyboardType = kind.keyboardType,
@@ -118,6 +120,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
             resourceReference(R.string.tangempay_withdraw_bank_field_error_invalid_format)
         BankWithdrawFieldError.InvalidRoutingNumber ->
             resourceReference(R.string.tangempay_withdraw_bank_field_error_routing_number)
+        BankWithdrawFieldError.InvalidClabe -> resourceReference(R.string.tangempay_withdraw_bank_field_error_clabe)
         BankWithdrawFieldError.NonLatin -> resourceReference(R.string.tangempay_order_data_field_latin_only)
     }
 

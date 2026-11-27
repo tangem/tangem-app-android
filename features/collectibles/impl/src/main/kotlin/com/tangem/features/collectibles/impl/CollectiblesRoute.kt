@@ -2,6 +2,7 @@ package com.tangem.features.collectibles.impl
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.impl.nftdetails.CollectiblesNftDetailsComponent
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -29,4 +30,13 @@ internal sealed interface CollectiblesRoute : Route {
 
     @Serializable
     data object PackOpenFailed : CollectiblesRoute
+
+    @Serializable
+    data object Inventory : CollectiblesRoute
+
+    @Serializable
+    data class NftDetails(
+        val id: String,
+        val ownership: CollectiblesNftDetailsComponent.Ownership,
+    ) : CollectiblesRoute
 }

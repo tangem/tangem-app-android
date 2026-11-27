@@ -3,6 +3,7 @@ package com.tangem.features.earn.impl.overview
 import com.tangem.features.earn.api.overview.EarnHeadline
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import javax.inject.Inject
 
 /**

@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.legal.LegalCaption
+import com.tangem.core.ui.ds2.button.HoldToConfirm
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -61,7 +63,7 @@ internal fun EarnConfirmContent(
         } else {
             null
         },
-        bottom = { EarnFlowButton(button = state.primary, modifier = Modifier.fillMaxWidth()) },
+        bottom = { ConfirmButton(state) },
         modifier = modifier,
     ) { contentPadding ->
         LazyColumn(
@@ -71,9 +73,6 @@ internal fun EarnConfirmContent(
             contentPadding = contentPadding,
         ) {
             item(key = "amount") { Amount(state) }
-            state.notice?.let { notice ->
-                item(key = "notice") { EarnNotice(text = notice, modifier = Modifier.padding(vertical = 12.dp)) }
-            }
             item(key = "details") { Details(state = state, feeBlock = feeBlock) }
         }
     }
@@ -120,6 +119,24 @@ private fun Details(state: EarnConfirmUM, feeBlock: FeeSelectorBlockComponent?) 
             )
         }
         feeBlock?.Content(Modifier.fillMaxWidth())
+        state.notice?.let { notice -> EarnNotice(text = notice) }
         EarnNotifications(state.notifications)
+    }
+}
+
+/** A mobile wallet signs without a card, so the action is held to confirm */
+@Composable
+private fun ConfirmButton(state: EarnConfirmUM) {
+    if (state.isHoldToConfirm) {
+        TangemButton.HoldToConfirm(
+            modifier = Modifier.fillMaxWidth(),
+            size = TangemButton.Size.X12,
+            isLoading = state.primary.isLoading,
+            isEnabled = state.primary.isEnabled,
+            text = state.primary.text,
+            onConfirm = state.primary.onClick,
+        )
+    } else {
+        EarnFlowButton(button = state.primary, modifier = Modifier.fillMaxWidth())
     }
 }

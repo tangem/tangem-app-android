@@ -26,6 +26,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.wallets.usecase.GetWalletLinkStatusUseCase
 import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
@@ -61,6 +62,7 @@ internal class TxHistoryModel @Inject constructor(
     private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
     private val vibratorHapticManager: VibratorHapticManager,
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase,
     paramsContainer: ParamsContainer,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) : Model(), TxHistoryUiActions {
@@ -101,6 +103,7 @@ internal class TxHistoryModel @Inject constructor(
             currency = params.currency,
             isResumed = isResumed,
             hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
+            isWalletLinked = getWalletLinkStatusUseCase(params.userWalletId),
             reload = ::reloadWithJointDelta,
         )
         subscribeOnCurrencyStatusUpdates()

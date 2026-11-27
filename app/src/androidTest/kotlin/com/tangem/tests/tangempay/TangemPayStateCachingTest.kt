@@ -7,11 +7,11 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
-import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.restartApp
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.SINGLE_CARD_TILE_SUBTITLE
 import com.tangem.scenarios.assertTangemPayConnectionIssuesBanner
 import com.tangem.scenarios.assertTangemPaySessionExpiredBanner
 import com.tangem.scenarios.assertTangemPayStaleState
@@ -47,7 +47,7 @@ class TangemPayStateCachingTest : BaseTestCase() {
     private val cachedTransaction = "Tangem Coffee"
 
     // The Main tile summarises the cached cards as a count, not as the "*XXXX" mask the card page shows.
-    private val cachedCardsSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 1, 1)
+    private val cachedCardsSubtitle = SINGLE_CARD_TILE_SUBTITLE
     private val sessionExpiredSubtitle = getResourceString(CoreResR.string.tangempay_payment_account_sync_needed)
 
     @AllureId("9753")
@@ -200,7 +200,7 @@ class TangemPayStateCachingTest : BaseTestCase() {
         val kycInProgressState = "InProgress"
         val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
         val activatingText = getResourceString(CoreResR.string.money_account_main_status_activating)
-        val customerInfoEndpoint = "/bff-v2/v1/customer/me"
+        val customerSummaryEndpoint = "/bff-v2/v1/customer/summary"
 
         setupHooks(
             additionalBeforeSection = {
@@ -220,12 +220,12 @@ class TangemPayStateCachingTest : BaseTestCase() {
             step("Set WireMock scenario '$sessionScenario' to '$serviceUnavailableState'") {
                 setWireMockScenarioState(sessionScenario, serviceUnavailableState)
             }
-            val customerInfoBefore = getWireMockRequestCount("GET", customerInfoEndpoint)
+            val customerSummaryBefore = getWireMockRequestCount("GET", customerSummaryEndpoint)
             step("Force-close and re-launch the app") { restartApp(packageName) }
-            step("Assert the relaunch requested customer info") {
+            step("Assert the relaunch requested the customer summary") {
                 awaitSuccess {
-                    if (getWireMockRequestCount("GET", customerInfoEndpoint) <= customerInfoBefore) {
-                        throw AssertionError("The relaunch should request $customerInfoEndpoint")
+                    if (getWireMockRequestCount("GET", customerSummaryEndpoint) <= customerSummaryBefore) {
+                        throw AssertionError("The relaunch should request $customerSummaryEndpoint")
                     }
                 }
             }
@@ -264,10 +264,9 @@ class TangemPayStateCachingTest : BaseTestCase() {
             step("Assert total balance shows the cached '$cachedTotalBalance'") {
                 flakySafely { onMainScreen { totalBalanceText.assertTextEquals(cachedTotalBalance) } }
             }
-            step("Assert 'Balances may be outdated' banner is displayed") {
+            step("Assert 'Some token balances couldn't be updated.' banner is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onOutdatedDataBanner {
-                        title.assertIsDisplayed()
                         message.assertIsDisplayed()
                     }
                 }

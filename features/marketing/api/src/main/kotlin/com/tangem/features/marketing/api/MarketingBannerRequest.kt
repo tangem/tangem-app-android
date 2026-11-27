@@ -23,12 +23,18 @@ data class LinkedBannerRequest(
  *
  * @param isDemandSurveyCompleted hides every banner whose link is the Waitlist link (`tangem://onramp?type=
  * concierge_waitlist`), whatever its type: it leads to the demand survey, which the wallet has already answered.
+ * @param moneyAccountAction what the Money account banner button says. `null` while the account state is unknown,
+ * then the campaign's own button text is shown.
  */
 data class CtaBannerRequest(
     val screen: MarketingScreen.Onramp,
     val amount: MarketingBannerAmount?,
     val isDemandSurveyCompleted: Boolean,
+    val moneyAccountAction: MoneyAccountBannerAction? = null,
 )
+
+/** The button of the Money account banner: opens the account the user has, or starts activating one. */
+enum class MoneyAccountBannerAction { CONTINUE, ACTIVATE }
 
 /**
  * Amount entered on the screen, matched against the campaigns' USD min/max bounds. A [Fiat] amount is converted

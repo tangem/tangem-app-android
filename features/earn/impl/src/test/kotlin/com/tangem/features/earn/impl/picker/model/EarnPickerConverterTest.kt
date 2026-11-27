@@ -1,8 +1,10 @@
 package com.tangem.features.earn.impl.picker.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
@@ -15,7 +17,6 @@ import com.tangem.features.earn.impl.fake.createFakeEarnProduct
 import com.tangem.features.earn.impl.fake.fakeReadyState
 import com.tangem.features.earn.impl.fake.fakeSummary
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
@@ -25,6 +26,8 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnRowInfo
+import com.tangem.features.earn.product.api.product.EarnRowKind
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -82,12 +85,16 @@ internal class EarnPickerConverterTest {
             calls += Call.Incentive
         }
 
-        override fun onInfoClick(block: EarnTextBlock) {
-            calls += Call.Info(block)
+        override fun onTabClick(tab: EarnPickerTab) {
+            calls += Call.Tab(tab)
         }
 
-        override fun onLinkClick(url: String) {
-            calls += Call.Link(url)
+        override fun onInfoClick(info: EarnRowInfo, row: EarnRowKind?) {
+            calls += Call.Info(info, row)
+        }
+
+        override fun onLinkClick(url: String, row: EarnRowKind?) {
+            calls += Call.Link(url, row)
         }
 
         override fun onCloseClick() {
@@ -133,12 +140,18 @@ internal class EarnPickerConverterTest {
         }
 
         @Test
-        fun `GIVEN one summary WHEN convert THEN there are no cards`() {
+        fun `GIVEN one summary WHEN convert THEN its card is shown and selected`() {
             // Act
-            val actual = convert(summaries = listOf(lendingSummary))
+            val actual = convert(summaries = listOf(lendingSummary), selectedId = lending.id).cardInfos()
 
             // Assert
-            assertThat(actual.products).isEmpty()
+            val expected = CardInfo(
+                id = "lending",
+                title = lending.title,
+                rate = lendingSummary.rateText,
+                isSelected = true,
+            )
+            assertThat(actual).containsExactly(expected)
         }
 
         @Test
@@ -203,7 +216,7 @@ internal class EarnPickerConverterTest {
             val state = ready.copy(projection = null, benefits = emptyList(), details = emptyList(), incentiveRate = null)
 
             // Act
-            val actual = convert(state = state).content
+            val actual = convert(state = state).readyContent()
 
             // Assert
             val expected = ContentUM.Ready(
@@ -212,6 +225,7 @@ internal class EarnPickerConverterTest {
                 sections = persistentListOf(),
                 benefits = persistentListOf(),
                 details = persistentListOf(),
+                onTabClick = actual.onTabClick,
             )
             assertThat(actual).isEqualTo(expected)
         }
@@ -283,7 +297,7 @@ internal class EarnPickerConverterTest {
         @Test
         fun `GIVEN details rows WHEN convert THEN info and link rows report their clicks and a text row has none`() {
             // Arrange
-            val info = EarnTextBlock(stringReference("title"), stringReference("description"))
+            val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
             val withInfo = EarnRow(stringReference("with"), EarnValue.Text(stringReference("1")), info)
             val link = EarnRow(stringReference("link"), EarnValue.Link(stringReference("Aave"), "https://aave.com"))
             val plain = EarnRow(stringReference("plain"), EarnValue.Text(stringReference("2")))
@@ -298,6 +312,46 @@ internal class EarnPickerConverterTest {
             assertThat(details[2].onInfoClick).isNull()
             assertThat(details[2].onValueClick).isNull()
             assertThat(calls).containsExactly(Call.Info(info), Call.Link("https://aave.com")).inOrder()
+        }
+
+        @Test
+        fun `GIVEN details with kinds WHEN tapping a row info THEN intents get the info and its kind`() {
+            // Arrange
+            val info = EarnRowInfo.Text(title = stringReference("title"), text = stringReference("description"))
+            val risk = EarnRow(stringReference("risk"), EarnValue.Text(stringReference("Low")), info, EarnRowKind.Risk)
+            val state = ready.copy(details = listOf(risk))
+
+            // Act
+            convert(state = state).readyContent().details.single().onInfoClick?.invoke()
+
+            // Assert
+            assertThat(calls).containsExactly(Call.Info(info, EarnRowKind.Risk))
+        }
+
+        @Test
+        fun `GIVEN a link row with a kind WHEN tapping its value THEN intents get the url and the kind`() {
+            // Arrange
+            val value = EarnValue.Link(stringReference("Aave"), "https://aave.com")
+            val protocol = EarnRow(stringReference("Protocol"), value, kind = EarnRowKind.Protocol)
+            val state = ready.copy(details = listOf(protocol))
+
+            // Act
+            convert(state = state).readyContent().details.single().onValueClick?.invoke()
+
+            // Assert
+            assertThat(calls).containsExactly(Call.Link("https://aave.com", EarnRowKind.Protocol))
+        }
+
+        @Test
+        fun `GIVEN Ready WHEN onTabClick Benefits THEN intents get the tab`() {
+            // Arrange
+            val content = convert().readyContent()
+
+            // Act
+            content.onTabClick(EarnPickerTab.Benefits)
+
+            // Assert
+            assertThat(calls).containsExactly(Call.Tab(EarnPickerTab.Benefits))
         }
 
         @Test
@@ -326,23 +380,21 @@ internal class EarnPickerConverterTest {
             actual.onClose()
 
             // Assert
-            assertThat(actual.title).isEqualTo(EarnPickerTexts.title)
-            assertThat(actual.subtitle).isEqualTo(EarnPickerTexts.subtitle)
+            assertThat(actual.title).isEqualTo(resourceReference(R.string.earn_yield_picker_title))
+            assertThat(actual.subtitle).isEqualTo(resourceReference(R.string.earn_yield_picker_subtitle))
             assertThat(actual.barTitle).isEqualTo(lending.title)
             assertThat(actual.readyContent().description).isEqualTo(ready.description)
             assertThat(actual.cta.text).isEqualTo(ready.primary.label)
-            assertThat(actual.ctaHint).isNull()
             assertThat(calls).containsExactly(Call.Action(lending, ready.primary.action), Call.Close).inOrder()
         }
 
         @Test
-        fun `GIVEN balance below the minimum WHEN cta clicked THEN intents get onAddFundsClick and the hint is shown`() {
+        fun `GIVEN balance below the minimum WHEN cta clicked THEN intents get onAddFundsClick`() {
             // Act
             val actual = convert(ethBalance = BigDecimal.ZERO)
             actual.cta.onClick()
 
             // Assert
-            assertThat(actual.ctaHint).isEqualTo(EarnPickerTexts.minDepositHint(ready.limits.minDeposit))
             assertThat(calls).containsExactly(Call.AddFunds)
         }
 
@@ -371,14 +423,13 @@ internal class EarnPickerConverterTest {
             actual.onClose()
 
             // Assert
-            assertThat(actual.title).isEqualTo(EarnPickerTexts.title)
-            assertThat(actual.subtitle).isEqualTo(EarnPickerTexts.subtitle)
-            assertThat(actual.barTitle).isEqualTo(EarnPickerTexts.title)
+            assertThat(actual.title).isEqualTo(resourceReference(R.string.earn_yield_picker_title))
+            assertThat(actual.subtitle).isEqualTo(resourceReference(R.string.earn_yield_picker_subtitle))
+            assertThat(actual.barTitle).isEqualTo(resourceReference(R.string.earn_yield_picker_title))
             assertThat(actual.products).isEmpty()
             assertThat(actual.content).isEqualTo(ContentUM.Loading)
-            assertThat(actual.cta.text).isEqualTo(EarnPickerTexts.startEarning)
+            assertThat(actual.cta.text).isEqualTo(resourceReference(R.string.eth_yield_start_earning))
             assertThat(actual.cta.isEnabled).isFalse()
-            assertThat(actual.ctaHint).isNull()
             assertThat(calls).containsExactly(Call.Close)
         }
 
@@ -392,7 +443,7 @@ internal class EarnPickerConverterTest {
 
             // Assert
             assertThat(actual.products).isEmpty()
-            assertThat(actual.cta.text).isEqualTo(EarnPickerTexts.startEarning)
+            assertThat(actual.cta.text).isEqualTo(resourceReference(R.string.eth_yield_start_earning))
             assertThat(actual.cta.isEnabled).isFalse()
             assertThat(calls).containsExactly(Call.OverviewRetry)
         }
@@ -409,6 +460,7 @@ internal class EarnPickerConverterTest {
         summaries = summaries,
         selectedId = selectedId,
         ethBalance = ethBalance,
+        capacity = EarnPickerDepositCapacity.Unknown,
         intents = intents,
     )
 
@@ -432,8 +484,9 @@ internal class EarnPickerConverterTest {
         data class Retry(val product: EarnProduct) : Call
         data object OverviewRetry : Call
         data object Incentive : Call
-        data class Info(val block: EarnTextBlock) : Call
-        data class Link(val url: String) : Call
+        data class Tab(val tab: EarnPickerTab) : Call
+        data class Info(val info: EarnRowInfo, val row: EarnRowKind? = null) : Call
+        data class Link(val url: String, val row: EarnRowKind? = null) : Call
         data object Close : Call
     }
 }

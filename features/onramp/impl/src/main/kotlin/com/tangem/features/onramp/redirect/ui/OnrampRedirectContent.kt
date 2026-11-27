@@ -23,8 +23,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
+import com.tangem.utils.annotations.RemoveWithToggle
 
 @Composable
+@RemoveWithToggle(toggleName = "AND_19143_ONRAMP_DESIGN_SYSTEM_ENABLED", description = "Delete with the flag")
 internal fun OnrampRedirectContent(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.imePadding(),

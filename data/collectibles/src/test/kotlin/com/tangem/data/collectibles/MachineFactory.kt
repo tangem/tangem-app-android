@@ -112,16 +112,11 @@ internal object MachineFactory {
         openPackMedia = openPackMedia,
     )
 
-    fun createListConfig(
-        categoryId: String? = null,
-        search: String? = null,
-    ) = CollectibleGachaMachinesListConfig(categoryId = categoryId, search = search)
+    fun createListConfig(categoryId: String? = null, search: String? = null) =
+        CollectibleGachaMachinesListConfig(categoryId = categoryId, search = search)
 
-    fun createCategoryDto(
-        id: String = "pokemons",
-        name: String = "Pokemons",
-        machinesQuantity: Int = 10,
-    ) = MachineCategoryDTO(id = id, name = name, machinesQuantity = machinesQuantity)
+    fun createCategoryDto(id: String = "pokemons", name: String = "Pokemons", machinesQuantity: Int = 10) =
+        MachineCategoryDTO(id = id, name = name, machinesQuantity = machinesQuantity)
 
     fun createCategoriesResponse(
         categories: List<MachineCategoryDTO> = listOf(createCategoryDto()),

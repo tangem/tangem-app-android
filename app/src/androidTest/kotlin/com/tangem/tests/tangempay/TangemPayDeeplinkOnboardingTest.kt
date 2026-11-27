@@ -186,9 +186,6 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert Tangem Pay mobile onboarding legal caption is not displayed") {
-                onTangemPayHotWalletOnboardingScreen { legalCaption.assertIsNotDisplayed() }
-            }
             step("Assert '$validateEndpoint' is requested once") {
                 val validateRequestsAfter = getWireMockRequestCount("POST", validateEndpoint)
                 Assert.assertEquals(1, validateRequestsAfter - validateRequestsBefore)

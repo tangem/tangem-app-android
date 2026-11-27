@@ -9,8 +9,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.coil.ImagePreloader
+import com.tangem.core.media.VideoLoadState
 import com.tangem.core.res.R
+import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -32,6 +33,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
+import com.tangem.features.collectibles.impl.common.ui.handleRegionStatus
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
 import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
@@ -43,9 +46,7 @@ import com.tangem.features.collectibles.impl.packopening.model.converter.Collect
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesSellBackButtonConverter
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
-import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
-import com.tangem.core.media.VideoLoadState
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
@@ -70,6 +71,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -83,6 +85,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private val buybackCollectibleUseCase: BuybackCollectibleUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val messageSender: UiMessageSender,
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase,
     private val router: Router,
     private val imagePreloader: ImagePreloader,
     playerFactory: PackRevealVideoPlayer.Factory,
@@ -465,6 +468,15 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
         buyback.value = BuybackState.InProgress(offer)
         modelScope.launch {
+            val status = getRegionStatusUseCase(params.userWalletId)
+            val isAllowed = handleRegionStatus(status, messageSender) {
+                bottomSheetNavigation.activate(CollectiblesConfirmOrderBottomSheetConfig.RegionRestricted)
+            }
+            if (!isAllowed) {
+                buyback.value = BuybackState.Available(offer)
+                return@launch
+            }
+
             val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
                 ?: return@launch onBuybackFailed(BuybackError.Unexpected, offer, pack)
 

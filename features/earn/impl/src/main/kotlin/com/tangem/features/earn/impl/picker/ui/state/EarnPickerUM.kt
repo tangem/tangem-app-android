@@ -10,7 +10,6 @@ import kotlinx.collections.immutable.ImmutableList
 
 /**
  * @property barTitle the selected product, the screen title while nothing is loaded
- * @property products shown only when the currency has several
  */
 @Immutable
 internal data class EarnPickerUM(
@@ -20,7 +19,6 @@ internal data class EarnPickerUM(
     val products: ImmutableList<EarnProductCardUM>,
     val content: ContentUM,
     val cta: TangemButtonUM,
-    val ctaHint: TextReference?,
     val onClose: () -> Unit,
 ) {
 
@@ -37,6 +35,7 @@ internal data class EarnPickerUM(
             val sections: ImmutableList<EarnPickerTab>,
             val benefits: ImmutableList<EarnBenefitUM>,
             val details: ImmutableList<EarnRowUM>,
+            val onTabClick: (EarnPickerTab) -> Unit,
         ) : ContentUM
     }
 }

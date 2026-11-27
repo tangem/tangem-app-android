@@ -37,11 +37,9 @@ import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
-import com.tangem.domain.wallets.usecase.ReportCardLinkedWalletsBackupUseCase
 import com.tangem.domain.wallets.usecase.ReportSavedWalletsBackupUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -83,8 +81,6 @@ internal class MainViewModel @Inject constructor(
     private val offrampRepository: OfframpRepository,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
     private val reportSavedWalletsBackupUseCase: ReportSavedWalletsBackupUseCase,
-    private val reportCardLinkedWalletsBackupUseCase: ReportCardLinkedWalletsBackupUseCase,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -187,11 +183,7 @@ internal class MainViewModel @Inject constructor(
 
     private fun reportSavedWalletsBackups() {
         viewModelScope.launch {
-            if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateV2Enabled) {
-                reportSavedWalletsBackupUseCase()
-            } else {
-                reportCardLinkedWalletsBackupUseCase()
-            }
+            reportSavedWalletsBackupUseCase()
         }
     }
 

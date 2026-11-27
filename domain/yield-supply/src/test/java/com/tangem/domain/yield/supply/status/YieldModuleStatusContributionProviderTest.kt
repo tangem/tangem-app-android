@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import com.tangem.domain.yield.supply.models.status.YieldModuleStatus
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.yield.MockYieldSupply
@@ -34,10 +35,12 @@ internal class YieldModuleStatusContributionProviderTest {
 
     private val yieldModuleStatusSupplier: YieldModuleStatusSupplier = mockk()
     private val tokensFeatureToggles: TokensFeatureToggles = mockk()
+    private val wrappedNativeFactory: YieldSupplyWrappedNativeFactory = mockk()
 
     private val provider = YieldModuleStatusContributionProvider(
         yieldModuleStatusSupplier = yieldModuleStatusSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
+        wrappedNativeFactory = wrappedNativeFactory,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -48,8 +51,9 @@ internal class YieldModuleStatusContributionProviderTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(yieldModuleStatusSupplier, tokensFeatureToggles)
+        clearMocks(yieldModuleStatusSupplier, tokensFeatureToggles, wrappedNativeFactory)
         every { tokensFeatureToggles.isYieldContributionEnabled } returns true
+        every { wrappedNativeFactory.create(any()) } returns null
     }
 
     @Test
@@ -73,6 +77,7 @@ internal class YieldModuleStatusContributionProviderTest {
         every {
             yieldModuleStatusSupplier(YieldModuleStatusProducer.Params(userWalletId = userWalletId))
         } returns flowOf(model.statuses)
+        every { wrappedNativeFactory.create(any()) } returns model.wrappedNative
 
         // Act
         val actual = provider.contributions(userWallet).first().resolve(
@@ -234,6 +239,26 @@ internal class YieldModuleStatusContributionProviderTest {
             statuses = setOf(status()),
             expected = null,
         ),
+        ResolveModel(
+            name = "active status of the network's wrapped native token",
+            statuses = setOf(status(isActive = true, effectiveProtocolBalance = BigDecimal("7"))),
+            wrappedNative = MockYieldSupply.token(contractAddress = "0xTOKENABC"),
+            expected = null,
+        ),
+        ResolveModel(
+            name = "active status of a token that is not the network's wrapped native token",
+            statuses = setOf(status(isActive = true, effectiveProtocolBalance = BigDecimal("7"))),
+            wrappedNative = MockYieldSupply.token(contractAddress = "0xOtherWrapped"),
+            expected = YieldSupplyContribution(
+                status = YieldSupplyStatus(
+                    isActive = true,
+                    isInitialized = true,
+                    isAllowedToSpend = true,
+                    effectiveProtocolBalance = BigDecimal("7"),
+                ),
+                source = StatusSource.ONLY_CACHE,
+            ),
+        ),
     )
 
     private fun status(
@@ -242,12 +267,10 @@ internal class YieldModuleStatusContributionProviderTest {
         isActive: Boolean = true,
         effectiveProtocolBalance: BigDecimal? = BigDecimal.ONE,
         effectiveBalance: BigDecimal? = null,
-    ) = YieldModuleStatus(
+    ) = MockYieldSupply.moduleStatus(
         networkId = networkId,
         tokenAddress = tokenAddress,
         isActive = isActive,
-        isInitialized = true,
-        isAllowedToSpend = true,
         effectiveProtocolBalance = effectiveProtocolBalance,
         effectiveBalance = effectiveBalance,
         source = StatusSource.ONLY_CACHE,
@@ -272,6 +295,7 @@ internal class YieldModuleStatusContributionProviderTest {
         val statuses: Set<YieldModuleStatus>,
         val expected: YieldSupplyContribution?,
         val currency: CryptoCurrency = MockYieldSupply.token(contractAddress = "0xTokenAbC"),
+        val wrappedNative: CryptoCurrency.Token? = null,
     ) {
         override fun toString(): String = name
     }

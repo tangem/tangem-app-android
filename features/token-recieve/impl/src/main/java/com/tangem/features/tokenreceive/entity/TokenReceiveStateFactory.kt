@@ -13,6 +13,7 @@ import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.ens.EnsAddress
+import com.tangem.domain.models.network.Network
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
@@ -41,11 +42,8 @@ internal class TokenReceiveStateFactory(
                 is TokenReceiveType.Custom -> getCustomCurrencyIconState(tokenReceiveType)
             },
             network = cryptoCurrency.network.name,
-            isEnsResultLoading = false,
-            notificationConfigs = getNotifications(
-                tokenName = tokenName,
-                tokenReceiveNotification = tokenReceiveNotification,
-            ).toImmutableList(),
+            isEnsResultLoading = cryptoCurrency.network.nameResolvingType == Network.NameResolvingType.ENS,
+            notificationConfigs = getNotifications(tokenName = tokenName).toImmutableList(),
         )
     }
 
@@ -121,10 +119,7 @@ internal class TokenReceiveStateFactory(
         return sortedAddresses.toPersistentList()
     }
 
-    private fun getNotifications(
-        tokenName: String,
-        tokenReceiveNotification: List<TokenReceiveNotification>,
-    ): List<NotificationUM> {
+    private fun getNotifications(tokenName: String): List<NotificationUM> {
         return buildList {
             add(
                 NotificationUM.Info(
@@ -139,17 +134,19 @@ internal class TokenReceiveStateFactory(
                     iconTint = NotificationConfig.IconTint.Accent,
                 ),
             )
-            tokenReceiveNotification.filter { !it.isYieldSupplyNotification }.map { notification ->
-                add(
-                    NotificationUM.Warning(
-                        title = resourceReference(notification.title),
-                        subtitle = resourceReference(
-                            id = notification.subtitle,
-                            formatArgs = WrappedList(notification.formatArgs),
-                        ),
-                    ),
-                )
-            }
+            addAll(getWarnings())
+        }
+    }
+
+    fun getWarnings(): List<NotificationUM> {
+        return tokenReceiveNotification.filter { !it.isYieldSupplyNotification }.map { notification ->
+            NotificationUM.Warning(
+                title = resourceReference(notification.title),
+                subtitle = resourceReference(
+                    id = notification.subtitle,
+                    formatArgs = WrappedList(notification.formatArgs),
+                ),
+            )
         }
     }
 

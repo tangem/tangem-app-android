@@ -240,13 +240,15 @@ internal class JointOperationModel @Inject constructor(
         if (!operation.canSign || isBusy) return
 
         launchSigning {
-            delegate.prepareSigning(
-                state = operation,
-                network = params.currency.network,
-                operationId = params.operationId,
-            )
-                .onRight { prepared -> onSigningPrepared(operation = operation, prepared = prepared) }
-                .onLeft(::onSignFailed)
+            if (delegate.ensureWalletLinked(userWalletId = params.userWalletId)) {
+                delegate.prepareSigning(
+                    state = operation,
+                    network = params.currency.network,
+                    operationId = params.operationId,
+                )
+                    .onRight { prepared -> onSigningPrepared(operation = operation, prepared = prepared) }
+                    .onLeft(::onSignFailed)
+            }
         }
     }
 
@@ -365,19 +367,21 @@ internal class JointOperationModel @Inject constructor(
         modelScope.launch {
             isRefusing.value = true
             try {
-                delegate.reject(
-                    state = operation,
-                    network = params.currency.network,
-                    operationId = params.operationId,
-                )
-                    .onRight {
-                        onRefused(operation)
-                        poller.refresh()
-                    }
-                    .onLeft { error ->
-                        if (error.isStaleOperation()) poller.refresh()
-                        showRejectError(error = error, role = operation.role)
-                    }
+                if (delegate.ensureWalletLinked(userWalletId = params.userWalletId)) {
+                    delegate.reject(
+                        state = operation,
+                        network = params.currency.network,
+                        operationId = params.operationId,
+                    )
+                        .onRight {
+                            onRefused(operation)
+                            poller.refresh()
+                        }
+                        .onLeft { error ->
+                            if (error.isStaleOperation()) poller.refresh()
+                            showRejectError(error = error, role = operation.role)
+                        }
+                }
             } finally {
                 isRefusing.value = false
             }
@@ -488,7 +492,7 @@ private fun JointOperationSignError.toAnalyticsEvent(): JointAccountError = when
 }
 
 private fun JointOperationRejectError.toAnalyticsEvent(role: Role): JointAccountError {
-    val source = if (role == Role.INITIATOR) ErrorSource.Delete else ErrorSource.Decline
+    val source = if (role == Role.INITIATOR) ErrorSource.Cancel else ErrorSource.Decline
     return when (this) {
         is JointOperationRejectError.Failed -> JointAccountError(source = source, cause = cause)
         else -> JointAccountError(source = source, errorMessage = toString())

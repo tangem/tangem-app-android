@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics
 
 import com.tangem.core.analytics.models.*
+import com.tangem.domain.models.wallet.UserWalletId
 
 sealed class WalletScreenAnalyticsEvent {
 
@@ -128,6 +129,12 @@ sealed class WalletScreenAnalyticsEvent {
         class NoticeUpgradeToColdWallet : MainScreen(event = "Notice - Upgrade To Cold Wallet")
 
         class ButtonUpgrade : MainScreen(event = "Button - Upgrade")
+
+        class NoticePermanentUpgradeBanner(
+            userWalletId: UserWalletId,
+        ) : MainScreen(event = "Notice - Permanent Upgrade Banner"), OneTimePerSessionEvent {
+            override val oneTimeEventId: String = "$event ${userWalletId.stringValue}"
+        }
 
         class NotePromo : MainScreen(event = "Notice - Note Promo")
 

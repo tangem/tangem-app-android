@@ -1,6 +1,7 @@
 package com.tangem.domain.yield.supply
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.domain.blockaid.models.transaction.GasEstimationResult
 import com.google.common.truth.Truth
@@ -19,12 +20,19 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase.SimulationPolicy
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -80,7 +88,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployTx = getDeployTx()
         val enterTx = getEnterTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
 
         val result = useCase(
@@ -125,7 +133,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
             }
             coEvery {
                 blockAidGasEstimate.getGasEstimation(any(), any())
-            } returns GasEstimationResult(emptyList()).right()
+            } returns GasEstimationResult.Unavailable.right()
             coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
 
             // Act
@@ -144,12 +152,150 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         }
 
     @Test
+    fun `GIVEN blockaid fails AND list of preparation and native enter WHEN invoke THEN native enter gets constant gas limit increased`() =
+        runTest {
+            // Arrange
+            val fee = TransactionFee.Single(ethLegacyFee())
+            val preparationTx = getDeployTx()
+            val nativeEnterTx = uncompiled(
+                fee = ethLegacyFee(),
+                extras = EthereumTransactionExtras(YieldSupplyContractCallDataProviderFactory.getEnterWithNativeCallData()),
+            )
+            coEvery {
+                blockAidGasEstimate.getGasEstimation(any(), any())
+            } returns GasEstimationResult.Unavailable.right()
+            coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
+
+            // Act
+            val result = useCase(
+                userWallet = userWallet,
+                cryptoCurrency = cryptoCurrency,
+                transactionDataList = listOf(preparationTx, nativeEnterTx),
+            )
+
+            // Assert
+            val txs = (result as Either.Right).value
+            Truth.assertThat(txs.map { (it.fee as Fee.Ethereum.Legacy).gasLimit })
+                .containsExactly(BigInteger.valueOf(29_400), BigInteger.valueOf(700_000))
+                .inOrder()
+            coVerify(exactly = 0) { feeRepository.calculateFee(any(), any(), nativeEnterTx) }
+        }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SimulationOutcome {
+
+        private val fee = TransactionFee.Single(ethLegacyFee())
+        private val deployTx = getDeployTx()
+        private val enterTx = getEnterTx()
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(feeRepository, feeErrorResolver, blockAidGasEstimate)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN simulation outcome and policy WHEN invoke THEN fails or falls back to the static estimate`(
+            model: SimulationOutcomeModel,
+        ) = runTest {
+            // Arrange
+            coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns model.simulation
+            coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
+            val staticEstimate = listOf(
+                deployTx.copy(fee = fee.normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY)),
+                enterTx.copy(
+                    fee = fee.normal.fixFee(cryptoCurrency, 500_000.toBigInteger())
+                        .increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
+                ),
+            )
+            val expected: Either<GetFeeError, List<TransactionData.Uncompiled>> =
+                model.expectedError?.left() ?: staticEstimate.right()
+
+            // Act
+            val actual = useCase(
+                userWallet = userWallet,
+                cryptoCurrency = cryptoCurrency,
+                transactionDataList = listOf(deployTx, enterTx),
+                policy = model.policy,
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(expected)
+            coVerify(exactly = if (model.expectedError == null) 1 else 0) {
+                feeRepository.calculateFee(any(), any(), any())
+            }
+            verify(exactly = 0) { feeErrorResolver.resolve(any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            SimulationOutcomeModel(
+                name = "reverted, default policy",
+                simulation = GasEstimationResult.Reverted.right(),
+                policy = SimulationPolicy(),
+                expectedError = null,
+            ),
+            SimulationOutcomeModel(
+                name = "reverted, revert not fatal, no static fallback",
+                simulation = GasEstimationResult.Reverted.right(),
+                policy = SimulationPolicy(isRevertFatal = false, isStaticFallbackAllowed = false),
+                expectedError = null,
+            ),
+            SimulationOutcomeModel(
+                name = "reverted, revert fatal",
+                simulation = GasEstimationResult.Reverted.right(),
+                policy = SimulationPolicy(isRevertFatal = true, isStaticFallbackAllowed = true),
+                expectedError = GetFeeError.SimulationError.Reverted,
+            ),
+            SimulationOutcomeModel(
+                name = "reverted, revert fatal, no static fallback",
+                simulation = GasEstimationResult.Reverted.right(),
+                policy = SimulationPolicy(isRevertFatal = true, isStaticFallbackAllowed = false),
+                expectedError = GetFeeError.SimulationError.Reverted,
+            ),
+            SimulationOutcomeModel(
+                name = "unavailable, default policy",
+                simulation = GasEstimationResult.Unavailable.right(),
+                policy = SimulationPolicy(),
+                expectedError = null,
+            ),
+            SimulationOutcomeModel(
+                name = "unavailable, revert fatal",
+                simulation = GasEstimationResult.Unavailable.right(),
+                policy = SimulationPolicy(isRevertFatal = true, isStaticFallbackAllowed = true),
+                expectedError = null,
+            ),
+            SimulationOutcomeModel(
+                name = "unavailable, no static fallback",
+                simulation = GasEstimationResult.Unavailable.right(),
+                policy = SimulationPolicy(isRevertFatal = false, isStaticFallbackAllowed = false),
+                expectedError = GetFeeError.SimulationError.Unavailable,
+            ),
+            SimulationOutcomeModel(
+                name = "blockaid failed, no static fallback",
+                simulation = IllegalStateException("blockaid").left(),
+                policy = SimulationPolicy(isRevertFatal = true, isStaticFallbackAllowed = false),
+                expectedError = GetFeeError.SimulationError.Unavailable,
+            ),
+        )
+    }
+
+    data class SimulationOutcomeModel(
+        val name: String,
+        val simulation: Either<Throwable, GasEstimationResult>,
+        val policy: SimulationPolicy,
+        val expectedError: GetFeeError?,
+    ) {
+        override fun toString(): String = name
+    }
+
+    @Test
     fun `test not enter transaction uses gas limit Legacy`() = runTest {
         val fee = TransactionFee.Single(ethLegacyFee())
         val deployTx = getDeployTx()
         val approveTx = getApproveTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returnsMany listOf(fee, fee)
 
         val result = useCase(
@@ -178,7 +324,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val enterTx = getEnterTx()
         val deployTx = getDeployTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returnsMany listOf(fee, fee)
 
         val result = useCase(
@@ -209,7 +355,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployTx = getDeployTx()
         val enterTx = getEnterTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
 
         val result = useCase(
@@ -241,7 +387,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployTx = getDeployTx()
         val approveTx = getApproveTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returnsMany listOf(fee, fee)
 
         val result = useCase(
@@ -270,7 +416,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val enterTx = getEnterTx()
         val deployTx = getDeployTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returnsMany listOf(fee, fee)
 
         val result = useCase(
@@ -300,7 +446,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val fee = TransactionFee.Single(ethLegacyFee())
         val enterTx = getEnterTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(emptyList()).right()
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Unavailable.right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returns fee
 
         val result = useCase(
@@ -329,8 +475,8 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val approveTx = getApproveTx()
         val enterTx = getEnterTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(
-            estimatedGasList = listOf(1_000.toBigInteger(), 2_000.toBigInteger(), 3_000.toBigInteger()),
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Estimated(
+            gasLimits = listOf(1_000.toBigInteger(), 2_000.toBigInteger(), 3_000.toBigInteger()),
         ).right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returns mockk()
         coEvery { feeRepository.getEthereumFeeWithoutGas(any(), any()) } returns fee
@@ -368,8 +514,8 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val approveTx = getApproveTx()
         val enterTx = getEnterTx()
 
-        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult(
-            estimatedGasList = listOf(1_000.toBigInteger(), 2_000.toBigInteger(), 3_000.toBigInteger()),
+        coEvery { blockAidGasEstimate.getGasEstimation(any(), any()) } returns GasEstimationResult.Estimated(
+            gasLimits = listOf(1_000.toBigInteger(), 2_000.toBigInteger(), 3_000.toBigInteger()),
         ).right()
         coEvery { feeRepository.calculateFee(any(), any(), any()) } returns mockk()
         coEvery { feeRepository.getEthereumFeeWithoutGas(any(), any()) } returns fee

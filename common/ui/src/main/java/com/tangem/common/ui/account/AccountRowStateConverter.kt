@@ -1,5 +1,6 @@
 package com.tangem.common.ui.account
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.R
 import com.tangem.common.ui.tokens.toPriceChangeState
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
@@ -10,6 +11,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_users_16_filled
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
@@ -26,6 +29,7 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
             header = Header(
                 id = account.accountId.value,
                 title = account.accountName.toUM().value,
+                titleIcon = Icons.ic_users_16_filled.takeIf { value is AccountStatus.Joint },
                 label = tokensCount(account.tokensCount),
                 description = membersCount(value),
                 onClick = onClick,
@@ -42,6 +46,7 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
             header = Header(
                 id = account.accountId.value,
                 title = account.accountName.toUM().value,
+                titleIcon = null,
                 label = tokensCount(tokensCount),
                 description = null,
                 onClick = onClick,
@@ -62,6 +67,7 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
         is TotalFiatBalance.Loaded -> TangemAccountRow.State.Content(
             id = header.id,
             title = header.title,
+            titleIcon = header.titleIcon,
             label = header.label,
             description = header.description,
             balance = stringReference(
@@ -78,6 +84,7 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
             TangemAccountRow.State.Unreachable(
                 id = header.id,
                 title = header.title,
+                titleIcon = header.titleIcon,
                 badge = resourceReference(R.string.common_unreachable),
                 label = header.label,
                 description = header.description,
@@ -87,6 +94,7 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
             TangemAccountRow.State.BalanceError(
                 id = header.id,
                 title = header.title,
+                titleIcon = header.titleIcon,
                 label = header.label,
                 description = header.description,
                 onClick = header.onClick,
@@ -118,6 +126,7 @@ class AccountRowStateConverter(private val appCurrency: AppCurrency) {
     private class Header(
         val id: String,
         val title: TextReference,
+        val titleIcon: ImageVector?,
         val label: TextReference,
         val description: TextReference?,
         val onClick: (() -> Unit)?,

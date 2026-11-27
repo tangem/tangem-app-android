@@ -54,6 +54,7 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -116,6 +117,7 @@ internal class JointOperationModelTest {
             menuActions,
             getBalanceHidingSettingsUseCase,
         )
+        coEvery { delegate.ensureWalletLinked(userWalletId = USER_WALLET_ID) } returns true
         every { delegate.isColdWallet(userWalletId = any()) } returns false
         every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns
             flowOf(JointOperationSnapshot.InFlight(createState()))
@@ -346,7 +348,7 @@ internal class JointOperationModelTest {
 
     private fun provideRejectErrorModels() = listOf(
         RejectErrorModel(ownAddress = OWN, expectedSource = ErrorSource.Decline),
-        RejectErrorModel(ownAddress = INITIATOR, expectedSource = ErrorSource.Delete),
+        RejectErrorModel(ownAddress = INITIATOR, expectedSource = ErrorSource.Cancel),
     )
 
     @Test
@@ -719,6 +721,75 @@ internal class JointOperationModelTest {
     }
 
     @Test
+    fun `GIVEN linked wallet WHEN sign THEN the link is ensured before signing is prepared`() = runTest {
+        // Arrange
+        coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
+        val model = createModel()
+
+        // Act
+        model.onSignClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerifyOrder {
+            delegate.ensureWalletLinked(userWalletId = USER_WALLET_ID)
+            delegate.prepareSigning(state = any(), network = any(), operationId = OPERATION_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN sign THEN nothing is prepared, signed or reported`() = runTest {
+        // Arrange
+        coEvery { delegate.ensureWalletLinked(userWalletId = USER_WALLET_ID) } returns false
+        val model = createModel()
+
+        // Act
+        model.onSignClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { delegate.prepareSigning(state = any(), network = any(), operationId = any()) }
+        coVerify(exactly = 0) { delegate.submitSigning(prepared = any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        assertThat(model.blockaidSheet.value).isNull()
+    }
+
+    @Test
+    fun `GIVEN linked wallet WHEN refusal confirmed THEN the link is ensured before the operation is refused`() =
+        runTest {
+            // Arrange
+            coEvery { delegate.reject(state = any(), network = any(), operationId = any()) } returns Unit.right()
+            val sheet = createModel()
+
+            // Act
+            sheet.confirmRefusal()
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
+                delegate.ensureWalletLinked(userWalletId = USER_WALLET_ID)
+                delegate.reject(state = any(), network = any(), operationId = OPERATION_ID)
+            }
+        }
+
+    @Test
+    fun `GIVEN wallet link refused WHEN refusal confirmed THEN the operation is not refused`() = runTest {
+        // Arrange
+        coEvery { delegate.ensureWalletLinked(userWalletId = USER_WALLET_ID) } returns false
+        val sheet = createModel()
+
+        // Act
+        sheet.confirmRefusal()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { delegate.reject(state = any(), network = any(), operationId = any()) }
+        verify(exactly = 0) { poller.refresh() }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
+
+    @Test
     fun `GIVEN a successful signature WHEN sign THEN the operation is fetched at once`() = runTest {
         // Arrange
         coEvery { delegate.submitSigning(prepared = any()) } returns null.right()
@@ -950,6 +1021,25 @@ internal class JointOperationModelTest {
                 analyticsEventHandler.send(event = ofType<JointAccountAnalyticsEvent.ButtonSignAnyway>())
             }
         }
+
+        @Test
+        fun `GIVEN a Blockaid sheet and wallet link refused WHEN decline THEN the sheet closes and nothing is refused`() =
+            runTest {
+                // Arrange
+                stubPrepared(verdict = Verdict.Warning)
+                val sheet = createModel()
+                sheet.onSignClick()
+                advanceUntilIdle()
+                coEvery { delegate.ensureWalletLinked(userWalletId = USER_WALLET_ID) } returns false
+
+                // Act
+                sheet.blockaidSheet.value!!.secondaryButton?.onClick?.invoke()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sheet.blockaidSheet.value).isNull()
+                coVerify(exactly = 0) { delegate.reject(state = any(), network = any(), operationId = any()) }
+            }
 
         private fun provideDeclineButtons() = listOf(
             DeclineModel(verdict = Verdict.Warning, button = { it.secondaryButton }),

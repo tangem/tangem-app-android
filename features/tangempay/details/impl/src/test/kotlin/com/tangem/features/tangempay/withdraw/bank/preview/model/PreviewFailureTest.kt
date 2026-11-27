@@ -32,6 +32,7 @@ internal class PreviewFailureTest {
         FailureModel(error = BankOfframpError.Conflict, expected = PreviewFailure.General),
         FailureModel(error = BankOfframpError.AmountOutOfLimits, expected = PreviewFailure.General),
         FailureModel(error = BankOfframpError.Rejected, expected = PreviewFailure.General),
+        FailureModel(error = BankOfframpError.BadRequest, expected = PreviewFailure.General),
     )
 
     data class FailureModel(val error: BankOfframpError, val expected: PreviewFailure)

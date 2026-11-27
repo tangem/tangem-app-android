@@ -5,6 +5,7 @@ import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.features.onramp.impl.R
@@ -26,6 +27,9 @@ internal data object OnrampSuccessComponentUMPreviewData {
         currencyImageUrl = "",
         notification = null,
         activeStatus = OnrampStatus.Status.Verifying,
+        statusVariant = TangemStatusScreen.Variant.Warning,
+        statusTitle = stringReference("Verifying"),
+        externalTxId = "vz5tdtqbu0cmvdqx",
         statusBlock = ExpressStatusUM(
             title = resourceReference(R.string.express_exchange_status_title),
             link = ExpressLinkUM.Empty,

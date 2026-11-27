@@ -1,5 +1,7 @@
 package com.tangem.domain.polymarket.interactor
 
+import com.tangem.domain.polymarket.sessionkey.FakePolymarketPendingAuthorizationStore
+import com.tangem.domain.polymarket.sessionkey.createPendingAuthorization
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -26,6 +28,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,12 +40,14 @@ import java.math.BigInteger
 
 internal class SubmitPredictionWithdrawalInteractorTest {
 
+    private val pendingAuthorizations = FakePolymarketPendingAuthorizationStore()
     private val bridgeRepository: PolymarketBridgeRepository = mockk()
     private val withdrawRepository: PolymarketWithdrawRepository = mockk()
     private val polymarketRepository: PolymarketRepository = mockk()
     private val signer: PolymarketTypedDataSigner = mockk()
     private val store: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
     private val codec: PredictionTransferCallCodec = mockk()
+    private val depositWalletLock = PolymarketDepositWalletLock(pendingAuthorizations)
 
     private val interactor = SubmitPredictionWithdrawalInteractor(
         bridgeRepository = bridgeRepository,
@@ -48,7 +56,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         signer = signer,
         store = store,
         codec = codec,
-        depositWalletLock = PolymarketDepositWalletLock(),
+        depositWalletLock = depositWalletLock,
     )
 
     @BeforeEach
@@ -228,6 +236,92 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
         coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
         coVerify(exactly = 0) { store.save(any(), any()) }
+        coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+    }
+
+    @Test
+    fun `GIVEN the nonce moved after prepare WHEN confirmed THEN the batch is signed with the nonce read at confirm`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(10).right()
+            val sent = slot<PredictionWithdrawalBatch>()
+            coEvery { withdrawRepository.submit(WALLET_ID, capture(sent)) } returns receipt().right()
+
+            // Act
+            interactor.confirm(prepared)
+
+            // Assert
+            assertThat(sent.captured).isEqualTo(batch().copy(nonce = "10", deadline = prepared.deadline))
+        }
+
+    @Test
+    fun `GIVEN a session key operation holds the wallet WHEN confirmed THEN WalletBusy and no nonce is read`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            val operating = CompletableDeferred<Unit>()
+            launch { depositWalletLock.withSessionKeyOperation(USER_WALLET_ID) { operating.await() } }
+            runCurrent()
+
+            // Act
+            val actual = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionWithdrawalFailure.WalletBusy.left())
+            coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
+            coVerify(exactly = 0) { store.save(any(), any()) }
+            operating.complete(Unit)
+        }
+
+    @Test
+    fun `GIVEN a session key operation holds the wallet WHEN resent THEN WalletBusy and nothing is submitted`() =
+        runTest {
+            // Arrange
+            coEvery { store.get(USER_WALLET_ID) } returns record(transactionId = null)
+            val operating = CompletableDeferred<Unit>()
+            launch { depositWalletLock.withSessionKeyOperation(USER_WALLET_ID) { operating.await() } }
+            runCurrent()
+
+            // Act
+            val actual = interactor.resend(userWalletId = USER_WALLET_ID, walletId = WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionWithdrawalFailure.WalletBusy.left())
+            coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
+            operating.complete(Unit)
+        }
+
+    @Test
+    fun `GIVEN an executable pending authorization WHEN confirmed THEN WalletBusy and nothing is signed or saved`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            pendingAuthorizations.store(USER_WALLET_ID, createPendingAuthorization())
+
+            // Act
+            val actual = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionWithdrawalFailure.WalletBusy.left())
+            coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
+            coVerify(exactly = 0) { store.save(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an executable pending authorization WHEN resent THEN WalletBusy and nothing is submitted`() = runTest {
+        // Arrange
+        coEvery { store.get(USER_WALLET_ID) } returns record(transactionId = null)
+        pendingAuthorizations.store(USER_WALLET_ID, createPendingAuthorization())
+
+        // Act
+        val actual = interactor.resend(userWalletId = USER_WALLET_ID, walletId = WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.WalletBusy.left())
+        coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
     }
 
     @Test
@@ -293,6 +387,34 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         assertThat(actual).isEqualTo(PredictionWithdrawalFailure.AlreadyInFlight.left())
         coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
     }
+
+    @Test
+    fun `GIVEN two withdrawals prepared WHEN both confirmed THEN only the first is sent and kept`() =
+        runTest {
+            // Arrange
+            val stored = mutableListOf<PredictionWithdrawalRecord>()
+            coEvery { store.get(USER_WALLET_ID) } answers { stored.lastOrNull() }
+            coEvery { store.save(USER_WALLET_ID, any()) } answers { stored += secondArg<PredictionWithdrawalRecord>() }
+            coEvery { polymarketRepository.getRelayerNonce(any()) } returnsMany listOf(
+                BigInteger.valueOf(9).right(),
+                BigInteger.valueOf(10).right(),
+            )
+            val first = interactor.prepare(params()).getOrNull()!!
+            val second = interactor.prepare(params()).getOrNull()!!
+
+            // Act
+            val firstResult = interactor.confirm(first)
+            val secondResult = interactor.confirm(second)
+
+            // Assert
+            assertThat(firstResult).isEqualTo(receipt().right())
+            assertThat(secondResult).isEqualTo(PredictionWithdrawalFailure.AlreadyInFlight.left())
+            coVerify(exactly = 1) { withdrawRepository.submit(any(), any()) }
+            coVerify(exactly = 1) { polymarketRepository.getRelayerNonce(any()) }
+            coVerify(exactly = 1) { signer.signRelayedBatch(any(), any()) }
+            assertThat(stored.last().transactionId).isEqualTo(TX_ID)
+            assertThat(stored.last().batch.nonce).isEqualTo("9")
+        }
 
     @Test
     fun `GIVEN the pre-submit save throws WHEN confirmed THEN PersistenceFailed and nothing is submitted`() = runTest {

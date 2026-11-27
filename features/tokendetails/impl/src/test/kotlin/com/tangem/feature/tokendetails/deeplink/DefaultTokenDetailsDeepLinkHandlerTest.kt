@@ -1,11 +1,9 @@
 package com.tangem.feature.tokendetails.deeplink
 
-import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import android.net.Uri
 import arrow.core.Either
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -14,6 +12,9 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
@@ -26,6 +27,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.logging.TangemLogger
@@ -43,7 +45,7 @@ import org.junit.jupiter.params.provider.ValueSource
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultTokenDetailsDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase = mockk()
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher = mockk()
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger = mockk()
@@ -55,16 +57,20 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     }
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val singleAccountListFetcher: SingleAccountListFetcher = mockk()
+    private var stack: List<Route> = emptyList()
 
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
         mockkObject(TangemLogger)
         every { analyticsEventHandler.send(any()) } just Runs
-        every { appRouter.push(any(), any()) } just Runs
-        every { appRouter.replaceCurrent(any(), any()) } just Runs
-        every { appRouter.stack } returns listOf(AppRoute.Wallet)
-        every { appRouter.popTo(route = any(), onComplete = any()) } just Runs
+        every { walletDeepLinkActionTrigger.selectWallet(any()) } just Runs
+        stack = listOf(AppRoute.Wallet)
+        every { router.navigate(any(), any()) } answers {
+            stack = firstArg<(List<Route>) -> List<Route>>().invoke(stack)
+            secondArg<(Boolean) -> Unit>().invoke(true)
+        }
+        every { router.popTo(route = any(), onComplete = any()) } just Runs
         coEvery { singleAccountListFetcher.invoke(any()) } returns Either.Right(Unit)
     }
 
@@ -76,8 +82,8 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         createHandler(scope = this, queryParams)
         advanceUntilIdle()
 
-        verify(exactly = 0) { appRouter.popTo(route = any(), onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+        verify(exactly = 0) { router.popTo(route = any(), onComplete = any()) }
+        verify(exactly = 0) { router.navigate(any(), any()) }
     }
 
     @Test
@@ -90,7 +96,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         coVerify(exactly = 0) { resolveAndSelectUserWalletUseCase(any()) }
     }
 
@@ -150,12 +156,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
 
         createHandler(scope = this, queryParams)
         advanceUntilIdle()
-        verify {
-            appRouter.push(
-                route = expectedRoute,
-                onComplete = any(),
-            )
-        }
+        assertThat(stack.last()).isEqualTo(expectedRoute)
     }
 
     @Test
@@ -262,7 +263,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
 
             createHandler(scope = this, queryParams)
             advanceUntilIdle()
-            verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expectedRoute)
             coVerify(exactly = 0) { tokenDetailsDeepLinkActionTrigger.trigger(any()) }
         }
 
@@ -277,7 +278,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             cryptoCurrencies = listOf(expectedCryptoCurrency),
         )
         val openDetails = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = expectedCryptoCurrency)
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, openDetails)
+        stack = listOf(AppRoute.Wallet, openDetails)
         val expectedRoute = AppRoute.CurrencyDetails(
             userWalletId = userWalletId,
             currency = expectedCryptoCurrency,
@@ -289,8 +290,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceCurrent(route = expectedRoute, onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, expectedRoute).inOrder()
     }
 
     @Test
@@ -305,16 +305,14 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         )
         val expectedRoute = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = expectedCryptoCurrency)
         val otherDetails: AppRoute.CurrencyDetails = mockk()
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, expectedRoute, otherDetails)
+        stack = listOf(AppRoute.Wallet, expectedRoute, otherDetails)
 
         // Act
         createHandler(scope = this, defaultQueryParams())
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.popTo(route = expectedRoute, onComplete = any()) }
-        verify(exactly = 0) { appRouter.replaceCurrent(route = any(), onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, expectedRoute).inOrder()
     }
 
     @Test
@@ -342,7 +340,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
 
         createHandler(scope = this, queryParams)
         advanceUntilIdle()
-        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expectedRoute)
     }
 
     @ParameterizedTest
@@ -541,7 +539,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         createHandler(scope = this, defaultQueryParams(), isFromOnNewIntent = true)
         advanceUntilIdle()
 
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
     @Test
@@ -564,9 +562,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         createHandler(scope = this, defaultQueryParams(), isFromOnNewIntent = true)
         advanceUntilIdle()
 
-        verify {
-            appRouter.push(route = expectedRoute, onComplete = any())
-        }
+        assertThat(stack.last()).isEqualTo(expectedRoute)
     }
 
     @Test
@@ -593,8 +589,8 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         createHandler(scope = this, defaultQueryParams(), isFromOnNewIntent = true)
         advanceUntilIdle()
 
-        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
-        verify(exactly = 0) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expectedRoute)
+        verify(exactly = 0) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
     @Test
@@ -612,7 +608,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         coVerify(exactly = 0) { singleAccountListFetcher.invoke(any()) }
         verify(exactly = 0) { singleAccountListSupplier.invoke(any<UserWalletId>()) }
     }
@@ -636,7 +632,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
             verify(exactly = 0) { singleAccountListSupplier.invoke(any<UserWalletId>()) }
         }
 
@@ -662,7 +658,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
             verify(exactly = 0) { singleAccountListSupplier.invoke(any<UserWalletId>()) }
             coVerify(exactly = 0) { singleAccountListFetcher.invoke(any()) }
         }
@@ -690,7 +686,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         )
         advanceUntilIdle()
 
-        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expectedRoute)
     }
 
     @Test
@@ -718,8 +714,8 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
-            verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+            verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
         }
 
     @Test
@@ -737,7 +733,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         )
         advanceUntilIdle()
 
-        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        verify { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
     @Test
@@ -770,7 +766,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+            assertThat(stack.last()).isEqualTo(expectedRoute)
         }
 
     @Test
@@ -791,7 +787,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+        assertThat(stack.last()).isEqualTo(expectedRoute)
     }
 
     private fun defaultQueryParams() = mapOf(
@@ -840,7 +836,6 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         isFromOnNewIntent: Boolean = false,
     ) {
         DefaultTokenDetailsDeepLinkHandler(
-            appRouter = appRouter,
             resolveAndSelectUserWalletUseCase = resolveAndSelectUserWalletUseCase,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             tokenDetailsDeepLinkActionTrigger = tokenDetailsDeepLinkActionTrigger,
@@ -856,6 +851,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
                 queryParams = queryParams,
                 scope = scope,
                 isFromOnNewIntent = isFromOnNewIntent,
+                router = router,
             ),
         )
     }

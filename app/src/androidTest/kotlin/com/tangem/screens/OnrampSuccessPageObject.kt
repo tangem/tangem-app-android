@@ -1,8 +1,11 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasTestTag as composeHasTestTag
+import androidx.compose.ui.test.hasText as composeHasText
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.StatusScreenTestTags
 import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.features.onramp.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -14,8 +17,15 @@ class OnrampSuccessPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     ComposeScreen<OnrampSuccessPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasTestTag(TransactionSuccessScreenTestTags.TITLE)
-        hasText(getResourceString(CoreResR.string.common_in_progress))
+        addSemanticsMatcher(
+            (
+                composeHasTestTag(TransactionSuccessScreenTestTags.TITLE) and
+                    composeHasText(getResourceString(CoreResR.string.common_in_progress))
+                ) or (
+                composeHasTestTag(StatusScreenTestTags.TITLE) and
+                    composeHasText(getResourceString(CoreResR.string.express_exchange_status_receiving_active))
+                ),
+        )
         useUnmergedTree = true
     }
 

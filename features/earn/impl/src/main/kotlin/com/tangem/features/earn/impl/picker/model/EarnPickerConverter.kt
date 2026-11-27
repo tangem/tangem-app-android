@@ -1,8 +1,9 @@
 package com.tangem.features.earn.impl.picker.model
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
-import com.tangem.features.earn.impl.picker.EarnPickerTexts
 import com.tangem.features.earn.impl.picker.ui.state.EarnBenefitUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
@@ -37,24 +38,25 @@ internal class EarnPickerConverter @Inject constructor(
         summaries: List<EarnProductSummary>,
         selectedId: EarnProductId,
         ethBalance: BigDecimal?,
+        capacity: EarnPickerDepositCapacity,
         intents: EarnPickerClickIntents,
     ): EarnPickerUM {
         val button = cta.resolve(
             state = state,
             ethBalance = ethBalance,
+            capacity = capacity,
             onActionClick = { intents.onActionClick(product, it) },
             onBlocked = intents::onBlockedClick,
             onAddFunds = intents::onAddFundsClick,
         )
 
         return EarnPickerUM(
-            title = EarnPickerTexts.title,
-            subtitle = EarnPickerTexts.subtitle,
+            title = resourceReference(R.string.earn_yield_picker_title),
+            subtitle = resourceReference(R.string.earn_yield_picker_subtitle),
             barTitle = product.title,
             products = products(summaries, selectedId, intents),
             content = content(product, state, intents),
-            cta = button.button,
-            ctaHint = button.hint,
+            cta = button,
             onClose = intents::onCloseClick,
         )
     }
@@ -63,19 +65,19 @@ internal class EarnPickerConverter @Inject constructor(
         val button = cta.resolve(
             state = EarnProductState.Loading,
             ethBalance = null,
+            capacity = EarnPickerDepositCapacity.Unknown,
             onActionClick = {},
             onBlocked = {},
             onAddFunds = {},
         )
 
         return EarnPickerUM(
-            title = EarnPickerTexts.title,
-            subtitle = EarnPickerTexts.subtitle,
-            barTitle = EarnPickerTexts.title,
+            title = resourceReference(R.string.earn_yield_picker_title),
+            subtitle = resourceReference(R.string.earn_yield_picker_subtitle),
+            barTitle = resourceReference(R.string.earn_yield_picker_title),
             products = persistentListOf(),
             content = content,
-            cta = button.button,
-            ctaHint = button.hint,
+            cta = button,
             onClose = intents::onCloseClick,
         )
     }
@@ -85,8 +87,6 @@ internal class EarnPickerConverter @Inject constructor(
         selectedId: EarnProductId,
         intents: EarnPickerClickIntents,
     ): ImmutableList<EarnProductCardUM> {
-        if (summaries.size < MIN_SUMMARIES_FOR_CARDS) return persistentListOf()
-
         return summaries.mapNotNull { summary ->
             val product = registry.find(summary.productId) ?: return@mapNotNull null
             EarnProductCardUM(
@@ -108,9 +108,13 @@ internal class EarnPickerConverter @Inject constructor(
                 incentive = state.incentiveRate.toIncentiveUM(onClick = intents::onIncentiveClick),
                 sections = EarnPickerTab.entries.filter { it.isAvailableIn(state) }.toImmutableList(),
                 benefits = state.benefits.map { block -> block.toBenefitUM() }.toImmutableList(),
-                details = state.details.map {
-                    it.toUM(onInfoClick = intents::onInfoClick, onLinkClick = intents::onLinkClick)
+                details = state.details.map { row ->
+                    row.toUM(
+                        onInfoClick = { info -> intents.onInfoClick(info, row.kind) },
+                        onLinkClick = { url -> intents.onLinkClick(url, row.kind) },
+                    )
                 }.toImmutableList(),
+                onTabClick = intents::onTabClick,
             )
         }
     }
@@ -121,10 +125,5 @@ internal class EarnPickerConverter @Inject constructor(
         EarnPickerTab.Calculator -> state.projection != null
         EarnPickerTab.Benefits -> state.benefits.isNotEmpty()
         EarnPickerTab.Details -> state.details.isNotEmpty()
-    }
-
-    private companion object {
-
-        const val MIN_SUMMARIES_FOR_CARDS = 2
     }
 }

@@ -175,9 +175,25 @@ internal class TronGaslessFeeResolverTest {
             }
 
         @Test
-        fun `GIVEN own energy short WHEN resolveWithAutoFeeToken THEN gasless fee is kept`() = runTest {
+        fun `GIVEN own energy partly covers the fee and TRX dearer WHEN resolveWithAutoFeeToken THEN native fee`() =
+            runTest {
+                // Arrange
+                nativeFeeStub.reset(tronNativeFee(value = "6.43", remainingEnergy = 10_000, feeEnergy = 65_000).right())
+
+                // Act
+                val actual = resolve(sentBalance = "100", nativeBalance = "50")
+
+                // Assert
+                val expected = tronNativeFee(value = "6.43", remainingEnergy = 10_000, feeEnergy = 65_000)
+                assertThat(actual).isEqualTo(expected.right())
+                coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN no own energy WHEN resolveWithAutoFeeToken THEN gasless fee is kept`() = runTest {
             // Arrange
-            nativeFeeStub.reset(tronNativeFee(value = "6.43", remainingEnergy = 10_000, feeEnergy = 65_000).right())
+            every { transactionFeatureToggles.isTronLowerFeeTypeEnabled } returns false
+            nativeFeeStub.reset(tronNativeFee(value = "13.03", remainingEnergy = 0, feeEnergy = 65_000).right())
 
             // Act
             val actual = resolve(sentBalance = "100", nativeBalance = "50")

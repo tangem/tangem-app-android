@@ -2,18 +2,26 @@ package com.tangem.core.media
 
 import android.view.SurfaceView
 import androidx.annotation.RawRes
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-/** Plays a raw-resource clip as a muted looping background; a failed video never runs again. */
+/**
+ * Plays a raw-resource clip, or a clip whose source [loadSource] makes available, as a muted looping background;
+ * a failed video, or a failed load, never runs again.
+ */
 class LoopingVideoController internal constructor(
     scope: CoroutineScope,
     private val frameSize: VideoFrameSize,
     private val diagnosticsSubject: String,
     private val onFailed: (error: Throwable, hasRenderedFrame: Boolean) -> Unit,
+    loadSource: (suspend () -> Unit)? = null,
     createPlayer: (LoopingVideoPlayer.Listener) -> LoopingVideoPlayer,
 ) {
 
@@ -45,6 +53,17 @@ class LoopingVideoController internal constructor(
 
     private var hasRenderedFrame = false
 
+    // Declared last: on an immediate dispatcher a failing load reaches fail() before the constructor returns.
+    private val loadJob: Job? = loadSource?.let { load ->
+        scope.launch {
+            runSuspendCatching { load() }
+                // A cancelled loader may still return or throw something other than a CancellationException.
+                .also { ensureActive() }
+                .onSuccess { player.markSourceReady() }
+                .onFailure(::fail)
+        }
+    }
+
     /** Starts over at every pass of the loop. */
     val positionMs: Long
         get() = player.positionMs
@@ -61,6 +80,7 @@ class LoopingVideoController internal constructor(
     }
 
     fun release() {
+        loadJob?.cancel()
         // A released player never reports the stop.
         outputWatchdog.onPlayingChanged(isPlaying = false)
         player.release()
@@ -131,6 +151,23 @@ class LoopingVideoController internal constructor(
         fun create(
             scope: CoroutineScope,
             @RawRes videoRes: Int,
+            frameSize: VideoFrameSize,
+            diagnosticsSubject: String,
+            onFailed: (error: Throwable, hasRenderedFrame: Boolean) -> Unit = { _, _ -> },
+        ): LoopingVideoController
+
+        /**
+         * Like [create], for a clip at [url].
+         *
+         * @param cache    downloads [url] in full before the clip is prepared; a failed download fails the clip
+         *                 as a load failure
+         * @param onFailed a load that fails at once calls it before [createRemote] returns, so it must not touch
+         *                 the returned controller
+         */
+        fun createRemote(
+            scope: CoroutineScope,
+            url: String,
+            cache: RemoteClipCache,
             frameSize: VideoFrameSize,
             diagnosticsSubject: String,
             onFailed: (error: Throwable, hasRenderedFrame: Boolean) -> Unit = { _, _ -> },

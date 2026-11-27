@@ -3,9 +3,9 @@ package com.tangem.features.promobanners.impl.campaigns.deeplink
 import android.net.Uri
 import arrow.core.left
 import arrow.core.right
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.CAMPAIGN_ID_KEY
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
@@ -70,5 +70,6 @@ internal class CampaignsDeepLinkHandlerTest {
         queryParams = queryParams,
         scope = mockk<CoroutineScope>(),
         isFromOnNewIntent = false,
+        router = mockk(),
     )
 }

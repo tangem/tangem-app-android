@@ -14,6 +14,7 @@ import com.tangem.core.ui.test.ModalStatusTestTags
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TopNavigationTestTags
+import com.tangem.screens.tangempay.expandTangemPayGroupIfCollapsed
 import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -24,6 +25,10 @@ import androidx.compose.ui.test.hasText as withText
 
 class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MoneyAccountPageObject>(semanticsProvider = semanticsProvider) {
+
+    init {
+        semanticsProvider.expandTangemPayGroupIfCollapsed()
+    }
 
     val mainRow: KNode = child {
         hasTestTag(MoneyAccountTestTags.MAIN_ROW)

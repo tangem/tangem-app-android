@@ -1902,6 +1902,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
         private val userWalletId = UserWalletId(stringValue = "deadbeef")
         private val paymentAccount = Account.Payment(userWalletId)
+        private val collectiblesAccount = Account.Collectibles(userWalletId)
         private val portfolioAccount = Account.Personal.createMainAccount(userWalletId)
         private val usdcContract = "0xUsdcContract"
         private val usdcDecimals = 6
@@ -1937,6 +1938,30 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
             // Act
             val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "10.000001")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `GIVEN collectibles vault amount over balance WHEN findBestQuote THEN InsufficientAmount`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = collectiblesAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "20")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.InsufficientAmount)
+        }
+
+        @Test
+        fun `GIVEN collectibles vault amount within balance WHEN findBestQuote THEN Pending`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = collectiblesAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "10")
 
             // Assert
             assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
@@ -2107,6 +2132,90 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 expectedSentSlippage = BigDecimal("0.5"),
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RestrictedDexQuote {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN restricted DEX quote WHEN findBestQuote THEN keeps it without requesting exchange-data`(
+            networkRawId: String,
+        ) = runTest {
+            // Arrange
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = dexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns buildQuoteModel(isRestricted = true).right()
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    fromAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = dexProvider.providerId,
+                    rateType = any(),
+                    toAddress = any(),
+                    expressOperationType = any(),
+                    refundAddress = any(),
+                )
+            } returns ExpressDataError.UnknownErrorWithCode(code = 2336).left()
+
+            // Act
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = buildSwapCurrencyStatus(
+                    networkRawId = networkRawId,
+                    isCoin = true,
+                    amount = BigDecimal("10"),
+                ),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = networkRawId),
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Assert
+            val state = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(state.isRestricted to state.preparedSwapConfigState.balanceStatus)
+                .isEqualTo(true to SwapBalanceStatus.Pending)
+            coVerify(exactly = 0) {
+                repository.getExchangeData(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    fromAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                    toAddress = any(),
+                    expressOperationType = any(),
+                    refundAddress = any(),
+                )
+            }
+        }
+
+        private fun provideTestModels() = listOf(ethNetwork, solanaNetwork)
     }
 
     /** [customSlippageProviderId] null means the custom slippage was picked for the quoted provider itself. */

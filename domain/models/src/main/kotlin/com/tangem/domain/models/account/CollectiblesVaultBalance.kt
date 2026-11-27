@@ -43,7 +43,7 @@ data class CollectiblesVaultBalance(
         value = depositCryptoCurrencyStatusValue(
             amount = usdcAmount,
             fiatRate = usdcFiatRate,
-            depositAddress = ataAddress,
+            depositAddress = vaultAddress,
             source = source,
         ),
     )

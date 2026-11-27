@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.category.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -24,7 +25,10 @@ import com.tangem.features.polymarket.impl.common.feed.model.PolymarketFeedContr
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryFilterUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerController
+import com.tangem.features.polymarket.impl.fasttrading.banner.PolymarketFastTradingBannerSource
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.isSoccerMatch
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -45,6 +49,7 @@ internal class PolymarketCategoryModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
+    fastTradingBannerSource: PolymarketFastTradingBannerSource,
     getEvents: GetPolymarketEventsBatchFlowUseCase,
     observeSports: ObservePolymarketSportsStateUseCase,
     observeQuotes: ObservePolymarketLiveQuotesUseCase,
@@ -82,16 +87,33 @@ internal class PolymarketCategoryModel @Inject constructor(
         shouldCacheFeeds = false,
     )
 
+    private val fastTradingBanner = PolymarketFastTradingBannerController(
+        scope = modelScope,
+        dispatchers = dispatchers,
+        userWalletId = params.userWalletId,
+        source = fastTradingBannerSource,
+        router = router,
+        onUnknownSignersReview = null,
+    )
+
     init {
         feed.content.onEach { content -> uiState.update { it.copy(content = content) } }.launchIn(modelScope)
+        fastTradingBanner.banner.onEach { banner -> uiState.update { it.copy(fastTradingBanner = banner) } }
+            .launchIn(modelScope)
         selectFeed()
     }
 
     fun onBack() = router.pop()
 
-    fun onResume() = feed.resume()
+    fun onResume() {
+        fastTradingBanner.resume()
+        feed.resume()
+    }
 
-    fun onPause() = feed.pause()
+    fun onPause() {
+        feed.pause()
+        fastTradingBanner.pause()
+    }
 
     fun onLoadMore() = feed.loadMore()
 
@@ -147,6 +169,7 @@ internal class PolymarketCategoryModel @Inject constructor(
             try {
                 coroutineScope {
                     launch { regionAccess.refresh() }
+                    launch { fastTradingBanner.refresh() }
                     feed.refresh()
                 }
             } finally {
@@ -159,10 +182,11 @@ internal class PolymarketCategoryModel @Inject constructor(
         uiState.update { it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = value)) }
     }
 
-    private fun openEvent(eventId: String) {
+    private fun openEvent(event: PolymarketEvent) {
         router.push(
             PolymarketRoute.EventDetails(
-                eventId = eventId,
+                eventId = event.id,
+                isSoccerMatch = event.isSoccerMatch,
                 userWalletId = params.userWalletId,
                 categoryLabel = selectedCategory().label,
             ),

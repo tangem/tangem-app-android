@@ -4,6 +4,10 @@ import android.net.Uri
 import arrow.core.getOrElse
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
@@ -22,6 +26,8 @@ import com.tangem.domain.marketing.models.validateDates
 import com.tangem.domain.quotes.GetFiatUSDRateUseCase
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import com.tangem.features.marketing.api.MoneyAccountBannerAction
+import com.tangem.features.marketing.api.MarketingFeatureToggles
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -63,6 +69,7 @@ internal class MarketingBannerModel @Inject constructor(
     private val appCoroutineScope: AppCoroutineScope,
     private val urlOpener: UrlOpener,
     private val clock: Clock,
+    private val marketingFeatureToggles: MarketingFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
@@ -134,6 +141,7 @@ internal class MarketingBannerModel @Inject constructor(
                         screen = request.screen,
                         amount = request.amount,
                         isConciergeWaitlistHidden = request.isDemandSurveyCompleted,
+                        moneyAccountAction = request.moneyAccountAction,
                     )
                 }
         }
@@ -161,19 +169,24 @@ internal class MarketingBannerModel @Inject constructor(
             .map { it?.isConciergeWaitlistHidden }
             .distinctUntilChanged()
 
+        val moneyAccountAction: Flow<MoneyAccountBannerAction?> = requestFlow
+            .map { it?.moneyAccountAction }
+            .distinctUntilChanged()
+
         modelScope.launch {
             combine(
                 flow = amountMatchingCampaigns,
                 flow2 = isConciergeWaitlistHidden,
                 flow3 = dismissedIds,
                 flow4 = timeWindowTick,
-            ) { list, isWaitlistHidden, dismissed, now ->
+                flow5 = moneyAccountAction,
+            ) { list, isWaitlistHidden, dismissed, now, accountAction ->
                 if (isWaitlistHidden == null) return@combine emptyList()
                 list.asSequence()
                     .filterNot { it.id in dismissed }
                     .filterNot { isWaitlistHidden && isConciergeWaitlist(it) }
                     .filter { it.isActiveAt(now) }
-                    .map { it.toUM() }
+                    .map { it.toUM(accountAction) }
                     .toList()
             }.collect { banners ->
                 uiState.value = if (banners.isEmpty()) {
@@ -252,7 +265,9 @@ internal class MarketingBannerModel @Inject constructor(
     private fun classifyCtaLinks(campaigns: List<MarketingCampaign>): Map<String?, CtaBannerLink> {
         if (params !is MarketingBannerComponent.Params.Cta) return emptyMap()
         return campaigns.map { it.banner.deeplink }.distinct().associateWith { link ->
-            resolveCtaBannerLink(link?.trim())
+            resolveCtaBannerLink(link?.trim()).takeUnless {
+                it == CtaBannerLink.MONEY_ACCOUNT && !marketingFeatureToggles.isMoneyAccountBannerEnabled
+            } ?: CtaBannerLink.UNSUPPORTED
         }
     }
 
@@ -267,9 +282,10 @@ internal class MarketingBannerModel @Inject constructor(
         val screen: MarketingScreen,
         val amount: MarketingBannerAmount?,
         val isConciergeWaitlistHidden: Boolean = false,
+        val moneyAccountAction: MoneyAccountBannerAction? = null,
     )
 
-    private fun MarketingCampaign.toUM() = MarketingBannerUM(
+    private fun MarketingCampaign.toUM(accountAction: MoneyAccountBannerAction?) = MarketingBannerUM(
         campaignId = id,
         text = banner.text,
         iconUrl = banner.iconUrl,
@@ -287,8 +303,9 @@ internal class MarketingBannerModel @Inject constructor(
         subtitle = banner.subtitle,
         etaLabel = banner.etaLabel,
         partnerLabel = banner.partnerLabel,
-        buttonText = banner.buttonText,
+        buttonText = buttonText(accountAction),
         hasGlow = banner.hasGlow,
+        replacesSlot = banner.replacesSlot.takeIf { banner.uiType == MarketingBanner.UiType.PSEUDO_PROVIDER },
         style = when (banner.uiType) {
             MarketingBanner.UiType.PSEUDO_PROVIDER -> MarketingBannerUM.Style.PSEUDO_PROVIDER
             MarketingBanner.UiType.STANDALONE_CTA -> MarketingBannerUM.Style.STANDALONE_CTA
@@ -297,6 +314,15 @@ internal class MarketingBannerModel @Inject constructor(
             -> MarketingBannerUM.Style.DEFAULT
         },
     )
+
+    private fun MarketingCampaign.buttonText(accountAction: MoneyAccountBannerAction?): TextReference? {
+        val moneyAccountAction = accountAction.takeIf { ctaLinks[banner.deeplink] == CtaBannerLink.MONEY_ACCOUNT }
+        return when (moneyAccountAction) {
+            MoneyAccountBannerAction.CONTINUE -> resourceReference(R.string.common_continue)
+            MoneyAccountBannerAction.ACTIVATE -> resourceReference(R.string.common_activate)
+            null -> banner.buttonText?.takeIf(String::isNotBlank)?.let(::stringReference)
+        }
+    }
 
     private companion object {
         const val REQUEST_DEBOUNCE_MS = 300L

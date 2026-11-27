@@ -158,6 +158,7 @@ internal class SetWarningsTransformerTest {
             SystemCardModel(notifications = persistentListOf(missingBackup)),
             SystemCardModel(notifications = persistentListOf(addFunds, missingBackup)),
             SystemCardModel(notifications = persistentListOf(devCard, missingBackup)),
+            SystemCardModel(notifications = persistentListOf(usedOutdatedData, missingBackup)),
             SystemCardModel(notificationsCarousel = persistentListOf(rateApp)),
             SystemCardModel(hasJointOperations = true),
         )
@@ -222,6 +223,27 @@ internal class SetWarningsTransformerTest {
             // Assert
             assertThat(actual).isEqualTo(walletUM.copy(notifications = notifications))
         }
+
+        @Test
+        fun `GIVEN shown promo cards WHEN only the outdated data card is set THEN promo cards stay`() {
+            // Arrange
+            val walletUM = createWalletContentUM(
+                isMarketingBlockVisible = true,
+                isTangemPayPromoVisible = true,
+                promoCardsCheck = PromoCardsCheck.None,
+            )
+            val notifications = persistentListOf(usedOutdatedData, tangemPayPromo)
+            val transformer = createTransformer(
+                notifications = notifications,
+                balanceState = NotificationsBalanceState.Settled,
+            )
+
+            // Act
+            val actual = transformer.transform(walletUM)
+
+            // Assert
+            assertThat(actual).isEqualTo(walletUM.copy(notifications = notifications))
+        }
     }
 
     @Nested
@@ -257,6 +279,12 @@ internal class SetWarningsTransformerTest {
             CardsModel(
                 notifications = persistentListOf(devCard, tangemPayPromo),
                 expectedNotifications = persistentListOf(devCard, tangemPayPromo),
+                isMarketingBlockVisible = true,
+                isTangemPayPromoVisible = true,
+            ),
+            CardsModel(
+                notifications = persistentListOf(usedOutdatedData, tangemPayPromo),
+                expectedNotifications = persistentListOf(usedOutdatedData, tangemPayPromo),
                 isMarketingBlockVisible = true,
                 isTangemPayPromoVisible = true,
             ),
@@ -443,11 +471,13 @@ internal class SetWarningsTransformerTest {
             onRefreshClick = {},
             buttonText = stringReference("Refresh"),
             shouldShowProgress = false,
+            isColdWallet = true,
         )
         val tangemPayUnreachable = WalletNotificationUM.TangemPayUnreachable
         val missingBackup = WalletNotificationUM.MissingBackup(onClick = {})
         val addFunds = WalletNotificationUM.AddFunds(onClick = {})
         val devCard = WalletNotificationUM.DevCard
+        val usedOutdatedData = WalletNotificationUM.UsedOutdatedData
         val finishWalletActivation = WalletNotificationUM.FinishWalletActivation(
             messageEffect = TangemMessageEffect.None,
             isBackupExists = false,

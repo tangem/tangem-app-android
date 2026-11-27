@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.search.model
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +14,7 @@ import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessa
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.common.feed.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.navigation.isSoccerMatch
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import com.tangem.features.polymarket.impl.search.model.transformer.PolymarketSearchContentTransformer
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
@@ -155,8 +157,14 @@ internal class PolymarketSearchModel @Inject constructor(
         router.pop()
     }
 
-    private fun onEventClick(eventId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId))
+    private fun onEventClick(event: PolymarketEvent) {
+        router.push(
+            PolymarketRoute.EventDetails(
+                eventId = event.id,
+                userWalletId = params.userWalletId,
+                isSoccerMatch = event.isSoccerMatch,
+            ),
+        )
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {

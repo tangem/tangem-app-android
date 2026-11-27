@@ -39,6 +39,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.assets.il_account_airplane
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
+import com.tangem.core.ui.res.generated.icons.ic_users_16_filled
 import com.tangem.feature.tester.presentation.storybook.entity.TangemAccountRowStory
 
 private const val SAMPLE_ICON_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/bitcoin.png"
@@ -91,6 +92,7 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
     val title = stringReference(if (state.longTitle) LONG_TITLE else SHORT_TITLE)
     val label = stringReference("Subtitle")
     val description = if (state.hasDescription) stringReference("Description") else null
+    val titleIcon = Icons.ic_users_16_filled.takeIf { state.hasTitleIcon }
     val isEmpty = state.variant == TangemAccountRowStory.Variant.Empty
     Column(
         modifier = Modifier
@@ -102,6 +104,7 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             TangemAccountRowStory.Variant.Empty,
             -> TangemAccountRow(
                 title = title,
+                titleIcon = titleIcon,
                 label = label,
                 description = description,
                 balance = if (isEmpty) stringReference("$0.00") else stringReference("$12,000.00"),
@@ -126,6 +129,7 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             )
             TangemAccountRowStory.Variant.Unreachable -> TangemAccountRow.Unreachable(
                 title = title,
+                titleIcon = titleIcon,
                 badge = stringReference("Unreachable"),
                 label = label,
                 description = description,
@@ -138,6 +142,7 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             )
             TangemAccountRowStory.Variant.BalanceError -> TangemAccountRow.BalanceError(
                 title = title,
+                titleIcon = titleIcon,
                 label = label,
                 description = description,
                 isExpandable = true,
@@ -149,6 +154,7 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             )
             TangemAccountRowStory.Variant.NotActive -> TangemAccountRow.NotActive(
                 title = title,
+                titleIcon = titleIcon,
                 label = label,
                 description = description,
                 balance = stringReference("$0.00"),
@@ -274,6 +280,7 @@ private fun Toggles(state: TangemAccountRowStory) {
             ToggleRow(label = "updateWarning", checked = state.hasUpdateWarning, onToggle = state.onUpdateWarningToggle)
             ToggleRow(label = "section", checked = state.hasSection, onToggle = state.onSectionToggle)
             ToggleRow(label = "longTitle", checked = state.longTitle, onToggle = state.onLongTitleToggle)
+            ToggleRow(label = "titleIcon", checked = state.hasTitleIcon, onToggle = state.onTitleIconToggle)
             ToggleRow(label = "balanceHidden", checked = state.isBalanceHidden, onToggle = state.onBalanceHiddenToggle)
             ToggleRow(
                 label = "balanceFlickering",

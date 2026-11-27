@@ -13,6 +13,7 @@ import com.tangem.data.collectibles.flow.DefaultCollectiblesActiveTxsFetcher
 import com.tangem.data.collectibles.flow.DefaultCollectiblesActiveTxsProducer
 import com.tangem.data.collectibles.store.CollectiblesActiveTxsStore
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
+import com.tangem.data.collectibles.store.CollectiblesRegionStore
 import com.tangem.data.collectibles.store.DefaultCollectiblesDismissedTxRepository
 import com.tangem.data.collectibles.store.DismissedTxsDTO
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
@@ -132,6 +133,12 @@ internal interface CollectiblesDataModule {
         @Singleton
         fun provideCollectiblesMachineStore(): CollectiblesMachineStore {
             return CollectiblesMachineStore(store = RuntimeSharedStore())
+        }
+
+        @Provides
+        @Singleton
+        fun provideCollectiblesRegionStore(): CollectiblesRegionStore {
+            return CollectiblesRegionStore(store = RuntimeSharedStore())
         }
 
         @Provides

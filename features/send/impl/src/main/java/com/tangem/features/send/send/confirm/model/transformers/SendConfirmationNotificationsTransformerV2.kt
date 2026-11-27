@@ -23,6 +23,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
+import java.math.BigInteger
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
@@ -81,20 +82,31 @@ internal class SendConfirmationNotificationsTransformerV2(
     /** The first operation in a network also deploys the Safe: its share is the deployment gas at the fee's gas price */
     private fun getSetupFeeNote(signaturesUM: SendSignaturesUM?, feeSelectorUM: FeeSelectorUM.Content): TextReference? {
         if (signaturesUM?.isFirstOperation != true) return null
-        val fee = feeSelectorUM.selectedFeeItem.fee as? Fee.Ethereum.Legacy ?: return null
+        val fee = feeSelectorUM.selectedFeeItem.fee
         val amount = fee.amount
-        val setupFee = (SafeTxGasBuilder.DEPLOY_GAS * fee.gasPrice).toBigDecimal().movePointLeft(amount.decimals)
+        val gasPrice = fee.safeGasPrice() ?: return null
+        val setupFee = (SafeTxGasBuilder.DEPLOY_GAS * gasPrice).toBigDecimal().movePointLeft(amount.decimals)
 
-        val crypto = setupFee.format { crypto(symbol = amount.currencySymbol, decimals = amount.decimals) }
-        val fiat = feeSelectorUM.feeFiatRateUM
+        val setupFeeText = feeSelectorUM.feeFiatRateUM
             ?.takeIf { feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat }
             ?.let { rate -> getFiatString(value = setupFee, rate = rate.rate, appCurrency = rate.appCurrency) }
-        val setupFeeText = if (fiat != null) "$fiat ($crypto)" else crypto
+            ?: setupFee.format { crypto(symbol = amount.currencySymbol, decimals = amount.decimals) }
 
         return resourceReference(
-            id = R.string.joint_account_send_setup_fee_note,
-            formatArgs = wrappedList(cryptoCurrency.network.name, setupFeeText),
+            id = R.string.joint_account_send_setup_fee_included,
+            formatArgs = wrappedList(setupFeeText),
         )
+    }
+
+    /** A Smart Gas token refund is `gasPrice × gasLimit` in the token's smallest units, so its gas price divides out */
+    private fun Fee.safeGasPrice(): BigInteger? = when (this) {
+        is Fee.Ethereum.Legacy -> gasPrice
+        is Fee.Ethereum.TokenCurrency -> amount.value
+            ?.movePointRight(amount.decimals)
+            ?.toBigInteger()
+            ?.takeIf { gasLimit.signum() > 0 }
+            ?.divide(gasLimit)
+        else -> null
     }
 
     private fun getSendingFooterText(signaturesUM: SendSignaturesUM?): TextReference {

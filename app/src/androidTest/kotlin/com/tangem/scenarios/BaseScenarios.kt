@@ -210,6 +210,9 @@ fun BaseTestCase.synchronizeAddresses(
     assertBalance: Boolean = true,
 ) {
     step("Click on 'Synchronize addresses' button") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
+            onMainScreen { scrollToSynchronizeAddressesButton() }
+        }
         onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
     }
 

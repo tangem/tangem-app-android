@@ -12,9 +12,12 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
     override val isRedesignedAccountRowsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED)
 
-    override val isWalletLinkingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19037_WALLET_LINKING_ENABLED)
-
     override val isRedesignedTokenRowsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED)
+
+    override val isTangemPayGroupEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1525_TANGEM_PAY_GROUP_ENABLED)
+
+    override val isPermanentUpgradeBannerEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1821_PERMANENT_UPGRADE_BANNER_ENABLED)
 }

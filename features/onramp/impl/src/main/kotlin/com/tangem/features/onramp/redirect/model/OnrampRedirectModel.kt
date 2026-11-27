@@ -106,6 +106,7 @@ internal class OnrampRedirectModel @Inject constructor(
                         TxHistoryFetchTrigger.OnExpressOperationExecute(
                             walletId = params.userWalletId,
                             type = TxHistoryFetchTrigger.OnExpressOperationExecute.Onramp,
+                            txId = transaction.txId,
                         ),
                     )
 

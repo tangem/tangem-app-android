@@ -430,6 +430,32 @@ internal class SwapNotificationsFactoryTest {
         assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.RegionalRestriction>()).isEmpty()
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN DEX fee error WHEN notifications built THEN network fee warning shown only for unrestricted quote`(
+        isRestricted: Boolean,
+    ) {
+        // Arrange
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(
+            providerType = ExchangeProviderType.DEX,
+            balanceStatus = SwapBalanceStatus.Pending,
+            isRestricted = isRestricted,
+        )
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = GetFeeError.UnknownError,
+            isFeeCurrencyInStack = false,
+        )
+
+        // Assert
+        assertThat(notifications.any { it is NotificationUM.Warning.NetworkFeeUnreachable }).isEqualTo(!isRestricted)
+    }
+
     @Test
     fun `GIVEN prediction limits and receive amount below minimum WHEN notifications built THEN minimum warning shown first`() {
         // Arrange

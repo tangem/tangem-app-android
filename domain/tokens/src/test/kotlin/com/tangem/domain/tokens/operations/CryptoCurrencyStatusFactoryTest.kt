@@ -946,7 +946,6 @@ class CryptoCurrencyStatusFactoryTest {
     data class FoldResult(val amount: BigDecimal?, val fiatAmount: BigDecimal?)
 
     private data class FakeContribution(val total: BigDecimal, val spendable: BigDecimal) : BalanceContribution {
-        override val kind: String = "fake"
         override val source: StatusSource = StatusSource.ACTUAL
         override fun totalDeltaCryptoAmount(): BigDecimal = total
         override fun spendableDeltaCryptoAmount(): BigDecimal = spendable

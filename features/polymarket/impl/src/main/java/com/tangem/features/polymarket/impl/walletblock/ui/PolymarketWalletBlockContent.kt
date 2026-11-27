@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.account.PredictionAccountIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.toBoxSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -180,12 +179,7 @@ private fun PolymarketBalance(text: TextReference, state: PolymarketWalletBlockU
 private fun PolymarketWalletBlockUM.Content.toRowUM(): TangemTokenRowUM = TangemTokenRowUM.Content(
     id = PREDICTION_ACCOUNT_ROW_ID,
     headIconUM = TangemIconUM.Currency(
-        currencyIconState = CurrencyIconState.CryptoPortfolio.Icon(
-            imageVector = PredictionAccountIcon.imageVector,
-            color = PredictionAccountIcon.color,
-            isGrayscale = false,
-            size = AccountIconSize.Default,
-        ),
+        currencyIconState = CurrencyIconState.PredictionAccount(size = AccountIconSize.Default),
     ),
     titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.prediction_account_title)),
     subtitleUM = TangemTokenRowUM.SubtitleUM.Content(

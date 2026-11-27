@@ -2,10 +2,12 @@ package com.tangem.feature.usedesk.deeplink
 
 import android.net.Uri
 import arrow.core.Either
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWallet
@@ -25,7 +27,7 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SupportDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
 
@@ -41,15 +43,23 @@ internal class SupportDeepLinkHandlerTest {
         walletMetaInfo = walletMetaInfo,
         source = AnalyticsParam.ScreensSources.Settings,
     )
+    private var stack: List<Route> = emptyList()
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, getSelectedWalletSyncUseCase, getWalletMetaInfoUseCase)
+        clearMocks(router, getSelectedWalletSyncUseCase, getWalletMetaInfoUseCase)
         mockkObject(TangemLogger)
         every { TangemLogger.e(any(), any(), any()) } just Runs
         every { getSelectedWalletSyncUseCase() } returns Either.Right(userWallet)
         coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns Either.Right(walletMetaInfo)
-        every { appRouter.stack } returns listOf(AppRoute.Wallet)
+        stack = listOf(AppRoute.Wallet)
+        every { router.push(any(), any()) } answers { stack = stack + firstArg<Route>() }
+        every { router.popToMatching(AppRoute.Usedesk::class, any(), any()) } answers {
+            val predicate = secondArg<(AppRoute.Usedesk) -> Boolean>()
+            val isMatching: (Route) -> Boolean = { it is AppRoute.Usedesk && predicate(it) }
+            stack = stack.dropLastWhile { !isMatching(it) }.ifEmpty { stack }
+            thirdArg<(Boolean) -> Unit>().invoke(stack.lastOrNull()?.let(isMatching) == true)
+        }
     }
 
     @AfterEach
@@ -65,7 +75,7 @@ internal class SupportDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { appRouter.push(deeplinkUsedeskRoute, any()) }
+            assertThat(stack).containsExactly(AppRoute.Wallet, deeplinkUsedeskRoute).inOrder()
         }
 
     @Test
@@ -80,7 +90,7 @@ internal class SupportDeepLinkHandlerTest {
 
             // Assert
             coVerify(exactly = 0) { getWalletMetaInfoUseCase(any<UserWalletId>()) }
-            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { router.push(any(), any()) }
             verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
         }
 
@@ -94,28 +104,27 @@ internal class SupportDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
         verify(exactly = 1) { TangemLogger.e(any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN chat on top of stack WHEN handled THEN neither pushes nor pops`() = runTest {
+    fun `GIVEN chat on top of stack WHEN handled THEN stack is unchanged`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, settingsUsedeskRoute)
+        stack = listOf(AppRoute.Wallet, settingsUsedeskRoute)
 
         // Act
         handle()
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
-        verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, settingsUsedeskRoute).inOrder()
     }
 
     @Test
     fun `GIVEN chat covered by another screen WHEN handled THEN pops back to that chat`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(
+        stack = listOf(
             AppRoute.Wallet,
             settingsUsedeskRoute,
             AppRoute.ReferralProgram(userWalletId = USER_WALLET_ID),
@@ -126,16 +135,20 @@ internal class SupportDeepLinkHandlerTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.popTo(settingsUsedeskRoute, any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, settingsUsedeskRoute).inOrder()
     }
 
     private fun TestScope.handle() = SupportDeepLinkHandler(
-        appRouter = appRouter,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
     ).handle(
-        DeepLinkRequest(uri = mockk<Uri>(), queryParams = emptyMap(), scope = this, isFromOnNewIntent = false),
+        DeepLinkRequest(
+            uri = mockk<Uri>(),
+            queryParams = emptyMap(),
+            scope = this,
+            isFromOnNewIntent = false,
+            router = router,
+        ),
     )
 
     private companion object {

@@ -591,8 +591,11 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             isAllowanceSatisfied && maybeQuote.isRight()
         }
+        // Express refuses exchange-data for a restricted token (code 2336), which would replace the
+        // restricted quote with a generic error.
+        val isRestricted = maybeQuote.getOrNull()?.isRestricted == true
 
-        return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
+        return if (isAllowedToSpend && isBalanceWithoutFeeEnough && !isRestricted) {
             loadDexSwapDataNoFee(
                 provider = provider,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -603,7 +606,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 spenderAddress = spenderAddress,
                 dexRouterSpenderAddress = dexRouterSpenderAddress,
                 yieldModuleAddress = yieldModuleAddress,
-                isRestricted = maybeQuote.getOrNull()?.isRestricted == true,
                 customSlippage = customSlippage,
                 quoteSlippage = maybeQuote.getOrNull()?.slippage,
                 intentId = intentId,
@@ -684,7 +686,10 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             SwapBalanceStatus.InsufficientAmount
         }
-        return if (quoteBalanceStatus != SwapBalanceStatus.InsufficientAmount && maybeQuotes.isRight()) {
+        val isRestricted = maybeQuotes.getOrNull()?.isRestricted == true
+        return if (
+            quoteBalanceStatus != SwapBalanceStatus.InsufficientAmount && maybeQuotes.isRight() && !isRestricted
+        ) {
             loadDexSwapDataNoFee(
                 provider = provider,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -695,7 +700,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 spenderAddress = null,
                 dexRouterSpenderAddress = null,
                 yieldModuleAddress = null,
-                isRestricted = maybeQuotes.getOrNull()?.isRestricted == true,
                 customSlippage = customSlippage,
                 quoteSlippage = maybeQuotes.getOrNull()?.slippage,
                 intentId = intentId,
@@ -745,7 +749,8 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         }
 
-        val isWithdrawOverBalance = fromSwapCurrencyStatus.account is Account.Payment &&
+        val fromAccount = fromSwapCurrencyStatus.account
+        val isWithdrawOverBalance = (fromAccount is Account.Payment || fromAccount is Account.Collectibles) &&
             !isBalanceEnough(fromSwapCurrencyStatus, amount, null)
         val quoteBalanceStatus = if (isWithdrawOverBalance) {
             SwapBalanceStatus.InsufficientAmount
@@ -1360,7 +1365,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    @Suppress("LongMethod", "LongParameterList", "CanBeNonNullable")
+    @Suppress("LongMethod", "LongParameterList", "CanBeNonNullable", "CyclomaticComplexMethod")
     private suspend fun onSwapCex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -1401,6 +1406,15 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
+
+        if (fromSwapCurrencyStatus.account is Account.Collectibles) {
+            return createCollectiblesWithdrawalData(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                amount = amount,
+                exchangeData = exchangeData,
+            )
+        }
 
         if (isTangemPayWithdrawal) {
             return SwapTransactionState.TangemPayWithdrawalData(
@@ -1812,6 +1826,39 @@ internal class SwapInteractorImpl @Inject constructor(
             network = network,
             gasLimit = gasLimit?.toBigInteger(),
         ).getOrNull() ?: error("failed to create extras")
+    }
+
+    private fun createCollectiblesWithdrawalData(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        amount: SwapAmount,
+        exchangeData: SwapDataModel,
+    ) = SwapTransactionState.CollectiblesWithdrawalData(
+        amount = amount,
+        swapData = exchangeData,
+        fromAmount = amountFormatter.formatSwapAmountToUI(amount, fromSwapCurrencyStatus.currency.symbol),
+        toAmount = amountFormatter.formatSwapAmountToUI(
+            exchangeData.toTokenAmount,
+            toSwapCurrencyStatus.currency.symbol,
+        ),
+    )
+
+    override suspend fun notifyExchangeSent(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        cexTransaction: ExpressTransactionModel.CEX,
+        txHash: String,
+    ): Either<ExpressDataError, Unit> {
+        val networkAddress = fromSwapCurrencyStatus.status.value.networkAddress
+        val fromAddress = networkAddress?.defaultAddress?.value.orEmpty()
+        return repository.exchangeSent(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            txId = cexTransaction.txId,
+            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+            fromAddress = fromAddress,
+            payInAddress = cexTransaction.txTo,
+            txHash = txHash,
+            payInExtraId = cexTransaction.txExtraId,
+        )
     }
 
     override suspend fun storeSwapTransaction(
@@ -2694,7 +2741,6 @@ internal class SwapInteractorImpl @Inject constructor(
         spenderAddress: String?,
         dexRouterSpenderAddress: String?,
         yieldModuleAddress: String?,
-        isRestricted: Boolean,
         customSlippage: BigDecimal?,
         quoteSlippage: BigDecimal?,
         intentId: String?,
@@ -2791,7 +2837,6 @@ internal class SwapInteractorImpl @Inject constructor(
                         feeValue = BigDecimal.ZERO,
                     ),
                     preparedSwapConfigState = preparedSwapConfigState,
-                    isRestricted = isRestricted,
                     slippage = swapData.slippage ?: quoteSlippage,
                 )
             },

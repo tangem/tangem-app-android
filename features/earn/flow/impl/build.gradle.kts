@@ -16,11 +16,14 @@ dependencies {
     implementation(projects.features.earn.flow.api)
     implementation(projects.features.earn.product.api)
     implementation(projects.features.send.api)
+    implementation(projects.features.txhistory.api)
 
     /** Common */
+    implementation(projects.common)
     implementation(projects.common.ui)
 
     /** Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.res)

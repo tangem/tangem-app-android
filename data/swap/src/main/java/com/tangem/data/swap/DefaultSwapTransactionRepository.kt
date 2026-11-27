@@ -281,7 +281,7 @@ internal class DefaultSwapTransactionRepository(
 
     private suspend fun clearTransactionsStatuses(txId: String) {
         appPreferencesStore.editData { mutablePreferences ->
-            val savedList = mutablePreferences.getObjectMap<SwapStatusModel>(
+            val savedList = mutablePreferences.getObjectMap<SwapStatusDTO>(
                 key = growPreferencesKeys.swapTransactionsStatusesKey,
             )
             val editedList = savedList.filterNot { it.key == txId }

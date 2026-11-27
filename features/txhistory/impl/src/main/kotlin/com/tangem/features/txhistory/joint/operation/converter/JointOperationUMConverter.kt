@@ -72,14 +72,18 @@ internal class JointOperationUMConverter(
                 onCopyClick = onCopyRecipientClick,
             ),
             rows = listOfNotNull(feeRow(state)).toImmutableList(),
-            cosign = cosignRow(state),
-            cosignAction = action(
-                state = state,
-                isSigning = value.isSigning,
-                isRefusing = value.isRefusing,
-                hasAnswered = value.hasAnswered,
-                isColdWallet = value.isColdWallet,
-            ),
+            cosign = cosignRow(state).takeUnless { state.isSending },
+            cosignAction = if (state.isSending) {
+                null
+            } else {
+                action(
+                    state = state,
+                    isSigning = value.isSigning,
+                    isRefusing = value.isRefusing,
+                    hasAnswered = value.hasAnswered,
+                    isColdWallet = value.isColdWallet,
+                )
+            },
         )
     }
 
@@ -142,9 +146,7 @@ internal class JointOperationUMConverter(
         add(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = if (isInitiator) Icons.ic_trash_bin_24 else Icons.ic_cross_24,
-                title = resourceReference(
-                    if (isInitiator) CoreUiR.string.common_delete else CoreUiR.string.common_decline,
-                ),
+                title = resourceReference(CoreUiR.string.common_cancel),
                 isDestructive = true,
                 action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(onRefuseClick),
             ),
@@ -161,8 +163,6 @@ internal class JointOperationUMConverter(
         // The model overlays a local answer into the state, so the answer alone says whether this member signed;
         // [hasAnswered] also covers a local decline and only blocks a second tap
         val hasSigned = state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED
-        if (state.isSending) return sentAction(ownAnswer = state.ownAnswer)
-
         val canSign = state.canSign && !hasAnswered && !isRefusing
 
         val (buttonText, caption) = when {
@@ -182,21 +182,6 @@ internal class JointOperationUMConverter(
             isLoading = isSigning || isRefusing,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_20).takeIf { canSign && isColdWallet },
             isHoldToConfirm = canSign && !isColdWallet,
-            onClick = onSignClick,
-        )
-    }
-
-    private fun sentAction(ownAnswer: Answer?): TxHistoryDetailsUM.CosignActionUM {
-        val buttonText = when (ownAnswer) {
-            Answer.CREATED, Answer.SIGNED -> CoreUiR.string.joint_operation_signed
-            Answer.DECLINED -> CoreUiR.string.joint_operation_declined
-            Answer.WAITING, null -> CoreUiR.string.common_sign
-        }
-
-        return TxHistoryDetailsUM.CosignActionUM(
-            buttonText = resourceReference(buttonText),
-            caption = null,
-            isEnabled = false,
             onClick = onSignClick,
         )
     }

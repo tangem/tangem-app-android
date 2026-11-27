@@ -8,6 +8,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.utils.getWireMockRequestCount
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.screens.tangempay.*
@@ -26,6 +27,7 @@ private const val BASIC_ORDER_SCENARIO = "tangem_pay_tariff_plan_basic_order"
 
 /** The card-issue order list is drained explicitly, so an issue order never masks the tariff-plan one. */
 private const val CARD_ISSUE_ORDERS_SCENARIO = "tangem_pay_card_issue_orders"
+private const val CARD_ISSUE_ORDER_SCENARIO = "tangem_pay_card_issue_order"
 
 private const val HISTORY_SCENARIO = "tangem_pay_transaction_history"
 
@@ -35,6 +37,10 @@ private const val HISTORY_INITIAL_EMPTY_STATE = "InitialEmpty"
 private const val ORDERS_EMPTY_STATE = "Empty"
 private const val ORDERS_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDERS_PLUS_PROCESSING_STATE = "PlusProcessing"
+private const val ORDERS_BASIC_PROCESSING_STATE = "BasicProcessing"
+private const val CARD_ISSUE_ORDERS_ACTIVE_STATE = "ActiveOrder"
+private const val CARD_ISSUE_ORDER_STARTED_STATE = "Started"
+private const val CARD_ISSUE_ORDER_COMPLETED_STATE = "Completed"
 private const val ORDER_STARTED_STATE = "Started"
 private const val ORDER_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDER_COMPLETED_STATE = "Completed"
@@ -44,8 +50,17 @@ private const val HISTORY_AFTER_PLAN_FEE_STATE = "AfterPlanFee"
 private const val PLAN_BASIC_STATE = "Basic"
 
 private const val PLACE_ORDER_ENDPOINT = "/bff-v2/v1/order"
+private const val PLAN_ORDER_ENDPOINT = "/bff-v2/v1/order/mock-tariff-plan-order-001"
 private const val CANCEL_ORDER_ENDPOINT = "/bff-v2/v1/order/mock-tariff-plan-order-001/cancel"
 private const val PENDING_TRANSITION_ENDPOINT = "/bff-v2/v1/customer/tariff-plan/pending-transition"
+private const val MONEY_ACCOUNT_SCENARIO = "tangem_pay_money_account"
+private const val PLAN_SELECT_NEEDED_STATE = "PlanSelectNeeded"
+private const val PLAN_ONBOARDING_AWAITING_DEPOSIT_STATE = "OnboardingAwaitingDeposit"
+private const val TRANSITIONS_ONBOARDING_STATE = "Onboarding"
+private const val KYC_APPROVED_NOT_STARTED_STATE = "KycApprovedNotStarted"
+private const val PAYMENT_ACCOUNT_AWAITING_DEPOSIT_STATE = "PaymentAccountAwaitingDeposit"
+private const val PAYMENT_ACCOUNT_ISSUING_STATE = "PaymentAccountIssuing"
+private const val SUMMARY_ENDPOINT = "/bff-v2/v1/customer/summary"
 private const val CANCEL_PENDING_TRANSITION_ENDPOINT = "/bff-v2/v1/customer/tariff-plan/pending-transition/cancel"
 
 /**
@@ -167,6 +182,8 @@ fun drainTangemPayPlanOrders() {
 
 fun getTangemPayPlanOrderRequestCount(): Int = getWireMockRequestCount("POST", PLACE_ORDER_ENDPOINT)
 
+fun getTangemPayPlanOrderPollCount(): Int = getWireMockRequestCount("GET", PLAN_ORDER_ENDPOINT)
+
 fun getTangemPayCancelPlanOrderRequestCount(): Int = getWireMockRequestCount("POST", CANCEL_ORDER_ENDPOINT)
 
 fun getTangemPayPendingTransitionRequestCount(): Int =
@@ -194,19 +211,9 @@ fun BaseTestCase.completeTangemPayBasicPlanIssuing(plan: String) {
     }
 }
 
-/** From the Main screen, opens plan selection through the 'Select plan' Tangem Pay tile. */
 fun BaseTestCase.openTangemPaySelectPlanFromOnboarding() {
-    val selectPlanSubtitle = getResourceString(CoreResR.string.tangempay_main_select_plan)
-
-    step("Click on Tangem Pay '$selectPlanSubtitle' tile") {
-        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            onTangemPayMainScreen { tileWithSubtitle(selectPlanSubtitle).assertIsDisplayed() }
-        }
-        onTangemPayMainScreen { tileWithSubtitle(selectPlanSubtitle).performClick() }
-    }
-    step("Assert 'Select plan' screen is displayed") {
-        awaitSuccess { onTangemPaySelectPlanScreen { title.assertIsDisplayed() } }
-    }
+    openTangemPayVerifiedFromDisplayedActionRequiredTile()
+    openTangemPaySelectPlanFromVerified()
 }
 
 /** Opens 'Current plan' from the top bar menu; [assertMenuItems] also checks the items it offers. */
@@ -331,5 +338,93 @@ fun BaseTestCase.checkTangemPayAddFundsFromTopUpBanner() {
     }
     step("Assert 'Add funds' sheet is not displayed") {
         awaitSuccess { onTangemPayAddFundsSheet { optionAt(index = 0).assertDoesNotExist() } }
+    }
+}
+
+/** KYC is approved and only the payment account is available: the Pay tile leads to 'You're verified'. */
+fun setTangemPayVerifiedOnboardingScenarios() {
+    setTangemPayTariffPlanScenarios(plan = PLAN_SELECT_NEEDED_STATE, transitions = TRANSITIONS_ONBOARDING_STATE)
+    step("Set WireMock scenario '$MONEY_ACCOUNT_SCENARIO' to '$KYC_APPROVED_NOT_STARTED_STATE'") {
+        setWireMockScenarioState(MONEY_ACCOUNT_SCENARIO, KYC_APPROVED_NOT_STARTED_STATE)
+    }
+}
+
+/** The onboarding order is placed: the payment account is issued once the Plus plan fee is deposited. */
+fun stageTangemPayOnboardingPlanFeeAwaitingDeposit() {
+    stageTangemPayPlanFeeAwaitingDeposit(plan = PLAN_ONBOARDING_AWAITING_DEPOSIT_STATE)
+    step("Switch WireMock scenario '$MONEY_ACCOUNT_SCENARIO' to '$PAYMENT_ACCOUNT_AWAITING_DEPOSIT_STATE'") {
+        setWireMockScenarioState(MONEY_ACCOUNT_SCENARIO, PAYMENT_ACCOUNT_AWAITING_DEPOSIT_STATE)
+    }
+}
+
+/**
+ * The issuing banner is rendered only from an active card-issue order, so the onboarding card issue is held
+ * by one: the onboarding order itself is not tracked as an issue order.
+ */
+fun stageTangemPayOnboardingBasicCardIssuing() {
+    stageTangemPayBasicOrderPolling()
+    step("Switch WireMock scenario '$ORDERS_SCENARIO' to '$ORDERS_BASIC_PROCESSING_STATE'") {
+        setWireMockScenarioState(ORDERS_SCENARIO, ORDERS_BASIC_PROCESSING_STATE)
+    }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDER_SCENARIO' to '$CARD_ISSUE_ORDER_STARTED_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDER_SCENARIO, CARD_ISSUE_ORDER_STARTED_STATE)
+    }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDERS_SCENARIO' to '$CARD_ISSUE_ORDERS_ACTIVE_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDERS_SCENARIO, CARD_ISSUE_ORDERS_ACTIVE_STATE)
+    }
+    step("Switch WireMock scenario '$MONEY_ACCOUNT_SCENARIO' to '$PAYMENT_ACCOUNT_ISSUING_STATE'") {
+        setWireMockScenarioState(MONEY_ACCOUNT_SCENARIO, PAYMENT_ACCOUNT_ISSUING_STATE)
+    }
+}
+
+fun BaseTestCase.completeTangemPayOnboardingBasicCardIssuing(plan: String) {
+    step("Reset WireMock scenario '$MONEY_ACCOUNT_SCENARIO'") { resetWireMockScenarioState(MONEY_ACCOUNT_SCENARIO) }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDER_SCENARIO' to '$CARD_ISSUE_ORDER_COMPLETED_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDER_SCENARIO, CARD_ISSUE_ORDER_COMPLETED_STATE)
+    }
+    step("Switch WireMock scenario '$CARD_ISSUE_ORDERS_SCENARIO' to '$ORDERS_EMPTY_STATE'") {
+        setWireMockScenarioState(CARD_ISSUE_ORDERS_SCENARIO, ORDERS_EMPTY_STATE)
+    }
+    completeTangemPayBasicPlanIssuing(plan)
+}
+
+fun getTangemPaySummaryRequestCount(): Int = getWireMockRequestCount("GET", SUMMARY_ENDPOINT)
+
+fun BaseTestCase.openTangemPayVerifiedFromActionRequiredTile() {
+    step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+    openTangemPayVerifiedFromDisplayedActionRequiredTile()
+}
+
+private fun BaseTestCase.openTangemPayVerifiedFromDisplayedActionRequiredTile() {
+    val actionRequired = getResourceString(CoreResR.string.tangempay_action_required_title)
+
+    step("Assert Tangem Pay tile with '$actionRequired' is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { tileWithSubtitle(actionRequired).assertIsDisplayed() }
+        }
+    }
+    step("Click on Tangem Pay tile") { onTangemPayMainScreen { clickMainScreenTileViaOnClickAction() } }
+    step("Assert 'You're verified' screen is displayed") {
+        awaitSuccess { onTangemPayVerifiedScreen { title.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.openTangemPaySelectPlanFromVerified() {
+    step("Click on 'Choose plan' button") {
+        awaitSuccess { onTangemPayVerifiedScreen { choosePlanButton.assertIsDisplayed() } }
+        onTangemPayVerifiedScreen { choosePlanButton.performClick() }
+    }
+    step("Assert 'Select plan' screen is displayed") {
+        awaitSuccess { onTangemPaySelectPlanScreen { title.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.closeTangemPayOnboardingSuccessToPaymentAccount() {
+    step("Click on 'Close' button") { onTangemPayOnboardingSuccessScreen { closeButton.performClick() } }
+    step("Click on Tangem Pay tile") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() }
+        }
+        clickTangemPayTileUntilPaymentAccountOpens()
     }
 }

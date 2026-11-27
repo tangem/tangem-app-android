@@ -3,6 +3,8 @@ package com.tangem.features.jointaccount.analytics
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.core.remote.response.ApiResponseError
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
@@ -61,6 +63,38 @@ sealed class JointAccountAnalyticsEvent(
             AnalyticsParam.TOKEN_PARAM to token,
         ),
     )
+
+    class ConfirmAddressScreenOpened(membersCount: Int, threshold: Int) : JointAccountAnalyticsEvent(
+        event = "Confirm Address Screen Opened",
+        params = mapOf(
+            MEMBERS_COUNT to membersCount.toString(),
+            THRESHOLD to threshold.toString(),
+        ),
+    )
+
+    /** [isAccountActivated] tells whether this confirmation was the last one the account was waiting for */
+    class AccountConfirmed(membersCount: Int, threshold: Int, isAccountActivated: Boolean) : JointAccountAnalyticsEvent(
+        event = "Account Confirmed",
+        params = mapOf(
+            MEMBERS_COUNT to membersCount.toString(),
+            THRESHOLD to threshold.toString(),
+            ACCOUNT_ACTIVATED to if (isAccountActivated) "Yes" else "No",
+        ),
+    )
+
+    /** Mirrored to monitoring: every click is a member reporting an address that differs from the one they were told */
+    class ButtonAddressDoesntMatch(membersCount: Int, threshold: Int) :
+        JointAccountAnalyticsEvent(
+            event = "Button - Address Doesn't Match",
+            params = mapOf(
+                MEMBERS_COUNT to membersCount.toString(),
+                THRESHOLD to threshold.toString(),
+            ),
+        ),
+        OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter()
+    }
 
     class NoticeAccountsLimitReached(source: LimitSource) : JointAccountAnalyticsEvent(
         event = "Notice - Accounts Limit Reached",
@@ -151,23 +185,28 @@ sealed class JointAccountAnalyticsEvent(
         CreateOperation("Create Operation"),
         Sign("Sign"),
         Decline("Decline"),
-        Delete("Delete"),
+        Cancel("Cancel"),
+        Confirm("Confirm"),
+        Invite("Invite"),
     }
 
     private companion object {
         const val CATEGORY = "Joint Account"
         const val MEMBERS_COUNT = "Members Count"
         const val THRESHOLD = "Threshold"
+        const val ACCOUNT_ACTIVATED = "Account Activated"
         const val SIGNATURES_COLLECTED = "Signatures Collected"
         const val THRESHOLD_REACHED = "Threshold Reached"
         const val RESULT = "Result"
     }
 }
 
+/** Names the place the flow was started from, with the values of `[Settings / Wallet Settings] Button - Add Account` */
 private val AppRoute.JointAccountCreation.Source.value: String
     get() = when (this) {
-        AppRoute.JointAccountCreation.Source.AddAccount -> "Add Account"
-        AppRoute.JointAccountCreation.Source.MainScreen -> "Main Screen"
+        AppRoute.JointAccountCreation.Source.AddAccount -> AnalyticsParam.ScreensSources.Settings.value
+        AppRoute.JointAccountCreation.Source.MainScreen -> AnalyticsParam.ScreensSources.Markets.value
+        AppRoute.JointAccountCreation.Source.AllServices -> "All Services"
     }
 
 private fun ApiResponseError.HttpException.errorCode(): String = bodyCode() ?: code.numericCode.toString()

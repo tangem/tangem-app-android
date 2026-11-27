@@ -12,6 +12,5 @@ object CollectiblesVaultCurrencies {
     const val TOKEN_SYMBOL = "USDC"
     const val DECIMALS = 6
 
-    /** Network-agnostic on purpose: a test card's vault lives on the testnet chain, which has no quote of its own. */
     val USDC_RAW_ID = CryptoCurrency.RawID(value = "usd-coin")
 }

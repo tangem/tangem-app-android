@@ -320,10 +320,15 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 cryptoCurrency = cryptoCurrency,
                 txIds = listOf(txId),
+                isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
             )
             yieldSupplyTxHistoryUpdater.scheduleUpdates(userWallet.walletId, cryptoCurrency, listOf(txId))
             params.callback.onStopEarningTransactionSent()
         }
+    }
+
+    private fun isHeldOutsidePortfolio(): Boolean {
+        return params.account.isHeldOutsidePortfolio
     }
 
     private suspend fun onLoadFee(load: Int) = coroutineScope {
@@ -331,6 +336,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isHeldOutsidePortfolio = isHeldOutsidePortfolio(),
         ).getOrNull()
         val nativeFeeStatus = feeStatus ?: cryptoCurrencyStatus
         if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) {
@@ -502,10 +508,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 feeTokenId = fee.feeTokenId,
                 network = cryptoCurrency.network,
+                account = params.account,
             )
         }
         if (feeTokenStatus == null) {
-            TangemLogger.e("Yield Mode exit Smart Gas fee token ${fee.feeTokenId} is not in the portfolio")
+            TangemLogger.e(
+                "Yield Mode exit Smart Gas fee token ${fee.feeTokenId} is not in the ${params.account} account",
+            )
             return null
         }
         return YieldSupplySmartGasFee(

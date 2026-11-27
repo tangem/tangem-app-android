@@ -2,6 +2,7 @@ package com.tangem.features.send.feeselector.component.extended.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,7 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -225,7 +228,9 @@ private fun SelectedFeeTokenRow(token: TokenItemState, modifier: Modifier = Modi
         },
         titleSlot = {
             (token.titleState as? TokenItemState.TitleState.Content)?.let { title ->
-                TangemRowText(text = title.text, role = TangemRowTextRole.Title)
+                Box(modifier = Modifier.testTag(TokenElementsTestTags.TOKEN_TITLE)) {
+                    TangemRowText(text = title.text, role = TangemRowTextRole.Title)
+                }
             }
         },
         subtitleSlot = {

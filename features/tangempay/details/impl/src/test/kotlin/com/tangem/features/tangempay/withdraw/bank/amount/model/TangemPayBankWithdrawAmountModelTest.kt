@@ -9,7 +9,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.AmountErrorReason
 import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.model.AmountLimits
@@ -36,6 +39,7 @@ import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -50,6 +54,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -77,10 +85,12 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
         fiatBalance = BigDecimal("12325.55"),
     )
     private val twoSourceOptions = bankWithdrawOptions(sources = listOf(bankWithdrawSource(), baseSource))
+    private val speiOnlyDestination = offrampDestination(rail = BankRail.SPEI)
 
     private val confirmed = mutableListOf<BankWithdrawAmountResult>()
     private lateinit var draftFlow: MutableStateFlow<BankWithdrawDraft>
     private lateinit var optionsFlow: MutableStateFlow<BankWithdrawOptions>
+    private lateinit var savedAccountsLoadedFlow: MutableStateFlow<Boolean>
 
     @BeforeEach
     fun resetMocks() {
@@ -122,6 +132,21 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
 
             // Assert
             assertThat(model.content().route.rail).isEqualTo(BankRail.ACH)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN business entry WHEN amount opened THEN SPEI is neither offered nor picked`() {
+            // Arrange
+            val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewBusiness)
+            val options = SPEI_OPTIONS.copy(destinations = persistentListOf(SPEI_DESTINATION, offrampDestination()))
+
+            // Act
+            val model = createModel(draft = draft, options = options)
+
+            // Assert
+            assertThat(model.content().route.rail).isEqualTo(BankRail.ACH)
+            assertThat(model.content().route.onClick).isNull()
             model.onDestroy()
         }
 
@@ -432,7 +457,7 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
                 NETWORK_FEE.right(),
             )
             val model = createModel(sourceAccount = moneyAccount)
-            val unreachable = model.uiState.value as TangemPayBankWithdrawAmountUM.FeeUnreachable
+            val unreachable = model.uiState.value as TangemPayBankWithdrawAmountUM.Unreachable
 
             // Act
             unreachable.onRetryClick()
@@ -440,6 +465,23 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
             // Assert
             assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
             coVerify(exactly = 2) { networkFeeLoader.load(moneyAccount, any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN SPEI picked WHEN network fee loaded THEN the form shown`() {
+            // Arrange
+            coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+
+            // Act
+            val model = createModel(
+                draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, destination = SPEI_DESTINATION),
+                options = SPEI_OPTIONS,
+                sourceAccount = moneyAccount,
+            )
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
             model.onDestroy()
         }
 
@@ -1139,10 +1181,324 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
             model.content().onContinueClick()
 
             // Assert
-            verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened()) }
+            verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened(rail = BankRail.ACH)) }
             assertThat(confirmed).hasSize(1)
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN money account with a SPEI draft WHEN amount screen opened THEN the event carries spei`() {
+            // Arrange
+            val options = bankWithdrawOptions(destinations = listOf(offrampDestination(), speiOnlyDestination))
+            val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, destination = speiOnlyDestination)
+
+            // Act
+            val model = createModel(draft = draft, sourceAccount = moneyAccount, options = options)
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened(rail = BankRail.SPEI))
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN saved entry still loading WHEN its recipient arrives THEN amount screen opened carries its rail`() {
+            // Arrange
+            val options = bankWithdrawOptions(destinations = listOf(offrampDestination(), speiOnlyDestination))
+            val draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1"))
+            val model = createModel(
+                draft = draft,
+                sourceAccount = moneyAccount,
+                options = options,
+                isSavedAccountsLoaded = false,
+            )
+            verify(exactly = 0) { analytics.send(any()) }
+
+            // Act
+            draftFlow.value = draft.copy(recipient = bankAccount(id = "acc-1", rail = BankRail.SPEI))
+            savedAccountsLoadedFlow.value = true
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened(rail = BankRail.SPEI))
+            }
+            verify(exactly = 0) {
+                analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened(rail = BankRail.ACH))
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN saved entry WHEN its recipient fails to load THEN amount screen opened sent without a rail`() {
+            // Arrange
+            val model = createModel(
+                draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")),
+                sourceAccount = moneyAccount,
+                options = bankWithdrawOptions(),
+                isSavedAccountsLoaded = false,
+            )
+
+            // Act
+            savedAccountsLoadedFlow.value = true
+
+            // Assert
+            verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened(rail = null)) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("errorHoldCases")
+        fun `GIVEN money account error WHEN it stays on screen THEN it is reported only after a second`(
+            model: ErrorHoldModel,
+        ) = runTest {
+            // Arrange
+            val amountModel = createModel(
+                sourceAccount = moneyAccount,
+                options = bankWithdrawOptions(),
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            runCurrent()
+
+            // Act
+            amountModel.content().amount.onValueChange("0.5")
+            advanceTimeBy(model.holdMillis)
+            runCurrent()
+            amountModel.content().amount.onValueChange("50")
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentAmountErrors()).hasSize(model.expectedEvents)
+            amountModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account error WHEN the screen is covered before a second THEN no error sent`() = runTest {
+            // Arrange
+            val model = createModel(
+                sourceAccount = moneyAccount,
+                options = bankWithdrawOptions(),
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            runCurrent()
+            model.content().amount.onValueChange("0.5")
+            runCurrent()
+
+            // Act
+            model.onScreenVisibilityChanged(isVisible = false)
+            advanceTimeBy(ERROR_HOLD_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(sentAmountErrors()).isEmpty()
+            model.onDestroy()
+        }
+
+        private fun errorHoldCases() = listOf(
+            ErrorHoldModel(holdMillis = 999, expectedEvents = 0),
+            ErrorHoldModel(holdMillis = 1_000, expectedEvents = 1),
+        )
+
+        @Test
+        fun `GIVEN MXN toggle off WHEN saved entry opens and an error is held THEN legacy screen event only`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")),
+                    sourceAccount = moneyAccount,
+                    options = bankWithdrawOptions(),
+                    dispatchers = createTestingCoroutineDispatcherProvider(),
+                    isMxnEnabled = false,
+                )
+                runCurrent()
+
+                // Act
+                model.content().amount.onValueChange("0.5")
+                advanceTimeBy(ERROR_HOLD_MILLIS)
+                runCurrent()
+
+                // Assert
+                verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened(rail = null)) }
+                model.onDestroy()
+            }
+
+        @ParameterizedTest
+        @MethodSource("amountErrorCases")
+        fun `GIVEN money account WHEN typed amounts stay on screen THEN each error entry reported with its reason`(
+            model: AmountErrorModel,
+        ) = runTest {
+            // Arrange
+            val amountModel = createModel(
+                sourceAccount = moneyAccount,
+                options = bankWithdrawOptions(),
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            runCurrent()
+
+            // Act
+            model.heldAmounts.forEach { amount ->
+                amountModel.content().amount.onValueChange(amount)
+                advanceTimeBy(ERROR_HOLD_MILLIS)
+                runCurrent()
+            }
+
+            // Assert
+            assertThat(sentAmountErrors()).containsExactlyElementsIn(
+                model.expectedReasons.map { reason ->
+                    MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(rail = BankRail.ACH, reason = reason)
+                },
+            ).inOrder()
+            amountModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account rail with a minimum WHEN an amount is typed past a short prefix THEN no error sent`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    sourceAccount = moneyAccount,
+                    options = bankWithdrawOptions(defaultAmountLimits = MONEY_ACCOUNT_LIMITS),
+                    dispatchers = createTestingCoroutineDispatcherProvider(),
+                )
+                runCurrent()
+
+                // Act
+                model.content().amount.onValueChange("5")
+                runCurrent()
+                model.content().amount.onValueChange("50")
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sentAmountErrors()).isEmpty()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN restored amount below minimum WHEN screen loads and then shows it THEN error sent once shown`() =
+            runTest {
+                // Arrange
+                val networkFee = CompletableDeferred<Either<GetFeeError, BigDecimal>>()
+                coEvery { networkFeeLoader.load(any(), any()) } coAnswers { networkFee.await() }
+                val model = createModel(
+                    draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, amount = BigDecimal("0.5")),
+                    sourceAccount = moneyAccount,
+                    options = bankWithdrawOptions(),
+                    dispatchers = createTestingCoroutineDispatcherProvider(),
+                )
+                advanceTimeBy(ERROR_HOLD_MILLIS)
+                runCurrent()
+                val isContentWhileLoading = model.uiState.value is TangemPayBankWithdrawAmountUM.Content
+                val sentWhileLoading = sentAmountErrors()
+
+                // Act
+                networkFee.complete(BigDecimal.ZERO.right())
+                advanceTimeBy(ERROR_HOLD_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(isContentWhileLoading).isFalse()
+                assertThat(sentWhileLoading).isEmpty()
+                assertThat(sentAmountErrors()).containsExactly(
+                    MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+                        rail = BankRail.ACH,
+                        reason = AmountErrorReason.BELOW_MINIMUM,
+                    ),
+                )
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN money account error shown WHEN rail changed THEN the error reported for the new rail`() = runTest {
+            // Arrange
+            val model = createModel(
+                sourceAccount = moneyAccount,
+                options = bankWithdrawOptions(),
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            runCurrent()
+            model.content().amount.onValueChange("0.5")
+            advanceTimeBy(ERROR_HOLD_MILLIS)
+            runCurrent()
+
+            // Act
+            model.content().route.onClick?.invoke()
+            runCurrent()
+            (model.content().sheet as SheetUM.Routes).items.last().onClick()
+            advanceTimeBy(ERROR_HOLD_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(sentAmountErrors()).containsExactly(
+                MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+                    rail = BankRail.ACH,
+                    reason = AmountErrorReason.BELOW_MINIMUM,
+                ),
+                MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+                    rail = BankRail.WIRE,
+                    reason = AmountErrorReason.BELOW_MINIMUM,
+                ),
+            ).inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN payment account WHEN amount below minimum held THEN no money account amount error sent`() = runTest {
+            // Arrange
+            val model = createModel(
+                sourceAccount = paymentAccount,
+                options = bankWithdrawOptions(),
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            runCurrent()
+
+            // Act
+            model.content().amount.onValueChange("0.5")
+            advanceTimeBy(ERROR_HOLD_MILLIS)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents>()) }
+            model.onDestroy()
+        }
+
+        private fun sentAmountErrors(): List<MoneyAccountAnalyticsEvents.OfframpAmountErrorShown> {
+            val sent = mutableListOf<AnalyticsEvent>()
+            verify(atLeast = 0) { analytics.send(capture(sent)) }
+            return sent.filterIsInstance<MoneyAccountAnalyticsEvents.OfframpAmountErrorShown>()
+        }
+
+        private fun amountErrorCases() = listOf(
+            AmountErrorModel(
+                name = "below the minimum",
+                heldAmounts = listOf("0.5"),
+                expectedReasons = listOf(AmountErrorReason.BELOW_MINIMUM),
+            ),
+            AmountErrorModel(
+                name = "above the balance",
+                heldAmounts = listOf("2400"),
+                expectedReasons = listOf(AmountErrorReason.ABOVE_BALANCE),
+            ),
+            AmountErrorModel(
+                name = "still below the minimum",
+                heldAmounts = listOf("0.5", "0.55"),
+                expectedReasons = listOf(AmountErrorReason.BELOW_MINIMUM),
+            ),
+            AmountErrorModel(
+                name = "left and entered again",
+                heldAmounts = listOf("0.5", "50", "0.5"),
+                expectedReasons = listOf(AmountErrorReason.BELOW_MINIMUM, AmountErrorReason.BELOW_MINIMUM),
+            ),
+            AmountErrorModel(
+                name = "from below the minimum to above the balance",
+                heldAmounts = listOf("0.5", "2400"),
+                expectedReasons = listOf(AmountErrorReason.BELOW_MINIMUM, AmountErrorReason.ABOVE_BALANCE),
+            ),
+            AmountErrorModel(
+                name = "above the rail maximum",
+                heldAmounts = listOf("20000"),
+                expectedReasons = emptyList(),
+            ),
+        )
 
         private fun provideTestModels() = listOf(
             TypedAmountsModel(priorAmounts = emptyList(), amount = "10", expectedEvents = 1),
@@ -1162,15 +1518,23 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
         options: BankWithdrawOptions = twoSourceOptions,
         isBalanceHidden: Boolean = false,
         sourceAccount: BankWithdrawSourceAccount = paymentAccount,
+        dispatchers: TestingCoroutineDispatcherProvider = this.dispatchers,
+        isMxnEnabled: Boolean = true,
+        isSavedAccountsLoaded: Boolean = true,
     ): TangemPayBankWithdrawAmountModel {
         draftFlow = MutableStateFlow(draft)
         optionsFlow = MutableStateFlow(options)
+        savedAccountsLoadedFlow = MutableStateFlow(isSavedAccountsLoaded)
+        val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk {
+            every { this@mockk.isMxnEnabled } returns isMxnEnabled
+        }
         return TangemPayBankWithdrawAmountModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawAmountComponent.Params(
                     sourceAccount = sourceAccount,
                     draft = draftFlow,
                     options = optionsFlow,
+                    isSavedAccountsLoaded = savedAccountsLoadedFlow,
                     step = step,
                     onContinue = confirmed::add,
                     onCloseFlow = onCloseFlow,
@@ -1178,14 +1542,25 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
             ),
             dispatchers = dispatchers,
             router = router,
-            analytics = analytics,
+            withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
             getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
             networkFeeLoader = networkFeeLoader,
-        ).destroyAfterTest()
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+        ).destroyAfterTest().also { it.onScreenVisibilityChanged(isVisible = true) }
     }
 
     private fun TangemPayBankWithdrawAmountModel.content(): TangemPayBankWithdrawAmountUM.Content =
         uiState.value as TangemPayBankWithdrawAmountUM.Content
+
+    data class ErrorHoldModel(val holdMillis: Long, val expectedEvents: Int)
+
+    data class AmountErrorModel(
+        val name: String,
+        val heldAmounts: List<String>,
+        val expectedReasons: List<AmountErrorReason>,
+    ) {
+        override fun toString(): String = name
+    }
 
     data class InitialStateModel(
         val name: String,
@@ -1231,6 +1606,7 @@ internal class TangemPayBankWithdrawAmountModelTest : TangemPayModelTestBase() {
     )
 
     private companion object {
+        const val ERROR_HOLD_MILLIS = 1_000L
         val NETWORK_FEE = BigDecimal("0.04")
         val MONEY_ACCOUNT_LIMITS = AmountLimits(min = BigDecimal("10"), max = null, currency = "USD")
         val EDIT_AMOUNT = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount)

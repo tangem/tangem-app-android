@@ -2,10 +2,13 @@ package com.tangem.features.earn.impl.fake
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.res.R as CoreR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
@@ -13,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.earn.api.overview.EarnBadgeAccent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
+import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
 import com.tangem.features.earn.product.api.navigation.EarnFlowRoute
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.navigation.EarnPickerRoute
@@ -120,6 +124,42 @@ internal class FakeEarnProductTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN preset WHEN product created THEN analytics carry the category and product of that preset`(
+            model: AnalyticsModel,
+        ) {
+            // Act
+            val actual = createProduct(model.preset).analytics
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedAnalytics)
+        }
+
+        private fun provideTestModels() = listOf(
+            AnalyticsModel(
+                FakeEarnProductPreset.Lending,
+                expectedAnalytics = EarnProductAnalytics(category = "ETH Lending", product = "Lending"),
+            ),
+            AnalyticsModel(
+                FakeEarnProductPreset.Staking,
+                expectedAnalytics = EarnProductAnalytics(category = "Earn", product = "Staking"),
+            ),
+            AnalyticsModel(
+                FakeEarnProductPreset.Vault,
+                expectedAnalytics = EarnProductAnalytics(category = "Earn", product = "Vault"),
+            ),
+        )
+    }
+
+    internal data class AnalyticsModel(val preset: FakeEarnProductPreset, val expectedAnalytics: EarnProductAnalytics) {
+        override fun toString(): String = "$preset -> $expectedAnalytics"
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class EveryPreset {
 
         @ParameterizedTest
@@ -146,7 +186,8 @@ internal class FakeEarnProductTest {
                 val summary = product.summary()
 
                 // Assert
-                assertThat(summary.rateText to summary.rate).isEqualTo(stringReference("5.5% APY") to fakeRate)
+                assertThat(summary.rateText to summary.rate)
+                    .isEqualTo(resourceReference(CoreR.string.earn_apy_value, wrappedList("5.5%")) to fakeRate)
             }
 
         @ParameterizedTest
@@ -158,7 +199,7 @@ internal class FakeEarnProductTest {
             val product = createProduct(preset)
 
             // Act
-            val actual = product.summaries(params.userWalletId).first().keys
+            val actual = product.summaries(params.userWalletId).first().byCurrency.keys
 
             // Assert
             assertThat(actual).containsExactly(ethId)
@@ -197,7 +238,7 @@ internal class FakeEarnProductTest {
             val state = product.readyState()
 
             // Assert
-            val actual = Triple(state.projection != null, state.howItWorks != null, state.limits.remainingCap != null)
+            val actual = Triple(state.projection != null, product.howItWorks != null, state.limits.remainingCap != null)
             val expected = Triple(model.hasProjection, model.hasHowItWorks, model.hasRemainingCap)
             assertThat(actual).isEqualTo(expected)
         }
@@ -241,7 +282,7 @@ internal class FakeEarnProductTest {
                 val expectedPrimary = EarnActionItem(
                     action = Deposit(),
                     block = null,
-                    label = stringReference("Start earning"),
+                    label = resourceReference(CoreR.string.eth_yield_start_earning),
                 )
                 assertThat(state.position).isEqualTo(EarnPositionState.None)
                 assertThat(state.primary).isEqualTo(expectedPrimary)
@@ -260,7 +301,7 @@ internal class FakeEarnProductTest {
             val expectedPrimary = EarnActionItem(
                 action = Deposit(),
                 block = null,
-                label = stringReference("Add funds"),
+                label = resourceReference(CoreR.string.common_add_funds),
             )
             val position = state.position
             assertThat(position).isInstanceOf(EarnPositionState.Known::class.java)
@@ -286,7 +327,7 @@ internal class FakeEarnProductTest {
                         reason = stringReference("Position is not loaded"),
                         action = EarnBlockAction.Retry,
                     ),
-                    label = stringReference("Start earning"),
+                    label = resourceReference(CoreR.string.eth_yield_start_earning),
                 )
                 assertThat(state.position).isEqualTo(EarnPositionState.Unknown)
                 assertThat(state.primary).isEqualTo(expectedPrimary)
@@ -571,13 +612,11 @@ internal class FakeEarnProductTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class LegacyBlock {
+    inner class SummaryRoute {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN preset WHEN product and summaries read THEN legacy block flag and summary route match`(
-            model: LegacyBlockModel,
-        ) = runTest {
+        fun `GIVEN preset WHEN summaries read THEN summary route matches`(model: SummaryRouteModel) = runTest {
             // Arrange
             val product = createProduct(model.preset)
 
@@ -585,18 +624,13 @@ internal class FakeEarnProductTest {
             val summary = product.summary()
 
             // Assert
-            assertThat(product.hasLegacyBlock to summary.route)
-                .isEqualTo(model.hasLegacyBlock to model.expectedSummaryRoute)
+            assertThat(summary.route).isEqualTo(model.expectedSummaryRoute)
         }
 
         private fun provideTestModels() = listOf(
-            LegacyBlockModel(FakeEarnProductPreset.Lending, hasLegacyBlock = false, expectedSummaryRoute = null),
-            LegacyBlockModel(
-                preset = FakeEarnProductPreset.Staking,
-                hasLegacyBlock = true,
-                expectedSummaryRoute = FakeForeignRoute,
-            ),
-            LegacyBlockModel(FakeEarnProductPreset.Vault, hasLegacyBlock = false, expectedSummaryRoute = null),
+            SummaryRouteModel(FakeEarnProductPreset.Lending, expectedSummaryRoute = null),
+            SummaryRouteModel(FakeEarnProductPreset.Staking, expectedSummaryRoute = FakeForeignRoute),
+            SummaryRouteModel(FakeEarnProductPreset.Vault, expectedSummaryRoute = null),
         )
     }
 
@@ -682,7 +716,7 @@ internal class FakeEarnProductTest {
     }
 
     private suspend fun EarnProduct.summary(): EarnProductSummary =
-        summaries(params.userWalletId).first().getValue(ethId)
+        summaries(params.userWalletId).first().byCurrency.getValue(ethId)
 
     internal data class IdentityModel(
         val preset: FakeEarnProductPreset,
@@ -734,9 +768,8 @@ internal class FakeEarnProductTest {
         override fun toString(): String = "$preset ${action.id}"
     }
 
-    internal data class LegacyBlockModel(
+    internal data class SummaryRouteModel(
         val preset: FakeEarnProductPreset,
-        val hasLegacyBlock: Boolean,
         val expectedSummaryRoute: Route?,
     ) {
         override fun toString(): String = "$preset"

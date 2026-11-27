@@ -30,9 +30,11 @@ import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalCanScrollBackward
@@ -127,6 +129,7 @@ private fun PortfolioSelectorListItem(
         is PortfolioSelectorItemUM.Portfolio -> PortfolioSelectorItem(
             walletModel = item.item,
             isSelected = item.isSelected,
+            endBadge = item.endBadge,
             isMultiChoiceEnabled = isMultiChoiceEnabled,
             isInformationShown = isInformationShown,
             modifier = decoration
@@ -145,6 +148,7 @@ private fun PortfolioSelectorListItem(
 private fun PortfolioSelectorItem(
     walletModel: UserWalletItemUM,
     isSelected: Boolean,
+    endBadge: TextReference?,
     isMultiChoiceEnabled: Boolean,
     isInformationShown: Boolean,
     modifier: Modifier = Modifier,
@@ -168,6 +172,9 @@ private fun PortfolioSelectorItem(
             }
         },
         endSlot = {
+            if (endBadge != null) {
+                TangemBadge(text = endBadge, size = TangemBadge.Size.X6)
+            }
             if (isMultiChoiceEnabled) {
                 TangemCheckmark(
                     checked = isSelected,

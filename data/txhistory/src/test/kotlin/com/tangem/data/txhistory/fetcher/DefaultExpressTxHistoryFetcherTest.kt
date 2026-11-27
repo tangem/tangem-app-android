@@ -5,6 +5,8 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
+import com.tangem.data.txhistory.repository.ExpressOperationId
+import com.tangem.data.txhistory.repository.ExpressOperationType
 import com.tangem.grow.datasource.express.models.response.ExchangeHistoryDeltaResponse
 import com.tangem.grow.datasource.express.models.response.ExchangeHistoryResponse
 import com.tangem.grow.datasource.express.models.response.ExpressPagination
@@ -133,6 +135,62 @@ internal class DefaultExpressTxHistoryFetcherTest {
     }
 
     @Test
+    fun `GIVEN swap executed WHEN trigger received THEN swap status is refreshed by id without history delta`() =
+        runTest {
+            // Arrange
+            coJustRun { expressHistoryRepository.refreshActiveStatuses(any(), any()) }
+            val fetcher = createFetcher(createUtils())
+
+            // Act
+            fetcher.invoke(
+                TxHistoryFetchTrigger.OnExpressOperationExecute(
+                    walletId = WALLET_ID,
+                    type = TxHistoryFetchTrigger.OnExpressOperationExecute.Swap,
+                    txId = TX_ID,
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                expressHistoryRepository.refreshActiveStatuses(
+                    WALLET_ID,
+                    ExpressOperationId(TX_ID, ExpressOperationType.Swap),
+                )
+            }
+            coVerify(exactly = 0) { expressHistoryRepository.fetchExchangeHistoryDelta(any(), any()) }
+            coVerify(exactly = 0) { expressHistoryRepository.fetchOnrampHistoryDelta(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN onramp executed WHEN trigger received THEN onramp status is refreshed by id without history delta`() =
+        runTest {
+            // Arrange
+            coJustRun { expressHistoryRepository.refreshActiveStatuses(any(), any()) }
+            val fetcher = createFetcher(createUtils())
+
+            // Act
+            fetcher.invoke(
+                TxHistoryFetchTrigger.OnExpressOperationExecute(
+                    walletId = WALLET_ID,
+                    type = TxHistoryFetchTrigger.OnExpressOperationExecute.Onramp,
+                    txId = TX_ID,
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                expressHistoryRepository.refreshActiveStatuses(
+                    WALLET_ID,
+                    ExpressOperationId(TX_ID, ExpressOperationType.Onramp),
+                )
+            }
+            coVerify(exactly = 0) { expressHistoryRepository.fetchExchangeHistoryDelta(any(), any()) }
+            coVerify(exactly = 0) { expressHistoryRepository.fetchOnrampHistoryDelta(any(), any()) }
+        }
+
+    @Test
     fun `close cancels the fetcher scope`() = runTest {
         val utils = createUtils()
         val fetcher = createFetcher(utils)
@@ -203,5 +261,6 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     private companion object {
         val WALLET_ID = MockAccounts.userWalletId
+        const val TX_ID = "tx-id"
     }
 }

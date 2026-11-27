@@ -7,6 +7,7 @@ import com.tangem.features.tokenreceive.component.DefaultTokenReceiveComponent
 import com.tangem.features.tokenreceive.model.TokenReceiveAssetsModel
 import com.tangem.features.tokenreceive.model.TokenReceiveModel
 import com.tangem.features.tokenreceive.model.TokenReceiveQrCodeModel
+import com.tangem.features.tokenreceive.model.TokenReceiveScreenModel
 import com.tangem.features.tokenreceive.model.TokenReceiveWarningModel
 import dagger.Binds
 import dagger.Module
@@ -43,6 +44,11 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(TokenReceiveQrCodeModel::class)
     fun bindsTokenReceiveQrCodeModel(model: TokenReceiveQrCodeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TokenReceiveScreenModel::class)
+    fun bindsTokenReceiveScreenModel(model: TokenReceiveScreenModel): Model
 
     @Binds
     @IntoMap

@@ -6,6 +6,8 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -16,20 +18,86 @@ import com.tangem.domain.staking.model.BalanceType
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.THREE_STARS
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import com.tangem.core.res.R as CoreResR
 
 class UpdateStakingNotificationTransformerTest {
 
     private val clickIntents: TokenDetailsClickIntents = mockk(relaxed = true)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EarnBannerShown {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN Earn banner shown WHEN transform THEN no staking block`(model: StakingCase) {
+            // Arrange
+            val transformer = createTransformer(
+                availability = model.availability,
+                entryInfo = model.entryInfo,
+                status = model.status,
+                isEarnBannerShown = true,
+            )
+
+            // Act
+            val result = transformer.transform(initialState())
+
+            // Assert
+            assertThat(result.earnBlockState).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            StakingCase(
+                name = "stake offer",
+                availability = availableOption(BigDecimal("4.2")),
+                entryInfo = StakingEntryInfo(tokenSymbol = "ETH"),
+                status = buildStatus(),
+            ),
+            StakingCase(
+                name = "active stake",
+                availability = availableOption(BigDecimal("4.2")),
+                entryInfo = StakingEntryInfo(tokenSymbol = "ETH"),
+                status = buildStatusWithStake(stakedAmount = BigDecimal("5")),
+            ),
+            StakingCase(
+                name = "active stake in full pools",
+                availability = fullOption(BigDecimal("4.2")),
+                entryInfo = null,
+                status = buildStatusWithStake(stakedAmount = BigDecimal("5")),
+            ),
+            StakingCase(
+                name = "staking temporarily unavailable",
+                availability = StakingAvailability.TemporaryUnavailable,
+                entryInfo = null,
+                status = buildStatus(),
+            ),
+        )
+    }
+
+    data class StakingCase(
+        val name: String,
+        val availability: StakingAvailability,
+        val entryInfo: StakingEntryInfo?,
+        val status: CryptoCurrencyStatus,
+    ) {
+        override fun toString(): String = name
+    }
 
     @Test
     fun `GIVEN Unavailable WHEN transform THEN earnBlockState is null`() {
@@ -243,6 +311,62 @@ class UpdateStakingNotificationTransformerTest {
         assertThat(subtitle.tone).isEqualTo(EarnBlockUM.SubtitleUM.Tone.Accent)
     }
 
+    @Test
+    fun `GIVEN active stake at a validator below the best preferred rate WHEN transform THEN subtitle shows staked validator rate`() {
+        // Arrange
+        val stakedValidatorAddress = "pool_p2p"
+        val status = buildStatus(
+            networkRawId = "cardano",
+            symbol = "ADA",
+            isCoin = true,
+            stakingBalance = stakeKitBalance(
+                staked = BigDecimal("100"),
+                rewards = BigDecimal("5"),
+                validatorAddress = stakedValidatorAddress,
+            ),
+        )
+        val option = stakeKitOption(
+            validators = listOf(
+                validator(address = "pool_other", apr = BigDecimal("0.0179")),
+                validator(address = stakedValidatorAddress, apr = BigDecimal("0.0135")),
+            ),
+        )
+        val transformer = createTransformer(
+            availability = StakingAvailability.Available(option = option),
+            entryInfo = StakingEntryInfo(tokenSymbol = "ADA"),
+            status = status,
+        )
+
+        // Act
+        val result = transformer.transform(initialState())
+
+        // Assert
+        val content = result.earnBlockState as EarnBlockUM.Content
+        val subtitle = content.subtitleUM as EarnBlockUM.SubtitleUM.Text
+        val rateLabel = (subtitle.text as TextReference.Combined).refs.data.first() as TextReference.Combined
+        val rate = (rateLabel.refs.data.first() as TextReference.Str).value
+        assertThat(rate).isEqualTo(BigDecimal("0.0135").format { percent() })
+    }
+
+    private fun stakeKitOption(validators: List<Yield.Validator>): StakingOption.StakeKit {
+        val yield = mockk<Yield>(relaxed = true) {
+            every { this@mockk.validators } returns validators
+            every { preferredValidators } returns validators.filter { it.isPreferred }
+        }
+        return mockk(relaxed = true) {
+            every { this@mockk.yield } returns yield
+        }
+    }
+
+    private fun validator(address: String, apr: BigDecimal): Yield.Validator = Yield.Validator(
+        address = address,
+        status = Yield.Validator.ValidatorStatus.ACTIVE,
+        name = address,
+        rewardInfo = RewardInfo(rate = apr, type = RewardType.APR),
+        isPreferred = true,
+        isStrategicPartner = false,
+    )
+
     private fun rewardFormatArg(text: TextReference): Any? = when (text) {
         is TextReference.Res -> text.formatArgs.data.firstOrNull()
         is TextReference.Combined -> (text.refs.data.last() as? TextReference.Str)?.value
@@ -254,12 +378,14 @@ class UpdateStakingNotificationTransformerTest {
         entryInfo: StakingEntryInfo?,
         status: CryptoCurrencyStatus = buildStatus(),
         isBalanceHidden: Boolean = false,
+        isEarnBannerShown: Boolean = false,
     ) = UpdateStakingNotificationTransformer(
         cryptoCurrencyStatus = status,
         stakingAvailability = availability,
         stakingEntryInfo = entryInfo,
         appCurrency = AppCurrency.Default,
         isBalanceHidden = isBalanceHidden,
+        isEarnBannerShown = isEarnBannerShown,
         clickIntents = clickIntents,
     )
 
@@ -288,7 +414,11 @@ class UpdateStakingNotificationTransformerTest {
     }
 
     /** Builds an active StakeKit balance with the given [staked] and [rewards] amounts. */
-    private fun stakeKitBalance(staked: BigDecimal, rewards: BigDecimal): StakingBalance.Data.StakeKit {
+    private fun stakeKitBalance(
+        staked: BigDecimal,
+        rewards: BigDecimal,
+        validatorAddress: String? = null,
+    ): StakingBalance.Data.StakeKit {
         val stakingId = StakingID(integrationId = "ethereum-eth-native-staking", address = "0xabc")
         return StakingBalance.Data.StakeKit(
             stakingId = stakingId,
@@ -296,20 +426,24 @@ class UpdateStakingNotificationTransformerTest {
             balance = YieldBalanceItem(
                 integrationId = stakingId.integrationId,
                 items = listOf(
-                    balanceItem(type = BalanceType.STAKED, amount = staked),
-                    balanceItem(type = BalanceType.REWARDS, amount = rewards),
+                    balanceItem(type = BalanceType.STAKED, amount = staked, validatorAddress = validatorAddress),
+                    balanceItem(type = BalanceType.REWARDS, amount = rewards, validatorAddress = validatorAddress),
                 ),
             ),
         )
     }
 
-    private fun balanceItem(type: BalanceType, amount: BigDecimal): BalanceItem = BalanceItem(
+    private fun balanceItem(
+        type: BalanceType,
+        amount: BigDecimal,
+        validatorAddress: String? = null,
+    ): BalanceItem = BalanceItem(
         groupId = "group",
         token = YieldToken.ETH,
         type = type,
         amount = amount,
         rawCurrencyId = null,
-        validatorAddress = null,
+        validatorAddress = validatorAddress,
         date = null,
         pendingActions = emptyList(),
         pendingActionsConstraints = emptyList(),

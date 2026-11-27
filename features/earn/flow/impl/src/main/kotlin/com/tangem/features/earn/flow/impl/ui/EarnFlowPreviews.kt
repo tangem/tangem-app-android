@@ -9,6 +9,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.amountScreen.preview.AmountScreenClickIntentsStub
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -97,21 +98,31 @@ internal data class EarnPreview(val preset: EarnPreviewPreset, val action: EarnP
         else -> stringReference("Withdrawals settle within 7 days, the funds arrive after that.")
     }
 
+    private val notifications: ImmutableList<NotificationUM> = if (isWithdraw) {
+        persistentListOf(
+            NotificationUM.Error.ExceedsBalance(
+                networkIconId = R.drawable.img_eth_22,
+                currencyName = "Ethereum",
+                feeName = "Ethereum",
+                feeSymbol = "ETH",
+                networkName = "Ethereum",
+            ),
+        )
+    } else {
+        persistentListOf()
+    }
+
     private val actionLabel = stringReference(if (isWithdraw) "Withdraw" else "Deposit")
 
     fun amount() = EarnAmountUM(
         title = if (isWithdraw) stringReference("Withdrawal") else stringReference("Deposit to Lending on Aave"),
         amountState = AmountStatePreviewData.amountStateV2,
         clickIntents = AmountScreenClickIntentsStub,
-        percents = if (isWithdraw) {
-            persistentListOf()
-        } else {
-            listOf(25, 50, 75, 100).map { percent ->
-                PredefinedPercentButtonUM(id = "$percent", label = stringReference("$percent%"), onClick = {})
-            }.toImmutableList()
-        },
+        percents = listOf(25, 50, 75, 100).map { percent ->
+            PredefinedPercentButtonUM(id = "$percent", label = stringReference("$percent%"), onClick = {})
+        }.toImmutableList(),
         notice = notice,
-        notifications = persistentListOf(),
+        notifications = notifications,
         primary = TangemButtonUM(text = actionLabel, type = TangemButtonType.Primary, onClick = {}),
         onHowItWorksClick = {},
         isFromPosition = isWithdraw,
@@ -123,7 +134,7 @@ internal data class EarnPreview(val preset: EarnPreviewPreset, val action: EarnP
         amountCrypto = stringReference("0.5 ETH"),
         rows = if (isWithdraw) persistentListOf() else depositRows(),
         notice = notice,
-        notifications = persistentListOf(),
+        notifications = notifications,
         legal = EarnLegalUM(termsOfUseUrl = "", privacyPolicyUrl = "", onClick = {}),
         stepLabel = null,
         primary = TangemButtonUM(

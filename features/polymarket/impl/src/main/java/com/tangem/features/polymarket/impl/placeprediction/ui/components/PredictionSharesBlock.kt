@@ -13,8 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -26,7 +31,11 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.appendStyled
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
@@ -98,16 +107,27 @@ private fun ProceedsSection(selected: BigDecimal, position: SellPositionUM, proc
         ProceedsFigure(proceeds = proceeds)
         Text(
             modifier = Modifier.padding(top = CAPTION_GAP),
-            text = stringResourceSafe(
-                R.string.prediction_close_selling_of,
-                selected.formatPolymarketShares(),
-                position.availableLabel(),
-            ),
+            text = resourceReference(
+                id = R.string.prediction_close_selling_of,
+                formatArgs = wrappedList(
+                    selected.formatPolymarketShares().emphasized(),
+                    position.availableLabel().emphasized(),
+                ),
+            ).resolveAnnotatedReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
     }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun String.emphasized(): AnnotatedString = buildAnnotatedString {
+    appendStyled(
+        text = this@emphasized,
+        spanStyle = SpanStyle(color = TangemTheme.colors3.text.primary, fontWeight = FontWeight.SemiBold),
+    )
 }
 
 @Composable

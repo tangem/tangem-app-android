@@ -23,8 +23,17 @@ internal sealed interface PolymarketFastTradingSettingsUM {
         val pullToRefreshConfig: PullToRefreshConfig,
         val onActionClick: (FastTradingKeyActionUM) -> Unit,
         val onActivateClick: () -> Unit,
+        val revokeConfirmation: FastTradingRevokeConfirmationUM?,
     ) : PolymarketFastTradingSettingsUM
 }
+
+@Immutable
+internal data class FastTradingRevokeConfirmationUM(
+    val description: TextReference,
+    val isHoldToConfirm: Boolean,
+    val onConfirm: () -> Unit,
+    val onDismiss: () -> Unit,
+)
 
 @Immutable
 internal data class FastTradingKeysUM(
@@ -57,6 +66,10 @@ internal data class FastTradingKeyRowUM(
 
 @Immutable
 internal sealed interface FastTradingKeyActionUM {
+
+    data object Extend : FastTradingKeyActionUM
+
+    data object Reactivate : FastTradingKeyActionUM
 
     data class Revoke(val address: String, val subject: RevokeSubject) : FastTradingKeyActionUM
 

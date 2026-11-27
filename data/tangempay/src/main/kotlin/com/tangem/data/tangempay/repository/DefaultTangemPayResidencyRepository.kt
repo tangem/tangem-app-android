@@ -9,7 +9,6 @@ import com.tangem.domain.models.tangempay.TangemPayEligibility
 import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.tangempay.TangemPayRegion
 import com.tangem.domain.models.tangempay.id
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.repository.TangemPayResidencyRepository
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.spend.datasource.tangempay.TangemPayApi
@@ -43,15 +42,6 @@ internal class DefaultTangemPayResidencyRepository @Inject constructor(
                 country = countryCode,
                 region = regionCode,
             )
-        }.map { response -> TangemPayEligibilityConverter.convert(response.result) }
-    }
-
-    override suspend fun checkEligibilityForCustomer(
-        userWalletId: UserWalletId,
-        product: TangemPayProduct,
-    ): Either<TangemPayApiError, TangemPayEligibility> {
-        return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.checkEligibilityForCustomer(authHeader = authHeader, product = product.id)
         }.map { response -> TangemPayEligibilityConverter.convert(response.result) }
     }
 }

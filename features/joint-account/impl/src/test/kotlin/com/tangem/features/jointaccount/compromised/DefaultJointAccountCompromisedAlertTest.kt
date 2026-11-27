@@ -50,7 +50,7 @@ internal class DefaultJointAccountCompromisedAlertTest {
     }
 
     @Test
-    fun `GIVEN wallet WHEN show THEN the dialog carries the cannot-verify texts`() {
+    fun `GIVEN wallet WHEN show THEN the dialog carries the paused-for-safety texts`() {
         // Arrange
         val message = slot<DialogMessage>()
         every { uiMessageSender.send(capture(message)) } returns Unit
@@ -59,9 +59,10 @@ internal class DefaultJointAccountCompromisedAlertTest {
         alert.show(userWalletId = userWalletId)
 
         // Assert
-        assertThat(message.captured.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_compromised_title))
+        assertThat(message.captured.title)
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_compromised_title_v2))
         assertThat(message.captured.message)
-            .isEqualTo(resourceReference(CoreUiR.string.joint_account_compromised_message))
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_compromised_message_v2))
     }
 
     @Test

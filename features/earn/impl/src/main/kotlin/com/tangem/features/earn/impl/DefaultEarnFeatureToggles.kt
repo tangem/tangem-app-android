@@ -13,4 +13,7 @@ internal class DefaultEarnFeatureToggles(
 
     override val isUserPortfolioEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18953_EARN_UPDATE_ASSET_SELECTION)
+
+    override val isGauntletVaultEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1869_GAUNTLET_VAULT_ENABLED)
 }

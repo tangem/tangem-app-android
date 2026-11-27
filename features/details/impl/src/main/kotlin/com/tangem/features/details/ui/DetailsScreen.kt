@@ -207,20 +207,16 @@ private fun ConnectionsActionRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         modifier = modifier,
         onClick = item.onClick,
-        startSlot = { ConnectionsIcon(isMcpEnabled = item.isMcpEnabled) },
+        startSlot = { ConnectionsIcon() },
         titleSlot = {
             TangemRowText(
-                text = TextReference.Res(
-                    if (item.isMcpEnabled) R.string.wc_connections else R.string.wallet_connect_title,
-                ),
+                text = TextReference.Res(R.string.wc_connections),
                 role = TangemRowTextRole.Title,
             )
         },
         subtitleSlot = {
             TangemRowText(
-                text = TextReference.Res(
-                    if (item.isMcpEnabled) R.string.wc_connections_subtitle else R.string.wallet_connect_subtitle,
-                ),
+                text = TextReference.Res(R.string.wc_connections_subtitle),
                 role = TangemRowTextRole.Subtitle,
             )
         },
@@ -229,18 +225,12 @@ private fun ConnectionsActionRow(
 }
 
 @Composable
-private fun ConnectionsIcon(isMcpEnabled: Boolean) {
-    val iconModifier = Modifier
-        .size(40.dp)
-        .clip(RoundedCornerShape(12.dp))
-
-    if (!isMcpEnabled) {
-        TangemIcon(tangemIconUM = TangemIconUM.Image(R.drawable.img_wallet_connect_76), modifier = iconModifier)
-        return
-    }
-
+private fun ConnectionsIcon() {
     Box(
-        modifier = iconModifier.background(TangemTheme.colors3.bg.status.infoSubtle),
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(TangemTheme.colors3.bg.status.infoSubtle),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

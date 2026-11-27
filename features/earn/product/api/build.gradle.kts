@@ -13,12 +13,19 @@ dependencies {
     /** Feature */
     api(projects.features.earn.api)
 
+    /** Common */
+    api(projects.common)
+
     /** Core */
+    api(projects.core.analytics.models)
     api(projects.core.decompose)
+    implementation(projects.core.res)
     api(projects.core.ui)
+    api(projects.core.utils)
 
     /** Domain */
     api(projects.domain.models)
+    implementation(projects.domain.quotes)
     api(projects.domain.transaction)
     api(projects.domain.transaction.models)
 
@@ -35,6 +42,7 @@ dependencies {
     implementation(deps.hilt.core)
 
     /** Tests */
+    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(deps.kotlin.serialization)
 }

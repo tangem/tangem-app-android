@@ -23,6 +23,10 @@ internal class QrContentClassifierParser(
             return ClassifiedQrContent.WalletConnect(qrCode)
         }
 
+        parseTangemWcUri(qrCode)?.let { wcUri ->
+            return ClassifiedQrContent.WalletConnect(wcUri)
+        }
+
         parseMcpUserCode(qrCode)?.let { userCode ->
             return ClassifiedQrContent.McpAuthorization(userCode)
         }
@@ -100,6 +104,20 @@ internal class QrContentClassifierParser(
         return decoded.ifBlank { null }
     }
 
+    private fun parseTangemWcUri(qrCode: String): String? {
+        if (!qrCode.startsWith(TANGEM_WC_PREFIX)) return null
+
+        val afterHost = qrCode.removePrefix(TANGEM_WC_PREFIX).removePrefix("/")
+        if (afterHost.isNotEmpty() && !afterHost.startsWith('?')) return null
+
+        val wcUri = QrSentUriParser().extractParameters(qrCode)[PARAM_URI] ?: return null
+        val decoded = runCatching {
+            URLDecoder.decode(wcUri, QrSentUriParser.CHARSET_UTF8)
+        }.getOrDefault(wcUri)
+
+        return decoded.takeIf { it.startsWith(WC_PREFIX) }
+    }
+
     private fun isDAppWcUrl(qrCode: String): Boolean {
         if (!qrCode.startsWith(HTTP_PREFIX) && !qrCode.startsWith(HTTPS_PREFIX)) return false
 
@@ -150,6 +168,7 @@ internal class QrContentClassifierParser(
         const val HTTPS_PREFIX = "https://"
         const val PARAM_URI = "uri"
         const val WC_PREFIX = "wc:"
+        const val TANGEM_WC_PREFIX = "tangem://wc"
         const val MCP_AUTHORIZATION_PREFIX = "tangem://mcp.authorization"
         const val PARAM_USER_CODE = "user_code"
     }

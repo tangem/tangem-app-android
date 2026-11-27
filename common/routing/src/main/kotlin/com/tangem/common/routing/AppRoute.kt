@@ -25,13 +25,13 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -326,19 +326,23 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class WalletHardwareBackup(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
+        val source: Source,
+    ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}") {
+
+        /** Entry point the hardware wallet upgrade was started from, passed on through the story if one is shown */
+        enum class Source {
+            UPGRADE_BANNER,
+            PERMANENT_BANNER,
+            WALLET_SETTINGS,
+            BACKUP,
+        }
+    }
 
     @Serializable
     data class HardwareUpgradeStories(
         val userWalletId: UserWalletId,
-        val source: Source,
-    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}") {
-
-        enum class Source {
-            MAIN,
-            WALLET_SETTINGS,
-        }
-    }
+        val source: WalletHardwareBackup.Source,
+    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}")
 
     @Serializable
     data class CreateCloudBackup(
@@ -523,15 +527,21 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
 
+    /** Crypto account intro for callers that can't tell which wallet: it asks, then opens [CreateAccount]. */
+    @Serializable
+    data object CryptoAccountIntro : AppRoute(path = "/crypto_account_intro")
+
+    /** [userWalletId] is null when the caller can't tell which wallet: the flow asks after its intro. */
     @Serializable
     data class JointAccountCreation(
-        val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId?,
         val source: Source,
-    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}") {
+    ) : AppRoute(path = "/joint_account_creation" + userWalletId?.let { "/${it.stringValue}" }.orEmpty()) {
 
         enum class Source {
             AddAccount,
             MainScreen,
+            AllServices,
         }
     }
 
@@ -569,6 +579,7 @@ sealed class AppRoute(val path: String) : Route {
     data class TangemPayDetails(
         val status: AccountStatus.Payment,
         val initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        val isOpenedFromKycPush: Boolean = false,
     ) : AppRoute(path = "/tangem_pay_details/${status.account}")
 
     @Serializable
@@ -621,31 +632,79 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_verified")
 
     @Serializable
-    data object TangemPayOnboardingSuccess : AppRoute(path = "/tangem_pay_onboarding_success")
+    data class TangemPayOnboardingSuccess(
+        @SerialName("product") val product: Product,
+    ) : AppRoute(path = "/tangem_pay_onboarding_success") {
+
+        @Serializable
+        enum class Product {
+            @SerialName("tangem_pay")
+            TANGEM_PAY,
+
+            @SerialName("money_account")
+            MONEY_ACCOUNT,
+        }
+    }
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
 
     @Serializable
     data class TangemPayEligibility(
-        val product: TangemPayProduct,
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
     data class MoneyAccountDetails(
         val userWalletId: UserWalletId,
+        val isOpenedFromKycPush: Boolean = false,
     ) : AppRoute(path = "/money_account_details/${userWalletId.stringValue}")
 
     @Serializable
     data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
+
+    /**
+     * @property stage the lifecycle stage label of the entry point, empty when it has none
+     * @property repeatAfterDays how long an answer closes the survey on this device; null closes it for good
+     * @property isAlreadyAnswered opens straight on the thank-you screen, for a survey answered within its term
+     * @property isFromCache the entry point got the survey from the cache, without a request to the vendor
+     */
+    @Serializable
+    data class NativeSurvey(
+        val surveyId: Long,
+        val source: Source,
+        val stage: String,
+        val repeatAfterDays: Int?,
+        val userWalletId: UserWalletId,
+        val isAlreadyAnswered: Boolean,
+        val isFromCache: Boolean,
+    ) : AppRoute(path = "/native_survey/$surveyId") {
+
+        enum class Source { SHEET, PUSH, BANNER, LINK }
+    }
 
     @Serializable
     data class YieldSupplyEntry(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
-    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+        val account: AccountKind = AccountKind.Portfolio,
+    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}") {
+
+        /**
+         * The kind of account the flow was opened from; its currencies are looked up and refreshed there only.
+         * A wallet has a single Money account, so the kind identifies it without an id.
+         */
+        @Serializable
+        enum class AccountKind {
+            Portfolio,
+            Money,
+            ;
+
+            val isHeldOutsidePortfolio: Boolean
+                get() = this == Money
+        }
+    }
 
     @Serializable
     data class EarnEntry(

@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketCryptoPriceRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
@@ -37,7 +38,6 @@ import com.tangem.domain.polymarket.signing.PolymarketSigningSession
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
-import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
@@ -49,15 +49,19 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketSoccerEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionOrderSessionKeyWindowUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketFastTradingUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationStateUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOperationUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSessionKeyOutcomeUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCryptoPricesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
@@ -67,8 +71,10 @@ import com.tangem.domain.polymarket.usecase.StartPolymarketSessionKeyOperationUs
 import com.tangem.domain.polymarket.usecase.AcknowledgePolymarketSessionKeyOutcomeUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorizationStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
+import com.tangem.domain.polymarket.sessionkey.PolymarketFastTradingBannerStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOperationRunner
@@ -92,6 +98,11 @@ internal object PolymarketDomainModule {
     fun provideObservePolymarketLiveQuotesUseCase(
         repository: PolymarketLiveQuotesRepository,
     ): ObservePolymarketLiveQuotesUseCase = ObservePolymarketLiveQuotesUseCase(repository)
+
+    @Provides
+    fun provideObservePolymarketCryptoPricesUseCase(
+        repository: PolymarketCryptoPriceRepository,
+    ): ObservePolymarketCryptoPricesUseCase = ObservePolymarketCryptoPricesUseCase(repository)
 
     @Provides
     @Singleton
@@ -165,6 +176,14 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPolymarketEventUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventUseCase {
         return GetPolymarketEventUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketSoccerEventUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPolymarketSoccerEventUseCase {
+        return GetPolymarketSoccerEventUseCase(polymarketRepository = polymarketRepository)
     }
 
     @Provides
@@ -324,9 +343,17 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideCanSignPredictionOrderWithSessionKeyUseCase(
+    fun provideGetPredictionOrderSessionKeyWindowUseCase(
         router: PolymarketOrderSigningRouter,
-    ): CanSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(router = router)
+        sessionKeyStore: PolymarketSessionKeyStore,
+        stateService: PolymarketSessionKeyStateService,
+        tradingStore: PolymarketSessionKeyTradingStore,
+    ): GetPredictionOrderSessionKeyWindowUseCase = GetPredictionOrderSessionKeyWindowUseCase(
+        router = router,
+        sessionKeyStore = sessionKeyStore,
+        stateService = stateService,
+        tradingStore = tradingStore,
+    )
 
     @Provides
     @Singleton
@@ -465,7 +492,9 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun providePolymarketDepositWalletLock(): PolymarketDepositWalletLock = PolymarketDepositWalletLock()
+    fun providePolymarketDepositWalletLock(
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
+    ): PolymarketDepositWalletLock = PolymarketDepositWalletLock(pendingAuthorizations = pendingAuthorizations)
 
     @Provides
     @Singleton
@@ -494,6 +523,7 @@ internal object PolymarketDomainModule {
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
         deriveApiCredentials: DeriveApiCredentialsUseCase,
         depositWalletLock: PolymarketDepositWalletLock,
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
     ): ManagePolymarketSessionKeyInteractor = ManagePolymarketSessionKeyInteractor(
         signBatches = signBatches,
         sessionKeyRepository = sessionKeyRepository,
@@ -505,6 +535,7 @@ internal object PolymarketDomainModule {
         getApiCredentials = getApiCredentials,
         deriveApiCredentials = deriveApiCredentials,
         depositWalletLock = depositWalletLock,
+        pendingAuthorizations = pendingAuthorizations,
     )
 
     @Provides
@@ -543,11 +574,15 @@ internal object PolymarketDomainModule {
         manage: ManagePolymarketSessionKeyInteractor,
         stateService: PolymarketSessionKeyStateService,
         sessionKeyStore: PolymarketSessionKeyStore,
+        bannerStore: PolymarketFastTradingBannerStore,
+        pendingAuthorizations: PolymarketPendingAuthorizationStore,
         appCoroutineScope: AppCoroutineScope,
     ): PolymarketSessionKeyOperationRunner = PolymarketSessionKeyOperationRunner(
         manage = manage,
         stateService = stateService,
         sessionKeyStore = sessionKeyStore,
+        bannerStore = bannerStore,
+        pendingAuthorizations = pendingAuthorizations,
         appScope = appCoroutineScope,
     )
 
@@ -572,6 +607,13 @@ internal object PolymarketDomainModule {
     fun provideObservePolymarketSessionKeyOutcomeUseCase(
         runner: PolymarketSessionKeyOperationRunner,
     ): ObservePolymarketSessionKeyOutcomeUseCase = ObservePolymarketSessionKeyOutcomeUseCase(runner = runner)
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketSessionKeyOperationStateUseCase(
+        runner: PolymarketSessionKeyOperationRunner,
+    ): ObservePolymarketSessionKeyOperationStateUseCase =
+        ObservePolymarketSessionKeyOperationStateUseCase(runner = runner)
 
     @Provides
     @Singleton

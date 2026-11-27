@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.features.earn.api.EarnFeatureToggles
 import com.tangem.features.feed.components.v2.blocks.FeedBlockModalCallbacks
 import com.tangem.features.feed.components.v2.model.converter.EarnBlockConverter
 import com.tangem.features.feed.nav.FeedRoute
@@ -45,6 +46,7 @@ internal class EarnBlockModel @Inject constructor(
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
+    earnFeatureToggles: EarnFeatureToggles,
 ) : Model() {
 
     private val callbacks = paramsContainer.require<FeedBlockModalCallbacks>()
@@ -53,7 +55,7 @@ internal class EarnBlockModel @Inject constructor(
         flow = userWalletsListRepository.userWallets,
         flow2 = multiAccountStatusListSupplier.invokeAsMap(),
         flow3 = yieldSupplyApyFlowUseCase(),
-        flow4 = getTopEarnTokensUseCase(),
+        flow4 = getTopEarnTokensUseCase(isVaultsIncluded = earnFeatureToggles.isEarnEnabled),
     ) { wallets, accountsByWallet, yieldSupplyApy, topEarnTokens ->
         val unlockedWalletIds = wallets.orEmpty().filterNot { it.isLocked }.mapTo(mutableSetOf()) { it.walletId }
         val currenciesByWallet = accountsByWallet

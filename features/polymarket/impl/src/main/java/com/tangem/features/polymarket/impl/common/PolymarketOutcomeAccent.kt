@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.common
 
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
+import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
 import com.tangem.domain.polymarket.model.PolymarketPosition
 
 /**
@@ -35,4 +36,10 @@ internal fun PolymarketOutcomeAccent.toBadgeStatus(): TangemBadge.Status = when 
     PolymarketOutcomeAccent.Info -> TangemBadge.Status.Info
     PolymarketOutcomeAccent.Error -> TangemBadge.Status.Error
     PolymarketOutcomeAccent.Neutral -> TangemBadge.Status.Neutral
+}
+
+internal fun PolymarketOutcomeAccent.toButtonAppearance(): PolymarketOutcomeButton.Appearance = when (this) {
+    PolymarketOutcomeAccent.Info -> PolymarketOutcomeButton.Appearance.Info
+    PolymarketOutcomeAccent.Error -> PolymarketOutcomeButton.Appearance.Error
+    PolymarketOutcomeAccent.Neutral -> PolymarketOutcomeButton.Appearance.Neutral
 }

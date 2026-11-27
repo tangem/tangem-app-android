@@ -151,6 +151,9 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
     }
 
     private fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
+        // A currency held outside the portfolio (the Money account POL) has no token details screen
+        if (params.account.isHeldOutsidePortfolio) return
+
         router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = params.userWalletId,

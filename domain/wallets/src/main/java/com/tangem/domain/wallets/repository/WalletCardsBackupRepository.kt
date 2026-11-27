@@ -23,8 +23,6 @@ interface WalletCardsBackupRepository {
      * that does not reach the backend stays queued and [sendPendingWalletCards] resends it later — the returned
      * [Either.Left] says the report has not landed yet, not that it has been lost.
      *
-     * With `TWI_1586_CARD_LINKED_STATUS_UPDATE_V2` off only [cards] are sent and nothing is remembered.
-     *
      * @param usedSeed `true` if a seed phrase was used to create or import the wallet
      */
     suspend fun saveWalletCards(

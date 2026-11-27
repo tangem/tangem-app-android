@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.active.model
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -48,6 +49,7 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
 
         // Act
         model.onGoToTokenClick()
+        advanceUntilIdle()
 
         // Assert
         verify(exactly = 1) { router.popToMatching(AppRoute.CurrencyDetails::class, any(), any()) }
@@ -67,6 +69,7 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
 
         // Act
         model.onGoToTokenClick()
+        advanceUntilIdle()
 
         // Assert
         verify(exactly = 1) { router.replaceCurrent(route = expectedRoute, onComplete = any()) }
@@ -89,6 +92,7 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
 
         // Act
         model.onGoToTokenClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(predicateSlot.captured(tokenRoute)).isTrue()
@@ -108,12 +112,35 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
 
         // Act
         activeModel.onGoToTokenClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(predicateSlot.captured(model.route)).isFalse()
 
         activeModel.onDestroy()
     }
+
+    @Test
+    fun `GIVEN a currency held outside the portfolio WHEN go to token is tapped THEN it goes back to the account`() =
+        runTest {
+            // Arrange
+            val model = createModel(
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+                account = AccountKind.Money,
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.onGoToTokenClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.pop(any()) }
+            verify(exactly = 0) { router.popToMatching(AppRoute.CurrencyDetails::class, any(), any()) }
+            verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+
+            model.onDestroy()
+        }
 
     private fun stubPopToTokenScreen(isFound: Boolean) {
         every {

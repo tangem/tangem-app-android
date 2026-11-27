@@ -4,4 +4,5 @@ enum class EarnFilterType {
     ALL,
     STAKING,
     YIELD,
+    VAULT,
 }

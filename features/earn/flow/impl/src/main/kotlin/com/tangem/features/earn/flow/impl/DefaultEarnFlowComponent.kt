@@ -12,6 +12,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.earn.api.ui.EarnHowItWorksModal
+import com.tangem.features.earn.api.ui.EarnRowInfoModal
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.impl.model.EarnFlowModel
 import com.tangem.features.earn.flow.impl.model.EarnFlowStep
@@ -110,6 +111,9 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
 
         val howItWorks by model.howItWorks.collectAsStateWithLifecycle()
         howItWorks?.let { um -> EarnHowItWorksModal(state = um, onDismiss = model::onHowItWorksDismiss) }
+
+        val rowInfo by model.rowInfo.collectAsStateWithLifecycle()
+        rowInfo?.let { um -> EarnRowInfoModal(state = um, onDismiss = model::onRowInfoDismiss) }
     }
 
     private fun createFeeSelectorBlock(
@@ -122,6 +126,7 @@ internal class DefaultEarnFlowComponent @AssistedInject constructor(
             userWalletId = params.product.userWalletId,
             onLoadFee = model::loadFee,
             onLoadFeeExtended = if (model.action.isGaslessAllowed) model::loadFeeExtended else null,
+            isGaslessForCoinAllowed = model.action.isGaslessAllowed,
             cryptoCurrencyStatus = status,
             feeCryptoCurrencyStatus = feeStatus,
             feeStateConfiguration = FeeSelectorParams.FeeStateConfiguration.None,

@@ -16,7 +16,11 @@ class CloseTangemPayCardUseCase(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId, cardId: String): Either<TangemPayApiError, Unit> = either {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        cardId: String,
+        onOrderEnded: suspend (isCompleted: Boolean) -> Unit = {},
+    ): Either<TangemPayApiError, Unit> = either {
         val order = closeCardRepository.closeCard(userWalletId, cardId).bind()
 
         if (order.orderStatus == OrderStatus.CANCELED) {
@@ -27,7 +31,7 @@ class CloseTangemPayCardUseCase(
         paymentAccountStatusFetcher.invoke(userWalletId)
 
         appCoroutineScope.launch {
-            startTangemPayOrderPollingUseCase(
+            val isCompleted = startTangemPayOrderPollingUseCase(
                 order = order,
                 userWalletId = userWalletId,
                 onOrderStateChange = { newOrder ->
@@ -36,6 +40,7 @@ class CloseTangemPayCardUseCase(
                     }
                 },
             )
+            onOrderEnded(isCompleted)
         }
     }
 }

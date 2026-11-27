@@ -11,7 +11,6 @@ import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -20,10 +19,9 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CollectiblesOwnerNetworkProviderTest {
 
     private val networkFactory: NetworkFactory = mockk()
@@ -43,16 +41,16 @@ internal class CollectiblesOwnerNetworkProviderTest {
         clearMocks(networkFactory, ownerDeriver)
     }
 
-    /** The owner address is the vault's `owner`, so it must be built on the same chain the vault is. */
+    /** A test card addresses mainnet too: the vault lives only there. */
     @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN the owner key is stored WHEN create THEN the network is built on the card's chain and owner path`(
-        model: VaultChainModel,
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN the owner key is stored WHEN create THEN the network is built on Solana and owner path`(
+        isTestCard: Boolean,
     ) = runTest {
         // Arrange
-        val wallet = mockColdWallet(walletId = userWalletId, isTestCard = model.isTestCard)
+        val wallet = mockColdWallet(walletId = userWalletId, isTestCard = isTestCard)
         coEvery { ownerDeriver.storedOwner(userWalletId) } returns OWNER
-        stubNetwork(userWallet = wallet, blockchain = model.blockchain, network = network)
+        stubNetwork(userWallet = wallet, blockchain = Blockchain.Solana, network = network)
 
         // Act
         val actual = provider.create(wallet)
@@ -61,7 +59,7 @@ internal class CollectiblesOwnerNetworkProviderTest {
         assertThat(actual).isEqualTo(network.right())
         verify(exactly = 1) {
             networkFactory.create(
-                blockchain = model.blockchain,
+                blockchain = Blockchain.Solana,
                 extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
                 userWallet = wallet,
             )
@@ -103,8 +101,6 @@ internal class CollectiblesOwnerNetworkProviderTest {
             )
         } returns network
     }
-
-    private fun provideTestModels() = vaultChainModels()
 
     private companion object {
 

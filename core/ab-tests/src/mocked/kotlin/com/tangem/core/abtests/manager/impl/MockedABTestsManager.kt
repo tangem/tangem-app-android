@@ -12,6 +12,8 @@ internal class MockedABTestsManager : ABTestsManager by StubABTestsManager() {
 
     override fun peekValue(key: String): String? = System.getProperty("$PROPERTY_PREFIX$key")
 
+    override fun getCachedValue(key: String): String? = peekValue(key)
+
     private companion object {
         const val PROPERTY_PREFIX = "uitest.abtests."
     }

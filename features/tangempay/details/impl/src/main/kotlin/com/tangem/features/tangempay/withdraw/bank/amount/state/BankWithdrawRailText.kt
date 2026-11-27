@@ -14,6 +14,7 @@ import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.formatPercentageFee
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 import java.util.Currency
@@ -28,7 +29,14 @@ private fun BankRail.toDefaultTitleReference(): TextReference = when (this) {
     BankRail.SPEI -> stringReference(name)
 }
 
-internal fun OfframpEta.toTextReference(): TextReference = when {
+/** SPEI settles within minutes; the same-day text belongs to wire, which also reports zero days. */
+internal fun OfframpDestination.toEtaReference(): TextReference = if (rail == BankRail.SPEI && eta.maxDays == 0) {
+    resourceReference(R.string.tangempay_withdraw_bank_eta_within_minutes)
+} else {
+    eta.toTextReference()
+}
+
+private fun OfframpEta.toTextReference(): TextReference = when {
     maxDays == 0 -> resourceReference(R.string.tangempay_withdraw_bank_eta_same_business_day)
     minDays == maxDays -> pluralReference(
         id = R.plurals.tangempay_withdraw_bank_eta_business_days,
@@ -49,6 +57,13 @@ internal fun OfframpDestination.totalFeeText(networkFee: BigDecimal): String = w
         currencyCode = fee.currency,
     )
 }
+
+internal fun OfframpDestination.feeText(amount: BigDecimal?, networkFee: BigDecimal): String =
+    if (amount != null && amount.isPositive() && fee.calculationType == FeeCalculationType.PERCENTAGE) {
+        (fee.amountFor(amount) + networkFee).formatFiat(Currency.getInstance(fee.currency))
+    } else {
+        totalFeeText(networkFee)
+    }
 
 internal fun BigDecimal.formatFiat(currency: Currency): String = format {
     fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol).optionalDecimals()

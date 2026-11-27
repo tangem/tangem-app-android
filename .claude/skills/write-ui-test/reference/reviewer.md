@@ -10,8 +10,8 @@ fork inherits the author's context and its bias.
   working tree included).
 - `REPORT`: path to `report.txt` printed by `scripts/check.sh`.
 - `ANDROID_REPO` and `MOCKS_REPO`: absolute paths to both repositories.
-- `CASES`: the raw steps and expected results of each automated case, copied from Allure TestOps. If the
-  reviewer can read TestOps itself, the Allure ids are enough. Never the author's paraphrase.
+- `GATE_TABLES`: the final step tables from `allure-steps-gate.md` — every Allure step and expected
+  result mapped to test code, all `COVERED` or `AGREED`.
 - `AGREED_DEVIATIONS`: deviations from the cases the user has already approved, one line each. Do not
   report these.
 
@@ -35,13 +35,11 @@ fix them.
 
 ## What to check
 
-1. **The test verifies the case.** For every automated case, map each step and expected result in
-   `CASES` to code. Flag:
-   - a missing step or a missing expected result;
-   - a test that ends on an action instead of an assertion;
-   - an assertion that passes regardless of app behaviour: an element that always exists, existence
-     where the case expects a value, a negative assertion (`assertDoesNotExist` /
-     `assertIsNotDisplayed`) used as proof that an action happened, or a wait whose result is ignored.
+1. **The assertions can fail.** The gate already mapped every case step to code; do not redo that
+   mapping. For each `COVERED` check in `GATE_TABLES`, confirm the cited assertion fails when the app is
+   wrong. Flag an element that always exists, a matcher that also matches the previous state, a
+   negative assertion (`assertDoesNotExist` / `assertIsNotDisplayed`) used as proof that an action
+   happened, and a wait whose result is ignored.
 2. **Flake sources.**
    - The test waits for an element that does not prove the state, e.g. a container that exists before
      its content loads, or a screen-wide tag that also matches the previous screen.

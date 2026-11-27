@@ -7,6 +7,7 @@ import com.tangem.domain.jointaccount.model.JointOperationFetchResult
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.params.ParameterizedTest
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.txhistory.repository.converter.FinishedJointOperationConverter
 import com.tangem.data.txhistory.repository.converter.JointOperationEntityConverter
@@ -44,6 +45,7 @@ internal class DefaultJointOperationHistoryRepositoryTest {
     private val repository = DefaultJointOperationHistoryRepository(
         jointAccountApi = jointAccountApi,
         jointOperationDao = jointOperationDao,
+        moshi = Moshi.Builder().build(),
     )
 
     @BeforeEach
@@ -296,6 +298,20 @@ internal class DefaultJointOperationHistoryRepositoryTest {
                 coVerify(exactly = 0) { jointOperationDao.upsert(any()) }
             }
 
+        @Test
+        fun `GIVEN the wallet not linked on the server WHEN fetchOperation THEN fails so polling goes on`() = runTest {
+            // Arrange
+            coEvery { jointAccountApi.getJointOperation(WALLET_ID.stringValue, "5", eTag = any()) } returns
+                httpError(ApiResponseError.HttpException.Code.FORBIDDEN, errorBody = WALLET_NOT_LINKED_BODY)
+
+            // Act
+            val actual = repository.fetchOperation(WALLET_ID, operationId = "5")
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) { jointOperationDao.upsert(any()) }
+        }
+
         private fun provideTestModels() = listOf(
             ErrorModel(
                 code = ApiResponseError.HttpException.Code.NOT_MODIFIED,
@@ -312,8 +328,11 @@ internal class DefaultJointOperationHistoryRepositoryTest {
         converter.convert(JointOperationEntityConverter.Input(userWalletId = WALLET_ID, dto = item))
 
     @Suppress("UNCHECKED_CAST")
-    private fun httpError(code: ApiResponseError.HttpException.Code): ApiResponse<JointOperationHistoryItemDto> =
-        ApiResponse.Error(ApiResponseError.HttpException(code, message = null, errorBody = null))
+    private fun httpError(
+        code: ApiResponseError.HttpException.Code,
+        errorBody: String? = null,
+    ): ApiResponse<JointOperationHistoryItemDto> =
+        ApiResponse.Error(ApiResponseError.HttpException(code, message = null, errorBody = errorBody))
             as ApiResponse<JointOperationHistoryItemDto>
 
     data class ErrorModel(val code: ApiResponseError.HttpException.Code, val expected: JointOperationFetchResult?)
@@ -352,5 +371,6 @@ internal class DefaultJointOperationHistoryRepositoryTest {
         const val CHAIN_ID = 8453L
         const val CREATED_AT = "2026-09-08T09:20:37.000Z"
         const val FINISHED_AT = "2026-09-08T09:24:02.000Z"
+        const val WALLET_NOT_LINKED_BODY = """{"errorCode":"WALLET_NOT_AUTHORIZED","walletId":"wallet"}"""
     }
 }

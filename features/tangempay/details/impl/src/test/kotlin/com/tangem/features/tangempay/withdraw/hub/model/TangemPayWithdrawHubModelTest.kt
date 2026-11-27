@@ -229,7 +229,7 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
             BankOptionClickModel(
                 name = "to business account",
                 recents = recentBankAccounts(),
-                click = { it.bankContent().toBusinessAccount.onClick() },
+                click = { requireNotNull(it.bankContent().toBusinessAccount).onClick() },
                 expected = BankWithdrawEntry.NewBusiness,
             ),
             BankOptionClickModel(
@@ -706,7 +706,7 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
             BankOptionClickModel(
                 name = "to business account",
                 recents = recentBankAccounts(),
-                click = { it.bankContent().toBusinessAccount.onClick() },
+                click = { requireNotNull(it.bankContent().toBusinessAccount).onClick() },
                 expected = TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked(),
             ),
             BankOptionClickModel(
@@ -918,7 +918,7 @@ internal class TangemPayWithdrawHubModelTest : TangemPayModelTestBase() {
                 expectedEntry = BankWithdrawEntry.NewPersonal,
             ),
             MoneyBankOptionModel(
-                click = { it.bankContent().toBusinessAccount.onClick() },
+                click = { requireNotNull(it.bankContent().toBusinessAccount).onClick() },
                 expectedEntry = BankWithdrawEntry.NewBusiness,
             ),
             MoneyBankOptionModel(

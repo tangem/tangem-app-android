@@ -43,12 +43,15 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
      * account holds funds in a Safe, so only the flows that can work with it (adding tokens) opt in
      * @property isDs3Modal shows the bottom sheet as the translucent DS3 modal. Its content is not lazy, so opt in
      * only where the list stays short
+     * @property areLockedWalletsInline lists locked wallets after the others, each labelled "Locked", instead of
+     * under a "Locked wallets" title
      */
     data class Settings(
         val isWalletSelectionOnly: Boolean = false,
         val isMultiChoice: Boolean = false,
         val isJointAccountsIncluded: Boolean = false,
         val isDs3Modal: Boolean = false,
+        val areLockedWalletsInline: Boolean = false,
     )
 
     interface BottomSheetCallback {
@@ -78,6 +81,10 @@ interface PortfolioSelectorController {
      * combine and update with your Feature data and [PortfolioFetcher.data]
      */
     val isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
+
+    /** A badge at the end of a wallet row in wallet-selection mode, e.g. "Full" for a wallet at the account cap */
+    val walletBadge: MutableStateFlow<(UserWallet) -> TextReference?>
+
     suspend fun isAccountModeSync(): Boolean
 
     fun selectAccount(accountIds: Set<AccountId>)

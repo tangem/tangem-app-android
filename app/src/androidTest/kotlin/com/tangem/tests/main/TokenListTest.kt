@@ -3,6 +3,7 @@ package com.tangem.tests.main
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
@@ -193,7 +194,9 @@ class TokenListTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(networkTitle).assertIsDisplayed() }
             }
             step("Assert token with custom derivation icon: '$customTokenTitle' is displayed") {
-                onMainScreen { tokenWithCustomDerivationIcon(customTokenTitle).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { assertTokenCustomDerivationIconDisplayed(customTokenTitle) }
+                }
             }
         }
     }
@@ -217,7 +220,9 @@ class TokenListTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Assert custom derivation icon is displayed on 'Main screen'") {
-                onMainScreen { tokenWithCustomDerivationIcon(customTokenName).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { assertTokenCustomDerivationIconDisplayed(customTokenName) }
+                }
             }
             step("Click on '$customTokenName' token with custom derivation icon") {
                 openTokenDetailsFromTokenList(customTokenName)

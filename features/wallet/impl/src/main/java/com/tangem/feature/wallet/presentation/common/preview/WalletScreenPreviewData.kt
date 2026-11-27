@@ -2,17 +2,14 @@ package com.tangem.feature.wallet.presentation.common.preview
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.topBarConfig
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
@@ -75,14 +72,10 @@ internal object WalletScreenPreviewData {
         ),
         organizeButtonUM = TangemButtonUM(
             text = resourceReference(R.string.organize_tokens_title),
-            type = TangemButtonType.Secondary,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X9,
+            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_filter_default_24),
             onClick = {},
-            tangemIconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_filter_default_24,
-                tintReference = { TangemTheme.colors3.icon.inverse },
-            ),
-            size = TangemButtonSize.X9,
-            shape = TangemButtonShape.Rounded,
         ),
     )
 
@@ -111,14 +104,10 @@ internal object WalletScreenPreviewData {
         ),
         organizeButtonUM = TangemButtonUM(
             text = resourceReference(R.string.organize_tokens_title),
-            type = TangemButtonType.Secondary,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X9,
+            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_filter_default_24),
             onClick = {},
-            tangemIconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_filter_default_24,
-                tintReference = { TangemTheme.colors3.icon.inverse },
-            ),
-            size = TangemButtonSize.X9,
-            shape = TangemButtonShape.Rounded,
         ),
     )
 
@@ -141,14 +130,10 @@ internal object WalletScreenPreviewData {
         ),
         organizeButtonUM = TangemButtonUM(
             text = resourceReference(R.string.organize_tokens_title),
-            type = TangemButtonType.Secondary,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X9,
+            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_filter_default_24),
             onClick = {},
-            tangemIconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_filter_default_24,
-                tintReference = { TangemTheme.colors3.icon.inverse },
-            ),
-            size = TangemButtonSize.X9,
-            shape = TangemButtonShape.Rounded,
         ),
     )
 

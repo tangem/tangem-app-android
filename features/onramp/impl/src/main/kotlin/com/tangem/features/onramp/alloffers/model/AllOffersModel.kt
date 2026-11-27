@@ -22,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
@@ -42,15 +43,16 @@ internal class AllOffersModel @Inject constructor(
 
     private var quotesJob: Job? = null
 
+    private val params: AllOffersComponent.Params = paramsContainer.require()
+
     private val stateFactory: AllOffersStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         AllOffersStateFactory(
             analyticsEventHandler = analyticsEventHandler,
             currentStateProvider = Provider { state.value },
             allOffersIntents = this,
+            isBuyEnabled = Provider { params.isBuyEnabled.value },
         )
     }
-
-    private val params: AllOffersComponent.Params = paramsContainer.require()
 
     init {
         subscribeOnAllOffers()
@@ -81,7 +83,8 @@ internal class AllOffersModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM) {
-        if (onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
+        if (!params.isBuyEnabled.value ||
+            onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
             onrampOfferAdvantagesUM == OnrampOfferAdvantagesUM.Restricted
         ) {
             return
@@ -124,7 +127,7 @@ internal class AllOffersModel @Inject constructor(
             getOnrampAllOffersUseCase.invoke(
                 userWalletId = params.userWallet.walletId,
                 cryptoCurrencyId = params.cryptoCurrency.id,
-            ).collectLatest { maybeOffers ->
+            ).combine(params.isBuyEnabled) { offers, _ -> offers }.collectLatest { maybeOffers ->
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offersGroup ->

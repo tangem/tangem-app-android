@@ -50,6 +50,7 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
                     WALLET_A.stringValue to mapOf(
                         "activate_banner" to DISMISSED_AT.toEpochMilli(),
                         "extend_banner" to EXTEND_DISMISSED_AT.toEpochMilli(),
+                        "reactivate_banner" to REACTIVATE_DISMISSED_AT.toEpochMilli(),
                     ),
                 ),
             ),
@@ -58,9 +59,12 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
         // Act
         val activate = store.dismissedAt(WALLET_A, PolymarketFastTradingBannerKind.ACTIVATE).first()
         val extend = store.dismissedAt(WALLET_A, PolymarketFastTradingBannerKind.EXTEND).first()
+        val reactivate = store.dismissedAt(WALLET_A, PolymarketFastTradingBannerKind.REACTIVATE).first()
 
         // Assert
-        assertThat(listOf(activate, extend)).containsExactly(DISMISSED_AT, EXTEND_DISMISSED_AT).inOrder()
+        assertThat(listOf(activate, extend, reactivate))
+            .containsExactly(DISMISSED_AT, EXTEND_DISMISSED_AT, REACTIVATE_DISMISSED_AT)
+            .inOrder()
     }
 
     @Test
@@ -166,5 +170,6 @@ internal class DefaultPolymarketFastTradingBannerStoreTest {
         val WALLET_B = UserWalletId("022")
         val DISMISSED_AT: Instant = Instant.ofEpochMilli(1_762_776_000_000)
         val EXTEND_DISMISSED_AT: Instant = Instant.ofEpochMilli(1_762_862_400_000)
+        val REACTIVATE_DISMISSED_AT: Instant = Instant.ofEpochMilli(1_762_948_800_000)
     }
 }

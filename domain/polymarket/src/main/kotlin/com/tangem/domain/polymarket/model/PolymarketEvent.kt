@@ -31,6 +31,8 @@ import java.time.Instant
  * @property isEnded whether the game has finished; absent when not reported
  * @property dataFetchedAt when the backend fetched the event, used to determine sports data freshness
  * @property teams teams or players in the order supplied by the provider
+ * @property cryptoWindow window of a crypto Up/Down event. Its presence is what makes an event Up/Down:
+ *  [eventType] is `crypto` for every crypto event
  */
 data class PolymarketEvent(
     val id: String,
@@ -58,4 +60,6 @@ data class PolymarketEvent(
     val dataFetchedAt: Instant? = null,
     val teams: List<PolymarketTeam>? = null,
     val resolutionSource: String? = null,
+    val eventType: String? = null,
+    val cryptoWindow: PolymarketCryptoWindow? = null,
 )

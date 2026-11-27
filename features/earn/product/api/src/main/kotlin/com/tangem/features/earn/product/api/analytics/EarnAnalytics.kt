@@ -6,4 +6,7 @@ data class EarnProductAnalytics(val category: String, val product: String)
 
 /** Preliminary shape: the set of events is not final, so the parameters are an open map of strings. */
 @Serializable
-data class EarnTxAnalytics(val params: Map<String, String> = emptyMap())
+data class EarnTxAnalytics(
+    val params: Map<String, String> = emptyMap(),
+    val confirmedParams: Map<String, String> = emptyMap(),
+)

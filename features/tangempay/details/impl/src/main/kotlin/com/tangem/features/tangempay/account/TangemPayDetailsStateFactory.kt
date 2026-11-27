@@ -2,12 +2,17 @@ package com.tangem.features.tangempay.account
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.menu.TangemMenu
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -21,6 +26,8 @@ import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.domain.models.tangempay.isAwaitingActivation
 import com.tangem.domain.models.tangempay.isFrozen
 import com.tangem.domain.models.tangempay.thumbnailUrl
+import com.tangem.domain.tangempay.utils.isKycAdditionalInfoActionRequired
+import com.tangem.features.tangempay.common.PayMenuItems
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.canAddFunds
 import com.tangem.features.tangempay.common.hasWithdrawableAmount
@@ -29,7 +36,9 @@ import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
+import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList", "LargeClass")
@@ -37,8 +46,14 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
+    isColdWallet: Boolean,
+    private val isCardRemovalAnimated: Boolean,
+    private val isDsMenuEnabled: Boolean,
 ) {
-    private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
+    private val notificationFactory = TangemPayDetailsNotificationFactory(
+        intents = intents,
+        isColdWallet = isColdWallet,
+    )
 
     private val subtitle = resourceReference(R.string.tangempay_multinetwork)
 
@@ -49,6 +64,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
                 subtitle = subtitle,
+                menu = getTopBarMenu(tariffPlan = null),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -69,27 +85,62 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
-        val isFresh = status.isFresh
-        val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
-        val isTariffAwaitingDeposit = status.cards.isEmpty() && status.tariffPlan?.isAwaitingDeposit == true
-        val isAddCardEnabled = isFresh && !hasIssuingCard && !isTariffAwaitingDeposit
         val balance = status.balance
         val hasWithdrawableBalance = status.hasWithdrawableAmount
         val canAddFunds = status.canAddFunds
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
-        val tiersNotificationType = status.tariffPlan?.let { plan ->
-            TangemPayTiersBannerType.fromPlan(plan)
-        }
-        val issueCardNotificationType = status.cards.resolveProgressBanner().takeIf { type ->
-            tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
-                type != CardsProgressBannerUM.Issuing
-        }
-        val cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
+        val tiersNotificationType = status.tariffPlan?.let { plan -> TangemPayTiersBannerType.fromPlan(plan) }
+        val isTopUpBannerShown = errorNotification == null && tiersNotification != null &&
+            tiersNotificationType == TangemPayTiersBannerType.TopUpForTierUpgrade
+
+        return TangemPayDetailsUM(
+            topBarConfig = TangemPayDetailsTopBarConfig(
+                onBackClick = onBack,
+                onOpenMenu = onOpenMenu,
+                items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
+                subtitle = subtitle,
+                menu = getTopBarMenu(tariffPlan = status.tariffPlan),
+            ),
+            pullToRefreshConfig = PullToRefreshConfig(
+                isRefreshing = false,
+                onRefresh = intents::onRefreshSwipe,
+            ),
+            balanceBlockState = getBalanceBlockState(
+                fiatBalance = balance?.fiatBalance,
+                cardsBlockState = getCardsBlockState(status, tiersNotificationType),
+                isMuted = !status.isFresh,
+                isAddFundsEnabled = status.isFresh && canAddFunds,
+                isWithdrawEnabled = status.isFresh && hasWithdrawableBalance,
+                isInactive = isTopUpBannerShown,
+            ),
+            isBalanceHidden = false,
+            messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
+            cashbackBlockState = null,
+            bankTransferOnrampBanner = createBankTransferOnrampBanner(status.virtualAccount),
+            kycAdditionalInfoBanner = MessageBannerUM(notificationFactory.createKycAdditionalInfoBannerState())
+                .takeIf { status.isKycAdditionalInfoActionRequired },
+        )
+    }
+
+    private fun getCardsBlockState(
+        status: PaymentAccountStatusValue.Loaded,
+        tiersNotificationType: TangemPayTiersBannerType?,
+    ): TangemPayDetailsBalanceBlockState.CardsBlockState {
+        val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
+
+        val isFirstCardIssuing = status.cards.isEmpty() &&
+            (status.isPaymentAccountIssuing || status.tariffPlan?.isAwaitingDeposit == true)
+
+        val issueCardNotification = status.cards.resolveProgressBanner()
+            ?: CardsProgressBannerUM.Issuing.takeIf { isFirstCardIssuing }
+
+        return TangemPayDetailsBalanceBlockState.CardsBlockState(
             cards = status.cards
                 .map { cardItem ->
                     val isAwaitingActivation = cardItem.state.isAwaitingActivation
                     TangemPayDetailsBalanceBlockState.Card(
+                        id = cardItem.id,
                         lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
                         imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
                         cardType = cardItem.cardType,
@@ -99,34 +150,15 @@ internal class TangemPayDetailsStateFactory(
                         state = cardItem.state.toUiState(),
                     )
                 }
-                .ifEmpty { listOfNotNull(issuingPlaceholderCard().takeIf { isTariffAwaitingDeposit }) }
+                .ifEmpty { listOfNotNull(issuingPlaceholderCard().takeIf { isFirstCardIssuing }) }
                 .toImmutableList(),
             onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
-            isAddCardEnabled = isAddCardEnabled,
-            progressBanner = issueCardNotificationType,
-        )
-        return TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(
-                onBackClick = onBack,
-                onOpenMenu = onOpenMenu,
-                items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
-                subtitle = subtitle,
-            ),
-            pullToRefreshConfig = PullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = intents::onRefreshSwipe,
-            ),
-            balanceBlockState = getBalanceBlockState(
-                fiatBalance = balance?.fiatBalance,
-                cardsBlockState = cardsBlockState,
-                isMuted = !isFresh,
-                isAddFundsEnabled = isFresh && canAddFunds,
-                isWithdrawEnabled = isFresh && hasWithdrawableBalance,
-            ),
-            isBalanceHidden = false,
-            messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
-            cashbackBlockState = null,
-            bankTransferOnrampBanner = createBankTransferOnrampBanner(status.virtualAccount),
+            isAddCardEnabled = status.isFresh && !hasIssuingCard && !isFirstCardIssuing,
+            progressBanner = issueCardNotification.takeIf { type ->
+                tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
+                    type != CardsProgressBannerUM.Issuing
+            },
+            isCardRemovalAnimated = isCardRemovalAnimated,
         )
     }
 
@@ -157,19 +189,21 @@ internal class TangemPayDetailsStateFactory(
         isMuted: Boolean,
         isAddFundsEnabled: Boolean,
         isWithdrawEnabled: Boolean,
+        isInactive: Boolean,
     ): TangemPayDetailsBalanceBlockState {
         if (fiatBalance == null) {
             return TangemPayDetailsBalanceBlockState.Error(
                 actionButtons = getActionButtonsConfig(isAddFundsEnabled = false, isWithdrawEnabled = false),
                 cardsBlockState = cardsBlockState,
+                isInactive = isInactive,
             )
         }
         return TangemPayDetailsBalanceBlockState.Content(
             isBalanceFlickering = false,
-            fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
+            fiatBalance = getFiatBalanceText(fiatBalance),
             isMuted = isMuted,
             isNegative = fiatBalance.availableBalance.signum() < 0,
-            isInactive = false,
+            isInactive = isInactive,
             actionButtons = getActionButtonsConfig(
                 isAddFundsEnabled = isAddFundsEnabled,
                 isWithdrawEnabled = isWithdrawEnabled,
@@ -206,6 +240,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getDeactivatedMenuItems(),
                 subtitle = subtitle,
+                menu = getDeactivatedMenu(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -217,44 +252,10 @@ internal class TangemPayDetailsStateFactory(
                 isMuted = status.source != StatusSource.ACTUAL,
                 isAddFundsEnabled = status.canAddFunds,
                 isWithdrawEnabled = hasWithdrawableBalance,
+                isInactive = false,
             ),
             isBalanceHidden = false,
             messageBanner = MessageBannerUM(state = accountDeactivatedBanner),
-            cashbackBlockState = null,
-        )
-    }
-
-    fun getInactiveState(status: PaymentAccountStatusValue.Inactive): TangemPayDetailsUM {
-        val notification = notificationFactory.createTiersConfig(status.tariffPlan)
-        return TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(
-                onBackClick = onBack,
-                onOpenMenu = onOpenMenu,
-                items = getTopBarMenuItems(tariffPlan = null),
-                subtitle = subtitle,
-            ),
-            pullToRefreshConfig = PullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = intents::onRefreshSwipe,
-            ),
-            balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
-                actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = false,
-                    isWithdrawEnabled = false,
-                ),
-                cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = persistentListOf(issuingPlaceholderCard()),
-                    progressBanner = CardsProgressBannerUM.Issuing.takeIf { notification == null },
-                    onAddCardClick = {},
-                    isAddCardEnabled = false,
-                ),
-                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(status.fiatBalance),
-                isInactive = true,
-                isNegative = false,
-                isBalanceFlickering = false,
-            ),
-            isBalanceHidden = false,
-            messageBanner = notification?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -271,6 +272,7 @@ internal class TangemPayDetailsStateFactory(
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = tariffPlan),
                 subtitle = subtitle,
+                menu = getTopBarMenu(tariffPlan = tariffPlan),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -286,9 +288,9 @@ internal class TangemPayDetailsStateFactory(
                     onAddCardClick = { intents.onAddCardClick(tariffPlan) },
                     isAddCardEnabled = true,
                 ),
-                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
-                isInactive = false,
+                fiatBalance = getFiatBalanceText(fiatBalance),
                 isNegative = fiatBalance.availableBalance.signum() < 0,
+                isInactive = false,
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
@@ -301,6 +303,7 @@ internal class TangemPayDetailsStateFactory(
     }
 
     private fun issuingPlaceholderCard() = TangemPayDetailsBalanceBlockState.Card(
+        id = ISSUING_PLACEHOLDER_CARD_ID,
         lastDigits = "",
         imageUrl = null,
         cardType = TangemPayCardType.UNDEFINED,
@@ -315,6 +318,32 @@ internal class TangemPayDetailsStateFactory(
         currency = tariffPlan?.tariff?.plan?.feeCurrencyOrDefault(FALLBACK_FIAT_CURRENCY)
             ?: FALLBACK_FIAT_CURRENCY,
     )
+
+    private fun getTopBarMenu(tariffPlan: TangemPayTariffPlanState?): TangemMenu.UiState? {
+        if (!isDsMenuEnabled) return null
+        return TangemMenu.UiState(
+            entries = listOfNotNull(
+                tariffPlan?.let { plan -> PayMenuItems.changePlan(plan) { intents.onClickCurrentPlan(plan) } },
+                PayMenuItems.support(intents::onContactSupportClicked),
+            ).toPersistentList(),
+        )
+    }
+
+    private fun getDeactivatedMenu(): TangemMenu.UiState? {
+        if (!isDsMenuEnabled) return null
+        return TangemMenu.UiState(
+            entries = persistentListOf(
+                PayMenuItems.support(intents::onContactSupportClicked),
+                TangemMenu.UiState.Divider(),
+                TangemMenu.UiState.Item(
+                    label = resourceReference(R.string.tangempay_remove_account),
+                    onClick = intents::onRemoveAccount,
+                    iconStart = Icons.ic_trash_bin_20,
+                    variant = TangemMenu.ItemVariant.Error,
+                ),
+            ),
+        )
+    }
 
     private fun getDeactivatedMenuItems(): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
@@ -346,18 +375,20 @@ internal class TangemPayDetailsStateFactory(
         return buildList {
             if (tariffPlan != null) {
                 val isPlanChanging = tariffPlan.isPlanTransitioningState
+                val iconRes = if (isPlanChanging) {
+                    CoreUiR.drawable.ic_arrow_refresh_20
+                } else {
+                    CoreUiR.drawable.ic_information_24
+                }
                 add(
                     TangemPayDropDownItemUM(
                         title = resourceReference(R.string.tangempay_current_plan_title),
                         onClick = { intents.onClickCurrentPlan(tariffPlan) },
                         icon = TangemIconUM.Icon(
-                            iconRes = if (isPlanChanging) {
-                                CoreUiR.drawable.ic_arrow_refresh_20
-                            } else {
-                                CoreUiR.drawable.ic_information_24
-                            },
+                            iconRes = iconRes,
                             tintReference = { TangemTheme.colors3.icon.primary },
                         ),
+                        iconRes = iconRes,
                         subtitle = if (isPlanChanging) {
                             resourceReference(R.string.tangempay_changing_plan)
                         } else {
@@ -403,5 +434,17 @@ internal class TangemPayDetailsStateFactory(
 
     private companion object {
         const val FALLBACK_FIAT_CURRENCY = "USD"
+        const val ISSUING_PLACEHOLDER_CARD_ID = "issuing_placeholder"
+    }
+}
+
+internal fun getFiatBalanceText(fiatBalance: PaymentAccountStatusValue.FiatBalance): TextReference {
+    val currency = Currency.getInstance(fiatBalance.currency)
+    return fiatBalance.availableBalance.formatStyled {
+        fiat(
+            fiatCurrencyCode = currency.currencyCode,
+            fiatCurrencySymbol = currency.symbol,
+            spanStyleReference = { TangemTheme.typography3.heading.medium.toSpanStyle() },
+        )
     }
 }

@@ -33,6 +33,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.utils.LastItemAtBottomArrangement
 import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
 import com.tangem.domain.models.tangempay.TangemPayCardState
 import com.tangem.domain.models.tangempay.TangemPayCardType
@@ -45,7 +46,9 @@ import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
 import com.tangem.features.tangempay.card.view.TangemPayCard
 import com.tangem.features.tangempay.card.view.TangemPayCardDetailsUM
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.features.tangempay.common.PayContextMenuButton
+import com.tangem.features.tangempay.common.PayMenuButton
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.details.impl.R
 import dev.chrisbanes.haze.rememberHazeState
@@ -91,6 +94,7 @@ private fun TangemPayCardPageScreen(
         topBar = {
             CardPageTopBar(
                 items = state.menuItems,
+                payMenu = state.payMenu,
                 onBackClick = state.onBackClick,
             )
         },
@@ -134,43 +138,39 @@ private fun BoxScope.CardPageLayout(
             .background(TangemTheme.colors3.bg.primary)
             .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
     )
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = contentPadding.copy(
-                bottom = if (isAddedToGoogleWalletShown) 16.dp else contentPadding.calculateBottomPadding() + 16.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            item(key = "Card") {
-                Box(modifier = Modifier.padding(top = CardTopSpacing)) {
-                    cardSection()
-                }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding.copy(bottom = contentPadding.calculateBottomPadding() + 16.dp),
+        verticalArrangement = if (isAddedToGoogleWalletShown) LastItemAtBottomArrangement else Arrangement.Top,
+    ) {
+        item(key = "Card") {
+            Box(modifier = Modifier.padding(top = CardTopSpacing)) {
+                cardSection()
             }
-            if (
-                state.settings.isNotEmpty() &&
-                state.cardState == TangemPayCardState.Active
-            ) {
-                cardPageItem("Settings buttons") {
-                    CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
-                        TangemPayCardPageSettingsButtonsBlock(
-                            modifier = Modifier.fillMaxWidth(),
-                            settings = state.settings,
-                        )
-                    }
-                }
-            }
-            cardState(state = state)
         }
+        if (
+            state.settings.isNotEmpty() &&
+            state.cardState == TangemPayCardState.Active
+        ) {
+            cardPageItem("Settings buttons") {
+                TangemPayCardPageSettingsButtonsBlock(
+                    modifier = Modifier.fillMaxWidth(),
+                    settings = state.settings,
+                    actionsMenu = state.actionsMenu,
+                    buttonsHazeState = buttonsHazeState,
+                )
+            }
+        }
+        cardState(state = state)
         if (isAddedToGoogleWalletShown) {
-            TangemPayAddedToGoogleWalletStatus(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = contentPadding.calculateBottomPadding() + 16.dp),
-            )
+            cardPageItem(key = "AddedToGoogleWallet") {
+                TangemPayAddedToGoogleWalletStatus(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .wrapContentWidth(),
+                )
+            }
         }
     }
 }
@@ -386,15 +386,20 @@ private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
 private fun CardPageTopBar(
     onBackClick: () -> Unit,
     items: ImmutableList<TangemPayDropDownItemUM>,
+    payMenu: TangemMenu.UiState?,
     modifier: Modifier = Modifier,
 ) {
     TangemTopNavigation(
         modifier = modifier,
         startButton = { TangemButton.Back(onClick = onBackClick) },
-        endButtonsGroup = if (items.isNotEmpty()) {
-            { PayContextMenuButton(items = items, testTag = TangemPayTestTags.CARD_PAGE_MORE_BUTTON) }
-        } else {
-            null
+        endButtonsGroup = when {
+            payMenu != null -> {
+                { PayMenuButton(menu = payMenu, testTag = TangemPayTestTags.CARD_PAGE_MORE_BUTTON) }
+            }
+            items.isNotEmpty() -> {
+                { PayContextMenuButton(items = items, testTag = TangemPayTestTags.CARD_PAGE_MORE_BUTTON) }
+            }
+            else -> null
         },
     )
 }

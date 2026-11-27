@@ -290,8 +290,8 @@ private fun Section(label: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -> Boolean, onSelect: (T) -> Unit) {
-    val shape = RoundedCornerShape(50)
-    Row(
+    val shape = RoundedCornerShape(20.dp)
+    FlowRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -304,13 +304,13 @@ private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -
             )
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         items.forEach { item ->
             Chip(
                 label = label(item),
                 selected = isSelected(item),
                 onClick = { onSelect(item) },
-                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -327,12 +327,14 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
                 if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary,
             )
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(vertical = 8.dp, horizontal = 12.dp),
     ) {
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
             color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

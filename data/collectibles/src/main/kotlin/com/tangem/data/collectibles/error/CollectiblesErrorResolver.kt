@@ -24,8 +24,10 @@ internal class CollectiblesErrorResolver @Inject constructor(@NetworkJson privat
 
         throw when (body?.code) {
             CollectiblesErrorCodes.LOW_INVENTORY -> CollectibleException.LowInventory()
-            CollectiblesErrorCodes.PACK_NOT_READY,
             CollectiblesErrorCodes.PACK_OPENING_FAILED,
+            CollectiblesErrorCodes.PACK_NOT_READY,
+            CollectiblesErrorCodes.PACK_RECIPIENT_BLOCKED,
+            CollectiblesErrorCodes.MACHINE_OUT_OF_NFT,
             -> CollectibleException.PackOpeningRefused()
             CollectiblesErrorCodes.REFUND_IN_PROGRESS -> CollectibleException.RefundInProgress()
             else -> error

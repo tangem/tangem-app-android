@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -227,6 +228,28 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN no answer from the exchange WHEN close is tapped on the failure dialog THEN the order stays open`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+
+                // Act
+                dialog.captured.secondAction?.onClick()
+
+                // Assert
+                assertThat(dialog.captured.secondAction?.title).isEqualTo(resourceReference(R.string.common_close))
+                assertThat(dialog.captured.isDismissable).isTrue()
+                verify(exactly = 0) { router.pop(onComplete = any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            }
+
+        @Test
         fun `GIVEN the screen leaves on success WHEN the order is placed THEN no quote is requested after it`() =
             runOrderTest {
                 // Arrange
@@ -430,7 +453,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a card wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
 
                 // Act
                 val model = openOrderModel()
@@ -443,7 +466,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a card wallet without a usable session key WHEN the screen opens THEN the card is asked`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns null
 
                 // Act
                 val model = openOrderModel()
@@ -458,15 +481,15 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             openOrderModel()
 
             // Assert
-            coVerify(exactly = 1) { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) }
+            coVerify(exactly = 1) { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) }
         }
 
         @Test
         fun `GIVEN the session key becomes usable WHEN the screen resumes THEN the button turns plain`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
-                    listOf(false, true)
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(null, SIGNING_WINDOW)
                 val model = openOrderModel()
                 model.onPause()
 
@@ -482,8 +505,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the session key stops being usable WHEN the screen resumes THEN the card is asked`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
-                    listOf(true, false)
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(SIGNING_WINDOW, null)
                 val model = openOrderModel()
                 model.onPause()
 
@@ -507,7 +530,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotedModel()
                 runCurrent()
                 model.tapPlace()
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
 
                 // Act
                 model.onPause()
@@ -528,7 +551,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a hot wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
 
                 // Act
@@ -542,7 +565,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a hot wallet without a usable session key WHEN the screen opens THEN the button is held`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns null
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
 
                 // Act
@@ -557,7 +580,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 every { featureToggles.isPolymarketFastOrdersEnabled } returns false
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
 
                 // Act
@@ -565,14 +588,14 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
-                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+                coVerify(exactly = 0) { signingRouter.sessionKeySigningWindow(userWalletId = any()) }
             }
 
         @Test
         fun `GIVEN the wallet is not found WHEN the screen opens THEN the session key is not checked`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
 
                 // Act
@@ -580,7 +603,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
-                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+                coVerify(exactly = 0) { signingRouter.sessionKeySigningWindow(userWalletId = any()) }
             }
 
         @Test
@@ -588,7 +611,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
                 runCurrent()
@@ -608,8 +631,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a plain card button WHEN the router picks the owner key THEN nothing is signed and the card is asked`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val snackbar = slot<SnackbarMessage>()
+                every { messageSender.send(capture(snackbar)) } returns Unit
                 val model = createQuotedModel()
                 runCurrent()
 
@@ -620,6 +645,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Assert
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
                 verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(snackbar.captured.message)
+                    .isEqualTo(resourceReference(R.string.prediction_session_key_toast_order_fallback))
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
             }
@@ -628,7 +655,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the session key of a card could not sign WHEN the card button is tapped THEN the card signs`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
                 runCurrent()
@@ -650,7 +677,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
                 runCurrent()
@@ -671,7 +698,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
                 coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
                     PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
@@ -694,7 +721,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a plain card button WHEN the exchange refuses the session key THEN the card is asked for the next tap`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
                 coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
                     PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
@@ -710,7 +737,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 coVerify(exactly = 0) {
                     signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
                 }
-                verify(exactly = 1) { messageSender.send(any()) }
+                verify(exactly = 1) { messageSender.send(any<SnackbarMessage>()) }
+                verify(exactly = 0) { messageSender.send(any<DialogMessage>()) }
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
             }
@@ -719,7 +747,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a card button WHEN the router picks the owner key THEN the owner key signs`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns null
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
                 runCurrent()
@@ -737,7 +765,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns null
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 val model = createQuotedModel()
                 runCurrent()
@@ -753,10 +781,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a card tap WHEN the button already turned plain THEN the owner key may sign`() = runOrderTest {
+        fun `GIVEN a usable session key WHEN the card button is tapped THEN only the owner key signs`() = runOrderTest {
             // Arrange
-            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
-            coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+            coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
             val model = createQuotedModel()
             runCurrent()
 
@@ -765,10 +793,69 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
+            coVerify(exactly = 0) { signingRouter.route(addresses = any()) }
+            coVerify(exactly = 1) {
+                signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+            }
+            coVerify(exactly = 0) { signOrderInteractor(request = match { it.route == SESSION_ROUTE }) }
+        }
+
+        @Test
+        fun `GIVEN a usable session key WHEN the hold button is held THEN only the owner key signs`() = runOrderTest {
+            // Arrange
+            every { getUserWalletUseCase(any()) } returns hotWallet().right()
+            coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
+            val model = createQuotedModel()
+            runCurrent()
+
+            // Act
+            model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.HOLD)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 0) { signingRouter.route(addresses = any()) }
             coVerify(exactly = 1) {
                 signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
             }
         }
+
+        @Test
+        fun `GIVEN a plain button WHEN the signing window elapses on an open screen THEN the card is asked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+                val model = openOrderModel()
+                advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() - 1)
+                runCurrent()
+                val beforeElapsing = model.uiState.value.placeButtonStyle
+
+                // Act
+                advanceTimeBy(delayTimeMillis = 2)
+                runCurrent()
+
+                // Assert
+                assertThat(beforeElapsing).isEqualTo(PlaceButtonStyleUM.PLAIN)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN a plain button WHEN the screen pauses before the window elapses THEN the resume check decides`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
+                val model = openOrderModel()
+                advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() / 2)
+                model.onPause()
+
+                // Act
+                model.onResume()
+                advanceTimeBy(delayTimeMillis = SIGNING_WINDOW.toMillis() / 2 + 1)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
 
         @Test
         fun `GIVEN session keys turned off WHEN a plain tap places THEN the owner key never signs`() = runOrderTest {
@@ -793,8 +880,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a cached plain style WHEN an owner placement fails THEN the session key is checked again`() =
             runOrderTest {
                 // Arrange
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
-                    listOf(true, false)
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(SIGNING_WINDOW, null)
                 coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
                 coEvery { signOrderInteractor(request = any()) } returns
                     PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
@@ -806,7 +893,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                coVerify(exactly = 2) { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) }
+                coVerify(exactly = 2) { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) }
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
             }
@@ -816,7 +903,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 every { featureToggles.isPolymarketFastOrdersEnabled } returns false
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.sessionKeySigningWindow(userWalletId = USER_WALLET_ID) } returns SIGNING_WINDOW
                 val model = openOrderModel()
                 model.onPause()
 
@@ -826,7 +913,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
-                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+                coVerify(exactly = 0) { signingRouter.sessionKeySigningWindow(userWalletId = any()) }
             }
 
         private fun TestScope.openOrderModel(): PlacePredictionOrderModel {
@@ -1023,6 +1110,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                         placedAt = status.captured.result.placedAt,
                         collateralAmount = BigDecimal("11.01"),
                         shares = HELD,
+                        fee = BigDecimal("0.4"),
+                        total = BigDecimal("10.61"),
                     ),
                     market = model.uiState.value.market,
                     side = PredictionOrderSide.SELL,

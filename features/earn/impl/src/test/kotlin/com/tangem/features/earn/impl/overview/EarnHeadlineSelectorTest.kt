@@ -12,6 +12,7 @@ import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.product.api.product.EarnPositionSummary
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.ProductAvailability
+import com.tangem.features.earn.product.api.rate.EarnRateBadgeConverter
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach

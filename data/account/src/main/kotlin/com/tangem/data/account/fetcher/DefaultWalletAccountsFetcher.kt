@@ -143,16 +143,31 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     }
 
     override suspend fun syncTokens(userWalletId: UserWalletId) {
+        val response = getSyncedWithRemote(userWalletId) ?: return
+
+        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
+    }
+
+    override suspend fun syncTokensOrRefresh(userWalletId: UserWalletId): Boolean {
+        val response = getSyncedWithRemote(userWalletId) ?: return false
+
+        val isStale = userTokensSaver.pushUnlessStale(
+            userWalletId = userWalletId,
+            response = response.toUserTokensResponse(),
+        )
+        if (isStale) fetch(userWalletId)
+
+        return isStale
+    }
+
+    private suspend fun getSyncedWithRemote(userWalletId: UserWalletId): GetWalletAccountsResponse? {
         if (!syncStatusStore.isSyncedWithRemote(userWalletId)) reconcileWithRemote(userWalletId)
 
         val response = if (syncStatusStore.isSyncedWithRemote(userWalletId)) getSaved(userWalletId) else null
 
-        if (response == null) {
-            TangemLogger.e("Can't sync tokens of $userWalletId: no document synced with the backend")
-            return
-        }
+        if (response == null) TangemLogger.e("Can't sync tokens of $userWalletId: no document synced with the backend")
 
-        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
+        return response
     }
 
     private suspend fun reconcileWithRemote(userWalletId: UserWalletId) {

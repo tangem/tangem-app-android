@@ -2,7 +2,9 @@ package com.tangem.features.earn.staking.impl
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -34,6 +36,8 @@ internal class PooledStakingMapperSummaryTest {
     private val mapper = PooledStakingMapper()
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val ethereum = coin(Blockchain.Ethereum)
+    private val startEarningLabel = resourceReference(R.string.eth_yield_start_earning)
+    private val manageLabel = resourceReference(R.string.eth_yield_manage)
     private var previousLocale: Locale = Locale.getDefault()
 
     @BeforeEach
@@ -60,15 +64,13 @@ internal class PooledStakingMapperSummaryTest {
         val expected = model.expectedAvailability?.let { availability ->
             EarnProductSummary(
                 productId = POOLED_STAKING_ID,
-                rateText = stringReference("3.00% APY"),
+                rateText = resourceReference(R.string.earn_apy_value, wrappedList("3.00%")),
                 risk = EarnRisk.Low,
                 availability = availability,
                 rate = EarnProductRate(BigDecimal("0.03"), EarnRateType.APY),
                 position = EarnPositionSummary(BigDecimal("2")).takeIf { model.hasPosition },
                 source = StatusSource.ACTUAL,
-                onClickAction = PooledStakingAction(
-                    stringReference(if (model.hasPosition) "Manage" else "Start earning"),
-                ),
+                onClickAction = PooledStakingAction(if (model.hasPosition) manageLabel else startEarningLabel),
                 route = stakingRoute(userWalletId, ethereum),
             )
         }
@@ -90,7 +92,7 @@ internal class PooledStakingMapperSummaryTest {
 
         // Assert
         assertThat(actual?.rate).isEqualTo(EarnProductRate(BigDecimal("0.055"), EarnRateType.APY))
-        assertThat(actual?.rateText).isEqualTo(stringReference("5.50% APY"))
+        assertThat(actual?.rateText).isEqualTo(resourceReference(R.string.earn_apy_value, wrappedList("5.50%")))
     }
 
     @Test
@@ -108,7 +110,7 @@ internal class PooledStakingMapperSummaryTest {
 
         // Assert
         assertThat(actual?.position).isNull()
-        assertThat(actual?.onClickAction).isEqualTo(PooledStakingAction(stringReference("Manage")))
+        assertThat(actual?.onClickAction).isEqualTo(PooledStakingAction(manageLabel))
     }
 
     @Test
@@ -126,7 +128,7 @@ internal class PooledStakingMapperSummaryTest {
 
         // Assert
         assertThat(actual?.position).isEqualTo(EarnPositionSummary(BigDecimal("2")))
-        assertThat(actual?.onClickAction).isEqualTo(PooledStakingAction(stringReference("Manage")))
+        assertThat(actual?.onClickAction).isEqualTo(PooledStakingAction(manageLabel))
     }
 
     @Test

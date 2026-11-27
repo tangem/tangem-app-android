@@ -11,7 +11,7 @@ class TangemBlogUrlBuilder @Inject constructor(
 
     suspend fun build(post: Post): String {
         return tangemSiteUrlBuilder.url(
-            path = "/embed/blog/post/${post.path}/",
+            path = post.sitePath,
             campaign = "articles",
         )
     }
@@ -19,6 +19,9 @@ class TangemBlogUrlBuilder @Inject constructor(
     sealed interface Post {
 
         val path: String
+
+        val sitePath: String
+            get() = "/embed/blog/post/$path/"
 
         data object SeedPhraseRiskySolution : Post {
             override val path: String = "seed-phrase-faq"
@@ -50,6 +53,12 @@ class TangemBlogUrlBuilder @Inject constructor(
 
         data object AboutCrossChainBridges : Post {
             override val path: String = "an-overview-of-cross-chain-bridges"
+        }
+
+        // There is no /embed/blog page for help center articles
+        data object LendingOnAave : Post {
+            override val path: String = "lending-on-aave"
+            override val sitePath: String = "/en/help-center/vaults/$path/"
         }
     }
 }

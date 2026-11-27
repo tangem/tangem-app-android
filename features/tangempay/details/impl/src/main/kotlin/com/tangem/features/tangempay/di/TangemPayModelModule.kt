@@ -9,6 +9,7 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding.Tang
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayBankingDetailsErrorModel
 import com.tangem.features.tangempay.campaign.TangemPayCampaignIssueCardModel
 import com.tangem.features.tangempay.card.activation.TangemPayCardActivationModel
+import com.tangem.features.tangempay.card.closure.TangemPayCloseCardConfirmModel
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.card.details.TangemPayCardPageModel
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletModel
@@ -128,6 +129,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayCloseCardModel::class)
     fun bindTangemPayCloseCardModel(model: TangemPayCloseCardModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCloseCardConfirmModel::class)
+    fun bindTangemPayCloseCardConfirmModel(model: TangemPayCloseCardConfirmModel): Model
 
     @Binds
     @IntoMap

@@ -2,21 +2,22 @@ package com.tangem.features.yield.supply.impl.entry.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.yield.supply.yieldSupply
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,9 +31,10 @@ internal class YieldSupplyEntryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val currencyStatusResolver: YieldSupplyCurrencyStatusResolver,
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<YieldSupplyEntryComponent.Params>()
@@ -47,8 +49,18 @@ internal class YieldSupplyEntryModel @Inject constructor(
         val userWalletId = params.userWalletId
         val cryptoCurrency = params.cryptoCurrency
         modelScope.launch(dispatchers.default) {
-            singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
-                .getCryptoCurrencyStatus(currency = cryptoCurrency)
+            // A Money flow can outlive the toggle that let Money details open it, if the toggle turns off meanwhile
+            if (params.account == AccountKind.Money && !moneyAccountFeatureToggles.isYieldModeEnabled) {
+                TangemLogger.i("Yield Mode for the Money account is off, closing ${cryptoCurrency.id}")
+                withContext(dispatchers.mainImmediate) { router.pop() }
+                return@launch
+            }
+
+            currencyStatusResolver.getSync(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+                account = params.account,
+            )
                 .onNone {
                     TangemLogger.e("Failed to get CryptoCurrencyStatus: ${cryptoCurrency.id}")
                     withContext(dispatchers.mainImmediate) {
@@ -82,6 +94,11 @@ internal class YieldSupplyEntryModel @Inject constructor(
         val isActiveYield = cryptoCurrencyStatus.value.yieldSupply?.isActive == true
 
         if (tokenEnterStatus != null) {
+            // Outside the portfolio (Money) the account screen already shows the pending state; no token screen exists
+            if (params.account.isHeldOutsidePortfolio) {
+                router.pop()
+                return null
+            }
             router.replaceCurrent(
                 AppRoute.CurrencyDetails(
                     userWalletId = userWalletId,

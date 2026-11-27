@@ -40,7 +40,7 @@ import com.tangem.utils.extensions.addHexPrefix
  * finished, was cancelled, or was replaced by another one — is [JointOperationSignError.OperationNotFound].
  *
  * [submit] returns the operation as the backend reports it right after counting the signature, `null` when that
- * answer could not be read.
+ * answer could not be read or the operation is no longer in the slot.
  */
 @Suppress("LongParameterList")
 class SignJointOperationUseCase(
@@ -155,7 +155,10 @@ class SignJointOperationUseCase(
                     safeTx = prepared.safeTx,
                     signature = signature,
                 )
-                .bind()
+                .getOrElse { error ->
+                    if (error !is JointOperationSignError.Failed) raise(error)
+                    return@either operationAfterLostAnswer(prepared = prepared, error = error)
+                }
 
             // The signature is already accepted by the backend, so a failed refresh must not fail the signing —
             // the list catches up on the next fetch
@@ -163,6 +166,40 @@ class SignJointOperationUseCase(
 
             signedOperation
         }
+    }
+
+    /**
+     * A failed request does not say whether the backend counted the signature: the answer can be lost on the way
+     * back. The refreshed list settles it — the operation carries this member's signature, or it already left the
+     * slot, and then there is nothing left to sign. Only an operation still waiting without that signature is the
+     * failure the user has to see.
+     */
+    private suspend fun Raise<JointOperationSignError>.operationAfterLostAnswer(
+        prepared: PreparedJointOperation.Signing,
+        error: JointOperationSignError.Failed,
+    ): JointOperation? {
+        val account = prepared.account
+        val userWalletId = account.accountId.userWalletId
+
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse { raise(error) }
+
+        val jointAccount = repository.getStoredJointAccounts(userWalletId = userWalletId)
+            .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
+            ?: raise(error)
+        val operation = jointAccount.inFlightOperations[prepared.chainId]
+            ?.takeIf { it.operationId == prepared.operationId }
+            ?: return null
+
+        val ownerAddress = ownerAddressResolver
+            .resolve(userWalletId = userWalletId, ownerKeyIndex = account.ownerKeyIndex)
+            .getOrNull()
+        val hasOwnSignature = operation.signatures.any { memberSignature ->
+            memberSignature.state == JointOperation.MemberSignature.State.SIGNED &&
+                memberSignature.address.equals(ownerAddress, ignoreCase = true)
+        }
+        ensure(hasOwnSignature) { error }
+
+        return operation
     }
 
     /**

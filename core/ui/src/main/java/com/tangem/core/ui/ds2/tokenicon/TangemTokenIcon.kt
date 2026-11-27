@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -60,7 +61,7 @@ import kotlinx.coroutines.launch
  * Design-system v2 token icon rendered from a high-level [TangemTokenIcon.UiState] — a loaded token,
  * a loading shimmer, or an error placeholder.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3901-470)
  *
@@ -240,6 +241,7 @@ fun TangemTokenIcon(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
+                    .indicatorTestTag(state.indicator.testTag)
                     .padding(end = sizeTokens.indicatorOffset, bottom = sizeTokens.indicatorOffset)
                     .size(size = sizeTokens.indicatorSize)
                     .background(
@@ -289,7 +291,7 @@ private fun TokenAsyncImage(
 /** Public API namespace for [TangemTokenIcon]. */
 object TangemTokenIcon {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /** High-level rendering state for the [TangemTokenIcon] overload that accepts a [UiState]. */
     @Immutable
@@ -323,9 +325,11 @@ object TangemTokenIcon {
         /**
          * Bottom-end status dot.
          *
+         * @param testTag Optional test tag applied to the dot, for callers that need to locate it.
          * @param colorReference2 Fill color of the dot, resolved from DS3 tokens.
          */
         data class Indicator(
+            val testTag: String? = null,
             val colorReference2: ColorReference2 = ColorReference2 { TangemTheme.colors3.icon.tertiary },
         )
     }
@@ -335,6 +339,8 @@ object TangemTokenIcon {
         X40, X44, X56, X72
     }
 }
+
+private fun Modifier.indicatorTestTag(tag: String?): Modifier = if (tag != null) testTag(tag) else this
 
 private fun TangemTokenIcon.Size.tokens(): Tokens {
     return when (this) {

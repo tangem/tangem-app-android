@@ -77,10 +77,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         unmockkStatic(UserWalletsListRepository::getSyncOrNull)
     }
 
-    private fun coldWallet(
-        firmwareSupportsHd: Boolean = true,
-        hasEdWallet: Boolean = true,
-    ): UserWallet.Cold {
+    private fun coldWallet(firmwareSupportsHd: Boolean = true, hasEdWallet: Boolean = true): UserWallet.Cold {
         val firmware = if (firmwareSupportsHd) {
             CardDTO.FirmwareVersion(major = 6, minor = 33, patch = 0, type = FirmwareVersion.FirmwareType.Sdk)
         } else {
@@ -247,7 +244,9 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.Unexpected(cause = throwable)).left())
+        assertThat(
+            result,
+        ).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.Unexpected(cause = throwable)).left())
     }
 
     @Nested

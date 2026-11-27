@@ -1,17 +1,27 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
+import arrow.core.getOrElse
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.GetActionsUseCase
+import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.model.P2PEthPoolIntegration
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
+import com.tangem.domain.staking.model.stakingBalanceData
+import com.tangem.domain.staking.single.SingleStakingBalanceProducer
+import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.extensions.isEqualTo
+import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -27,6 +37,8 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val fetchStakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
+    private val singleStakingBalanceSupplier: SingleStakingBalanceSupplier,
+    private val stakingIdFactory: StakingIdFactory,
     private val coroutineScope: AppCoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -43,10 +55,11 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     )
                 },
                 async {
-                    fetchStakingYieldBalanceUseCase(
-                        userWalletId = userWallet.walletId,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                    )
+                    if (integration is P2PEthPoolIntegration) {
+                        refreshP2PEthPoolBalanceUntilChanged()
+                    } else {
+                        fetchStakingBalance()
+                    }
                 },
                 // we should update tx history and network for new balances
                 async {
@@ -140,6 +153,67 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
             .any { it.status == StakingActionStatus.PROCESSING }
     }
 
+    private suspend fun fetchStakingBalance() {
+        fetchStakingYieldBalanceUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+        )
+    }
+
+    /**
+     * P2P reads the StakeWise subgraph, which reports a deposit minutes after it lands on-chain and exposes no
+     * readiness signal, so the position stays stale until re-fetched.
+     */
+    private suspend fun refreshP2PEthPoolBalanceUntilChanged() {
+        fetchStakingBalance()
+
+        val stakingId = stakingIdFactory.create(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+        ).getOrElse { error ->
+            TangemLogger.i("P2P ETH pool balance is not polled after the transaction: $error")
+            return
+        }
+        val balanceParams = SingleStakingBalanceProducer.Params(
+            userWalletId = userWallet.walletId,
+            stakingId = stakingId,
+        )
+        val positionBeforeIndexing = readP2PEthPoolPosition(balanceParams)
+            ?: P2PEthPoolPosition(cryptoCurrencyStatus.value.stakingBalanceData)
+
+        val positionChanged = withTimeoutOrNull(P2P_BALANCE_POLL_TIMEOUT) {
+            do {
+                delay(P2P_BALANCE_POLL_INTERVAL)
+                fetchStakingBalance()
+                val position = readP2PEthPoolPosition(balanceParams)
+            } while (position == null || position.isSameAs(positionBeforeIndexing))
+        }
+
+        if (positionChanged == null) {
+            TangemLogger.i("P2P ETH pool balance did not change within the polling window after the transaction")
+        }
+    }
+
+    private suspend fun readP2PEthPoolPosition(params: SingleStakingBalanceProducer.Params): P2PEthPoolPosition? {
+        return when (val balance = singleStakingBalanceSupplier.getSyncOrNull(params, P2P_BALANCE_READ_TIMEOUT)) {
+            is StakingBalance.Error,
+            null,
+            -> null
+            else -> P2PEthPoolPosition(balance)
+        }
+    }
+
+    private class P2PEthPoolPosition(balance: StakingBalance?) {
+        // P2P compounds rewards into the stake, so they are excluded to keep a reward update from passing as indexed
+        private val principal = balance?.totalStaked.orZero() - balance?.totalRewards.orZero()
+        // An exit request maturing only moves its amount from unstaking to withdrawable, so the queue is compared whole
+        private val exitQueue = balance?.unstakingAmount.orZero() + balance?.withdrawableAmount.orZero()
+
+        fun isSameAs(other: P2PEthPoolPosition): Boolean {
+            return principal isEqualTo other.principal && exitQueue isEqualTo other.exitQueue
+        }
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(
@@ -153,5 +227,8 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         const val BALANCE_UPDATE_DELAY = 11_000L
         const val ACTIONS_POLL_INTERVAL = 10_000L
         const val ACTIONS_POLL_MAX_ATTEMPTS = 6
+        const val P2P_BALANCE_POLL_INTERVAL = 15_000L
+        const val P2P_BALANCE_POLL_TIMEOUT = 300_000L
+        const val P2P_BALANCE_READ_TIMEOUT = 5_000L
     }
 }

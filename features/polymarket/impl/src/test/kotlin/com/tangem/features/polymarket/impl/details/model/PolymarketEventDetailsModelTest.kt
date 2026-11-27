@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
@@ -22,6 +23,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.createPredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createSoccerMatchTeams
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -40,6 +42,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketEventDetailsModelTest {
@@ -511,10 +515,92 @@ internal class PolymarketEventDetailsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN unknown soccer match WHEN loaded while paused THEN redirect waits for resume and preserves route context`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), any()) } returns createSoccerMatch().right()
+        val model = createModel(this, phaseTwoEnabled = true)
+        runCurrent()
+        verify(exactly = 0) { router.navigate(any(), any()) }
+        val transform = slot<(List<Route>) -> List<Route>>()
+        every { router.navigate(capture(transform), any()) } returns Unit
+        val original = PolymarketRoute.EventDetails("event-1", UserWalletId("011"), "market", "token", "Sports")
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(transform.captured(listOf(original))).containsExactly(original.copy(isSoccerMatch = true))
+        advanceTimeBy(30_000)
+        runCurrent()
+        coVerify(exactly = 1) { getEventUseCase(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN delayed soccer redirect WHEN another screen is on top THEN stack is unchanged`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), any()) } returns createSoccerMatch().right()
+        val transform = slot<(List<Route>) -> List<Route>>()
+        every { router.navigate(capture(transform), any()) } returns Unit
+        val model = createModel(this, phaseTwoEnabled = true)
+        model.onResume()
+        runCurrent()
+        val order = PolymarketRoute.PlacePrediction(UserWalletId("011"), "event-1", "market", "token")
+        val otherWallet = PolymarketRoute.EventDetails("event-1", UserWalletId("022"))
+        val otherEvent = PolymarketRoute.EventDetails("event-2", UserWalletId("011"))
+
+        // Act & Assert
+        assertThat(transform.captured(listOf(order))).containsExactly(order)
+        assertThat(transform.captured(listOf(otherWallet))).containsExactly(otherWallet)
+        assertThat(transform.captured(listOf(otherEvent))).containsExactly(otherEvent)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN disabled D2 WHEN soccer match is loaded THEN generic content is retained`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(any(), any()) } returns createSoccerMatch().right()
+        val model = createModel(this, phaseTwoEnabled = false)
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        verify(exactly = 0) { router.navigate(any(), any()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @CsvSource(",false", "false,true")
+    fun `GIVEN no soccer match to move to WHEN loaded THEN the event stays on this screen`(
+        routeIsSoccerMatch: Boolean?,
+        hasTeams: Boolean,
+    ) = runTest {
+        // Arrange
+        val event = createEvent().copy(eventType = "soccer", teams = createSoccerMatchTeams().takeIf { hasTeams })
+        coEvery { getEventUseCase(any(), any()) } returns event.right()
+        val model = createModel(this, phaseTwoEnabled = true, isSoccerMatch = routeIsSoccerMatch)
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        verify(exactly = 0) { router.navigate(any(), any()) }
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         regionAccess: PredictionRegionAccess = createPredictionRegionAccess(),
         categoryLabel: String? = null,
+        phaseTwoEnabled: Boolean = false,
+        isSoccerMatch: Boolean? = null,
     ): PolymarketEventDetailsModel {
         return PolymarketEventDetailsModel(
             paramsContainer = MutableParamsContainer(
@@ -522,6 +608,7 @@ internal class PolymarketEventDetailsModelTest {
                     eventId = "event-1",
                     userWalletId = UserWalletId("011"),
                     categoryLabel = categoryLabel,
+                    isSoccerMatch = isSoccerMatch,
                 ),
             ),
             router = router,
@@ -531,13 +618,16 @@ internal class PolymarketEventDetailsModelTest {
             messageSender = messageSender,
             regionAccess = regionAccess,
             urlOpener = urlOpener,
-            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
-            getPriceHistoryUseCase = mockk(),
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns phaseTwoEnabled },
+            getPriceHistoryUseCase = mockk { coEvery { this@mockk(any(), any(), any()) } returns emptyMap() },
             currentTimeProvider = { testScope.testScheduler.currentTime },
         ).also { model = it }
     }
 
     private fun createEvent(title: String = "Event title"): PolymarketEvent = createPolymarketEvent(title = title)
+
+    private fun createSoccerMatch(): PolymarketEvent =
+        createEvent().copy(eventType = "soccer", teams = createSoccerMatchTeams())
 
     private companion object {
         const val POLL_INTERVAL_MILLIS = 10_000L

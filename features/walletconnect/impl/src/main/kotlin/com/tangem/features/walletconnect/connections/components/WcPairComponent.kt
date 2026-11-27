@@ -123,6 +123,7 @@ internal class WcPairComponent(
             is Alert.UnsupportedNetwork ->
                 WcAlertsFactory.createUnsupportedChainAlert(alertType.appName, model::errorAlertOnDismiss)
             is Alert.UriAlreadyUsed -> WcAlertsFactory.createUriAlreadyUsedAlert(model::errorAlertOnDismiss)
+            is Alert.UriExpired -> WcAlertsFactory.createUriExpiredAlert(model::errorAlertOnDismiss)
             is Alert.TimeoutException -> WcAlertsFactory.createTimeoutExceptionAlert(model::errorAlertOnDismiss)
         }
     }

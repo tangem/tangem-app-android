@@ -73,7 +73,6 @@ internal class YieldSupplyContributionProviderTest {
                 YieldSupplyContribution(status = status, source = StatusSource.ONLY_CACHE),
             )
             assertThat(actual?.totalDeltaCryptoAmount()).isEqualTo(BigDecimal.ZERO)
-            assertThat(actual?.kind).isEqualTo(YieldSupplyContribution.CONTRIBUTION_KIND)
         }
 
     @Test

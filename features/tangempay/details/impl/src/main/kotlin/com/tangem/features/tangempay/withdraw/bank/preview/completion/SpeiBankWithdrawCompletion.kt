@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.completion
 import arrow.core.Either
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
@@ -12,24 +13,35 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransfer
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransferError
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
+import com.tangem.features.tangempay.withdraw.bank.preview.model.isLockTrusted
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toRecipient
 import com.tangem.features.tangempay.withdraw.bank.preview.model.truncatedToCents
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 import java.util.UUID
 
+@Suppress("LongParameterList")
 internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val productInstanceId: String,
-    @Assisted private val onQuoteChanged: (BankOfframpQuote) -> Unit,
     @Assisted private val onNetworkFeeChanged: (BigDecimal) -> Unit,
+    @Assisted private val onQuoteExpired: () -> Unit,
+    @Assisted private val newRecipientListener: NewRecipientListener,
     private val bankOfframpOrderRepository: BankOfframpOrderRepository,
     private val moneyAccountTransfer: MoneyAccountTransfer,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : BankWithdrawCompletion {
+
+    override val quote: StateFlow<BankOfframpQuote?>
+        field = MutableStateFlow<BankOfframpQuote?>(null)
 
     private var attempt: QuoteAttempt? = null
 
@@ -37,9 +49,9 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
 
     private var isTransferOutcomeUnknown = false
 
-    override suspend fun prepare(draft: BankWithdrawDraft) {
+    override suspend fun prepare(draft: BankWithdrawDraft, onState: (CompletionState) -> Unit) {
         val request = draft.toQuoteRequest() ?: return
-        if (attempt?.sendableQuoteFor(request) == null) requestQuote(request)
+        if (sendableQuoteFor(request) == null) refreshQuote(request = request, onState = onState)
     }
 
     override suspend fun complete(draft: BankWithdrawDraft, onState: (CompletionState) -> Unit) {
@@ -49,12 +61,12 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         }
         val request = draft.toQuoteRequest() ?: return
         val token = draft.source?.token ?: return
-        onState(CompletionState.Sending)
-        val quote = attempt?.sendableQuoteFor(request)
+        val quote = sendableQuoteFor(request)
         if (quote == null) {
-            showNewQuote(request = request, onState = onState)
+            refreshQuote(request = request, onState = onState)
             return
         }
+        onState(CompletionState.Sending)
         bankOfframpOrderRepository.createTransfer(userWalletId = userWalletId, quoteId = quote.quoteId).fold(
             ifLeft = { error -> onTransferRequestFailed(error = error, request = request, onState = onState) },
             ifRight = { transfer ->
@@ -80,17 +92,46 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         onState(CompletionState.Failed(PreviewFailure.General))
     }
 
-    private suspend fun showNewQuote(request: QuoteRequest, onState: (CompletionState) -> Unit) {
-        requestQuote(request).fold(
-            ifLeft = { error -> onQuoteFailed(error = error, onState = onState) },
-            ifRight = { onState(CompletionState.Idle) },
-        )
+    private fun sendableQuoteFor(request: QuoteRequest): BankOfframpQuote? {
+        val current = attempt?.takeIf { it.request == request } ?: return null
+        return current.quote?.takeIf {
+            !current.isLockTrusted || currentTimeProvider.nowMillis() < it.sendDeadline.millis
+        }
+    }
+
+    /**
+     * A quote request the backend never answered (offline, 5xx) keeps the terms loading and is asked again after a
+     * growing pause, under the same key, for about two minutes. A refusal, an expired session or a longer silence shows
+     * its failure, since the same code also covers failures that never recover.
+     */
+    private suspend fun refreshQuote(request: QuoteRequest, onState: (CompletionState) -> Unit) {
+        onState(CompletionState.Idle)
+        var retryDelayMillis = FIRST_RETRY_DELAY_MILLIS
+        var attemptsLeft = MAX_UNANSWERED_QUOTE_ATTEMPTS
+        while (true) {
+            val error = requestQuote(request).leftOrNull() ?: return
+            attemptsLeft--
+            if (!error.isUnanswered() || attemptsLeft == 0) {
+                onQuoteFailed(error = error, request = request, onState = onState)
+                return
+            }
+            val message = "SPEI quote failed, retrying in $retryDelayMillis ms: $error"
+            // Only the first miss goes to the exported log; an outage would otherwise add a line every 30 s.
+            if (retryDelayMillis == FIRST_RETRY_DELAY_MILLIS) {
+                TangemLogger.withTag(TAG).e(message)
+            } else {
+                TangemLogger.withTag(TAG).d(message)
+            }
+            delay(retryDelayMillis)
+            retryDelayMillis = (retryDelayMillis * 2).coerceAtMost(MAX_RETRY_DELAY_MILLIS)
+        }
     }
 
     private suspend fun requestQuote(request: QuoteRequest): Either<BankOfframpError, BankOfframpQuote> {
         val current = attempt?.takeIf { it.request == request && it.quote == null }
             ?: QuoteAttempt(request = request, idempotencyKey = UUID.randomUUID().toString())
         attempt = current
+        quote.value = null
         return bankOfframpOrderRepository.createQuote(
             userWalletId = userWalletId,
             productInstanceId = productInstanceId,
@@ -98,12 +139,16 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
             recipient = registeredRecipients[request.recipient] ?: request.recipient,
             idempotencyKey = current.idempotencyKey,
         )
-            .onRight { quote ->
-                attempt = current.copy(quote = quote)
-                if (request.recipient is BankOfframpRecipient.New) {
-                    registeredRecipients[request.recipient] = BankOfframpRecipient.Saved(quote.bankAccountId)
+            .onRight { newQuote ->
+                attempt = current.copy(
+                    quote = newQuote,
+                    isLockTrusted = newQuote.isLockTrusted(currentTimeProvider.nowMillis()),
+                )
+                request.recipient.unregisteredNew()?.let { recipient ->
+                    registeredRecipients[recipient] = BankOfframpRecipient.Saved(newQuote.bankAccountId)
+                    newRecipientListener.onSaved(recipient.details)
                 }
-                onQuoteChanged(quote)
+                quote.value = newQuote
             }
             .onLeft { error -> if (!error.isOutcomeUnknown()) attempt = null }
     }
@@ -115,21 +160,24 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
     ) {
         TangemLogger.withTag(TAG).e("SPEI transfer creation failed: $error")
         if (error == BankOfframpError.QuoteExpired) {
+            onQuoteExpired()
             attempt = null
-            showNewQuote(request = request, onState = onState)
+            refreshQuote(request = request, onState = onState)
             return
         }
         if (!error.isOutcomeUnknown()) attempt = null
         onState(CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode))
     }
 
-    private fun onQuoteFailed(error: BankOfframpError, onState: (CompletionState) -> Unit) {
+    private fun onQuoteFailed(error: BankOfframpError, request: QuoteRequest, onState: (CompletionState) -> Unit) {
         TangemLogger.withTag(TAG).e("SPEI quote failed: $error")
-        if (error == BankOfframpError.Validation) {
-            onState(CompletionState.Idle)
-        } else {
-            onState(CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode))
+        val unregistered = request.recipient.unregisteredNew()
+        if (unregistered != null && error.isRecipientRefusal()) {
+            newRecipientListener.onRejected(recipient = unregistered.details, errorCode = error.errorCode)
         }
+        onState(
+            CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode, isQuoteFailure = true),
+        )
     }
 
     private suspend fun send(
@@ -174,7 +222,13 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         return QuoteRequest(amount = amount.truncatedToCents(), recipient = recipient)
     }
 
+    private fun BankOfframpRecipient.unregisteredNew(): BankOfframpRecipient.New? =
+        (this as? BankOfframpRecipient.New)?.takeIf { it !in registeredRecipients }
+
     private fun BankOfframpError.isOutcomeUnknown(): Boolean = this is BankOfframpError.Unknown && isOutcomeUnknown
+
+    private fun BankOfframpError.isUnanswered(): Boolean =
+        this is BankOfframpError.Unknown && errorCode in UNANSWERED_ERROR_CODES
 
     private fun BankOfframpTransfer.matches(quote: BankOfframpQuote, amount: BigDecimal): Boolean =
         sourceAmount.compareTo(quote.sourceAmount) == 0 && quote.sourceAmount.compareTo(amount) == 0
@@ -185,20 +239,26 @@ internal class SpeiBankWithdrawCompletion @AssistedInject constructor(
         val request: QuoteRequest,
         val idempotencyKey: String,
         val quote: BankOfframpQuote? = null,
-    ) {
-
-        fun sendableQuoteFor(request: QuoteRequest): BankOfframpQuote? = quote?.takeIf { this.request == request }
-    }
+        val isLockTrusted: Boolean = true,
+    )
 
     @AssistedFactory
     interface Factory {
         fun create(
             userWalletId: UserWalletId,
             productInstanceId: String,
-            onQuoteChanged: (BankOfframpQuote) -> Unit,
             onNetworkFeeChanged: (BigDecimal) -> Unit,
+            onQuoteExpired: () -> Unit,
+            newRecipientListener: NewRecipientListener,
         ): SpeiBankWithdrawCompletion
     }
 }
 
 private const val TAG = "SpeiBankWithdrawCompletion"
+private const val FIRST_RETRY_DELAY_MILLIS = 2_000L
+private const val MAX_RETRY_DELAY_MILLIS = 30_000L
+private const val MAX_UNANSWERED_QUOTE_ATTEMPTS = 8
+private val UNANSWERED_ERROR_CODES = setOf(
+    TangemPayApiError.UnknownWithoutCode.errorCode,
+    TangemPayApiError.ServerUnavailable.errorCode,
+)

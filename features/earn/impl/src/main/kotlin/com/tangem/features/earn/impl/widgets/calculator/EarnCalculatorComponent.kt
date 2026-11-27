@@ -10,6 +10,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.impl.widgets.calculator.model.EarnCalculatorModel
 import com.tangem.features.earn.impl.widgets.calculator.ui.EarnCalculatorContent
+import com.tangem.features.earn.product.api.product.EarnHorizon
 import com.tangem.features.earn.product.api.product.EarnProjection
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -35,6 +36,8 @@ internal class EarnCalculatorComponent @AssistedInject constructor(
         state?.let { EarnCalculatorContent(state = it, modifier = modifier) }
     }
 
+    enum class Input { InitialBalance, MonthlyTopUp }
+
     data class Params(
         val projection: Flow<EarnProjection?>,
         val incentiveRate: Flow<EarnProductRate?> = flowOf(null),
@@ -44,6 +47,10 @@ internal class EarnCalculatorComponent @AssistedInject constructor(
     interface ModelCallback {
 
         fun onIncentiveClick()
+
+        fun onHorizonChange(horizon: EarnHorizon)
+
+        fun onInputChange(input: Input)
     }
 
     @AssistedFactory

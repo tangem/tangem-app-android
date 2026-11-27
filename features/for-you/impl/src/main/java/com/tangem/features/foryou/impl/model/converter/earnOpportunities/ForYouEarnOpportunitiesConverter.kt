@@ -10,6 +10,8 @@ import com.tangem.domain.staking.earn.EarnRate
 import com.tangem.domain.staking.earn.ResolveEarnRateUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.features.earn.api.overview.EarnOverviews
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
@@ -40,6 +42,7 @@ internal class ForYouEarnOpportunitiesConverter(
     private val expandClick: (assetId: String) -> Unit,
     private val yieldSupplyAvailability: Map<String, BigDecimal>,
     private val yieldStakingAvailability: Map<CryptoCurrency, StakingAvailability>,
+    private val earnOverviews: Map<UserWalletId, EarnOverviews>,
     private val topEarnTokens: EarnTopToken?,
     private val onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit,
     private val onAllEarnTokensClick: () -> Unit,
@@ -55,7 +58,10 @@ internal class ForYouEarnOpportunitiesConverter(
             .mapNotNull { (account, accountStatuses) ->
                 val tokenList = accountStatuses.mapNotNull { accountCryptoCurrencyStatus ->
                     val cryptoCurrencyStatus = accountCryptoCurrencyStatus.status
-                    val earn = resolveEarnApy(
+                    val earn = resolveEarnOverviewApy(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        overviews = earnOverviews[account.userWalletId],
+                    ) ?: resolveEarnApy(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         yieldModuleApyMap = yieldSupplyAvailability,
                         stakingApyMap = yieldStakingAvailability,
@@ -113,6 +119,29 @@ internal class ForYouEarnOpportunitiesConverter(
     }
 
     /**
+     * The banner marks a currency with Earn products (and the Earn toggle on); a headline alone also exists for plain
+     * Staking and Yield Mode rates, which keep their own rows.
+     */
+    private fun resolveEarnOverviewApy(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        overviews: EarnOverviews?,
+    ): EarnApyInfo? {
+        val overview = overviews?.get(cryptoCurrencyStatus.currency.id)?.takeIf { it.banner != null } ?: return null
+        val headline = overview.headline ?: return null
+        val rate = headline.rate.fraction
+
+        return EarnApyInfo(
+            isActive = headline.isActive,
+            apy = rate,
+            potentialRewards = cryptoCurrencyStatus.value.fiatAmount?.multiply(rate),
+            type = ForYouEarnOpportunitiesType.Earn(
+                activeRoute = headline.route.takeIf { headline.isActive },
+                rewardType = headline.rate.type.toEarnRewardType(),
+            ),
+        )
+    }
+
+    /**
      * Maps the resolved [EarnRate] onto the section's own [EarnApyInfo], adding the potential reward the
      * rate would yield on the currency's fiat balance.
      */
@@ -146,5 +175,10 @@ internal class ForYouEarnOpportunitiesConverter(
                 )
             },
         )
+    }
+
+    private fun EarnRateType.toEarnRewardType(): EarnRewardType = when (this) {
+        EarnRateType.APY -> EarnRewardType.APY
+        EarnRateType.APR -> EarnRewardType.APR
     }
 }

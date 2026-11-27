@@ -30,6 +30,7 @@ import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.math.BigInteger
 import com.tangem.core.ui.R as CoreUiR
@@ -54,7 +55,7 @@ internal class JointOperationUMConverterTest {
         // Assert
         assertThat(actual.header.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
         assertThat(actual.header.subtitle).isEqualTo(resourceReference(CoreUiR.string.transaction_history_pending))
-        assertThat(actual.header.menu.map { it.title }).contains(resourceReference(CoreUiR.string.common_decline))
+        assertThat(actual.header.menu.map { it.title }).contains(resourceReference(CoreUiR.string.common_cancel))
         assertThat(actual.cosign).isNotNull()
         assertThat(actual.cosignAction?.isEnabled).isTrue()
     }
@@ -71,33 +72,18 @@ internal class JointOperationUMConverterTest {
             resourceReference(CoreUiR.string.common_copy_address),
             resourceReference(CoreUiR.string.address_book_add_contact),
         )
-        assertThat(actual.cosign).isNotNull()
-        assertThat(actual.cosignAction?.isEnabled).isFalse()
-        assertThat(actual.cosignAction?.caption).isNull()
-        assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.common_sign))
+        assertThat(actual.cosign).isNull()
+        assertThat(actual.cosignAction).isNull()
     }
 
-    @Test
-    fun `GIVEN this member signed WHEN the operation is sent THEN the button says signed`() {
+    @ParameterizedTest
+    @EnumSource(Answer::class)
+    fun `GIVEN any own answer WHEN the operation is sent THEN there is no sign button`(ownAnswer: Answer) {
         // Act
-        val actual = converter.convert(input(state(isSending = true, ownAnswer = Answer.SIGNED)))
+        val actual = converter.convert(input(state(isSending = true, ownAnswer = ownAnswer)))
 
         // Assert
-        assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.joint_operation_signed))
-    }
-
-    @Test
-    fun `GIVEN this member declined WHEN the operation is sent THEN the button says declined`() {
-        // Arrange
-        val declinedLocally = input(state(isSending = true, ownAnswer = Answer.DECLINED), hasAnswered = true)
-
-        // Act
-        val actual = converter.convert(declinedLocally)
-
-        // Assert
-        assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.joint_operation_declined))
-        assertThat(actual.cosignAction?.isEnabled).isFalse()
-        assertThat(actual.cosignAction?.caption).isNull()
+        assertThat(actual.cosignAction).isNull()
     }
 
     @Test
@@ -107,7 +93,7 @@ internal class JointOperationUMConverterTest {
 
         // Assert
         assertThat(actual.header.subtitle).isEqualTo(resourceReference(CoreUiR.string.transaction_history_pending))
-        assertThat(actual.header.menu.map { it.title }).doesNotContain(resourceReference(CoreUiR.string.common_decline))
+        assertThat(actual.header.menu.map { it.title }).doesNotContain(resourceReference(CoreUiR.string.common_cancel))
         assertThat(actual.cosignAction).isEqualTo(
             TxHistoryDetailsUM.CosignActionUM(
                 buttonText = resourceReference(CoreUiR.string.joint_operation_declined),
@@ -274,11 +260,6 @@ internal class JointOperationUMConverterTest {
         HoldToConfirmModel(
             description = "hot wallet already answered",
             input = input(state(isSending = false), hasAnswered = true, isColdWallet = false),
-            expected = false,
-        ),
-        HoldToConfirmModel(
-            description = "hot wallet, operation already on its way",
-            input = input(state(isSending = true), isColdWallet = false),
             expected = false,
         ),
     )

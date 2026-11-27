@@ -25,9 +25,13 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
@@ -46,6 +50,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private val result = MutableStateFlow<HotWalletPasswordRequester.Result?>(null)
     private val currentRequest = MutableStateFlow<HotWalletPasswordRequester.AttemptRequest?>(null)
     private val attemptsRequestJobHolder = JobHolder()
+    private val deletionMutex = Mutex()
 
     private val HotWalletPasswordRequester.AttemptRequest.attemptId
         get() = HotWalletAccessCodeAttemptsRepository.AttemptId(
@@ -86,8 +91,17 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         dismissState()
     }
 
+    fun dismiss(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        if (isCurrentRequest(attemptRequest)) dismiss()
+    }
+
     suspend fun wrongAccessCode(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         hotAccessCodeAttemptsRepository.incrementAttempts(attemptRequest.attemptId)
+        // The caller re-requests the code right after this returns, which would cancel a deletion still in flight
+        if (hotAccessCodeAttemptsRepository.getAttempts(attemptRequest.attemptId).firstOrNull() == Attempts.Deletion) {
+            deleteUserWallet(attemptRequest)
+            return
+        }
         // Reflect the wrong-code UI only if this request still owns the visible dialog.
         if (isCurrentRequest(attemptRequest)) {
             uiState.update { state ->
@@ -226,13 +240,19 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         val currentRequest = currentRequest.value ?: return
         // Only delete if the request whose threshold was crossed is still the one owning the dialog.
         if (currentRequest.requestId != expectedRequest.requestId) return
-        val userWallet = userWalletsListRepository.userWalletsSync()
-            .firstOrNull { it is UserWallet.Hot && it.hotWalletId == currentRequest.hotWalletId } ?: return
 
-        startAssetsDiscoveryUseCase.cancel(userWallet.walletId)
+        withContext(NonCancellable) {
+            deletionMutex.withLock {
+                val userWallet = userWalletsListRepository.userWalletsSync()
+                    .firstOrNull { it is UserWallet.Hot && it.hotWalletId == currentRequest.hotWalletId }
+                    ?: return@withLock
 
-        deleteWalletUseCase(userWallet.walletId)
-        dismiss()
+                startAssetsDiscoveryUseCase.cancel(userWallet.walletId)
+                deleteWalletUseCase(userWallet.walletId)
+            }
+            // The user may have opened another wallet's dialog while the deletion was running
+            if (isCurrentRequest(expectedRequest)) dismiss()
+        }
     }
 
     private suspend fun HotWalletPasswordRequester.AttemptRequest.isBiometryButtonVisible(): Boolean =

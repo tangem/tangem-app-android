@@ -33,9 +33,10 @@ internal object CollectiblesMainPreviewData {
         ),
         collection = CollectiblesMainUM.CollectionUM(
             subtitle = stringReference("My collection"),
-            title = stringReference("25 cards"),
+            title = stringReference("View cards"),
             onClick = {},
         ),
+        isRegionRestricted = false,
         relink = CollectiblesMainUM.RelinkUM.Hidden,
         pendingPacks = persistentListOf(),
         menu = menu(isShown = false),

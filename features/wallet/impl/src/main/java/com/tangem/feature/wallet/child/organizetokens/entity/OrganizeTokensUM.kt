@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.child.organizetokens.entity
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.event.StateEvent
 import kotlinx.collections.immutable.PersistentList
 

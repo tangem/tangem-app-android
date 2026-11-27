@@ -46,10 +46,12 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import javax.inject.Singleton
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
 @Suppress("LargeClass", "LongParameterList", "SuspendFunWithFlowReturnType")
+@Singleton
 internal class DefaultNFTRepository @Inject constructor(
     private val nftPersistenceStoreFactory: NFTPersistenceStoreFactory,
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
@@ -498,10 +500,8 @@ internal class DefaultNFTRepository @Inject constructor(
 
     private fun getNFTPersistenceStore(userWalletId: UserWalletId, network: Network): NFTPersistenceStore {
         val storeId = (userWalletId to network).formatted()
-        return nftPersistenceStores.getOrPut(storeId) {
-            nftPersistenceStoreFactory.provide(userWalletId, network).also {
-                nftPersistenceStores[storeId] = it
-            }
+        return nftPersistenceStores.computeIfAbsent(storeId) {
+            nftPersistenceStoreFactory.provide(userWalletId, network)
         }
     }
 

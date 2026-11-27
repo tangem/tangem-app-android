@@ -374,6 +374,75 @@ internal class GaslessGachaVaultTransactionSenderTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Withdraw {
+
+        @BeforeEach
+        fun stubWithdraw() {
+            coEvery { walletManager.buildWithdrawCollectiblesVault(MINT, RECIPIENT, AMOUNT) } returns
+                Result.Success(transaction)
+        }
+
+        @Test
+        fun `GIVEN the sponsor takes it WHEN withdraw THEN it is signed with the vault rules and submitted`() =
+            runTest {
+                // Act
+                val actual = sender.withdraw(userWallet, MINT, RECIPIENT, AMOUNT)
+
+                // Assert
+                assertThat(actual).isEqualTo(TX_HASH.right())
+                coVerifyOrder {
+                    gaslessSigner.signGaslessTransaction(transaction, FEE_PAYER, signer, RULES)
+                    gaslessRepository.submit(WALLET_ID, SIGNED_BYTES, 42)
+                }
+                coVerify(exactly = 0) { walletManager.send(any<TransactionData>(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the sponsor is unavailable WHEN withdraw THEN nothing is built`() = runTest {
+            // Arrange
+            coEvery { gaslessRepository.getFeePayer() } returns SolanaGaslessError.Disabled.left()
+
+            // Act
+            val actual = sender.withdraw(userWallet, MINT, RECIPIENT, AMOUNT)
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.SponsorUnavailable).left())
+            coVerify(exactly = 0) { walletManager.buildWithdrawCollectiblesVault(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the build fails WHEN withdraw THEN nothing is signed`() = runTest {
+            // Arrange
+            coEvery { walletManager.buildWithdrawCollectiblesVault(any(), any(), any()) } returns
+                Result.Failure(BlockchainSdkError.CustomError("bad recipient"))
+
+            // Act
+            val actual = sender.withdraw(userWallet, MINT, RECIPIENT, AMOUNT)
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) {
+                gaslessSigner.signGaslessTransaction(any(), any(), any(), any())
+                gaslessRepository.submit(any(), any(), any())
+            }
+        }
+
+        @Test
+        fun `GIVEN the submit may have landed WHEN withdraw THEN the outcome is unknown`() = runTest {
+            // Arrange
+            coEvery { gaslessRepository.submit(any(), any(), any()) } returns
+                SolanaGaslessError.MaybeSent(signature = TX_HASH).left()
+
+            // Act
+            val actual = sender.withdraw(userWallet, MINT, RECIPIENT, AMOUNT)
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectiblesAccountError.MaybeSent(txHash = TX_HASH).left())
+        }
+    }
+
     private fun vault(sessionKey: String): CollectiblesVault = mockk {
         every { this@mockk.sessionKey } returns sessionKey
     }
@@ -393,6 +462,8 @@ internal class GaslessGachaVaultTransactionSenderTest {
         const val FEE_AMOUNT = 1_000_000L
         const val MEMO = "cc-uuid"
         const val TX_HASH = "hash"
+        const val MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
+        const val RECIPIENT = "Hx6LbkMHe69DYawhPyVNs8Apa6tyfogfzQV6a7XkwBUU"
 
         const val CARD_ID = "AC01000000041225"
         val SEED_KEY = byteArrayOf(2, 0xA.toByte(), 0xB.toByte())

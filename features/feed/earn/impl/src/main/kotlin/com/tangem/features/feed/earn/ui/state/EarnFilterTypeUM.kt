@@ -17,4 +17,8 @@ internal enum class EarnFilterTypeUM(val title: TextReference, val text: TextRef
         title = resourceReference(R.string.markets_sort_by_yield_mode_title),
         text = resourceReference(R.string.earn_filter_yield_type_text),
     ),
+    Vaults(
+        title = resourceReference(R.string.common_vaults),
+        text = resourceReference(R.string.earn_filter_vaults_type_text),
+    ),
 }

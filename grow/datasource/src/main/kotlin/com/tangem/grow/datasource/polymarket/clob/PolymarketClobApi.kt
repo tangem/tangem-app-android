@@ -6,6 +6,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowa
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceRequest
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceHistoryResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketSessionSignersResponse
 import okhttp3.RequestBody
@@ -57,6 +58,10 @@ interface PolymarketClobApi {
         @Query("token_id") tokenId: String,
         @Query("side") side: String,
     ): ApiResponse<PolymarketPriceResponse>
+
+    /** Public book-side prices, keyed by token ID and side. At most 500 token/side pairs per request. */
+    @POST("prices")
+    suspend fun getPrices(@Body requests: List<PolymarketPriceRequest>): ApiResponse<Map<String, Map<String, String>>>
 
     @GET("prices-history")
     suspend fun getPriceHistory(

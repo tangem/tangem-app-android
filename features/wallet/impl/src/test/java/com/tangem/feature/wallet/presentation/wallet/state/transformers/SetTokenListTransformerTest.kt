@@ -3,9 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -136,7 +136,7 @@ class SetTokenListTransformerTest {
         buttons = persistentListOf(
             TangemButtonUM(
                 text = stringReference(value = "Buy"),
-                type = TangemButtonType.Secondary,
+                variant = TangemButton.Variant.Material,
                 onClick = {},
                 isEnabled = buttonEnabled,
             ),

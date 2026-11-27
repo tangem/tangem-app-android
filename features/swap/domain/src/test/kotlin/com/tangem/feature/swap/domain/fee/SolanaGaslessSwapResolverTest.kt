@@ -16,7 +16,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.transaction.models.GaslessProtocolData
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.buildSwapProvider
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -55,7 +54,6 @@ internal class SolanaGaslessSwapResolverTest {
 
     private val swapFeatureToggles: SwapFeatureToggles = mockk()
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository = mockk()
-    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
 
     private val liFi = buildSwapProvider(providerId = "li-fi")
@@ -72,13 +70,12 @@ internal class SolanaGaslessSwapResolverTest {
         clearMocks(
             swapFeatureToggles,
             solanaGaslessTransactionRepository,
-            walletManagersFacade,
             getFeePaidCryptoCurrencyStatusSyncUseCase,
         )
         every { swapFeatureToggles.isSolanaGaslessEnabled } returns true
         every { swapFeatureToggles.isSolanaGaslessRentEnabled } returns false
         coEvery {
-            walletManagersFacade.simulateSolanaGaslessTransaction(
+            solanaGaslessTransactionRepository.simulate(
                 userWalletId = any(), network = any(), transactionData = any(), feePayer = any(),
                 sponsorsRent = any(),
             )
@@ -170,7 +167,7 @@ internal class SolanaGaslessSwapResolverTest {
             assertThat(actual).isEqualTo(sponsorship(from))
             coVerify(exactly = 1) { solanaGaslessTransactionRepository.getFeePayer() }
             coVerify(exactly = 1) {
-                walletManagersFacade.simulateSolanaGaslessTransaction(
+                solanaGaslessTransactionRepository.simulate(
                     userWalletId = any(),
                     network = any(),
                     transactionData = any(),
@@ -287,7 +284,7 @@ internal class SolanaGaslessSwapResolverTest {
         // Assert
         assertThat(actual).isEqualTo(sponsorship(from, isRentSponsored = isRentEnabled))
         coVerify(exactly = 1) {
-            walletManagersFacade.simulateSolanaGaslessTransaction(
+            solanaGaslessTransactionRepository.simulate(
                 userWalletId = any(),
                 network = any(),
                 transactionData = any(),
@@ -314,7 +311,7 @@ internal class SolanaGaslessSwapResolverTest {
             // Assert
             assertThat(actual).isEqualTo(sponsorship(from, isRentSponsored = true))
             coVerify(exactly = 1) {
-                walletManagersFacade.simulateSolanaGaslessTransaction(
+                solanaGaslessTransactionRepository.simulate(
                     userWalletId = any(),
                     network = any(),
                     transactionData = any(),
@@ -332,7 +329,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
         coEvery {
-            walletManagersFacade.simulateSolanaGaslessTransaction(
+            solanaGaslessTransactionRepository.simulate(
                 userWalletId = any(), network = any(), transactionData = any(), feePayer = "FeePayer",
                 sponsorsRent = any(),
             )
@@ -356,7 +353,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
         coEvery {
-            walletManagersFacade.simulateSolanaGaslessTransaction(
+            solanaGaslessTransactionRepository.simulate(
                 userWalletId = any(), network = any(), transactionData = any(), feePayer = any(),
                 sponsorsRent = any(),
             )
@@ -415,7 +412,7 @@ internal class SolanaGaslessSwapResolverTest {
         // Assert
         assertThat(actual).isEqualTo(feeOnlySponsorship(from))
         coVerify(exactly = 0) {
-            walletManagersFacade.simulateSolanaGaslessTransaction(any(), any(), any(), any(), any())
+            solanaGaslessTransactionRepository.simulate(any(), any(), any(), any(), any())
         }
     }
 
@@ -447,7 +444,7 @@ internal class SolanaGaslessSwapResolverTest {
         // Assert
         assertThat(actual).isEqualTo(feeOnlySponsorship(from).right())
         coVerify(exactly = 1) {
-            walletManagersFacade.simulateSolanaGaslessTransaction(
+            solanaGaslessTransactionRepository.simulate(
                 userWalletId = userWalletId,
                 network = network,
                 transactionData = depositTransfer,
@@ -463,7 +460,7 @@ internal class SolanaGaslessSwapResolverTest {
         val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
         coEvery {
-            walletManagersFacade.simulateSolanaGaslessTransaction(
+            solanaGaslessTransactionRepository.simulate(
                 userWalletId = any(), network = any(), transactionData = any(), feePayer = any(), sponsorsRent = any(),
             )
         } returns Result.Success(SolanaGaslessSimulation.Failed(error = "InsufficientFundsForRent", logs = emptyList()))
@@ -488,7 +485,7 @@ internal class SolanaGaslessSwapResolverTest {
             // Assert
             assertThat(actual).isEqualTo(SolanaGaslessError.ServiceUnavailable(code = null).left())
             coVerify(exactly = 0) {
-                walletManagersFacade.simulateSolanaGaslessTransaction(
+                solanaGaslessTransactionRepository.simulate(
                     userWalletId = any(), network = any(), transactionData = any(), feePayer = any(), sponsorsRent = any(),
                 )
             }
@@ -563,7 +560,6 @@ internal class SolanaGaslessSwapResolverTest {
     private fun createResolver() = SolanaGaslessSwapResolver(
         swapFeatureToggles = swapFeatureToggles,
         solanaGaslessTransactionRepository = solanaGaslessTransactionRepository,
-        walletManagersFacade = walletManagersFacade,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
     )
 

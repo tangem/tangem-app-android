@@ -37,6 +37,7 @@ object NotificationsFactory {
             is GetFeeError.GaslessError.TronActivationRateLimited -> addActivationRateLimited(feeError, onReload)
             is GetFeeError.DataError,
             is GetFeeError.UnknownError,
+            is GetFeeError.SimulationError,
             -> add(
                 NotificationUM.Warning.NetworkFeeUnreachable(onReload),
             )
@@ -91,7 +92,9 @@ object NotificationsFactory {
                 )
             }
             is GetFeeError.GaslessError.TronActivationRateLimited -> addActivationRateLimited(feeError, onReload)
-            is GetFeeError.UnknownError -> add(
+            is GetFeeError.UnknownError,
+            is GetFeeError.SimulationError,
+            -> add(
                 NotificationUM.Warning.NetworkFeeUnreachable(onReload),
             )
             else -> {

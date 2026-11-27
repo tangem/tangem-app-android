@@ -8,6 +8,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
+import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -18,6 +19,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import java.math.BigDecimal
+
+private const val PULL_TO_REFRESH_ATTEMPTS = 2
 
 @HiltAndroidTest
 class StakingTest : BaseTestCase() {
@@ -74,10 +77,18 @@ class StakingTest : BaseTestCase() {
             step("Set WireMock scenario: '$capacityScenario' to state: '$capacityAvailableState'") {
                 setWireMockScenarioState(scenarioName = capacityScenario, state = capacityAvailableState)
             }
-            step("Pull to refresh until 'Available staking block' is displayed once the vault has free capacity") {
+            step("Pull to refresh 'Token details' screen to re-fetch the vault limits") {
+                repeat(PULL_TO_REFRESH_ATTEMPTS) { pullToRefreshTokenDetails() }
+            }
+            step("Wait until 'Token details' refresh is finished") {
+                waitUntilTokenBalanceIsLoaded()
+            }
+            step("Click on 'Back' button to return to 'Main' screen") {
+                tapBackButton()
+            }
+            step("Assert 'APY' badge is displayed on the '$tokenTitle' token row once the vault has free capacity") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    pullToRefreshTokenDetails()
-                    onTokenDetailsScreen { availableStakingBlock.assertIsDisplayed() }
+                    onMainScreen { tokenEarnApyBadge(tokenTitle).assertIsDisplayed() }
                 }
             }
         }

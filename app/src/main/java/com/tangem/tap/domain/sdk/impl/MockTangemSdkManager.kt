@@ -2,6 +2,7 @@ package com.tangem.tap.domain.sdk.impl
 
 import androidx.annotation.DrawableRes
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
@@ -253,7 +254,7 @@ class MockTangemSdkManager(
         hash: String,
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, WithdrawalSignatureResult> {
-        error("Not implemented")
+        return WithdrawalSignatureResult.Success(signature = "12".repeat(n = 64) + "1b").right()
     }
 
     // endregion

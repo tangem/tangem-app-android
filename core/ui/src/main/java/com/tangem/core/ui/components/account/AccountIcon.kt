@@ -31,8 +31,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.assets.il_account_gacha
+import com.tangem.core.ui.res.generated.assets.il_account_magic_ball
+import com.tangem.core.ui.res.generated.assets.il_account_safe
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_magic_ball_24
 
 enum class AccountIconSize {
     Default,
@@ -87,6 +88,24 @@ fun AccountResIcon(imageVector: ImageVector, color: Color, size: AccountIconSize
     )
 }
 
+/** Draws an `il_account_*` illustration so its glyph matches the plain icons of the same [size]. */
+@Composable
+private fun AccountIllustrationIcon(
+    imageVector: ImageVector,
+    color: Color,
+    size: AccountIconSize,
+    modifier: Modifier = Modifier,
+) {
+    AccountGlyphIcon(
+        imageVector = imageVector,
+        glyphTint = TangemTheme.colors3.text.staticDark.primary.copy(alpha = ACCOUNT_GLYPH_ALPHA),
+        color = color,
+        size = size,
+        isIllustration = true,
+        modifier = modifier,
+    )
+}
+
 private const val ACCOUNT_GLYPH_ALPHA = 0.8f
 
 @Composable
@@ -96,6 +115,7 @@ private fun AccountGlyphIcon(
     color: Color,
     size: AccountIconSize,
     modifier: Modifier = Modifier,
+    isIllustration: Boolean = false,
 ) {
     val boxSize by animateDpAsState(
         targetValue = size.toBoxSize(),
@@ -118,7 +138,8 @@ private fun AccountGlyphIcon(
             .background(color),
     ) {
         Icon(
-            modifier = Modifier.size(iconSize),
+            // An illustration's 48 canvas is twice the 24 canvas the icon sizes were set for, padding included
+            modifier = if (isIllustration) Modifier.requiredSize(iconSize * 2) else Modifier.size(iconSize),
             tint = glyphTint,
             imageVector = imageVector,
             contentDescription = null,
@@ -222,7 +243,7 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
 
 @Composable
 fun PredictionAccountResIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
-    AccountResIcon(
+    AccountIllustrationIcon(
         imageVector = PredictionAccountIcon.imageVector,
         color = PredictionAccountIcon.color,
         size = size,
@@ -232,7 +253,7 @@ fun PredictionAccountResIcon(size: AccountIconSize, modifier: Modifier = Modifie
 
 @Composable
 fun CollectiblesAccountResIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
-    AccountResIcon(
+    AccountIllustrationIcon(
         imageVector = CollectiblesAccountIcon.imageVector,
         color = CollectiblesAccountIcon.color,
         size = size,
@@ -240,11 +261,21 @@ fun CollectiblesAccountResIcon(size: AccountIconSize, modifier: Modifier = Modif
     )
 }
 
-/** Art of the Prediction account, shared by the account icon and the wallet row, so both change together. */
+@Composable
+fun MoneyAccountResIcon(color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountIllustrationIcon(
+        imageVector = Icons.il_account_safe,
+        color = color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
+/** Art of the Prediction account, shared by the account icon and the feed block, so both change together. */
 object PredictionAccountIcon {
 
     val imageVector: ImageVector
-        get() = Icons.ic_magic_ball_24
+        get() = Icons.il_account_magic_ball
     val color: Color
         @Composable get() = TangemTheme.colors3.bg.accent.violet
 }

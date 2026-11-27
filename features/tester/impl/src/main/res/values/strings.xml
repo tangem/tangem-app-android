@@ -19,6 +19,9 @@
     <string name="usedesk_token_ttl_title" translatable="false">Usedesk chat token TTL</string>
     <string name="usedesk_token_ttl_custom" translatable="false">Custom (minutes)</string>
     <string name="share_logs" translatable="false">Share logs</string>
+    <string name="upgrade_banner_check_threshold" translatable="false">Upgrade banner: check balance in USD</string>
+    <string name="upgrade_banner_check_threshold_hint" translatable="false">Balance in USD</string>
+    <string name="upgrade_banner_reset_threshold" translatable="false">Upgrade banner: reset threshold flag</string>
     <string name="test_push" translatable="false">Test push</string>
     <string name="accounts" translatable="false">Wallets (Accounts)</string>
     <string name="news" translatable="false">News</string>

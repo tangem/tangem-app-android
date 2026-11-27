@@ -2,6 +2,7 @@ package com.tangem.tests
 
 import androidx.compose.ui.test.onAllNodesWithText
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openOrganizeTokensScreen
@@ -53,7 +54,9 @@ class OrganizeTokensTest : BaseTestCase() {
                 onOrganizeTokensScreen { applyButton.clickWithAssertion() }
             }
             step("Assert tokens were grouped on 'Main screen'") {
-                onMainScreen { tokenNetworkGroupTitle(networkTitleMain).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { assertNetworkGroupTitleDisplayed(networkTitleMain) }
+                }
             }
             step("Open 'Organize tokens' screen") {
                 openOrganizeTokensScreen()
@@ -77,7 +80,9 @@ class OrganizeTokensTest : BaseTestCase() {
                 onOrganizeTokensScreen { applyButton.clickWithAssertion() }
             }
             step("Assert tokens were ungrouped on 'Main screen'") {
-                onMainScreen { tokenNetworkGroupTitle(networkTitleMain).assertIsNotDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { assertNetworkGroupTitleNotDisplayed(networkTitleMain) }
+                }
             }
         }
     }

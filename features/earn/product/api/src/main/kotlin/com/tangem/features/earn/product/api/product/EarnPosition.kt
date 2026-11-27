@@ -19,7 +19,11 @@ sealed interface EarnPositionState {
     data object Unknown : EarnPositionState
 }
 
-/** @property cryptoAmount without pending withdrawals */
+/**
+ * @property cryptoAmount without pending withdrawals
+ * @property rows the user's money is an [EarnValue.Amount], never a text: the Info screen hides amounts while balance
+ * hiding is on and shows every other value as is
+ */
 data class EarnPosition(
     val cryptoAmount: BigDecimal,
     val earned: BigDecimal?,

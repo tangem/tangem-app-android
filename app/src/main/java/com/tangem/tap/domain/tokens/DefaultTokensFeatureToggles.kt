@@ -8,10 +8,6 @@ internal class DefaultTokensFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TokensFeatureToggles {
 
-    override val isPluggableBalanceSourcesEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED)
-
     override val isYieldContributionEnabled: Boolean
-        get() = isPluggableBalanceSourcesEnabled &&
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED)
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED)
 }

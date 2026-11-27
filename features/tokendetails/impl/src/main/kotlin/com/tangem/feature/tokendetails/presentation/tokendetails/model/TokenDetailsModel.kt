@@ -61,6 +61,7 @@ import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.accruingContributions
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -97,6 +98,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
+import com.tangem.domain.yield.supply.usecase.GetAccruingBalanceUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -107,6 +109,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
+import com.tangem.features.earn.api.overview.EarnOverviewSupplier
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
@@ -119,6 +122,7 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.logging.TangemLogger
@@ -127,6 +131,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onEmpty
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -175,6 +180,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
+    private val getAccruingBalanceUseCase: GetAccruingBalanceUseCase,
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
     private val isXpubSupportedUseCase: IsXpubSupportedUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
@@ -191,6 +197,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
+    private val earnOverviewSupplier: EarnOverviewSupplier,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -217,6 +224,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val buttonsJobHolder = JobHolder()
     private val stakingJobHolder = JobHolder()
     private val yieldSupplyBalanceJobHolder = JobHolder()
+    private var accruingTickInputs: AccruingTickInputs? = null
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
     private val redesignBalanceJobHolder = JobHolder()
     private val redesignEarnJobHolder = JobHolder()
@@ -338,6 +346,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
+        observeTickingBalance()
     }
 
     private fun handleBalanceHiding() {
@@ -506,7 +515,6 @@ internal class TokenDetailsModel @Inject constructor(
                     updateButtons(currencyStatus = status)
                     updateWarnings(status)
                     subscribeOnUpdateStakingInfo(status)
-                    subscribeOnYieldSupplyBalanceIfActive(status)
                 }
                 currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
             }
@@ -515,12 +523,36 @@ internal class TokenDetailsModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
-        if (status.value.yieldSupply?.isActive == true) {
-            if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
-                return
+    /** The ticking total carries the currency symbol, so the selected currency restarts it too */
+    private fun observeTickingBalance() {
+        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .map { it.status }
+            .distinctUntilChanged()
+            .combine(selectedAppCurrencyFlow) { status, appCurrency -> status to appCurrency }
+            .onEach { (status, appCurrency) -> subscribeOnTickingBalance(status, appCurrency) }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnTickingBalance(status: CryptoCurrencyStatus, appCurrency: AppCurrency) {
+        val tickingBalance = when {
+            status.value.yieldSupply?.isActive == true -> {
+                accruingTickInputs = null
+                if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
+                    return
+                }
+                yieldSupplyGetRewardsBalanceUseCase(status, appCurrency)
             }
-            yieldSupplyGetRewardsBalanceUseCase(status = status, appCurrency = selectedAppCurrencyFlow.value)
+            status.value.accruingContributions().isNotEmpty() -> {
+                val inputs = AccruingTickInputs.of(status, appCurrency)
+                if (yieldSupplyBalanceJobHolder.isActive && inputs == accruingTickInputs) return
+                accruingTickInputs = inputs
+                getAccruingBalanceUseCase(status, appCurrency).onEmpty { emit(YieldSupplyRewardBalance.empty()) }
+            }
+            else -> null
+        }
+        if (tickingBalance != null) {
+            tickingBalance
                 .onEach { formatted ->
                     uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(formatted)
                     redesignStateController.update(SetYieldSupplyBalanceTransformer(formatted))
@@ -529,6 +561,7 @@ internal class TokenDetailsModel @Inject constructor(
                 .launchIn(modelScope)
                 .saveIn(yieldSupplyBalanceJobHolder)
         } else {
+            accruingTickInputs = null
             yieldSupplyBalanceJobHolder.cancel()
             uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
                 YieldSupplyRewardBalance.empty(),
@@ -1650,13 +1683,18 @@ internal class TokenDetailsModel @Inject constructor(
             }
         }
 
-        combine(
-            flow = statusFlow,
+        val isEarnBannerShownFlow = earnOverviewSupplier(userWalletId)
+            .map { overviews -> overviews[cryptoCurrency.id]?.banner != null }
+            .distinctUntilChanged()
+
+        combine6(
+            flow1 = statusFlow,
             flow2 = availabilityFlow,
             flow3 = entryInfoFlow,
             flow4 = selectedAppCurrencyFlow,
             flow5 = redesignStateController.isBalanceHidden,
-        ) { status, availability, entryInfo, appCurrency, isBalanceHidden ->
+            flow6 = isEarnBannerShownFlow,
+        ) { status, availability, entryInfo, appCurrency, isBalanceHidden, isEarnBannerShown ->
             redesignStateController.update(
                 UpdateStakingNotificationTransformer(
                     cryptoCurrencyStatus = status,
@@ -1664,6 +1702,7 @@ internal class TokenDetailsModel @Inject constructor(
                     stakingEntryInfo = entryInfo,
                     appCurrency = appCurrency,
                     isBalanceHidden = isBalanceHidden,
+                    isEarnBannerShown = isEarnBannerShown,
                     clickIntents = this,
                 ),
             )

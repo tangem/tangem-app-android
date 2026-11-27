@@ -28,32 +28,50 @@ class TangemHotWalletSigner @AssistedInject constructor(
         hashes: List<ByteArray>,
         publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
-        val wallet = userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(publicKey.seedKey) }
-            ?: return CompletionResult.Failure(
-                TangemSdkError.ExceptionError(IllegalStateException("wallet is locked")),
-            )
+        val wallet = findWallet(publicKey) ?: return walletLockedFailure()
 
         val result = runSuspendCatching {
             hotWalletAccessor.signHashes(
                 hotWalletId = userWallet.hotWalletId,
                 dataToSign = listOf(
-                    DataToSign(
-                        curve = wallet.curve,
-                        hashes = hashes,
-                        derivationPath = publicKey.derivationPath,
-                    ),
+                    DataToSign(curve = wallet.curve, derivationPath = publicKey.derivationPath, hashes = hashes),
                 ),
             )
-        }.getOrElse { throwable ->
-            TangemLogger.e("Error", throwable)
-            return if (throwable is TangemSdkError) {
-                CompletionResult.Failure(throwable)
-            } else {
-                CompletionResult.Failure(TangemSdkError.ExceptionError(throwable))
-            }
-        }
+        }.getOrElse { return it.toSignFailure() }
 
         return CompletionResult.Success(result.map { it.signatures }.flatten())
+    }
+
+    override suspend fun sign(
+        publicKey: Wallet.PublicKey,
+        hashesProvider: suspend () -> List<ByteArray>,
+    ): CompletionResult<List<ByteArray>> {
+        val wallet = findWallet(publicKey) ?: return walletLockedFailure()
+
+        val result = runSuspendCatching {
+            hotWalletAccessor.signHashesPreparing(hotWalletId = userWallet.hotWalletId) {
+                listOf(
+                    DataToSign(
+                        curve = wallet.curve,
+                        derivationPath = publicKey.derivationPath,
+                        hashes = hashesProvider(),
+                    ),
+                )
+            }
+        }.getOrElse { return it.toSignFailure() }
+
+        return CompletionResult.Success(result.map { it.signatures }.flatten())
+    }
+
+    private fun findWallet(publicKey: Wallet.PublicKey) =
+        userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(publicKey.seedKey) }
+
+    private fun <T> walletLockedFailure(): CompletionResult<T> =
+        CompletionResult.Failure(TangemSdkError.ExceptionError(IllegalStateException("wallet is locked")))
+
+    private fun <T> Throwable.toSignFailure(): CompletionResult<T> {
+        TangemLogger.e("Error", this)
+        return CompletionResult.Failure(this as? TangemSdkError ?: TangemSdkError.ExceptionError(this))
     }
 
     override suspend fun multiSign(
@@ -64,11 +82,7 @@ class TangemHotWalletSigner @AssistedInject constructor(
             hotWalletAccessor.signHashes(
                 hotWalletId = userWallet.hotWalletId,
                 dataToSign = dataToSign.map { signData ->
-                    val wallet =
-                        userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(publicKey.seedKey) }
-                            ?: return CompletionResult.Failure(
-                                TangemSdkError.ExceptionError(IllegalStateException("wallet is locked")),
-                            )
+                    val wallet = findWallet(publicKey) ?: return walletLockedFailure()
 
                     DataToSign(
                         curve = wallet.curve,
@@ -77,14 +91,7 @@ class TangemHotWalletSigner @AssistedInject constructor(
                     )
                 },
             )
-        }.getOrElse { throwable ->
-            TangemLogger.e("Error", throwable)
-            return if (throwable is TangemSdkError) {
-                CompletionResult.Failure(throwable)
-            } else {
-                CompletionResult.Failure(TangemSdkError.ExceptionError(throwable))
-            }
-        }
+        }.getOrElse { return it.toSignFailure() }
 
         return CompletionResult.Success(
             result.mapIndexed { index, data ->

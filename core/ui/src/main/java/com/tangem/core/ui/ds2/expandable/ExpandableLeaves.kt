@@ -14,8 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -89,6 +91,16 @@ internal fun ExpandableTitleAnchor(title: TextReference, modifier: Modifier = Mo
     )
 }
 
+@Composable
+internal fun ExpandableTitleIcon(imageVector: ImageVector, modifier: Modifier = Modifier) {
+    Icon(
+        imageVector = imageVector,
+        contentDescription = null,
+        tint = TangemTheme.colors3.icon.secondary,
+        modifier = modifier.size(16.dp),
+    )
+}
+
 /** The 12dp separator dot, shared by the collapsed subtitle and the expanded heading. */
 @Composable
 internal fun ExpandableDot(modifier: Modifier = Modifier) {
@@ -102,11 +114,15 @@ internal fun ExpandableDot(modifier: Modifier = Modifier) {
 
 /** Secondary caption line — the collapsed subtitle parts and the compact copies in the expanded heading. */
 @Composable
-internal fun ExpandableCaptionText(text: TextReference, modifier: Modifier = Modifier) {
+internal fun ExpandableCaptionText(
+    text: TextReference,
+    modifier: Modifier = Modifier,
+    color: Color = TangemTheme.colors3.text.secondary,
+) {
     Text(
         text = text.resolveReference(),
         style = TangemTheme.typography3.caption.medium,
-        color = TangemTheme.colors3.text.secondary,
+        color = color,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,

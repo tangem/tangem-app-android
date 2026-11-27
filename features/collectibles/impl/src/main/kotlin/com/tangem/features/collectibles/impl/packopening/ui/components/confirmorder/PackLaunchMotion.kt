@@ -2,7 +2,7 @@ package com.tangem.features.collectibles.impl.packopening.ui.components.confirmo
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
+import com.tangem.features.collectibles.impl.common.ui.rewardcard.CAMERA_PX_PER_INCH
 
 internal object PackLaunchMotion {
 
@@ -61,8 +61,7 @@ internal object PackLaunchMotion {
 
     fun alpha(progress: ConfirmProgress): Float = if (progress.launch >= 1f) 0f else 1f
 
-    fun cameraDistance(packWidthPx: Float): Float =
-        packWidthPx * PERSPECTIVE_OF_PACK_WIDTH / PackOpeningConst.CAMERA_PX_PER_INCH
+    fun cameraDistance(packWidthPx: Float): Float = packWidthPx * PERSPECTIVE_OF_PACK_WIDTH / CAMERA_PX_PER_INCH
 
     fun contentShift(exit: Float, isDelayed: Boolean): Dp = lerp(0.dp, CONTENT_SHIFT, contentProgress(exit, isDelayed))
 

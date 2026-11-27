@@ -248,9 +248,78 @@ class SendConfirmationNotificationsTransformerV2Test {
         )
 
     @Test
-    fun `GIVEN the first joint operation WHEN transform THEN the note names the deployment share of the fee`() = runTest {
-        // Arrange — 300 000 deployment gas at 2 gwei = 0.0006 ETH, worth $1.20 at $2000
-        val fee = Fee.Ethereum.Legacy(
+    fun `GIVEN the first joint operation and a fiat rate WHEN transform THEN the note names the setup fee in fiat`() =
+        runTest {
+            // Arrange — 300 000 deployment gas at 2 gwei = 0.0006 ETH, worth $1.20 at $2000
+            val feeSelectorUM = createDeploymentFeeSelectorUM(
+                feeFiatRateUM = FeeFiatRateUM(rate = BigDecimal("2000"), appCurrency = appCurrency),
+            )
+            val initialState = createFirstJointOperationConfirmUM()
+
+            // Act
+            val actual = transformer(feeSelectorUM).transform(initialState) as ConfirmUM.Content
+
+            // Assert
+            // The symbol position follows the locale, like every other amount on the screen
+            val note = actual.setupFeeNote as TextReference.Res
+            Truth.assertThat(note.id).isEqualTo(R.string.joint_account_send_setup_fee_included)
+            Truth.assertThat(note.formatArgs).hasSize(1)
+            val setupFeeText = note.formatArgs.single() as String
+            Truth.assertThat(setupFeeText).contains("$1.20")
+            Truth.assertThat(setupFeeText).doesNotContain("ETH")
+        }
+
+    @Test
+    fun `GIVEN the first joint operation and no fiat rate WHEN transform THEN the note names the setup fee in crypto`() =
+        runTest {
+            // Arrange
+            val feeSelectorUM = createDeploymentFeeSelectorUM(feeFiatRateUM = null)
+            val initialState = createFirstJointOperationConfirmUM()
+
+            // Act
+            val actual = transformer(feeSelectorUM).transform(initialState) as ConfirmUM.Content
+
+            // Assert
+            val note = actual.setupFeeNote as TextReference.Res
+            Truth.assertThat(note.id).isEqualTo(R.string.joint_account_send_setup_fee_included)
+            val setupFeeText = note.formatArgs.single() as String
+            Truth.assertThat(setupFeeText).contains("0.0006")
+            Truth.assertThat(setupFeeText).contains("ETH")
+        }
+
+    @Test
+    fun `GIVEN the first joint operation paid in a Smart Gas token WHEN transform THEN the note names the setup fee`() =
+        runTest {
+            // Arrange — the refund is gasPrice × gasLimit: 2 USDT units × 500 000 gas = 1 USDT,
+            // so the deployment share is 300 000 gas × 2 units = 0.6 USDT, worth $0.60 at $1
+            val fee = Fee.Ethereum.TokenCurrency(
+                amount = com.tangem.blockchain.common.Amount(
+                    currencySymbol = "USDT",
+                    value = BigDecimal("1"),
+                    decimals = 6,
+                ),
+                gasLimit = BigInteger("500000"),
+                coinPriceInToken = BigInteger("3000000000"),
+                feeTransferGasLimit = BigInteger.ZERO,
+                baseGas = BigInteger("100000"),
+            )
+            val feeSelectorUM = createDeploymentFeeSelectorUM(
+                feeFiatRateUM = FeeFiatRateUM(rate = BigDecimal("1"), appCurrency = appCurrency),
+                fee = fee,
+            )
+
+            // Act
+            val actual = transformer(feeSelectorUM).transform(createFirstJointOperationConfirmUM()) as ConfirmUM.Content
+
+            // Assert
+            val note = actual.setupFeeNote as TextReference.Res
+            Truth.assertThat(note.id).isEqualTo(R.string.joint_account_send_setup_fee_included)
+            Truth.assertThat(note.formatArgs.single() as String).contains("$0.60")
+        }
+
+    private fun createDeploymentFeeSelectorUM(
+        feeFiatRateUM: FeeFiatRateUM?,
+        fee: Fee = Fee.Ethereum.Legacy(
             amount = com.tangem.blockchain.common.Amount(
                 currencySymbol = "ETH",
                 value = BigDecimal("0.001"),
@@ -258,29 +327,19 @@ class SendConfirmationNotificationsTransformerV2Test {
             ),
             gasLimit = BigInteger("500000"),
             gasPrice = BigInteger("2000000000"),
-        )
-        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001")).copy(
+        ),
+    ): FeeSelectorUM.Content {
+        return createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001")).copy(
             fees = TransactionFee.Single(fee),
             feeItems = persistentListOf(FeeItem.Market(fee)),
             selectedFeeItem = FeeItem.Market(fee),
-            feeFiatRateUM = FeeFiatRateUM(rate = BigDecimal("2000"), appCurrency = appCurrency),
+            feeFiatRateUM = feeFiatRateUM,
         )
-        val initialState = createTestConfirmUM().copy(
-            signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3, isFirstOperation = true),
-        )
-
-        // Act
-        val actual = transformer(feeSelectorUM).transform(initialState) as ConfirmUM.Content
-
-        // Assert
-        // The symbol position follows the locale, like every other amount on the screen
-        val note = actual.setupFeeNote as TextReference.Res
-        Truth.assertThat(note.id).isEqualTo(R.string.joint_account_send_setup_fee_note)
-        val setupFeeText = note.formatArgs[1] as String
-        Truth.assertThat(setupFeeText).contains("$1.20")
-        Truth.assertThat(setupFeeText).contains("0.0006")
-        Truth.assertThat(setupFeeText).contains("ETH")
     }
+
+    private fun createFirstJointOperationConfirmUM() = createTestConfirmUM().copy(
+        signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3, isFirstOperation = true),
+    )
 
     @Test
     fun `GIVEN a joint operation on a deployed Safe WHEN transform THEN there is no setup fee note`() = runTest {

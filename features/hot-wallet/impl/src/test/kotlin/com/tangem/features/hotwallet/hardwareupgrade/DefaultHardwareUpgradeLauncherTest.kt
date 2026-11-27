@@ -1,7 +1,9 @@
 package com.tangem.features.hotwallet.hardwareupgrade
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.storiesv2.GetHardwareUpgradeStoriesVariantUseCase
 import com.tangem.features.storiesv2.HardwareUpgradeStoriesVariant
@@ -11,9 +13,7 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -25,21 +25,25 @@ import org.junit.jupiter.params.provider.MethodSource
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultHardwareUpgradeLauncherTest {
 
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
     private val getHardwareUpgradeStoriesVariantUseCase: GetHardwareUpgradeStoriesVariantUseCase = mockk()
     private val storiesV2Prefetcher: StoriesV2Prefetcher = mockk(relaxUnitFun = true)
 
     private val launcher = DefaultHardwareUpgradeLauncher(
-        appRouter = appRouter,
+        router = router,
         getHardwareUpgradeStoriesVariantUseCase = getHardwareUpgradeStoriesVariantUseCase,
         storiesV2Prefetcher = storiesV2Prefetcher,
     )
 
+    private var stack: List<Route> = emptyList()
+
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, getHardwareUpgradeStoriesVariantUseCase, storiesV2Prefetcher)
-        every { appRouter.stack } returns emptyList()
-        every { appRouter.push(any(), any()) } just runs
+        clearMocks(router, getHardwareUpgradeStoriesVariantUseCase, storiesV2Prefetcher)
+        stack = listOf(AppRoute.Wallet)
+        every { router.navigate(any(), any()) } answers {
+            stack = firstArg<(List<Route>) -> List<Route>>().invoke(stack)
+        }
     }
 
     @ParameterizedTest
@@ -53,7 +57,7 @@ internal class DefaultHardwareUpgradeLauncherTest {
             launcher.launch(userWalletId = USER_WALLET_ID, source = SOURCE)
 
             // Assert
-            verify(exactly = 1) { appRouter.push(model.expectedRoute, any()) }
+            assertThat(stack).containsExactly(AppRoute.Wallet, model.expectedRoute).inOrder()
         }
 
     @Test
@@ -61,13 +65,13 @@ internal class DefaultHardwareUpgradeLauncherTest {
         // Arrange
         val storiesRoute = AppRoute.HardwareUpgradeStories(userWalletId = USER_WALLET_ID, source = SOURCE)
         coEvery { getHardwareUpgradeStoriesVariantUseCase() } returns HardwareUpgradeStoriesVariant.TREATMENT
-        every { appRouter.stack } returns listOf(storiesRoute)
+        stack = listOf(AppRoute.Wallet, storiesRoute)
 
         // Act
         launcher.launch(userWalletId = USER_WALLET_ID, source = SOURCE)
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        assertThat(stack).containsExactly(AppRoute.Wallet, storiesRoute).inOrder()
     }
 
     @ParameterizedTest
@@ -97,7 +101,7 @@ internal class DefaultHardwareUpgradeLauncherTest {
         ),
         VariantModel(
             variant = HardwareUpgradeStoriesVariant.CONTROL,
-            expectedRoute = AppRoute.WalletHardwareBackup(userWalletId = USER_WALLET_ID),
+            expectedRoute = AppRoute.WalletHardwareBackup(userWalletId = USER_WALLET_ID, source = SOURCE),
         ),
     )
 
@@ -105,6 +109,6 @@ internal class DefaultHardwareUpgradeLauncherTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
-        val SOURCE = AppRoute.HardwareUpgradeStories.Source.WALLET_SETTINGS
+        val SOURCE = AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS
     }
 }

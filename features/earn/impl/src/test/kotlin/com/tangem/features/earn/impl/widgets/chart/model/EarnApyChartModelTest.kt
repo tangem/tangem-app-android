@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.earn.api.overview.EarnProductRate
 import com.tangem.features.earn.api.overview.EarnRateType
@@ -14,11 +16,20 @@ import com.tangem.features.earn.product.api.product.EarnApyPoint
 import com.tangem.features.earn.product.api.product.EarnPeriod
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.logging.Severity
 import com.tangem.utils.logging.TangemLogger
+import io.mockk.clearMocks
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -43,6 +54,8 @@ internal class EarnApyChartModelTest {
         EarnPeriod(id = "6m", label = stringReference("6M")),
     )
 
+    private val callback: EarnApyChartComponent.ModelCallback = mockk(relaxed = true)
+
     private val requested = mutableListOf<String>()
     private val logs = mutableListOf<Pair<Severity, String>>()
 
@@ -50,6 +63,7 @@ internal class EarnApyChartModelTest {
 
     @BeforeEach
     fun setUp() {
+        clearMocks(callback)
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
         requested.clear()
@@ -205,6 +219,53 @@ internal class EarnApyChartModelTest {
     }
 
     @Test
+    fun `GIVEN default 6m WHEN clicking 1m THEN onPeriodChange 1m once`() = runTest {
+        // Arrange
+        val model = createModel { historyOf(count = 3).right() }
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[0].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { callback.onPeriodChange(periods[0]) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN default 6m WHEN clicking 6m THEN no callback`() = runTest {
+        // Arrange
+        val model = createModel { historyOf(count = 3).right() }
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[2].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { callback.onPeriodChange(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN 1m selected WHEN clicking 1m again THEN no second callback`() = runTest {
+        // Arrange
+        val model = createModel { historyOf(count = 3).right() }
+        advanceUntilIdle()
+        model.uiState.value.periods[0].onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[0].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { callback.onPeriodChange(periods[0]) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN selected bar WHEN period changed THEN selection is reset`() = runTest {
         // Arrange
         val model = createModel { historyOf(count = 3).right() }
@@ -344,9 +405,318 @@ internal class EarnApyChartModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN loaded chart WHEN current rate changes THEN header follows it and the bars and selection stay`() =
+        runTest {
+            // Arrange
+            val rate = MutableStateFlow(rate("0.055"))
+            val model = createModel(currentRate = rate) { historyOf(count = 3).right() }
+            advanceUntilIdle()
+            model.uiState.value.onBarSelected(1)
+            val before = model.uiState.value
+
+            // Act
+            rate.value = rate("0.0612")
+            advanceUntilIdle()
+
+            // Assert
+            val expected = before.copy(currentRate = stringReference("6.12%"))
+            assertThat(model.uiState.value).isEqualTo(expected)
+            assertThat(model.uiState.value.selectedBar).isEqualTo(1)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN loading chart WHEN current rate changes THEN it keeps loading with the new rate`() = runTest {
+        // Arrange
+        val rate = MutableStateFlow(rate("0.055"))
+        val answer = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+        val model = createModel(currentRate = rate) { answer.await() }
+        runCurrent()
+
+        // Act
+        rate.value = rate("0.0612")
+        runCurrent()
+
+        // Assert
+        val actual = model.uiState.value
+        assertThat(actual.isLoading).isTrue()
+        assertThat(actual.currentRate).isEqualTo(stringReference("6.12%"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN rate changed while history is pending WHEN history arrives THEN header shows the latest rate`() =
+        runTest {
+            // Arrange
+            val rate = MutableStateFlow(rate("0.055"))
+            val answer = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+            val model = createModel(currentRate = rate) { answer.await() }
+            runCurrent()
+            rate.value = rate("0.0612")
+            runCurrent()
+
+            // Act
+            answer.complete(historyOf(count = 3).right())
+            advanceUntilIdle()
+
+            // Assert
+            val actual = model.uiState.value
+            assertThat(actual.isLoading).isFalse()
+            assertThat(actual.currentRate).isEqualTo(stringReference("6.12%"))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN rate changed WHEN another period is requested THEN the new state keeps the latest rate`() = runTest {
+        // Arrange
+        val rate = MutableStateFlow(rate("0.055"))
+        val model = createModel(currentRate = rate) { historyOf(count = 3).right() }
+        advanceUntilIdle()
+        rate.value = rate("0.0612")
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.periods[1].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.currentRate).isEqualTo(stringReference("6.12%"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN rate type changes WHEN collected THEN titles switch from APY to APR`() = runTest {
+        // Arrange
+        val rate = MutableStateFlow(rate("0.055", EarnRateType.APY))
+        val model = createModel(currentRate = rate) { historyOf(count = 3).right() }
+        advanceUntilIdle()
+
+        // Act
+        rate.value = rate("0.055", EarnRateType.APR)
+        advanceUntilIdle()
+
+        // Assert
+        val actual = model.uiState.value
+        assertThat(actual.rateTitle).isEqualTo(resourceReference(R.string.earn_chart_current_apr))
+        assertThat(actual.average?.title).isEqualTo(resourceReference(R.string.earn_chart_average_apr))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN loaded chart WHEN a reload signal arrives THEN the selected period is requested again and the new bars replace the old without a loading state`() =
+        runTest {
+            // Arrange
+            val reloads = MutableSharedFlow<Unit>()
+            var calls = 0
+            val model = createModel(reloads = reloads) { period ->
+                requested += period.id
+                historyOf(count = if (++calls == 1) 3 else 2).right()
+            }
+            advanceUntilIdle()
+            val states = getEmittedValues(model.uiState)
+
+            // Act
+            reloads.emit(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(requested).containsExactly("6m", "6m").inOrder()
+            assertThat(model.uiState.value.bars).hasSize(2)
+            assertThat(states.map { it.isLoading }).doesNotContain(true)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a period tapped WHEN a reload signal arrives THEN that period is requested`() = runTest {
+        // Arrange
+        val reloads = MutableSharedFlow<Unit>()
+        val model = createModel(reloads = reloads) { period ->
+            requested += period.id
+            historyOf(count = 3).right()
+        }
+        advanceUntilIdle()
+        model.uiState.value.periods[1].onClick()
+        advanceUntilIdle()
+
+        // Act
+        reloads.emit(Unit)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requested).containsExactly("6m", "3m", "3m").inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN loaded chart WHEN a reload fails THEN the bars stay and the error is logged`() = runTest {
+        // Arrange
+        val reloads = MutableSharedFlow<Unit>()
+        var failing = false
+        val model = createModel(reloads = reloads) {
+            if (failing) IllegalStateException("boom").left() else historyOf(count = 3).right()
+        }
+        advanceUntilIdle()
+        val before = model.uiState.value
+        failing = true
+
+        // Act
+        reloads.emit(Unit)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isSameInstanceAs(before)
+        assertThat(logs.filter { it.first == Severity.Error }.map { it.second })
+            .containsExactly("Earn APY history reload failed, period 6m")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN failed chart WHEN a reload succeeds THEN the chart shows the new bars`() = runTest {
+        // Arrange
+        val reloads = MutableSharedFlow<Unit>()
+        val answers = listOf<Either<Throwable, EarnApyHistory>>(
+            IllegalStateException("boom").left(),
+            historyOf(count = 3).right(),
+        )
+        var calls = 0
+        val model = createModel(reloads = reloads) { answers[calls++] }
+        advanceUntilIdle()
+        assertThat(model.uiState.value.bars).isEmpty()
+
+        // Act
+        reloads.emit(Unit)
+        advanceUntilIdle()
+
+        // Assert
+        val actual = model.uiState.value
+        assertThat(actual.bars).hasSize(3)
+        assertThat(actual.isLoading).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN chart still loading WHEN a reload signal arrives THEN no second request is made`() = runTest {
+        // Arrange
+        val reloads = MutableSharedFlow<Unit>()
+        val answer = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+        val model = createModel(reloads = reloads) { period ->
+            requested += period.id
+            answer.await()
+        }
+        runCurrent()
+
+        // Act
+        reloads.emit(Unit)
+        runCurrent()
+
+        // Assert
+        assertThat(requested).containsExactly("6m")
+        answer.complete(historyOf(count = 3).right())
+        advanceUntilIdle()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a reload in flight WHEN another period is tapped and the reload answers late THEN only the tapped period shows`() =
+        runTest {
+            // Arrange
+            val reloads = MutableSharedFlow<Unit>()
+            val lateReload = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+            var reloading = false
+            val model = createModel(reloads = reloads) { period ->
+                when {
+                    reloading && period.id == "6m" -> lateReload.await()
+                    period.id == "3m" -> historyOf(count = 2).right()
+                    else -> historyOf(count = 3).right()
+                }
+            }
+            advanceUntilIdle()
+            reloading = true
+            reloads.emit(Unit)
+            runCurrent()
+
+            // Act
+            model.uiState.value.periods[1].onClick()
+            advanceUntilIdle()
+            lateReload.complete(historyOf(count = 5).right())
+            advanceUntilIdle()
+
+            // Assert
+            val actual = model.uiState.value
+            assertThat(actual.bars).hasSize(2)
+            assertThat(actual.periods.map { it.isSelected }).containsExactly(false, true, false).inOrder()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a reload in flight WHEN the current rate changes and the answer arrives THEN the header shows the latest rate`() =
+        runTest {
+            // Arrange
+            val reloads = MutableSharedFlow<Unit>()
+            val rate = MutableStateFlow(rate("0.055"))
+            val lateReload = CompletableDeferred<Either<Throwable, EarnApyHistory>>()
+            var reloading = false
+            val model = createModel(currentRate = rate, reloads = reloads) {
+                if (reloading) lateReload.await() else historyOf(count = 3).right()
+            }
+            advanceUntilIdle()
+            reloading = true
+            reloads.emit(Unit)
+            runCurrent()
+            rate.value = rate("0.0612")
+            runCurrent()
+
+            // Act
+            lateReload.complete(historyOf(count = 2).right())
+            advanceUntilIdle()
+
+            // Assert
+            val actual = model.uiState.value
+            assertThat(actual.bars).hasSize(2)
+            assertThat(actual.currentRate).isEqualTo(stringReference("6.12%"))
+            model.onDestroy()
+        }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ReloadSelection {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a bar selected WHEN a reload lands THEN the selection stays only while its index is inside the new bars`(
+            model: ReloadSelectionModel,
+        ) = runTest {
+            // Arrange
+            val reloads = MutableSharedFlow<Unit>()
+            var barCount = 3
+            val chart = createModel(reloads = reloads) { historyOf(count = barCount).right() }
+            advanceUntilIdle()
+            chart.uiState.value.onBarSelected(1)
+            barCount = model.newBars
+
+            // Act
+            reloads.emit(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(chart.uiState.value.selectedBar).isEqualTo(model.expected)
+            chart.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            ReloadSelectionModel(newBars = 3, expected = 1),
+            ReloadSelectionModel(newBars = 1, expected = null),
+        )
+    }
+
+    data class ReloadSelectionModel(val newBars: Int, val expected: Int?)
+
     private fun TestScope.createModel(
         periods: List<EarnPeriod> = this@EarnApyChartModelTest.periods,
         defaultPeriod: EarnPeriod = periods.last(),
+        currentRate: StateFlow<EarnProductRate> = MutableStateFlow(rate("0.055")),
+        reloads: Flow<Unit> = emptyFlow(),
         history: suspend (EarnPeriod) -> Either<Throwable, EarnApyHistory>,
     ): EarnApyChartModel = EarnApyChartModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -355,11 +725,16 @@ internal class EarnApyChartModelTest {
                 periods = periods,
                 defaultPeriod = defaultPeriod,
                 history = history,
-                currentRate = EarnProductRate(fraction = BigDecimal("0.055"), type = EarnRateType.APY),
+                currentRate = currentRate,
+                reloads = reloads,
+                callback = callback,
             ),
         ),
         converter = EarnApyChartConverter(),
     )
+
+    private fun rate(fraction: String, type: EarnRateType = EarnRateType.APY) =
+        EarnProductRate(fraction = BigDecimal(fraction), type = type)
 
     private fun historyOf(count: Int) = EarnApyHistory(
         points = List(count) { index ->

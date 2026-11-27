@@ -32,7 +32,6 @@ import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.components.TangemPayWithdrawHubComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -82,13 +81,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             TangemPayDetailsInitialRoute.CASHBACK,
             TangemPayDetailsInitialRoute.ORDER_CARD,
             -> TangemPayAccountDetailsInnerRoute.AccountDetails
-            TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> {
-                if (params.initialStatus.tariffPlan != null) {
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING)
-                } else {
-                    TangemPayAccountDetailsInnerRoute.AccountDetails
-                }
-            }
         }
     }
 
@@ -136,14 +128,11 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 tariffPlan = config.tariffPlan,
             ),
         )
-        is TangemPayAccountDetailsInnerRoute.SelectPlan -> selectPlanComponentFactory.create(
+        TangemPayAccountDetailsInnerRoute.SelectPlan -> selectPlanComponentFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPaySelectPlanComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
-                mode = when (config.source) {
-                    TangemPaySelectPlanSource.TIERS_ONBOARDING -> TangemPaySelectPlanComponent.Mode.TiersOnboarding
-                    TangemPaySelectPlanSource.CHANGE_PLAN -> TangemPaySelectPlanComponent.Mode.ChangePlan
-                },
+                mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
             ),
         )
         TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding ->

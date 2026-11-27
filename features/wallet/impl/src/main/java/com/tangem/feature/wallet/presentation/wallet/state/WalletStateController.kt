@@ -11,8 +11,11 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletSt
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +35,11 @@ internal class WalletStateController @Inject constructor() {
 
     val isInitialized: Boolean
         get() = value.selectedWalletIndex != NOT_INITIALIZED_WALLET_INDEX
+
+    val selectedWalletIdFlow: Flow<UserWalletId>
+        get() = uiState
+            .mapNotNull { state -> state.wallets2.getOrNull(state.selectedWalletIndex)?.walletsBalanceUM?.id }
+            .distinctUntilChanged()
 
     fun update(function: (WalletScreenState) -> WalletScreenState) {
         uiState.update(function = function)

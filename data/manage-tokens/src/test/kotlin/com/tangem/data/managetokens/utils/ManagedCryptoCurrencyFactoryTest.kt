@@ -61,12 +61,16 @@ internal class ManagedCryptoCurrencyFactoryTest {
         ),
     )
 
+    private val jointTokensResponse = tokensResponse.copy(
+        tokens = tokensResponse.tokens.map { it.copy(derivationPath = ownerPath.value) },
+    )
+
     @Test
     fun `GIVEN joint account WHEN create THEN the token is offered and marked added on the owner key path`() {
         // Act
         val items = factory.create(
             coinsResponse = coinsResponse,
-            tokensResponse = tokensResponse,
+            tokensResponse = jointTokensResponse,
             userWallet = userWallet,
             accountDerivation = AccountDerivation.Joint(ownerPath),
         )
@@ -75,6 +79,40 @@ internal class ManagedCryptoCurrencyFactoryTest {
         val token = items.single() as ManagedCryptoCurrency.Token
         assertThat(token.availableNetworks.map { it.network.derivationPath }).containsExactly(ownerPath)
         assertThat(token.addedIn.map { it.derivationPath }).containsExactly(ownerPath)
+    }
+
+    @Test
+    fun `GIVEN joint account with a token on another path WHEN create THEN the token is not marked added`() {
+        // Act
+        val items = factory.create(
+            coinsResponse = coinsResponse,
+            tokensResponse = tokensResponse.withTokenPath("m/44'/60'/0'/0/0"),
+            userWallet = userWallet,
+            accountDerivation = AccountDerivation.Joint(ownerPath),
+        )
+
+        // Assert
+        val token = items.single() as ManagedCryptoCurrency.Token
+        assertThat(token.addedIn).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN joint account with a token without an id WHEN createWithCustomTokens THEN no custom token is listed`() {
+        // Arrange
+        val customTokensResponse = jointTokensResponse.copy(
+            tokens = jointTokensResponse.tokens.map { it.copy(id = null) },
+        )
+
+        // Act
+        val items = factory.createWithCustomTokens(
+            coinsResponse = coinsResponse,
+            tokensResponse = customTokensResponse,
+            userWallet = userWallet,
+            accountDerivation = AccountDerivation.Joint(ownerPath),
+        )
+
+        // Assert
+        assertThat(items.filterIsInstance<ManagedCryptoCurrency.Custom>()).isEmpty()
     }
 
     @Test
@@ -106,6 +144,10 @@ internal class ManagedCryptoCurrencyFactoryTest {
 
         // Assert
         assertThat(items).isEmpty()
+    }
+
+    private fun UserTokensResponse.withTokenPath(path: String): UserTokensResponse {
+        return copy(tokens = tokens.map { it.copy(derivationPath = path) })
     }
 
     private companion object {

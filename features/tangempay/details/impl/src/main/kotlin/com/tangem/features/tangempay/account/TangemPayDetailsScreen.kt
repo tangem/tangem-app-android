@@ -17,8 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
@@ -26,7 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,9 +44,12 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.copy
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -62,6 +62,7 @@ import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.features.tangempay.common.PayContextMenuButton
+import com.tangem.features.tangempay.common.PayMenuButton
 import com.tangem.features.tangempay.common.TangemPayActionButton
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
@@ -78,7 +79,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.tangem.core.ui.R as CoreUiR
 
-private val InitialTopBarHeight: Dp = 64.dp
 private const val TOP_FADE_MID_STOP = 0.8f
 private const val TOP_FADE_MID_ALPHA = 0.8f
 
@@ -92,53 +92,45 @@ internal fun TangemPayDetailsScreen(
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    val density = LocalDensity.current
-    val statusBarHeight = with(density) { WindowInsets.systemBars.getTop(this).toDp() }
-    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
-    var topBarTotalHeight by remember { mutableStateOf(InitialTopBarHeight + statusBarHeight) }
     val rootBackground = TangemTheme.colors3.bg.primary
 
     val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
     val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
-    val hazeState = rememberHazeState()
     val buttonsHazeState = rememberHazeState()
 
-    CompositionLocalProvider(LocalHazeState provides hazeState) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(rootBackground),
-        ) {
-            // Material buttons inside the list can't blur the list's own haze source (Haze skips an ancestor
-            // source of the same state), so they sample a separate state backed by the plain background.
+    Box(modifier = modifier.fillMaxSize()) {
+        TangemTopBarScaffold(
+            containerColor = rootBackground,
+            topBar = { PayDetailsTopBar(config = state.topBarConfig) },
+        ) { contentPadding ->
+            val topBarHeight = contentPadding.calculateTopPadding()
+
+            // Material buttons inside the list can't blur the scaffold's haze source they sit in (Haze skips an
+            // ancestor source of the same state), so they sample a separate state backed by the plain background.
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .background(rootBackground)
                     .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
             )
 
             TangemPullToRefreshSlidingContainer(
                 config = state.pullToRefreshConfig,
-                indicatorOffset = topBarTotalHeight,
+                indicatorOffset = topBarHeight,
             ) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CONTENT)
-                        .hazeSourceTangem(state = hazeState)
                         .topFade(
-                            height = topBarTotalHeight,
+                            height = topBarHeight,
                             0f to rootBackground,
                             TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
                             1f to Color.Transparent,
                         ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     state = listState,
-                    contentPadding = PaddingValues(
-                        top = topBarTotalHeight,
-                        bottom = 16.dp + bottomBarHeight,
-                    ),
+                    contentPadding = contentPadding.copy(bottom = contentPadding.calculateBottomPadding() + 16.dp),
                 ) {
                     payDetailsBody(state = state, buttonsHazeState = buttonsHazeState)
                     state.cashbackBlockState?.let { cashbackState ->
@@ -167,16 +159,9 @@ internal fun TangemPayDetailsScreen(
                     with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
                 }
             }
-
-            PayDetailsTopBar(
-                config = state.topBarConfig,
-                onHeightChange = { measuredHeight ->
-                    if (topBarTotalHeight != measuredHeight) topBarTotalHeight = measuredHeight
-                },
-            )
-
-            expressState.bottomSheetSlot?.content(null)
         }
+
+        expressState.bottomSheetSlot?.content(null)
     }
 }
 
@@ -200,6 +185,16 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
                 ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
             }
+        }
+    }
+
+    state.kycAdditionalInfoBanner?.let { banner ->
+        item("kycAdditionalInfoBannerBlock") {
+            SpacerH12()
+            MessageBanner(
+                banner = banner,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         }
     }
 
@@ -350,16 +345,9 @@ private fun MessageBanner(banner: MessageBannerUM, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun PayDetailsTopBar(
-    config: TangemPayDetailsTopBarConfig,
-    onHeightChange: (Dp) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val density = LocalDensity.current
+private fun PayDetailsTopBar(config: TangemPayDetailsTopBarConfig, modifier: Modifier = Modifier) {
     TangemTopNavigation(
-        modifier = modifier.onSizeChanged { size ->
-            onHeightChange(with(density) { size.height.toDp() })
-        },
+        modifier = modifier,
         contentAlign = TangemTopNavigation.ContentAlign.Center,
         blurBackground = false,
         startButton = { TangemButton.Back(onClick = config.onBackClick) },
@@ -371,16 +359,26 @@ private fun PayDetailsTopBar(
             Spacer(modifier = Modifier.height(4.dp))
             TangemNavigationText(text = config.subtitle, role = TangemNavigationText.Role.Subtitle)
         },
-        endButtonsGroup = if (config.items.isNotEmpty()) {
-            {
-                PayContextMenuButton(
-                    items = config.items,
-                    testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
-                    onOpen = config.onOpenMenu,
-                )
+        endButtonsGroup = when {
+            config.menu != null -> {
+                {
+                    PayMenuButton(
+                        menu = config.menu,
+                        testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
+                        onOpen = config.onOpenMenu,
+                    )
+                }
             }
-        } else {
-            null
+            config.items.isNotEmpty() -> {
+                {
+                    PayContextMenuButton(
+                        items = config.items,
+                        testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
+                        onOpen = config.onOpenMenu,
+                    )
+                }
+            }
+            else -> null
         },
     )
 }
@@ -417,21 +415,22 @@ private fun BalanceBlock(
             style = TangemTheme.typography3.caption.medium,
         )
 
-        when (state) {
-            is TangemPayDetailsBalanceBlockState.Loading -> Unit
-            is TangemPayDetailsBalanceBlockState.Content -> {
-                if (state.isInactive) {
-                    TangemBadge(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        text = resourceReference(R.string.tangempay_status_inactive),
-                        variant = TangemBadge.Variant.Outline,
-                        status = TangemBadge.Status.Warning,
-                        size = TangemBadge.Size.X6,
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
-                    )
-                }
-            }
-            is TangemPayDetailsBalanceBlockState.Error -> Unit
+        val isInactive = when (state) {
+            is TangemPayDetailsBalanceBlockState.Loading -> false
+            is TangemPayDetailsBalanceBlockState.Content -> state.isInactive
+            is TangemPayDetailsBalanceBlockState.Error -> state.isInactive
+        }
+        if (isInactive) {
+            TangemBadge(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_INACTIVE_BADGE),
+                text = resourceReference(R.string.tangempay_status_inactive),
+                variant = TangemBadge.Variant.Outline,
+                status = TangemBadge.Status.Warning,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_information_24),
+            )
         }
     }
 }
@@ -488,17 +487,28 @@ private fun CardsBlock(
         ),
         horizontalArrangement = Arrangement.Center,
     ) {
-        items(items = cardsBlockState.cards) { item ->
-            TangemPayCardView(
-                isIssueInProgress = item.state != TangemPayCardUiState.Active,
-                lastDigits = item.lastDigits,
-                imageUrl = item.imageUrl,
-                cardType = item.cardType,
-                onClick = item.onClick,
-                isEnabled = item.isEnabled,
-                isFrozen = item.isFrozen,
-            )
-            SpacerW(8.dp)
+        items(
+            items = cardsBlockState.cards,
+            key = if (cardsBlockState.isCardRemovalAnimated) {
+                { card -> card.id }
+            } else {
+                null
+            },
+        ) { item ->
+            Row(
+                modifier = Modifier.conditional(cardsBlockState.isCardRemovalAnimated) { animateItem() },
+            ) {
+                TangemPayCardView(
+                    isIssueInProgress = item.state != TangemPayCardUiState.Active,
+                    lastDigits = item.lastDigits,
+                    imageUrl = item.imageUrl,
+                    cardType = item.cardType,
+                    onClick = item.onClick,
+                    isEnabled = item.isEnabled,
+                    isFrozen = item.isFrozen,
+                )
+                SpacerW(8.dp)
+            }
         }
         item {
             TangemPayAddCardView(

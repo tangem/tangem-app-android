@@ -7,8 +7,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 interface JointAccountCreationComponent : ComposableContentComponent {
 
+    /** [userWalletId] is null when the caller can't tell which wallet: the flow asks after its intro. */
     data class Params(
-        val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId?,
         val source: AppRoute.JointAccountCreation.Source,
     )
 

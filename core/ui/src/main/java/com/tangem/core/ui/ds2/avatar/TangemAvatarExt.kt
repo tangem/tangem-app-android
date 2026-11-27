@@ -28,7 +28,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 
 @Immutable
 internal sealed interface AvatarAccountGlyph {
-    data class Icon(val icon: Either<Int, ImageVector>, val color: TangemAvatar.FillColor) : AvatarAccountGlyph
+    data class Icon(val imageVector: ImageVector, val color: TangemAvatar.FillColor) : AvatarAccountGlyph
     data class Letter(val text: TextReference, val color: TangemAvatar.FillColor) : AvatarAccountGlyph
     data class Kind(val kind: TangemAvatar.AccountKind) : AvatarAccountGlyph
 }
@@ -59,7 +59,6 @@ internal fun AvatarInitialStyle.textStyle(): TextStyle = when (this) {
 internal data class AvatarTokens(
     val size: Dp,
     val cornerRadius: Dp,
-    val accountGlyphSize: Dp,
     val iconGlyphSize: Dp,
     val initialFontSize: TextUnit,
     val initialStyle: AvatarInitialStyle,
@@ -72,7 +71,6 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
     TangemAvatar.Size.X72 -> AvatarTokens(
         size = 72.dp,
         cornerRadius = 20.dp,
-        accountGlyphSize = 36.dp,
         iconGlyphSize = 28.dp,
         initialFontSize = 20.sp,
         initialStyle = AvatarInitialStyle.HeadingSmall,
@@ -82,7 +80,6 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
     TangemAvatar.Size.X44 -> AvatarTokens(
         size = 44.dp,
         cornerRadius = 12.dp,
-        accountGlyphSize = 22.dp,
         iconGlyphSize = 20.dp,
         initialFontSize = 16.sp,
         initialStyle = AvatarInitialStyle.Body,
@@ -92,7 +89,6 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
     TangemAvatar.Size.X40 -> AvatarTokens(
         size = 40.dp,
         cornerRadius = 12.dp,
-        accountGlyphSize = 20.dp,
         iconGlyphSize = 20.dp,
         initialFontSize = 16.sp,
         initialStyle = AvatarInitialStyle.Body,
@@ -102,7 +98,6 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
     TangemAvatar.Size.X16 -> AvatarTokens(
         size = 16.dp,
         cornerRadius = 4.dp,
-        accountGlyphSize = 8.dp,
         iconGlyphSize = 12.dp,
         initialFontSize = 12.sp,
         initialStyle = AvatarInitialStyle.Caption,
@@ -119,7 +114,6 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
 internal fun lerpAvatarTokens(start: AvatarTokens, stop: AvatarTokens, fraction: Float) = AvatarTokens(
     size = lerp(start = start.size, stop = stop.size, fraction = fraction),
     cornerRadius = lerp(start = start.cornerRadius, stop = stop.cornerRadius, fraction = fraction),
-    accountGlyphSize = lerp(start = start.accountGlyphSize, stop = stop.accountGlyphSize, fraction = fraction),
     iconGlyphSize = lerp(start = start.iconGlyphSize, stop = stop.iconGlyphSize, fraction = fraction),
     initialFontSize = lerp(start = start.initialFontSize, stop = stop.initialFontSize, fraction = fraction),
     initialStyle = if (fraction < 0.5f) start.initialStyle else stop.initialStyle,
@@ -184,7 +178,7 @@ internal fun TangemAvatar.FillColor.toColor(): Color {
 internal fun TangemAvatar.AccountKind.fillColor(): Color = when (this) {
     TangemAvatar.AccountKind.Prediction -> TangemTheme.colors3.bg.accent.violet
     TangemAvatar.AccountKind.Gacha -> TangemTheme.colors3.bg.accent.yellow
-    TangemAvatar.AccountKind.Visa -> TangemTheme.colors3.account.visa
+    TangemAvatar.AccountKind.Visa -> TangemTheme.colors3.account.azureBlue
     TangemAvatar.AccountKind.Money -> TangemTheme.colors3.bg.accent.green
 }
 
@@ -197,9 +191,6 @@ internal fun TangemAvatar.AccountKind.icon(): ImageVector = when (this) {
 
 internal val TangemAvatar.AccountKind.isTinted: Boolean
     get() = this == TangemAvatar.AccountKind.Visa || this == TangemAvatar.AccountKind.Money
-
-internal val TangemAvatar.AccountKind.glyphScale: Float
-    get() = if (this == TangemAvatar.AccountKind.Visa) 1.2f else 1f
 
 /** Figma maps the transaction states onto four of the [TangemAvatar.Appearance] colour schemes. */
 internal fun TangemAvatar.Status.toAppearance(): TangemAvatar.Appearance = when (this) {

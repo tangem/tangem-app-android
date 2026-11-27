@@ -26,14 +26,15 @@ interface EarnProduct {
 
     val analytics: EarnProductAnalytics
 
-    /**
-     * The product already has its own block on the token page, and the banner must not count it, otherwise one
-     * position would be shown twice. A fact about the product, not a command to the banner.
-     */
-    val hasLegacyBlock: Boolean
-        get() = false
+    /** Documents of the provider the confirmation asks the user to agree with; `null` hides the line */
+    val legal: EarnLegal?
+        get() = null
 
-    fun summaries(userWalletId: UserWalletId): Flow<Map<CryptoCurrency.ID, EarnProductSummary>>
+    /** The sheet the product screen and the deposit flow open from their info buttons; `null` hides the buttons */
+    val howItWorks: EarnHowItWorks?
+        get() = null
+
+    fun summaries(userWalletId: UserWalletId): Flow<EarnSummaries>
 
     fun state(params: Params): Flow<EarnProductState>
 
@@ -59,4 +60,12 @@ fun interface EarnActionHandler {
     fun onActionClick(action: EarnAction)
 }
 
+/** @property loadingCurrencies still loading: Earn screens wait for them instead of settling without this product */
+data class EarnSummaries(
+    val byCurrency: Map<CryptoCurrency.ID, EarnProductSummary>,
+    val loadingCurrencies: Set<CryptoCurrency.ID> = emptySet(),
+)
+
 data class EarnProvider(val title: TextReference, val icon: ImageReference)
+
+data class EarnLegal(val termsOfUseUrl: String, val privacyPolicyUrl: String)

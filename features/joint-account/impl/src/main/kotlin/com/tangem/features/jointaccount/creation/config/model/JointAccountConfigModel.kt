@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,6 +13,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -44,6 +47,8 @@ internal class JointAccountConfigModel @Inject constructor(
     userWalletsListRepository: UserWalletsListRepository,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val walletIconUMConverter: WalletIconUMConverter,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountCreationChildParams>()
@@ -79,8 +84,8 @@ internal class JointAccountConfigModel @Inject constructor(
         pickedWallet,
         unlockedWallets,
     ) { picked, wallets ->
-        val draftConfig = params.draftHolder.draft.value.config
-        val defaultWalletId = draftConfig?.walletId ?: params.userWalletId
+        val draft = params.draftHolder.draft.value
+        val defaultWalletId = draft.config?.walletId ?: draft.walletId
 
         picked
             ?: wallets.firstOrNull { it.walletId == defaultWalletId }
@@ -121,9 +126,11 @@ internal class JointAccountConfigModel @Inject constructor(
             UpdateWalletsTransformer(
                 wallets = wallets,
                 selectedWallet = selected,
+                selectedWalletIcon = selected?.let { walletIconUMConverter.convert(getWalletIconUseCase(it)) },
                 onWalletRowClick = ::onWalletRowClick,
             )
         }
+            .flowOn(dispatchers.default)
             .onEach(stateController::update)
             .launchIn(modelScope)
     }
@@ -158,13 +165,14 @@ internal class JointAccountConfigModel @Inject constructor(
 
     private fun onContinueClick() {
         val state = uiState.value
+        val walletId = selectedWallet.value?.walletId ?: params.draftHolder.draft.value.walletId ?: return
 
         params.draftHolder.setConfig(
             JointAccountCreationDraft.Config(
                 name = state.name,
                 icon = state.icon.value,
                 color = state.icon.color,
-                walletId = selectedWallet.value?.walletId ?: params.userWalletId,
+                walletId = walletId,
             ),
         )
 

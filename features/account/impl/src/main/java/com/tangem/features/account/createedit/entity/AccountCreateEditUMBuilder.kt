@@ -122,6 +122,12 @@ internal class AccountCreateEditUMBuilder(
             )
         }
 
+        fun AccountCreateEditUM.resetDerivationIndex(): AccountCreateEditUM {
+            return this.copy(
+                account = this.account.copy(derivationInfo = AccountCreateEditUM.DerivationInfo.Empty),
+            )
+        }
+
         private fun createAccountDerivationInfo(index: Int): AccountCreateEditUM.DerivationInfo {
             val derivationIndexText = if (index.toString().length == 1) "0$index" else "$index"
 

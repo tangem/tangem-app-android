@@ -76,7 +76,7 @@ internal class SendAnalyticHelperTest {
                 cryptoCurrency = currency,
                 sendUM = createSendUM(),
                 feeToken = currency,
-                account = MockAccounts.createJointAccount(),
+                account = MockAccounts.createJointAccount(ownerKeyIndex = 3),
                 jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
             )
 
@@ -84,12 +84,12 @@ internal class SendAnalyticHelperTest {
             val (screenOpened, transactionSent) = sentEvents()
             assertThat(screenOpened.params).containsAtLeast(
                 AnalyticsParam.ACCOUNT_TYPE_FROM, "Joint",
+                "Account Derivation (from)", "3",
                 AnalyticsParam.MEMBERS_COUNT, "3",
                 AnalyticsParam.THRESHOLD, "2",
                 AnalyticsParam.FEE_TYPE, "Fixed",
                 AnalyticsParam.NONCE, "False",
             )
-            assertThat(screenOpened.params).doesNotContainKey(AnalyticsParam.ACCOUNT_DERIVATION_FROM)
             assertThat(transactionSent.params).containsAtLeast(
                 AnalyticsParam.ACCOUNT_TYPE, "Joint",
                 AnalyticsParam.MEMBERS_COUNT, "3",
@@ -103,7 +103,7 @@ internal class SendAnalyticHelperTest {
         runTest {
             // Arrange
             val destinationAccount: AccountCryptoCurrency = mockk {
-                every { account } returns MockAccounts.createJointAccount()
+                every { account } returns MockAccounts.createJointAccount(ownerKeyIndex = 4)
             }
             coEvery { getAccountCurrencyByAddressUseCase(DESTINATION) } returns destinationAccount.some()
 
@@ -118,6 +118,7 @@ internal class SendAnalyticHelperTest {
             // Assert
             val (screenOpened, _) = sentEvents()
             assertThat(screenOpened.params).containsEntry(AnalyticsParam.ACCOUNT_TYPE_TO, "Joint")
+            assertThat(screenOpened.params).containsEntry("Account Derivation (to)", "4")
         }
 
     private fun sentEvents(): Pair<AnalyticsEvent, AnalyticsEvent> {

@@ -5,7 +5,6 @@ import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.logging.TangemLogger
@@ -15,13 +14,10 @@ import kotlinx.coroutines.flow.first
 internal class DefaultMarketingUidBindingRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val featureToggles: MarketingFeatureToggles,
     private val walletServerBinder: WalletServerBinder,
 ) : MarketingUidBindingRepository {
 
     override suspend fun bind(uid: String) {
-        if (!featureToggles.isUidBindingEnabled) return
-
         val wallets = awaitFirstWallets()
         val body = BindMarketingUidWalletsBody(walletIds = wallets.map { it.walletId.stringValue })
 

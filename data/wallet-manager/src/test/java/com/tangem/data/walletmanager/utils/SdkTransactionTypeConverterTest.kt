@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -827,7 +828,7 @@ internal class SdkTransactionTypeConverterTest {
             val actual = converter.convert(item)
 
             // Assert
-            assertThat(actual).isEqualTo(TxInfo.TransactionType.Operation(name = model.expectedName))
+            assertThat(actual).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(false, true).flatMap { isWrappedInUpgrade ->
@@ -837,21 +838,29 @@ internal class SdkTransactionTypeConverterTest {
                     callData = ENTER_NATIVE_METHOD_ID,
                     amount = BigDecimal.ONE,
                     isWrappedInUpgrade = isWrappedInUpgrade,
-                    expectedName = "EnterProtocolByOwnerWithNative",
+                    expected = TxInfo.TransactionType.Lending.Deposit,
                 ),
                 NativeYieldModuleCallModel(
                     methodId = WITHDRAW_NATIVE_METHOD_ID,
-                    callData = WITHDRAW_NATIVE_METHOD_ID + ZERO_WORD,
+                    callData = WITHDRAW_ONE_ETHER_CALLDATA,
                     amount = BigDecimal.ZERO,
                     isWrappedInUpgrade = isWrappedInUpgrade,
-                    expectedName = "WithdrawNative",
+                    expected = TxInfo.TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = ONE_ETHER),
                 ),
                 NativeYieldModuleCallModel(
                     methodId = EXIT_NATIVE_METHOD_ID,
                     callData = EXIT_NATIVE_METHOD_ID,
                     amount = BigDecimal.ZERO,
                     isWrappedInUpgrade = isWrappedInUpgrade,
-                    expectedName = "WithdrawAndDeactivateNative",
+                    expected = TxInfo.TransactionType.Lending.Withdraw(isEntire = true, requestedAmount = null),
+                ),
+                // A partial withdrawal whose amount could not be decoded is still partial
+                NativeYieldModuleCallModel(
+                    methodId = WITHDRAW_NATIVE_METHOD_ID,
+                    callData = WITHDRAW_NATIVE_METHOD_ID,
+                    amount = BigDecimal.ZERO,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expected = TxInfo.TransactionType.Lending.Withdraw(isEntire = false, requestedAmount = null),
                 ),
             )
         }
@@ -1205,7 +1214,7 @@ internal class SdkTransactionTypeConverterTest {
         val callData: String,
         val amount: BigDecimal,
         val isWrappedInUpgrade: Boolean,
-        val expectedName: String,
+        val expected: TxInfo.TransactionType,
     )
 
     internal data class YieldModuleCallModel(
@@ -1362,6 +1371,10 @@ internal class SdkTransactionTypeConverterTest {
         const val EXIT_NATIVE_METHOD_ID = "0x4423380d"
         const val NEW_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val ZERO_WORD = "0000000000000000000000000000000000000000000000000000000000000000"
+        val ONE_ETHER: BigDecimal = BigDecimal.ONE.setScale(Blockchain.Ethereum.decimals())
+        val WITHDRAW_ONE_ETHER_CALLDATA: String = EthereumYieldSupplyWithdrawNativeCallData(
+            Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum),
+        ).dataHex
         const val YIELD_MODULE_CONTRACT = "0x4444444444444444444444444444444444444444"
         const val YIELD_MODULE_INFO = "yieldModule"
 

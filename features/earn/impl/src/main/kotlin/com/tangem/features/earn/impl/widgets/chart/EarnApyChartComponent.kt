@@ -16,6 +16,9 @@ import com.tangem.features.earn.product.api.product.EarnPeriod
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 internal class EarnApyChartComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -31,16 +34,21 @@ internal class EarnApyChartComponent @AssistedInject constructor(
         EarnApyChartContent(state = state, modifier = modifier)
     }
 
+    /** @property currentRate the rate the header shows; the header follows it, a fixed rate is a constant flow */
     data class Params(
         val periods: List<EarnPeriod>,
         val defaultPeriod: EarnPeriod,
         val history: suspend (EarnPeriod) -> Either<Throwable, EarnApyHistory>,
-        val currentRate: EarnProductRate,
+        val currentRate: StateFlow<EarnProductRate>,
+        val reloads: Flow<Unit> = emptyFlow(),
+        val hasCalculator: Boolean = false,
         val callback: ModelCallback? = null,
     )
 
     interface ModelCallback {
         fun onCalculatorClick()
+
+        fun onPeriodChange(period: EarnPeriod)
     }
 
     @AssistedFactory

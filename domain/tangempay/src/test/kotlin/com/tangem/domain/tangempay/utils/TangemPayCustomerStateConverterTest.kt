@@ -273,6 +273,78 @@ internal class TangemPayCustomerStateConverterTest {
                 money = MoneyAccountActivationState.NotStarted,
             ),
         ),
+        ConvertModel(
+            name = "cdd: both completed",
+            summary = cddSummary(
+                payment = payment(COMPLETED),
+                banking = banking(MoneyAccount.Activation.Status.COMPLETED),
+            ),
+            expected = accounts(
+                payment = PaymentAccountActivationState.Completed(CARDS),
+                money = MoneyAccountActivationState.Completed,
+            ),
+        ),
+        ConvertModel(
+            name = "cdd: money only",
+            summary = cddSummary(banking = banking(MoneyAccount.Activation.Status.COMPLETED)),
+            expected = accounts(
+                payment = PaymentAccountActivationState.NotStarted,
+                money = MoneyAccountActivationState.Completed,
+            ),
+        ),
+        ConvertModel(
+            name = "cdd: payment issuing",
+            summary = cddSummary(payment = payment(PROCESSING)),
+            expected = accounts(
+                payment = Issuing(Issuing.Step.ISSUING),
+                money = MoneyAccountActivationState.NotStarted,
+            ),
+        ),
+        ConvertModel(
+            name = "cdd: money issuing",
+            summary = cddSummary(banking = banking(MoneyAccount.Activation.Status.PROCESSING)),
+            expected = accounts(
+                payment = PaymentAccountActivationState.NotStarted,
+                money = MoneyAccountActivationState.Issuing(MoneyAccountActivationState.Issuing.Step.ISSUING),
+            ),
+        ),
+        ConvertModel(
+            name = "cdd: nothing started",
+            summary = cddSummary(),
+            expected = accounts(
+                payment = PaymentAccountActivationState.NotStarted,
+                money = MoneyAccountActivationState.NotStarted,
+            ),
+        ),
+        ConvertModel(
+            name = "cdd: unknown kyc is not cdd",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = KycStatus.UNKNOWN,
+                banking = banking(MoneyAccount.Activation.Status.COMPLETED),
+            ),
+            expected = accounts(
+                payment = PaymentAccountActivationState.AwaitingKyc(KycStatus.UNKNOWN),
+                money = MoneyAccountActivationState.Completed,
+            ),
+        ),
+        ConvertModel(
+            name = "cdd: new customer still onboarding",
+            summary = summary(customerStatus = CustomerStatus.NEW, kycStatus = KycStatus.IN_PROGRESS),
+            expected = TangemPayCustomerState.KycInProgress,
+        ),
+        ConvertModel(
+            name = "cdd: former unchanged",
+            summary = summary(
+                customerStatus = CustomerStatus.FORMER,
+                kycStatus = KycStatus.IN_PROGRESS,
+                banking = banking(MoneyAccount.Activation.Status.COMPLETED),
+            ),
+            expected = TangemPayCustomerState.Former(
+                paymentAccount = PaymentAccountActivationState.AwaitingKyc(KycStatus.IN_PROGRESS),
+                moneyAccount = MoneyAccountActivationState.Completed,
+            ),
+        ),
     )
 
     private fun accounts(payment: PaymentAccountActivationState, money: MoneyAccountActivationState) =
@@ -303,6 +375,16 @@ internal class TangemPayCustomerStateConverterTest {
         kycStatus = kycStatus,
         paymentAccount = PaymentAccount(id = null, activation = payment, cards = CARDS),
         moneyAccount = MoneyAccount(id = null, activation = banking),
+    )
+
+    private fun cddSummary(
+        payment: PaymentAccount.Activation = payment(PaymentAccount.Activation.Status.NOT_STARTED),
+        banking: MoneyAccount.Activation = banking(MoneyAccount.Activation.Status.NOT_STARTED),
+    ) = summary(
+        customerStatus = CustomerStatus.ACTIVE,
+        kycStatus = KycStatus.IN_PROGRESS,
+        payment = payment,
+        banking = banking,
     )
 
     data class ConvertModel(

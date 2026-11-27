@@ -32,6 +32,7 @@ import org.junit.Test
 class DeeplinksTest : BaseTestCase() {
 
     private val fromTokenSymbol = "POL"
+    private val fromTokenTitle = "POL (ex-MATIC)"
     private val toTokenSymbol = "ETH"
     private val providerName = "1Inch"
     private val userTokensState = "HotWalletSvS"
@@ -72,6 +73,9 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Wait until '$fromTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(fromTokenTitle)
             }
 
             var deeplinkUri = ""
@@ -133,6 +137,9 @@ class DeeplinksTest : BaseTestCase() {
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
+            step("Wait until '$fromTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(fromTokenTitle)
+            }
             step("Open the deeplink with only the FROM/TO pair, no amount") {
                 openAppByDeepLink(
                     "tangem://swap" +
@@ -179,6 +186,9 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Wait until '$fromTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(fromTokenTitle)
             }
             step("Open the deeplink with 'from_amount' greater than the wallet balance") {
                 openAppByDeepLink(
@@ -261,6 +271,9 @@ class DeeplinksTest : BaseTestCase() {
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
+            step("Wait until '$fromTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(fromTokenTitle)
+            }
             step("Kill the app") {
                 stopApp(getTargetContext().packageName)
             }
@@ -316,6 +329,9 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Wait until '$fromTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(fromTokenTitle)
             }
             step("Open the first deeplink with amount '$firstAmount'") {
                 openAppByDeepLink(
@@ -441,6 +457,9 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Wait until '$fromTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(fromTokenTitle)
             }
             step("Turn off Wi-Fi and Mobile Data") {
                 disableWiFi()

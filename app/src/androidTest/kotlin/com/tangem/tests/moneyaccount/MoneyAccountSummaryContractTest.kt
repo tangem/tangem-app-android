@@ -3,12 +3,10 @@ package com.tangem.tests.moneyaccount
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
-import com.tangem.common.extensions.getQuantityString
-import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.SINGLE_CARD_TILE_SUBTITLE
 import com.tangem.scenarios.assertMoneyAccountRowKeepsShowing
 import com.tangem.scenarios.assertMoneyAccountRowNeverShown
 import com.tangem.scenarios.openMainWithMoneyAccountWallet
@@ -24,15 +22,10 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @HiltAndroidTest
 class MoneyAccountSummaryContractTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1525_MONEY_ACCOUNTS_ENABLED.rawName to true,
-    )
 
     private val eligibilityState = "PaeraCustomer"
     private val moneyAccountScenario = "tangem_pay_money_account"
@@ -40,7 +33,7 @@ class MoneyAccountSummaryContractTest : BaseTestCase() {
     private val kycApprovedNotStartedState = "KycApprovedNotStarted"
 
     private val initialBalance = "$25.00"
-    private val oneCardSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 1, 1)
+    private val oneCardSubtitle = SINGLE_CARD_TILE_SUBTITLE
     private val actionRequiredText = getResourceString(CoreResR.string.tangempay_action_required_title)
 
     @AllureId("13648")
@@ -130,13 +123,6 @@ class MoneyAccountSummaryContractTest : BaseTestCase() {
     @DisplayName("Money account: 'Action required' checks eligibility of both products")
     @Test
     fun actionRequiredChecksEligibilityOfBothProductsTest() {
-        val eligibilityCheckPath = "/bff-v2/v1/eligibility/check"
-        val productParam = "product"
-        val bankingAccountProduct = "BANKING_ACCOUNT"
-        val paymentAccountProduct = "PAYMENT_ACCOUNT"
-        var bankingChecksBefore = 0
-        var paymentChecksBefore = 0
-
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -150,47 +136,14 @@ class MoneyAccountSummaryContractTest : BaseTestCase() {
                     onTangemPayMainScreen { tileWithSubtitle(actionRequiredText).assertIsDisplayed() }
                 }
             }
-            step("Read 'eligibility/check' request counts") {
-                bankingChecksBefore = getWireMockRequestCountByQueryParam(
-                    method = "GET",
-                    urlPath = eligibilityCheckPath,
-                    queryParam = productParam,
-                    queryValue = bankingAccountProduct,
-                )
-                paymentChecksBefore = getWireMockRequestCountByQueryParam(
-                    method = "GET",
-                    urlPath = eligibilityCheckPath,
-                    queryParam = productParam,
-                    queryValue = paymentAccountProduct,
-                )
-            }
             step("Click on Tangem Pay tile") { onTangemPayMainScreen { clickMainScreenTileViaOnClickAction() } }
             step("Assert 'You're verified' screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onTangemPayVerifiedScreen { title.assertIsDisplayed() } }
             }
-            step("Assert 'eligibility/check' is requested for '$bankingAccountProduct'") {
-                val bankingChecksAfter = getWireMockRequestCountByQueryParam(
-                    method = "GET",
-                    urlPath = eligibilityCheckPath,
-                    queryParam = productParam,
-                    queryValue = bankingAccountProduct,
-                )
-                assertTrue(
-                    "Expected a new '$bankingAccountProduct' check: before=$bankingChecksBefore, after=$bankingChecksAfter",
-                    bankingChecksAfter > bankingChecksBefore,
-                )
-            }
-            step("Assert 'eligibility/check' is requested for '$paymentAccountProduct'") {
-                val paymentChecksAfter = getWireMockRequestCountByQueryParam(
-                    method = "GET",
-                    urlPath = eligibilityCheckPath,
-                    queryParam = productParam,
-                    queryValue = paymentAccountProduct,
-                )
-                assertTrue(
-                    "Expected a new '$paymentAccountProduct' check: before=$paymentChecksBefore, after=$paymentChecksAfter",
-                    paymentChecksAfter > paymentChecksBefore,
-                )
+            step("Assert 'You're verified' screen offers both the card and the USD account") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTangemPayVerifiedScreen { bothProductsDescription.assertIsDisplayed() }
+                }
             }
         }
     }

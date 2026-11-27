@@ -10,6 +10,7 @@ import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.ManageFundsAnalyticsEvent
 import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -42,7 +43,6 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.commonfeatures.impl.R
-import com.tangem.features.commonfeatures.impl.managefunds.analytics.ManageFundsAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

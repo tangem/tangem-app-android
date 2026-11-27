@@ -2,8 +2,8 @@ package com.tangem.features.tangempay.deeplink
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
@@ -41,17 +41,17 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayAccountDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, userWalletsListRepository, paymentAccountStatusFetcher, paymentAccountStatusSupplier)
+        clearMocks(router, userWalletsListRepository, paymentAccountStatusFetcher, paymentAccountStatusSupplier)
         mockkObject(TangemLogger)
         every { TangemLogger.i(any()) } just Runs
-        every { appRouter.popTo(any<AppRoute>(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(true) }
+        every { router.popTo(any<AppRoute>(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(true) }
         coEvery { userWalletsListRepository.selectedUserWalletSync() } returns unlockedWallet()
         every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(paymentStatus())
     }
@@ -80,7 +80,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
             // Assert
             verify(exactly = 1) {
-                appRouter.push(
+                router.push(
                     route = AppRoute.TangemPayDetails(status = status, initialRoute = model.expectedRoute),
                     onComplete = any(),
                 )
@@ -92,7 +92,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             ScreenModel(screen = "add_funds", expectedRoute = TangemPayDetailsInitialRoute.ADD_FUNDS),
             ScreenModel(screen = "va_onramp", expectedRoute = TangemPayDetailsInitialRoute.VA_ONRAMP),
             ScreenModel(screen = "va_onramp_details", expectedRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS),
-            ScreenModel(screen = "select_plan", expectedRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING),
+            ScreenModel(screen = "select_plan", expectedRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS),
             ScreenModel(screen = "current_plan", expectedRoute = TangemPayDetailsInitialRoute.CURRENT_PLAN),
             ScreenModel(screen = "change_plan", expectedRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN),
             ScreenModel(screen = "cashback", expectedRoute = TangemPayDetailsInitialRoute.CASHBACK),
@@ -101,6 +101,42 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             ScreenModel(screen = "unknown", expectedRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS),
             ScreenModel(screen = " ", expectedRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS),
         )
+    }
+
+    @Nested
+    inner class SelectPlan {
+
+        @Test
+        fun `GIVEN verified status WHEN select plan deeplink handled THEN verified screen opens`() = runTest {
+            // Arrange
+            val status = paymentStatus(PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL))
+            every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(status)
+
+            // Act
+            handle(scope = this, queryParams = mapOf("screen" to "select_plan"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(route = AppRoute.TangemPayVerified(userWalletId = USER_WALLET_ID), onComplete = any())
+            }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
+        }
+
+        @Test
+        fun `GIVEN verified status WHEN another screen deeplink handled THEN nothing opens`() = runTest {
+            // Arrange
+            val status = paymentStatus(PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL))
+            every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(status)
+
+            // Act
+            handle(scope = this, queryParams = mapOf("screen" to "add_funds"))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(any(), any()) }
+            verify(exactly = 1) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        }
     }
 
     @Nested
@@ -121,9 +157,9 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
             // Assert
             verify(exactly = if (model.isOpenable) 1 else 0) {
-                appRouter.push(any<AppRoute.TangemPayDetails>(), any())
+                router.push(any<AppRoute.TangemPayDetails>(), any())
             }
-            verify(atLeast = 1) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(atLeast = 1) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
         }
 
         @Test
@@ -136,8 +172,8 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 1) { router.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         @Test
@@ -150,7 +186,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         @Test
@@ -163,7 +199,7 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { appRouter.push(any<AppRoute.TangemPayDetails>(), any()) }
+            verify(exactly = 0) { router.push(any<AppRoute.TangemPayDetails>(), any()) }
         }
 
         private fun provideTestModels() = listOf(
@@ -174,10 +210,8 @@ internal class TangemPayAccountDeepLinkHandlerTest {
             StatusModel(PaymentAccountStatusValue.Error.ExposedDevice, isOpenable = false),
             StatusModel(PaymentAccountStatusValue.Error.CardIssueFailed("customer-id"), isOpenable = false),
             StatusModel(mockk<PaymentAccountStatusValue.UnderReview>(relaxed = true), isOpenable = false),
-            StatusModel(mockk<PaymentAccountStatusValue.IssuingCard>(relaxed = true), isOpenable = false),
+            StatusModel(PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL), isOpenable = false),
             StatusModel(PaymentAccountStatusValue.Loading, isOpenable = true),
-            StatusModel(mockk<PaymentAccountStatusValue.AwaitingPlanSelection>(relaxed = true), isOpenable = true),
-            StatusModel(mockk<PaymentAccountStatusValue.Inactive>(relaxed = true), isOpenable = true),
             StatusModel(mockk<PaymentAccountStatusValue.Loaded>(relaxed = true), isOpenable = true),
             StatusModel(mockk<PaymentAccountStatusValue.Deactivated>(relaxed = true), isOpenable = true),
         )
@@ -185,12 +219,17 @@ internal class TangemPayAccountDeepLinkHandlerTest {
 
     private fun handle(scope: TestScope, queryParams: Map<String, String> = emptyMap()) =
         TangemPayAccountDeepLinkHandler(
-            appRouter = appRouter,
             userWalletsListRepository = userWalletsListRepository,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         ).handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = scope, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = scope,
+                isFromOnNewIntent = false,
+                router = router,
+            ),
         )
 
     private fun unlockedWallet(id: UserWalletId = USER_WALLET_ID): UserWallet = mockk<UserWallet.Hot>(relaxed = true) {

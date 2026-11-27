@@ -29,12 +29,14 @@ import java.math.BigDecimal
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 internal class UpdateStakingNotificationTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val stakingAvailability: StakingAvailability,
     private val stakingEntryInfo: StakingEntryInfo?,
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
+    private val isEarnBannerShown: Boolean,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
@@ -43,6 +45,10 @@ internal class UpdateStakingNotificationTransformer(
     }
 
     private fun buildEarnBlock(isBalanceHidden: Boolean): EarnBlockUM? {
+        // The Earn banner counts this staking and is the only earn entry on the page. A stake blocked in the region is
+        // not part of it, so that block stays.
+        if (isEarnBannerShown && stakingAvailability !is StakingAvailability.RegionUnavailable) return null
+
         return when (val availability = stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> buildTemporaryUnavailable()
             StakingAvailability.RegionUnavailable -> buildRegionUnavailableOrNull()
@@ -324,7 +330,10 @@ internal class UpdateStakingNotificationTransformer(
     }
 
     private fun rewardRateReference(): TextReference? {
-        val rewardInfo = stakingAvailability.optionOrNull?.displayRewardInfo ?: return null
+        val option = stakingAvailability.optionOrNull ?: return null
+        val stakedValidatorRewardInfo = (option as? StakingOption.StakeKit)
+            ?.stakedValidatorRewardInfo(cryptoCurrencyStatus.value.stakingBalanceData as? StakingBalance.Data.StakeKit)
+        val rewardInfo = stakedValidatorRewardInfo ?: option.displayRewardInfo ?: return null
         val rateTypeResId = when (rewardInfo.type) {
             RewardType.APR -> CoreResR.string.staking_details_apr
             RewardType.APY,
@@ -355,6 +364,14 @@ private fun StakingBalance.Data?.getRewardAmount(): BigDecimal = when (this) {
     is StakingBalance.Data.StakeKit -> getRewardStakingBalance()
     is StakingBalance.Data.P2PEthPool -> totalRewards
     null -> BigDecimal.ZERO
+}
+
+private fun StakingOption.StakeKit.stakedValidatorRewardInfo(balance: StakingBalance.Data.StakeKit?): RewardInfo? {
+    val validatorsByAddress = yield.validators.associateBy { it.address }
+    return balance?.balance
+        ?.items
+        ?.mapNotNull { it.validatorAddress }
+        ?.firstNotNullOfOrNull { address -> validatorsByAddress[address]?.rewardInfo }
 }
 
 private val StakingOption.displayRewardInfo: RewardInfo?

@@ -51,10 +51,6 @@ interface OnboardingRepository {
         idempotencyKey: String,
     ): Either<TangemPayApiError, String>
 
-    suspend fun clearOrderId(userWalletId: UserWalletId)
-
-    suspend fun getOrderId(userWalletId: UserWalletId): String?
-
     /** Creates a Virtual Account on-ramp order (VA MVP0, TWI-1638); returns the created order id. */
     suspend fun createVirtualAccountOrder(
         userWalletId: UserWalletId,

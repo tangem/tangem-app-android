@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.components.ClearFocusOnKeyboardHidden
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
@@ -34,7 +35,7 @@ import com.tangem.features.tangempay.common.TextInput
 import com.tangem.features.tangempay.common.TextInputState
 import com.tangem.features.tangempay.common.revealAboveFooter
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.canSuggestSavedRecipients
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.SuggestionUM
@@ -42,6 +43,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM, modifier: Modifier = Modifier) {
+    ClearFocusOnKeyboardHidden(isEnabled = state.suggestions.isEmpty())
     TangemTopBarScaffold(
         modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_FORM_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
@@ -72,15 +74,15 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
                 .padding(bottom = FooterHeight),
             verticalArrangement = Arrangement.spacedBy(FieldSpacing),
         ) {
-            val accountNumberIndex = state.fields.indexOfFirst { it.field == BankWithdrawFormField.AccountNumber }
-            if (accountNumberIndex == -1) {
+            val numberIndex = state.fields.indexOfFirst { it.field.canSuggestSavedRecipients }
+            if (numberIndex == -1) {
                 state.fields.fastForEach { field -> FormField(state = field) }
             } else {
-                state.fields.subList(fromIndex = 0, toIndex = accountNumberIndex + 1)
+                state.fields.subList(fromIndex = 0, toIndex = numberIndex + 1)
                     .fastForEach { field -> FormField(state = field) }
                 SuggestionsOrFields(
                     suggestions = state.suggestions,
-                    fields = state.fields.subList(fromIndex = accountNumberIndex + 1, toIndex = state.fields.size),
+                    fields = state.fields.subList(fromIndex = numberIndex + 1, toIndex = state.fields.size),
                 )
             }
         }
@@ -134,6 +136,7 @@ private fun TextField(state: FieldUM.Text, modifier: Modifier = Modifier) {
         modifier = modifier,
         state = inputState(error = state.error),
         placeholder = state.placeholder,
+        hint = state.helperText,
         keyboardOptions = state.keyboardOptions,
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         contentType = state.contentType,
@@ -194,6 +197,7 @@ private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdr
         TangemPayBankWithdrawFormPreviewData.personalWithError,
         TangemPayBankWithdrawFormPreviewData.personalFreeTextRegion,
         TangemPayBankWithdrawFormPreviewData.personalUsRegion,
+        TangemPayBankWithdrawFormPreviewData.speiPersonal,
         TangemPayBankWithdrawFormPreviewData.businessBank,
     )
 }

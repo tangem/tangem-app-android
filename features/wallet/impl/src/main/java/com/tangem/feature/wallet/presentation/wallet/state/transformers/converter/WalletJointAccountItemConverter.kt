@@ -19,6 +19,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
+import com.tangem.core.ui.res.generated.icons.ic_users_16_filled
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -26,6 +27,7 @@ import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
+import com.tangem.utils.annotations.RemoveWithToggle
 import java.math.BigDecimal
 
 /** A joint account that is not active yet, as one [TangemAccountRow] of the wallet account list */
@@ -34,7 +36,11 @@ internal class WalletJointAccountItemConverter(
     private val userWalletId: UserWalletId,
     private val onAccountClick: (UserWalletId, String) -> Unit,
     private val onCompromisedAccountClick: (UserWalletId) -> Unit,
+    @RemoveWithToggle(toggleName = "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED", description = "Inline true")
+    isRedesignedAccountRowsEnabled: Boolean = false,
 ) {
+
+    private val titleIcon = Icons.ic_users_16_filled.takeIf { isRedesignedAccountRowsEnabled }
 
     fun convert(value: AccountStatus.Joint): TokensListItemUM2.JointPending {
         val account = value.account
@@ -43,6 +49,7 @@ internal class WalletJointAccountItemConverter(
             is JointAccountStatusValue.Error.Unavailable -> TangemAccountRow.State.BalanceError(
                 id = account.accountId.value,
                 title = account.accountName.toUM().value,
+                titleIcon = titleIcon,
             )
             is JointAccountStatusValue.Error.Compromised -> compromised(account = account)
             is JointAccountStatusValue.Pending -> notActive(
@@ -69,6 +76,7 @@ internal class WalletJointAccountItemConverter(
         return TangemAccountRow.State.NotActive(
             id = account.accountId.value,
             title = account.accountName.toUM().value,
+            titleIcon = titleIcon,
             description = membersCount(totalMembers),
             balance = stringReference(zeroBalanceText()),
             priceChange = TangemPriceChange.State(value = zeroPriceChange(), direction = Neutral),
@@ -82,6 +90,7 @@ internal class WalletJointAccountItemConverter(
         return TangemAccountRow.State.Unreachable(
             id = account.accountId.value,
             title = account.accountName.toUM().value,
+            titleIcon = titleIcon,
             badge = resourceReference(R.string.joint_account_main_unavailable),
             label = resourceReference(R.string.joint_account_main_paused_for_safety),
             onClick = { onCompromisedAccountClick(userWalletId) },

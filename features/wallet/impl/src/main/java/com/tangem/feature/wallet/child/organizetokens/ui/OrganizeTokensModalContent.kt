@@ -44,7 +44,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
 import com.tangem.core.ui.ds2.button.Close
@@ -319,13 +319,10 @@ private fun ApplyButton(applyButton: TangemButtonUM) {
         blurBackground = false,
     ) {
         TangemButton(
+            buttonUM = applyButton,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
-            onClick = applyButton.onClick,
-            text = applyButton.text,
-            size = TangemButton.Size.X12,
-            isEnabled = applyButton.isEnabled,
         )
     }
 }

@@ -5,6 +5,7 @@ import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import com.tangem.utils.logging.TangemLogger
@@ -77,12 +78,20 @@ fun setWireMockScenarioState(
 fun getWireMockRequestCount(
     method: String,
     urlPathPattern: String,
+    bodyContains: List<String> = emptyList(),
     baseUrl: String = getWireMockBaseUrl(),
 ): Int {
     // Build via JSONObject so a regex urlPathPattern with quotes/backslashes stays valid JSON.
     val json = JSONObject()
         .put("method", method)
         .put("urlPathPattern", urlPathPattern)
+        .apply {
+            if (bodyContains.isNotEmpty()) {
+                val patterns = JSONArray()
+                bodyContains.forEach { patterns.put(JSONObject().put("contains", it)) }
+                put("bodyPatterns", patterns)
+            }
+        }
         .toString()
     val mediaType = "application/json".toMediaType()
 
@@ -218,6 +227,15 @@ fun findWireMockRequestQueryParamValues(
     baseUrl = baseUrl,
 ).mapNotNull { request -> Uri.parse(request.getString("url")).getQueryParameter(queryParam) }
 
+fun findWireMockRequestUrls(
+    method: String,
+    urlPath: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequests(
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPath),
+    baseUrl = baseUrl,
+).map { request -> request.getString("url") }
+
 fun findWireMockRequestHeaders(
     method: String,
     urlPath: String,
@@ -275,6 +293,7 @@ private fun findWireMockRequests(requestPattern: JSONObject, baseUrl: String): L
             if (!response.isSuccessful) return emptyList()
             val requests = JSONObject(body).getJSONArray("requests")
             List(requests.length()) { index -> requests.getJSONObject(index) }
+                .sortedBy { request -> request.optLong("loggedDate") }
         }
     } catch (e: IOException) {
         TangemLogger.e("WireMock request find error", e)

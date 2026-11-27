@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -30,13 +29,13 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    analytics: AnalyticsEventHandler,
+    withdrawAnalyticsFactory: BankWithdrawAnalytics.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<Params>()
     private val form = params.form
 
-    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = form.sourceAccount, analytics = analytics)
+    private val withdrawAnalytics = withdrawAnalyticsFactory.create(sourceAccount = form.sourceAccount)
 
     private val screen = when (form.step) {
         TangemPayBankWithdrawInnerRoute.BankDetails,
@@ -75,6 +74,9 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     init {
         withdrawAnalytics.sendPaymentAccountOnly(screenOpenedEvent())
+        if (form.step == TangemPayBankWithdrawInnerRoute.RecipientDetails && form.draft.value.recipient == null) {
+            form.onRecipientFormOpened()
+        }
         combine(form.draft, state, form.savedAccounts) { draft, formState, accounts ->
             umFactory.create(draft = draft, state = formState, accounts = accounts)
         }

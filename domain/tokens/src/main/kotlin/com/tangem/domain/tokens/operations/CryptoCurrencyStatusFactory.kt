@@ -5,6 +5,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.BalanceContribution
+import com.tangem.domain.models.currency.balance.withSpendableContributions
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.quote.QuoteStatus
@@ -271,16 +272,5 @@ object CryptoCurrencyStatusFactory {
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
-    }
-
-    /**
-     * Folds what the contributions add to the spendable balance into the network amount, so `amount` and
-     * `fiatAmount` keep meaning "what can be sent" wherever that balance is fetched from. Returns the network amount
-     * untouched, scale included, when nothing spendable is added.
-     */
-    private fun BigDecimal.withSpendableContributions(contributions: List<BalanceContribution>): BigDecimal {
-        val spendableDelta = contributions.sumOf(BalanceContribution::spendableDeltaCryptoAmount)
-
-        return if (spendableDelta.signum() == 0) this else this + spendableDelta
     }
 }

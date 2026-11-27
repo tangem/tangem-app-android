@@ -108,7 +108,7 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
         when (state) {
             is TangemPayBankWithdrawAmountUM.Content -> AmountContent(state = state)
             is TangemPayBankWithdrawAmountUM.Loading -> AmountLoading(state = state)
-            is TangemPayBankWithdrawAmountUM.FeeUnreachable -> FeeUnreachable(state = state)
+            is TangemPayBankWithdrawAmountUM.Unreachable -> Unreachable(state = state)
         }
     }
     BankWithdrawAmountSheets(sheet = (state as? TangemPayBankWithdrawAmountUM.Content)?.sheet ?: SheetUM.Hidden)
@@ -179,7 +179,7 @@ private fun ColumnScope.AmountLoading(state: TangemPayBankWithdrawAmountUM.Loadi
 }
 
 @Composable
-private fun ColumnScope.FeeUnreachable(state: TangemPayBankWithdrawAmountUM.FeeUnreachable) {
+private fun ColumnScope.Unreachable(state: TangemPayBankWithdrawAmountUM.Unreachable) {
     Column(
         modifier = Modifier
             .weight(1f)

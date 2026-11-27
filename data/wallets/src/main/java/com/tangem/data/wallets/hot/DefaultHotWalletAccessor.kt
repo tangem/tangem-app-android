@@ -14,6 +14,7 @@ import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -40,6 +41,31 @@ class DefaultHotWalletAccessor @Inject constructor(
         hotSdkRequest(hotWalletId) { unlock ->
             tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = dataToSign)
         }
+
+    override suspend fun signHashesPreparing(
+        hotWalletId: HotWalletId,
+        prepare: suspend () -> List<DataToSign>,
+    ): List<SignedData> {
+        return try {
+            // Once the code is entered, closing the prompt no longer cancels signing; preparing takes long enough to
+            // try, so the prompt is closed first. A wrong code reopens it
+            hotSdkRequest(hotWalletId, closePromptFirst = true) { unlock ->
+                tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = prepareGuarded(prepare))
+            }
+        } catch (e: PreparationException) {
+            throw e.cause
+        }
+    }
+
+    // Keeps a preparation failure out of the wrong-password and biometry-reset handling of hotSdkRequest, which
+    // would otherwise ask for the code again and prepare twice
+    private suspend fun prepareGuarded(prepare: suspend () -> List<DataToSign>): List<DataToSign> = try {
+        prepare()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        throw PreparationException(e)
+    }
 
     override suspend fun signHashesReusingContextualUnlock(
         hotWalletId: HotWalletId,
@@ -127,7 +153,11 @@ class DefaultHotWalletAccessor @Inject constructor(
         }
     }
 
-    private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
+    private suspend fun <T> hotSdkRequest(
+        hotWalletId: HotWalletId,
+        closePromptFirst: Boolean = false,
+        block: suspend (unlock: UnlockHotWallet) -> T,
+    ): T {
         val isAccessCodeRequired = isAccessCodeRequired()
 
         val requestedAuth = when (hotWalletId.authType) {
@@ -148,7 +178,7 @@ class DefaultHotWalletAccessor @Inject constructor(
             }
         }
 
-        return runCatchingSdkErrors(hotWalletId, requestedAuth) {
+        return runCatchingSdkErrors(hotWalletId, requestedAuth, closePromptFirst) {
             block(UnlockHotWallet(hotWalletId, it))
         }
     }
@@ -156,12 +186,14 @@ class DefaultHotWalletAccessor @Inject constructor(
     private suspend fun <T> runCatchingSdkErrors(
         hotWalletId: HotWalletId,
         requestedAuth: RequestedAuth,
+        closePromptFirst: Boolean,
         block: suspend (auth: HotAuth) -> T,
     ): T {
         return runCatchingWrongPassInternal(
             hotWalletId = hotWalletId,
             originalAuth = requestedAuth,
             requestedAuth = requestedAuth,
+            closePromptFirst = closePromptFirst,
             block = { blockAuth ->
                 val result = block(blockAuth)
 
@@ -206,14 +238,18 @@ class DefaultHotWalletAccessor @Inject constructor(
         hotWalletId: HotWalletId,
         originalAuth: RequestedAuth,
         requestedAuth: RequestedAuth,
+        closePromptFirst: Boolean,
         block: suspend (auth: HotAuth) -> T,
     ): T = runSuspendCatching {
+        val request = requestedAuth.attemptRequest
+        if (closePromptFirst && request != null) hotWalletPasswordRequester.dismiss(request)
         block(requestedAuth.auth).also {
-            val request = requestedAuth.attemptRequest
             if (request != null) {
                 hotWalletPasswordRequester.successfulAuthentication(request)
+                hotWalletPasswordRequester.dismiss(request)
+            } else {
+                hotWalletPasswordRequester.dismiss()
             }
-            hotWalletPasswordRequester.dismiss()
         }
     }.getOrElse { exception ->
         if (requestedAuth.auth is HotAuth.Biometry && (exception.isBiometryError() || exception.isBiometryReset())) {
@@ -229,6 +265,7 @@ class DefaultHotWalletAccessor @Inject constructor(
                 hotWalletId = hotWalletId,
                 originalAuth = originalAuth,
                 requestedAuth = passAuth,
+                closePromptFirst = closePromptFirst,
                 block = block,
             )
         }
@@ -249,6 +286,7 @@ class DefaultHotWalletAccessor @Inject constructor(
             hotWalletId = hotWalletId,
             originalAuth = originalAuth,
             requestedAuth = passResult,
+            closePromptFirst = closePromptFirst,
             block = block,
         )
     }
@@ -288,3 +326,5 @@ class DefaultHotWalletAccessor @Inject constructor(
         is HotWalletPasswordRequester.Result.EnteredPassword -> this.password
     }
 }
+
+private class PreparationException(override val cause: Exception) : Exception(cause)

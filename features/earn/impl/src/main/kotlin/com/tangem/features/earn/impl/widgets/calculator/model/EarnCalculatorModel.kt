@@ -47,20 +47,43 @@ internal class EarnCalculatorModel @Inject constructor(
             }
         }
             .flowOn(dispatchers.default)
-            .onEach { uiState.value = it }
+            .onEach { rebuilt ->
+                uiState.update { current ->
+                    rebuilt?.copy(selectedBar = current?.selectedBar?.takeIf { current.bars == rebuilt.bars })
+                }
+            }
             .launchIn(modelScope)
     }
 
     fun onInitialStep(direction: Int) {
-        input.update { it.stepInitial(direction) }
+        if (updateInput { it.stepInitial(direction) }) {
+            params.callback.onInputChange(EarnCalculatorComponent.Input.InitialBalance)
+        }
     }
 
     fun onTopUpStep(direction: Int) {
-        input.update { it.stepMonthlyTopUp(direction) }
+        if (updateInput { it.stepMonthlyTopUp(direction) }) {
+            params.callback.onInputChange(EarnCalculatorComponent.Input.MonthlyTopUp)
+        }
     }
 
     fun onHorizonSelect(horizon: EarnHorizon) {
-        input.update { it.copy(horizon = horizon) }
+        if (updateInput { it.copy(horizon = horizon) }) {
+            params.callback.onHorizonChange(horizon)
+        }
+    }
+
+    private fun updateInput(transform: (CalculatorInput) -> CalculatorInput): Boolean {
+        val previous = input.value
+        val next = transform(previous)
+        if (next == previous) return false
+
+        input.value = next
+        return true
+    }
+
+    fun onBarSelected(index: Int?) {
+        uiState.update { state -> state?.copy(selectedBar = index?.takeIf { it in state.bars.indices }) }
     }
 
     private fun createUiState(
@@ -77,5 +100,6 @@ internal class EarnCalculatorModel @Inject constructor(
         onInitialStep = ::onInitialStep,
         onTopUpStep = ::onTopUpStep,
         onHorizonSelect = ::onHorizonSelect,
+        onBarSelected = ::onBarSelected,
     )
 }

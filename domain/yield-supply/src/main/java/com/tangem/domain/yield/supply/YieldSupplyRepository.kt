@@ -2,6 +2,7 @@ package com.tangem.domain.yield.supply
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.yield.supply.models.YieldChartWindow
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
@@ -33,9 +34,16 @@ interface YieldSupplyRepository {
 
     /**
      * Get yield token APY chart by contract address.
+     *
+     * @param window         the span of the chart; null leaves it to the backend
+     * @param bucketSizeDays days per bar; null leaves it to the backend
      */
     @Throws
-    suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData
+    suspend fun getTokenChart(
+        cryptoCurrencyToken: CryptoCurrency.Token,
+        window: YieldChartWindow? = null,
+        bucketSizeDays: Int? = null,
+    ): YieldSupplyMarketChartData
 
     suspend fun isYieldSupplySupported(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
 

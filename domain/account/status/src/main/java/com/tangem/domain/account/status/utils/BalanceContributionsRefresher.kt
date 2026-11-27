@@ -6,7 +6,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.FetchErrorFormatter
 import com.tangem.domain.tokens.FetchingSource
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -19,13 +18,9 @@ import com.tangem.utils.logging.TangemLogger
 class BalanceContributionsRefresher(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val balanceFetchingOperations: BalanceFetchingOperations,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, network: Network) {
-        // Without the toggle CONTRIBUTIONS is the legacy staking fetch, which this refresh never triggered
-        if (!tokensFeatureToggles.isPluggableBalanceSourcesEnabled) return
-
         val currencies = singleAccountListSupplier.getSyncOrNull(userWalletId)
             ?.flattenCurrencies()
             ?.filter { it.network.id == network.id }

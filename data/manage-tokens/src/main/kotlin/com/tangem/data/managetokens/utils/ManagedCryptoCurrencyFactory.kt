@@ -10,6 +10,7 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.getCoinId
 import com.tangem.data.common.currency.getTokenId
+import com.tangem.data.common.currency.isCustomIn
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -124,7 +125,7 @@ internal class ManagedCryptoCurrencyFactory(
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
         accountDerivation: AccountDerivation,
-    ): List<ManagedCryptoCurrency> = tokensResponse.tokens
+    ): List<ManagedCryptoCurrency> = tokensResponse.tokensOf(accountDerivation)
         .mapNotNull { token ->
             maybeCreateCustomToken(
                 token = token,
@@ -290,7 +291,7 @@ internal class ManagedCryptoCurrencyFactory(
     ): Set<Network> {
         if (tokensResponse == null) return emptySet()
 
-        return tokensResponse.tokens
+        return tokensResponse.tokensOf(accountDerivation)
             .filter { getL2CompatibilityTokenComparison(it, currencyId) }
             .mapNotNullTo(mutableSetOf()) { token ->
                 val blockchain = Blockchain.fromNetworkId(token.networkId)
@@ -333,6 +334,14 @@ internal class ManagedCryptoCurrencyFactory(
                 derivationPath = accountDerivation.path,
                 userWallet = userWallet ?: return null,
             )
+        }
+    }
+
+    /** A joint account's custom tokens never become its currencies, so they are neither listed nor counted as added */
+    private fun UserTokensResponse.tokensOf(accountDerivation: AccountDerivation): List<UserTokensResponse.Token> {
+        return when (accountDerivation) {
+            is AccountDerivation.Joint -> tokens.filterNot { it.isCustomIn(accountDerivation.path) }
+            is AccountDerivation.Personal -> tokens
         }
     }
 

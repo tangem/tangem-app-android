@@ -102,17 +102,14 @@ fun BaseTestCase.returnFromProviderToOnrampInProgress(
     step("Assert 'In progress' title is displayed") {
         awaitSuccess { onOnrampSuccessScreen { title.assertIsDisplayed() } }
     }
-    step("Assert currency icon is displayed") {
-        onOnrampSuccessScreen { currencyIcon.assertIsDisplayed() }
+    step("Assert provider icon is displayed") {
+        onOnrampSuccessScreen { providerIcon.assertIsDisplayed() }
     }
     step("Assert fiat amount is displayed") {
         onOnrampSuccessScreen { textContaining(fiatAmountText).assertIsDisplayed() }
     }
     step("Assert crypto amount is displayed") {
         onOnrampSuccessScreen { textContaining(cryptoAmountText).assertIsDisplayed() }
-    }
-    step("Assert provider icon is displayed") {
-        onOnrampSuccessScreen { providerIcon.assertIsDisplayed() }
     }
     step("Assert provider name '$providerName' is displayed") {
         onOnrampSuccessScreen { providerName(providerName).assertIsDisplayed() }
@@ -143,5 +140,16 @@ fun BaseTestCase.openBuyScreenFromMarkets(tokenName: String, fiatAmount: String)
     }
     step("Write fiat amount = '$fiatAmount'") {
         onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
+    }
+}
+
+fun BaseTestCase.openProviderPageByBuyButton(providerPageUrl: String) {
+    step("Stub opening of the provider page") {
+        stubUrlOpening(providerPageUrl)
+    }
+    step("Click on 'Buy' button and assert provider page is opened") {
+        onBuyTokenDetailsScreen {
+            buyButton.clickAndWaitFor(composeTestRule) { assertUrlOpened(providerPageUrl, times = 1) }
+        }
     }
 }

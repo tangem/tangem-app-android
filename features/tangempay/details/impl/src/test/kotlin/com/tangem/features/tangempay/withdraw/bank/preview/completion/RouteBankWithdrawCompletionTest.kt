@@ -4,7 +4,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.domain.tangempay.model.FeeCalculationType
+import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpRoute
@@ -13,10 +15,14 @@ import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.model.bankofframp.OfframpEta
 import com.tangem.domain.tangempay.model.bankofframp.OfframpFee
 import com.tangem.domain.tangempay.repository.BankOfframpOrderRepository
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransfer
 import com.tangem.features.tangempay.withdraw.bank.model.MoneyAccountTransferError
+import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
+import com.tangem.features.tangempay.withdraw.bank.model.toNewBankAccountDetails
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.bank.personalFormValues
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import com.tangem.features.tangempay.withdraw.bank.savedRecipientDraft
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
@@ -25,6 +31,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -44,10 +51,20 @@ internal class RouteBankWithdrawCompletionTest {
     private val changedDestinations = mutableListOf<OfframpDestination>()
     private val changedNetworkFees = mutableListOf<BigDecimal>()
     private val states = mutableListOf<CompletionState>()
+    private val newRecipientListener: NewRecipientListener = mockk(relaxed = true)
+    private val newRecipientDraft = draft.copy(
+        entry = BankWithdrawEntry.NewPersonal,
+        recipient = null,
+        newRecipient = NewRecipientDraft(
+            isThirdParty = false,
+            accountType = BankAccountType.CHECKING,
+            fields = personalFormValues,
+        ),
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(bankOfframpOrderRepository, moneyAccountTransfer)
+        clearMocks(bankOfframpOrderRepository, moneyAccountTransfer, newRecipientListener)
         changedDestinations.clear()
         changedNetworkFees.clear()
         states.clear()
@@ -327,14 +344,131 @@ internal class RouteBankWithdrawCompletionTest {
         assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Idle).inOrder()
     }
 
+    @Test
+    fun `GIVEN new recipient WHEN route created THEN the recipient reported as saved`() = runTest {
+        // Arrange
+        val completion = createCompletion()
+
+        // Act
+        completion.complete(newRecipientDraft, states::add)
+
+        // Assert
+        verify(exactly = 1) { newRecipientListener.onSaved(requireNotNull(newRecipientDraft.toNewBankAccountDetails())) }
+        verify(exactly = 0) { newRecipientListener.onRejected(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN new recipient route reused after a failed transfer WHEN complete again THEN saved reported once`() =
+        runTest {
+            // Arrange
+            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) } returnsMany listOf(
+                MoneyAccountTransferError.NotSent.left(),
+                Unit.right(),
+            )
+            val completion = createCompletion()
+            completion.complete(newRecipientDraft, states::add)
+
+            // Act
+            completion.complete(newRecipientDraft, states::add)
+
+            // Assert
+            coVerify(exactly = 1) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
+            verify(exactly = 1) { newRecipientListener.onSaved(any()) }
+        }
+
+    @Test
+    fun `GIVEN saved recipient WHEN route created THEN no recipient result reported`() = runTest {
+        // Arrange
+        val completion = createCompletion()
+
+        // Act
+        completion.complete(draft, states::add)
+
+        // Assert
+        verify(exactly = 0) { newRecipientListener.onSaved(any()) }
+        verify(exactly = 0) { newRecipientListener.onRejected(any(), any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRecipientRefusalModels")
+    fun `GIVEN new recipient WHEN route request fails THEN only an answered refusal reported with its code`(
+        model: RecipientRefusalModel,
+    ) = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createRoute(userWalletId, any(), any(), any(), any()) } returns
+            model.error.left()
+        val completion = createCompletion()
+
+        val wireDraft = newRecipientDraft.copy(destination = offrampDestination(rail = BankRail.WIRE))
+
+        // Act
+        completion.complete(wireDraft, states::add)
+
+        // Assert
+        verify(exactly = model.expectedRejections) {
+            newRecipientListener.onRejected(
+                recipient = requireNotNull(wireDraft.toNewBankAccountDetails()),
+                errorCode = model.error.errorCode,
+            )
+        }
+        verify(exactly = 0) { newRecipientListener.onSaved(any()) }
+    }
+
+    @Test
+    fun `GIVEN saved recipient WHEN route refused THEN no recipient result reported`() = runTest {
+        // Arrange
+        coEvery { bankOfframpOrderRepository.createRoute(userWalletId, any(), any(), any(), any()) } returns
+            BankOfframpError.Rejected.left()
+        val completion = createCompletion()
+
+        // Act
+        completion.complete(draft, states::add)
+
+        // Assert
+        verify(exactly = 0) { newRecipientListener.onRejected(any(), any()) }
+    }
+
     private fun createCompletion() = RouteBankWithdrawCompletion(
         userWalletId = userWalletId,
         productInstanceId = PRODUCT_INSTANCE_ID,
         onDestinationChanged = changedDestinations::add,
         onNetworkFeeChanged = changedNetworkFees::add,
+        newRecipientListener = newRecipientListener,
         bankOfframpOrderRepository = bankOfframpOrderRepository,
         moneyAccountTransfer = moneyAccountTransfer,
     )
+
+    private fun provideRecipientRefusalModels() = listOf(
+        RecipientRefusalModel(error = BankOfframpError.BadRequest, expectedRejections = 1),
+        RecipientRefusalModel(
+            error = BankOfframpError.Unknown(cause = null, errorCode = BAD_REQUEST_ERROR_CODE),
+            expectedRejections = 0,
+        ),
+        RecipientRefusalModel(error = BankOfframpError.RecipientRegionUnsupported, expectedRejections = 1),
+        RecipientRefusalModel(error = BankOfframpError.BusinessUnsupported, expectedRejections = 1),
+        RecipientRefusalModel(error = BankOfframpError.Validation, expectedRejections = 0),
+        RecipientRefusalModel(error = BankOfframpError.Rejected, expectedRejections = 0),
+        RecipientRefusalModel(error = BankOfframpError.AmountOutOfLimits, expectedRejections = 0),
+        RecipientRefusalModel(
+            error = BankOfframpError.Unknown(cause = null, errorCode = FORBIDDEN_ERROR_CODE),
+            expectedRejections = 0,
+        ),
+        RecipientRefusalModel(
+            error = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true),
+            expectedRejections = 0,
+        ),
+        RecipientRefusalModel(
+            error = BankOfframpError.Unknown(cause = null, errorCode = SERVER_UNAVAILABLE_ERROR_CODE),
+            expectedRejections = 0,
+        ),
+        RecipientRefusalModel(error = BankOfframpError.PollingTimeout, expectedRejections = 0),
+        RecipientRefusalModel(
+            error = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true, errorCode = BAD_REQUEST_ERROR_CODE),
+            expectedRejections = 0,
+        ),
+    )
+
+    internal data class RecipientRefusalModel(val error: BankOfframpError, val expectedRejections: Int)
 
     private fun route(
         fee: BigDecimal = BigDecimal("1.00"),
@@ -416,5 +550,6 @@ internal class RouteBankWithdrawCompletionTest {
         val RAISED_NETWORK_FEE = BigDecimal("0.05")
         const val FORBIDDEN_ERROR_CODE = 104_120_100
         const val BAD_REQUEST_ERROR_CODE = 104_130_100
+        val SERVER_UNAVAILABLE_ERROR_CODE = TangemPayApiError.ServerUnavailable.errorCode
     }
 }

@@ -75,6 +75,7 @@ dependencies {
     // region Tests
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.mock)
     testImplementation(tangemDeps.card.core)
     testImplementation(tangemDeps.hot.core)
     // endregion

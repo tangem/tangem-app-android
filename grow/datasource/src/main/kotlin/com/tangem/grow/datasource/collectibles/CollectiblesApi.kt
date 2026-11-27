@@ -12,6 +12,7 @@ import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResp
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.GenerateBuybackDataResponse
 import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.GeoblockResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineNftsResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachinesResponse
@@ -126,4 +127,9 @@ interface CollectiblesApi {
         @Header("user-id") userWalletId: String,
         @Query("buybackId") buybackId: String,
     ): ApiResponse<BuybackStatusResponse>
+
+    /** The country is taken from the request's IP, so the answer follows the network, not the wallet. */
+    @RequiresSessionAuth
+    @GET("api/v1/geoblock")
+    suspend fun getGeoblock(@Header("user-id") userWalletId: String): ApiResponse<GeoblockResponse>
 }

@@ -88,11 +88,7 @@ private fun BoxScope.AvatarBody(state: TangemAvatar.UiState, tokens: AvatarToken
         is TangemAvatar.UiState.Account -> when (val glyph = state.glyph) {
             is AvatarAccountGlyph.Icon -> {
                 FilledBackground(color = glyph.color.toColor())
-                AccountGlyphIcon(
-                    imageVector = glyph.icon.asImageVector(),
-                    size = tokens.accountGlyphSize,
-                    contentDescription = contentDescription,
-                )
+                AccountIllustration(imageVector = glyph.imageVector, contentDescription = contentDescription)
             }
             is AvatarAccountGlyph.Letter -> {
                 FilledBackground(color = glyph.color.toColor())
@@ -100,7 +96,7 @@ private fun BoxScope.AvatarBody(state: TangemAvatar.UiState, tokens: AvatarToken
             }
             is AvatarAccountGlyph.Kind -> {
                 FilledBackground(color = glyph.kind.fillColor())
-                AccountKindGlyph(kind = glyph.kind, tokens = tokens, contentDescription = contentDescription)
+                AccountKindGlyph(kind = glyph.kind, contentDescription = contentDescription)
             }
         }
         is TangemAvatar.UiState.User -> if (state.initial == null) {
@@ -151,25 +147,24 @@ private fun BoxScope.AvatarBody(state: TangemAvatar.UiState, tokens: AvatarToken
 }
 
 @Composable
-private fun AccountGlyphIcon(imageVector: ImageVector, size: Dp, contentDescription: String?) {
+private fun BoxScope.AccountIllustration(imageVector: ImageVector, contentDescription: String?) {
     Icon(
         imageVector = imageVector,
         contentDescription = contentDescription,
         tint = TangemTheme.colors3.icon.staticDark.copy(alpha = ACCOUNT_GLYPH_ALPHA),
-        modifier = Modifier.size(size),
+        modifier = Modifier.matchParentSize(),
     )
 }
 
 @Composable
-private fun AccountKindGlyph(kind: TangemAvatar.AccountKind, tokens: AvatarTokens, contentDescription: String?) {
-    val size = tokens.accountGlyphSize * kind.glyphScale
+private fun BoxScope.AccountKindGlyph(kind: TangemAvatar.AccountKind, contentDescription: String?) {
     if (kind.isTinted) {
-        AccountGlyphIcon(imageVector = kind.icon(), size = size, contentDescription = contentDescription)
+        AccountIllustration(imageVector = kind.icon(), contentDescription = contentDescription)
     } else {
         Image(
             imageVector = kind.icon(),
             contentDescription = contentDescription,
-            modifier = Modifier.size(size),
+            modifier = Modifier.matchParentSize(),
         )
     }
 }

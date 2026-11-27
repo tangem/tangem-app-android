@@ -218,7 +218,7 @@ class TangemPayMultipleCardsTest : BaseTestCase() {
     @DisplayName("Tangem Pay: the card counter on the Payment account tile grows with every issued card")
     @Test
     fun cardCounterUpdatesOnPaymentAccountTileTest() {
-        val oneCardSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 1, 1)
+        val oneCardSubtitle = SINGLE_CARD_TILE_SUBTITLE
         val twoCardsSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 2, 2)
         val threeCardsSubtitle = getQuantityString(CoreResR.plurals.tangempay_cards_count, 3, 3)
 

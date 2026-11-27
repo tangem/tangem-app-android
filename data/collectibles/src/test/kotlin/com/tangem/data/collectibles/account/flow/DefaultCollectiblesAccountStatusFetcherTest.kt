@@ -75,22 +75,21 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN the vault read fails WHEN invoke THEN the cached amount is kept and marked stale`() =
-        runTest {
-            // Arrange
-            coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns UNREADABLE.left()
-            val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
+    fun `GIVEN the vault read fails WHEN invoke THEN the cached amount is kept and marked stale`() = runTest {
+        // Arrange
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
+        coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns UNREADABLE.left()
+        val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
-            // Act
-            val actual = createFetcher(store).invoke(PARAMS)
+        // Act
+        val actual = createFetcher(store).invoke(PARAMS)
 
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
-                CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ONLY_CACHE, vaultBalance = CACHED),
-            )
-        }
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+            CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ONLY_CACHE, vaultBalance = CACHED),
+        )
+    }
 
     /** A wallet restored on a new phone: the vault exists, its owner key has not been derived here yet. */
     @Test
@@ -122,19 +121,18 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
 
     /** The wallet was deleted and re-added: the local record went with it, the backend still lists the account. */
     @Test
-    fun `GIVEN only the backend lists the account and no owner key WHEN invoke THEN nothing is recorded`() =
-        runTest {
-            // Arrange
-            coEvery { walletAccountsFetcher.getSaved(WALLET) } returns SAVED_WITH_COLLECTIBLES
-            coEvery { ownerDeriver.storedOwner(WALLET) } returns null
-            val store = createStore(testScope = this, recorded = null)
+    fun `GIVEN only the backend lists the account and no owner key WHEN invoke THEN nothing is recorded`() = runTest {
+        // Arrange
+        coEvery { walletAccountsFetcher.getSaved(WALLET) } returns SAVED_WITH_COLLECTIBLES
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns null
+        val store = createStore(testScope = this, recorded = null)
 
-            // Act
-            createFetcher(store).invoke(PARAMS)
+        // Act
+        createFetcher(store).invoke(PARAMS)
 
-            // Assert
-            assertThat(store.getSyncOrNull(WALLET)).isNull()
-        }
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET)).isNull()
+    }
 
     @Test
     fun `GIVEN a restored account whose owner key is derived now WHEN invoke THEN it awaits the session key update`() =
@@ -298,21 +296,20 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN a relink sent WHEN the vault answers to this device THEN the relink is no longer pending`() =
-        runTest {
-            // Arrange
-            coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
-            val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
-            val accountRepository = createAccountRepository(store)
-            accountRepository.markRelinkSent(WALLET)
+    fun `GIVEN a relink sent WHEN the vault answers to this device THEN the relink is no longer pending`() = runTest {
+        // Arrange
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
+        coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
+        val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
+        val accountRepository = createAccountRepository(store)
+        accountRepository.markRelinkSent(WALLET)
 
-            // Act
-            createFetcher(store, accountRepository = accountRepository).invoke(PARAMS)
+        // Act
+        createFetcher(store, accountRepository = accountRepository).invoke(PARAMS)
 
-            // Assert
-            assertThat(accountRepository.isRelinkPending(WALLET)).isFalse()
-        }
+        // Assert
+        assertThat(accountRepository.isRelinkPending(WALLET)).isFalse()
+    }
 
     @Test
     fun `GIVEN a relink finishes during the vault read WHEN invoke THEN its result is not overwritten`() = runTest {
@@ -357,23 +354,24 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     /** Neither a read that did not answer nor a vault without a session key says the vault moved to another phone. */
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `GIVEN an onboarded account and no session key answer WHEN invoke THEN it stays onboarded`(isReadFailed: Boolean) =
-        runTest {
-            // Arrange
-            coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns
-                if (isReadFailed) UNREADABLE.left() else null.right()
-            coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
-            val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
+    fun `GIVEN an onboarded account and no session key answer WHEN invoke THEN it stays onboarded`(
+        isReadFailed: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
+        coEvery { gachaVaultRepository.getVaultSessionKey(USER_WALLET) } returns
+            if (isReadFailed) UNREADABLE.left() else null.right()
+        coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
+        val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
-            // Act
-            createFetcher(store).invoke(PARAMS)
+        // Act
+        createFetcher(store).invoke(PARAMS)
 
-            // Assert
-            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
-                CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL, vaultBalance = READ),
-            )
-        }
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+            CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL, vaultBalance = READ),
+        )
+    }
 
     @Test
     fun `GIVEN a locked wallet WHEN invoke THEN the cached amount is kept and marked stale`() = runTest {

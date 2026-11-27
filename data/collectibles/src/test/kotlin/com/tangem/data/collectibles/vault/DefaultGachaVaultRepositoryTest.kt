@@ -10,13 +10,10 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.common.core.TangemSdkError
-import com.tangem.data.collectibles.vault.transaction.DevnetGachaVaultTransactionSender
 import com.tangem.data.collectibles.vault.transaction.GachaVaultSigners
 import com.tangem.data.collectibles.vault.transaction.GaslessGachaVaultTransactionSender
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
@@ -39,10 +36,7 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -58,7 +52,6 @@ internal class DefaultGachaVaultRepositoryTest {
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory = mockk()
     private val gaslessSender: GaslessGachaVaultTransactionSender = mockk()
-    private val devnetSender: DevnetGachaVaultTransactionSender = mockk()
     private val sessionKey: CollectiblesSessionKey = mockk()
 
     private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
@@ -76,29 +69,19 @@ internal class DefaultGachaVaultRepositoryTest {
         ownerDeriver = ownerDeriver,
         signers = GachaVaultSigners(cardSdkConfigRepository, hotWalletSignerFactory),
         gaslessSender = gaslessSender,
-        devnetSender = devnetSender,
         sessionKey = sessionKey,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    /** Mainnet goes through the gasless sponsor; only a test card, which addresses devnet, pays in SOL. */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class TransactionSenderChoice {
+    inner class SetUpVault {
 
         @BeforeEach
         fun resetMocks() {
-            clearMocks(gaslessSender, devnetSender, ownerDeriver)
-            mockkStatic(SCAN_RESPONSE_EXT_FILE)
+            clearMocks(gaslessSender, ownerDeriver)
             coEvery { gaslessSender.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
-            coEvery { devnetSender.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
             coEvery { gaslessSender.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
-            coEvery { devnetSender.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
-        }
-
-        @AfterEach
-        fun unmockStatics() {
-            unmockkStatic(SCAN_RESPONSE_EXT_FILE)
         }
 
         @Test
@@ -109,13 +92,12 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) { gaslessSender.initOrUpdateVault(userWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { devnetSender.initOrUpdateVault(any(), any(), any()) }
         }
 
         @Test
-        fun `GIVEN a production card WHEN initOrUpdateVault THEN the gasless sender sets it up`() = runTest {
+        fun `GIVEN a card WHEN initOrUpdateVault THEN the gasless sender sets it up`() = runTest {
             // Arrange
-            val coldWallet = coldWallet(isTestCard = false)
+            val coldWallet: UserWallet.Cold = mockk { every { walletId } returns WALLET_ID }
 
             // Act
             val actual = repository.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS)
@@ -123,13 +105,12 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) { gaslessSender.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { devnetSender.initOrUpdateVault(any(), any(), any()) }
         }
 
         @Test
-        fun `GIVEN a production card WHEN deriveOwnerAndSetUpVault THEN the gasless sender sets it up`() = runTest {
+        fun `GIVEN a card WHEN deriveOwnerAndSetUpVault THEN the gasless sender sets it up`() = runTest {
             // Arrange
-            val coldWallet = coldWallet(isTestCard = false)
+            val coldWallet: UserWallet.Cold = mockk { every { walletId } returns WALLET_ID }
 
             // Act
             val actual = repository.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS)
@@ -137,21 +118,6 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) { gaslessSender.deriveOwnerAndSetUpVault(coldWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { devnetSender.deriveOwnerAndSetUpVault(any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN a test card WHEN initOrUpdateVault THEN the devnet sender sets it up`() = runTest {
-            // Arrange
-            val coldWallet = coldWallet(isTestCard = true)
-
-            // Act
-            val actual = repository.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS)
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) { devnetSender.initOrUpdateVault(coldWallet, SESSION_KEY, LIMITS) }
-            coVerify(exactly = 0) { gaslessSender.initOrUpdateVault(any(), any(), any()) }
         }
 
         @Test
@@ -182,12 +148,6 @@ internal class DefaultGachaVaultRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(CollectiblesAccountError.Cancelled.left())
             coVerify(exactly = 0) { gaslessSender.initOrUpdateVault(any(), any(), any()) }
-        }
-
-        private fun coldWallet(isTestCard: Boolean): UserWallet.Cold {
-            val coldWallet = mockk<UserWallet.Cold> { every { walletId } returns WALLET_ID }
-            every { coldWallet.cardTypesResolver } returns mockk { every { isTestCard() } returns isTestCard }
-            return coldWallet
         }
     }
 
@@ -284,7 +244,7 @@ internal class DefaultGachaVaultRepositoryTest {
         @Test
         fun `GIVEN the vault holds the token WHEN getVaultBalance THEN its amount is returned`() = runTest {
             // Arrange
-            stubTokenBalances(tokenBalance(mint = MINT, amount = BigDecimal("12.5")))
+            stubVaultBalance(Result.Success(BigDecimal("12.5")))
 
             // Act
             val actual = repository.getVaultBalance(userWallet)
@@ -300,36 +260,28 @@ internal class DefaultGachaVaultRepositoryTest {
             )
         }
 
-        /** The provider lists only accounts holding something, and the vault's own account always exists. */
         @Test
-        fun `GIVEN no entry for the mint WHEN getVaultBalance THEN the amount is an honest zero`() = runTest {
+        fun `GIVEN a vault WHEN getVaultBalance THEN the balance is read for the vault's mint`() = runTest {
             // Arrange
-            stubTokenBalances(tokenBalance(mint = OTHER_MINT, amount = BigDecimal.TEN))
-
-            // Act
-            val actual = repository.getVaultBalance(userWallet)
-
-            // Assert
-            assertThat(actual.getOrNull()?.usdcAmount).isEqualTo(BigDecimal.ZERO)
-        }
-
-        /** The token accounts belong to the vault PDA, not to the address the vault's USDC sits at. */
-        @Test
-        fun `GIVEN a vault WHEN getVaultBalance THEN the balances are read by the vault address`() = runTest {
-            // Arrange
-            stubTokenBalances()
+            stubVaultBalance(Result.Success(BigDecimal.ZERO))
 
             // Act
             repository.getVaultBalance(userWallet)
 
             // Assert
-            coVerify(exactly = 1) {
-                walletManagersFacade.getTokenBalances(
-                    userWalletId = WALLET_ID,
-                    network = network,
-                    address = VAULT_ADDRESS,
-                )
-            }
+            coVerify(exactly = 1) { walletManager.getCollectiblesVaultTokenBalance(mint = MINT) }
+        }
+
+        @Test
+        fun `GIVEN the balance read fails WHEN getVaultBalance THEN an error is returned, not zero`() = runTest {
+            // Arrange
+            stubVaultBalance(Result.Failure(BlockchainSdkError.CustomError("rpc down")))
+
+            // Act
+            val actual = repository.getVaultBalance(userWallet)
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
         }
 
         @Test
@@ -340,7 +292,7 @@ internal class DefaultGachaVaultRepositoryTest {
                     amount = BigDecimal.ZERO,
                     currency = MockCollectibles.usdc(mint = MINT),
                 )
-                stubTokenBalances(tokenBalance(mint = MINT, amount = BigDecimal.ONE))
+                stubVaultBalance(Result.Success(BigDecimal.ONE))
 
                 // Act
                 val actual = repository.getVaultBalance(userWallet, cached = known)
@@ -352,7 +304,7 @@ internal class DefaultGachaVaultRepositoryTest {
             }
 
         @Test
-        fun `GIVEN the config cannot be read WHEN getVaultBalance THEN nothing is read by address`() = runTest {
+        fun `GIVEN the config cannot be read WHEN getVaultBalance THEN no balance is read`() = runTest {
             // Arrange
             coEvery { walletManager.getCollectiblesVaultUsdc() } returns
                 Result.Failure(BlockchainSdkError.CustomError("no config"))
@@ -362,7 +314,7 @@ internal class DefaultGachaVaultRepositoryTest {
 
             // Assert
             assertThat(actual.isLeft()).isTrue()
-            coVerify(exactly = 0) { walletManagersFacade.getTokenBalances(any(), any(), any()) }
+            coVerify(exactly = 0) { walletManager.getCollectiblesVaultTokenBalance(any()) }
         }
 
         @Test
@@ -380,16 +332,55 @@ internal class DefaultGachaVaultRepositoryTest {
 
         private fun expectedCurrency() = MockCollectibles.usdc(mint = MINT)
 
-        private fun stubTokenBalances(vararg balances: TokenBalance) {
-            coEvery { walletManagersFacade.getTokenBalances(WALLET_ID, network, VAULT_ADDRESS) } returns
-                balances.toList()
+        private fun stubVaultBalance(result: Result<BigDecimal>) {
+            coEvery { walletManager.getCollectiblesVaultTokenBalance(MINT) } returns result
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Withdraw {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(gaslessSender)
+            coEvery { gaslessSender.withdraw(any(), any(), any(), any()) } returns TX_HASH.right()
         }
 
-        private fun tokenBalance(mint: String, amount: BigDecimal) = TokenBalance(
-            contractAddress = mint,
-            amount = amount,
-            isNativeToken = false,
-        )
+        @Test
+        fun `GIVEN a mobile wallet WHEN withdraw THEN the gasless sender pays the wallet in base units`() = runTest {
+            // Act
+            val actual = repository.withdraw(userWallet, VAULT_TOKEN, RECIPIENT, BigDecimal("12.5"))
+
+            // Assert
+            assertThat(actual).isEqualTo(TX_HASH.right())
+            coVerify(exactly = 1) {
+                gaslessSender.withdraw(userWallet, MINT, RECIPIENT, 12_500_000L)
+            }
+        }
+
+        @Test
+        fun `GIVEN more decimals than USDC has WHEN withdraw THEN nothing is sent`() = runTest {
+            // Act
+            val actual = repository.withdraw(userWallet, VAULT_TOKEN, RECIPIENT, BigDecimal("0.0000001"))
+
+            // Assert
+            assertThat(actual.leftOrNull()).isInstanceOf(CollectiblesAccountError.Vault::class.java)
+            coVerify(exactly = 0) { gaslessSender.withdraw(any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the outcome is unknown WHEN withdraw THEN it is passed on`() = runTest {
+            // Arrange
+            val maybeSent = CollectiblesAccountError.MaybeSent(txHash = TX_HASH)
+            coEvery { gaslessSender.withdraw(any(), any(), any(), any()) } returns maybeSent.left()
+
+            // Act
+            val actual = repository.withdraw(userWallet, VAULT_TOKEN, RECIPIENT, BigDecimal.ONE)
+
+            // Assert
+            assertThat(actual).isEqualTo(maybeSent.left())
+        }
     }
 
     @Nested
@@ -542,7 +533,7 @@ internal class DefaultGachaVaultRepositoryTest {
         const val VAULT_ADDRESS = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
         const val VAULT_USDC_ADDRESS = "9vJc1bnfHRLbGeDdQCrmJFAsEtR9SEbNJVi8QeHfAo8f"
         const val MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-        const val OTHER_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+        val VAULT_TOKEN = MockCollectibles.usdc(mint = MINT)
 
         val SESSION_KEY = SessionKeyPublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
         val LIMITS = GachaVaultLimits.Default
@@ -552,6 +543,7 @@ internal class DefaultGachaVaultRepositoryTest {
         const val MEMO = "cc-uuid"
         const val TX_HASH = "hash"
         const val OWNER = "owner"
+        const val RECIPIENT = "Hx6LbkMHe69DYawhPyVNs8Apa6tyfogfzQV6a7XkwBUU"
 
         const val CARD_ID = "AC01000000041225"
         const val PUBLIC_KEY_SIZE = 32
@@ -560,6 +552,5 @@ internal class DefaultGachaVaultRepositoryTest {
         /** Pushes the message past the 930 bytes a card can sign. */
         const val LARGE_INSTRUCTION_DATA_SIZE = 900
 
-        const val SCAN_RESPONSE_EXT_FILE = "com.tangem.domain.card.common.util.ScanResponseExtKt"
     }
 }

@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.recipients.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -38,12 +37,12 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val speiAvailability: BankWithdrawSpeiAvailability,
-    analytics: AnalyticsEventHandler,
+    withdrawAnalyticsFactory: BankWithdrawAnalytics.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawRecipientsComponent.Params>()
 
-    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
+    private val withdrawAnalytics = withdrawAnalyticsFactory.create(sourceAccount = params.sourceAccount)
 
     private val umFactory = TangemPayBankWithdrawRecipientsUMFactory(
         callbacks = TangemPayBankWithdrawRecipientsUMFactory.Callbacks(
@@ -112,7 +111,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     }
 
     private fun onRecipientClick(account: BankAccount) {
-        withdrawAnalytics.onRecipientSelected()
+        withdrawAnalytics.onRecipientSelected(rail = account.details.rail)
         params.onRecipientSelected(account)
     }
 }

@@ -1,10 +1,14 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
+import com.tangem.domain.polymarket.model.PredictionOrderFees
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderStatus
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -43,10 +47,78 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = spent,
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
+                    total = BigDecimal("14.07"),
                 ),
             ),
         )
     }
+
+    @ParameterizedTest
+    @MethodSource("providePartialSellModels")
+    fun `GIVEN a partial sell WHEN converted THEN the total is the fill net of its share of the fee`(
+        model: PartialSellModel,
+    ) {
+        // Act
+        val actual = convert(
+            result = result(side = PredictionOrderSide.SELL, shares = model.shares, collateral = model.received),
+            side = PredictionOrderSide.SELL,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = model.received,
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = model.shares,
+                    total = model.expectedTotal,
+                ),
+            ),
+        )
+    }
+
+    internal data class PartialSellModel(
+        val name: String,
+        val shares: BigDecimal,
+        val received: BigDecimal,
+        val expectedTotal: BigDecimal,
+    ) {
+        override fun toString(): String = name
+    }
+
+    private fun providePartialSellModels() = listOf(
+        PartialSellModel(
+            name = "half the shares bear half the fee",
+            shares = QUOTED_SHARES.half(),
+            received = BigDecimal("36.000000"),
+            expectedTotal = BigDecimal("35.30"),
+        ),
+        PartialSellModel(
+            name = "a quarter of the shares bear a quarter of the fee",
+            shares = BigDecimal("24.489796"),
+            received = BigDecimal("18.000000"),
+            expectedTotal = BigDecimal("17.65"),
+        ),
+        PartialSellModel(
+            name = "the proceeds round down to cents",
+            shares = BigDecimal("32.653061"),
+            received = BigDecimal("24.002000"),
+            expectedTotal = BigDecimal("23.53"),
+        ),
+        PartialSellModel(
+            name = "a fee above the proceeds leaves nothing",
+            shares = BigDecimal("0.979592"),
+            received = BigDecimal("0.001000"),
+            expectedTotal = BigDecimal("0.00"),
+        ),
+        PartialSellModel(
+            name = "the fill ratio follows the shares, not the collateral",
+            shares = QUOTED_SHARES.half(),
+            received = BigDecimal("30.000000"),
+            expectedTotal = BigDecimal("29.30"),
+        ),
+    )
 
     @Test
     fun `GIVEN the collateral leg is short WHEN the shares are whole THEN the fill is full`() {
@@ -66,11 +138,17 @@ internal class PlaceResultUMConverterTest {
     @EnumSource(PredictionOrderSide::class)
     fun `GIVEN a full fill WHEN converted THEN the actual exchanged amount is shown`(side: PredictionOrderSide) {
         val amount = BigDecimal("70.25")
+        val total = when (side) {
+            PredictionOrderSide.BUY -> BigDecimal("71.65")
+            PredictionOrderSide.SELL -> BigDecimal("68.85")
+        }
 
         val actual = convert(result = result(side = side, collateral = amount), side = side)
 
         assertThat(actual).isEqualTo(
-            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = amount)),
+            PlaceOutcome.Reportable(
+                result = filled(shares = QUOTED_SHARES).copy(collateralAmount = amount, total = total),
+            ),
         )
     }
 
@@ -106,7 +184,12 @@ internal class PlaceResultUMConverterTest {
 
         // Assert
         assertThat(actual).isEqualTo(
-            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = BigDecimal.ZERO)),
+            PlaceOutcome.Reportable(
+                result = filled(shares = QUOTED_SHARES).copy(
+                    collateralAmount = BigDecimal.ZERO,
+                    total = BigDecimal("0.00"),
+                ),
+            ),
         )
     }
 
@@ -137,6 +220,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("71.999999"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES - BigDecimal("0.000001"),
+                    total = BigDecimal("73.40"),
                 ),
             ),
         ),
@@ -183,7 +267,7 @@ internal class PlaceResultUMConverterTest {
         ConvertModel(
             side = PredictionOrderSide.SELL,
             result = result(side = PredictionOrderSide.SELL),
-            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES)),
+            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES).copy(total = SOLD_TOTAL)),
         ),
         ConvertModel(
             side = PredictionOrderSide.SELL,
@@ -198,6 +282,7 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("36.000000"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = QUOTED_SHARES.half(),
+                    total = BigDecimal("35.30"),
                 ),
             ),
         ),
@@ -219,7 +304,7 @@ internal class PlaceResultUMConverterTest {
         ConvertModel(
             side = PredictionOrderSide.SELL,
             result = result(side = PredictionOrderSide.SELL, shares = QUOTED_SHARES + BigDecimal.ONE),
-            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES + BigDecimal.ONE)),
+            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES + BigDecimal.ONE).copy(total = SOLD_TOTAL)),
         ),
     )
 
@@ -229,7 +314,7 @@ internal class PlaceResultUMConverterTest {
         // Act
         val actual = PlaceResultUMConverter.convert(
             order = model.order,
-            quotedAmount = QUOTED_AMOUNT,
+            quote = model.quote,
             placedAt = PLACED_AT,
         )
 
@@ -237,7 +322,12 @@ internal class PlaceResultUMConverterTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    internal data class ReadBackModel(val name: String, val order: PredictionOrderState, val expected: PlaceOutcome) {
+    internal data class ReadBackModel(
+        val name: String,
+        val order: PredictionOrderState,
+        val expected: PlaceOutcome,
+        val quote: PredictionOrderQuote = QUOTE,
+    ) {
         override fun toString(): String = name
     }
 
@@ -250,6 +340,8 @@ internal class PlaceResultUMConverterTest {
                     placedAt = PLACED_AT,
                     collateralAmount = BigDecimal("73.50"),
                     shares = ORDERED_SHARES,
+                    fee = QUOTED_FEE,
+                    total = BigDecimal("74.90"),
                 ),
             ),
         ),
@@ -261,6 +353,8 @@ internal class PlaceResultUMConverterTest {
                     placedAt = PLACED_AT,
                     collateralAmount = BigDecimal("74.24"),
                     shares = ORDERED_SHARES + BigDecimal.ONE,
+                    fee = QUOTED_FEE,
+                    total = BigDecimal("75.64"),
                 ),
             ),
         ),
@@ -273,6 +367,77 @@ internal class PlaceResultUMConverterTest {
                     filledCollateral = BigDecimal("24.50"),
                     requestedCollateral = QUOTED_AMOUNT,
                     shares = BigDecimal("33.333333"),
+                    total = BigDecimal("24.97"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "a full sell nets the fee from the unrounded proceeds",
+            order = readBack(sizeMatched = ORDERED_SHARES, price = BigDecimal("0.73505")),
+            quote = SELL_QUOTE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.Filled(
+                    placedAt = PLACED_AT,
+                    collateralAmount = BigDecimal("73.51"),
+                    shares = ORDERED_SHARES,
+                    fee = QUOTED_FEE,
+                    total = BigDecimal("72.10"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "a partial sell just short of the order size nets less than the full fee",
+            order = readBack(sizeMatched = BigDecimal("99")),
+            quote = SELL_QUOTE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("72.77"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = BigDecimal("99"),
+                    total = BigDecimal("71.37"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "two thirds of the order net exactly two thirds of the fee",
+            order = readBack(sizeMatched = BigDecimal("2"), originalSize = BigDecimal("3"), price = BigDecimal("2")),
+            quote = SELL_QUOTE.copy(fees = SELL_QUOTE.fees.copy(total = BigDecimal("3"))),
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("4.00"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = BigDecimal("2"),
+                    total = BigDecimal("2.00"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "a partial sell nets its share of the fee from the proceeds",
+            order = readBack(sizeMatched = QUOTED_SHARES.half()),
+            quote = SELL_QUOTE,
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("36.00"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = QUOTED_SHARES.half(),
+                    total = BigDecimal("35.31"),
+                ),
+            ),
+        ),
+        ReadBackModel(
+            name = "without quoted shares the fee is still shared by the ordered size",
+            order = readBack(sizeMatched = QUOTED_SHARES.half()),
+            quote = SELL_QUOTE.copy(shares = BigDecimal.ZERO),
+            expected = PlaceOutcome.Reportable(
+                result = PlaceResultUM.PartiallyFilled(
+                    placedAt = PLACED_AT,
+                    filledCollateral = BigDecimal("36.00"),
+                    requestedCollateral = QUOTED_AMOUNT,
+                    shares = QUOTED_SHARES.half(),
+                    total = BigDecimal("35.31"),
                 ),
             ),
         ),
@@ -304,14 +469,36 @@ internal class PlaceResultUMConverterTest {
     ) = PlaceResultUMConverter.convert(
         result = result,
         side = side,
-        quotedShares = QUOTED_SHARES,
-        quotedAmount = QUOTED_AMOUNT,
+        quote = QUOTE,
         placedAt = PLACED_AT,
     )
 
     private companion object {
         val QUOTED_AMOUNT: BigDecimal = BigDecimal("72.000000")
         val QUOTED_SHARES: BigDecimal = BigDecimal("97.959184")
+        val QUOTED_FEE: BigDecimal = BigDecimal("1.40")
+        val QUOTED_TOTAL: BigDecimal = BigDecimal("73.40")
+        val SOLD_TOTAL: BigDecimal = BigDecimal("70.60")
+        val QUOTE = PredictionOrderQuote(
+            status = PredictionQuoteStatus.FULL,
+            side = PredictionOrderSide.BUY,
+            shares = QUOTED_SHARES,
+            notional = QUOTED_AMOUNT,
+            expectedExecutionAmount = QUOTED_SHARES,
+            averagePrice = BigDecimal("0.735"),
+            worstCasePrice = BigDecimal("0.74"),
+            fees = PredictionOrderFees(market = BigDecimal("1.00"), builder = BigDecimal("0.40"), total = QUOTED_FEE),
+            total = QUOTED_TOTAL,
+            builderCode = "0xbuilder",
+            minOrderSize = BigDecimal("5"),
+            minOrderAmount = BigDecimal.ONE,
+            tickSize = BigDecimal("0.001"),
+            isLive = false,
+            version = PolymarketMarketVersion.V1,
+            exchange = null,
+            signingDomainVersion = null,
+        )
+        val SELL_QUOTE = QUOTE.copy(side = PredictionOrderSide.SELL)
         const val PLACED_AT = 1_787_300_000_000L
         const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
         const val UNREADABLE_FILL_REASON = "The exchange matched the order, but its fill cannot be read"
@@ -322,6 +509,8 @@ internal class PlaceResultUMConverterTest {
             placedAt = PLACED_AT,
             collateralAmount = QUOTED_AMOUNT,
             shares = shares,
+            fee = QUOTED_FEE,
+            total = QUOTED_TOTAL,
         )
 
         const val ORDER_ID = "0x6b2e"

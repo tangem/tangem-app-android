@@ -12,6 +12,7 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -20,6 +21,8 @@ import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.earn.api.EarnEntrySource
+import com.tangem.features.earn.api.overview.EarnProductRate
+import com.tangem.features.earn.api.overview.EarnRateType
 import com.tangem.features.earn.flow.api.EarnFlowComponent
 import com.tangem.features.earn.flow.api.EarnFlowProduct
 import com.tangem.features.earn.product.api.analytics.EarnProductAnalytics
@@ -27,6 +30,7 @@ import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProvider
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.session.EarnActionInput
+import com.tangem.features.earn.product.api.session.EarnFeeSelection
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.EarnPlan
 import com.tangem.features.earn.product.api.session.EarnResult
@@ -59,13 +63,20 @@ internal fun testStatus(
     fiatRate = fiatRate,
 )
 
+internal fun createRate(fraction: String) = EarnProductRate(fraction = BigDecimal(fraction), type = EarnRateType.APY)
+
 internal fun testFee(value: String): Fee =
     Fee.Common(Amount(currencySymbol = "ETH", value = BigDecimal(value), decimals = 18))
+
+/** [testFeeContent] offers a single fee, so the selector reports it as Fixed */
+internal fun testFeeSelection(value: String, extended: TransactionFeeExtended? = null) =
+    EarnFeeSelection(fee = testFee(value), extended = extended, feeType = AnalyticsParam.FeeType.Fixed)
 
 internal fun testFeeContent(
     value: String,
     isPrimaryButtonEnabled: Boolean = true,
     extended: TransactionFeeExtended? = null,
+    feeCryptoCurrencyStatus: CryptoCurrencyStatus = testStatus(),
 ): FeeSelectorUM.Content {
     val fee = testFee(value)
     return FeeSelectorUM.Content(
@@ -77,7 +88,7 @@ internal fun testFeeContent(
             isFeeApproximate = false,
             isFeeConvertibleToFiat = true,
             isTronToken = false,
-            feeCryptoCurrencyStatus = testStatus(),
+            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             transactionFeeExtended = extended,
         ),
         feeFiatRateUM = null,
@@ -89,7 +100,7 @@ internal val testFlowProduct = EarnFlowProduct(
     productId = EarnProductId("lending"),
     title = stringReference("Lending on Aave"),
     provider = EarnProvider(title = stringReference("Aave"), icon = ImageReference.Res(0)),
-    analytics = EarnProductAnalytics(category = "Earn", product = "Lending"),
+    analytics = EarnProductAnalytics(category = "ETH Lending", product = "Lending"),
 )
 
 internal fun testParams(action: EarnFlowAction, callback: EarnFlowComponent.ModelCallback) = EarnFlowComponent.Params(
@@ -104,6 +115,14 @@ internal object TestClaim : EarnFlowAction {
     override val id: String = "claim"
     override val label: TextReference = stringReference("Claim")
     override val input: EarnActionInput = EarnActionInput.None
+    override val isGaslessAllowed: Boolean = false
+    override fun title(productTitle: TextReference): TextReference = productTitle
+}
+
+internal object TestTopUp : EarnFlowAction {
+    override val id: String = "top-up"
+    override val label: TextReference = stringReference("Top up")
+    override val input: EarnActionInput = EarnActionInput.Amount(EarnActionInput.Amount.Source.Wallet)
     override val isGaslessAllowed: Boolean = false
     override fun title(productTitle: TextReference): TextReference = productTitle
 }

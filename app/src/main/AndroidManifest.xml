@@ -22,7 +22,15 @@
         tools:node="remove" />
 
     <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="false" />
@@ -239,6 +247,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
+                    android:host="native_survey"
+                    android:scheme="tangem" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
                     android:host="markets"
                     android:scheme="tangem" />
             </intent-filter>
@@ -316,6 +335,16 @@
 
                 <data
                     android:host="onboard-visa"
+                    android:scheme="tangem" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="onboard-virtual-account"
                     android:scheme="tangem" />
             </intent-filter>
             <intent-filter>
@@ -506,10 +535,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
-        <receiver
-            android:name="com.tangem.tap.common.share.ShareResultReceiver"
-            android:exported="false" />
 
         <!-- SurveySparrow SDK exports this activity (exported="true") in its own manifest. -->
         <!-- We launch it only via an explicit in-app intent, so force it non-exported to -->

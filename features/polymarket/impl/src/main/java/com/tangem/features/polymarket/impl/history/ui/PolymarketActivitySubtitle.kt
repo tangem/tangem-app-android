@@ -17,6 +17,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
+import com.tangem.core.ui.ds2.row.TangemRowAddressText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.extensions.appendColored
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -36,6 +38,11 @@ internal fun PolymarketActivitySubtitle(subtitle: PolymarketActivitySubtitleUM, 
             style = TangemTheme.typography3.caption.medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = modifier,
+        )
+        is PolymarketActivitySubtitleUM.TransactionHash -> TangemRowAddressText(
+            address = subtitle.hash,
+            role = TangemRowTextRole.Subtitle,
             modifier = modifier,
         )
         is Funding -> FundingSubtitle(subtitle = subtitle, modifier = modifier)

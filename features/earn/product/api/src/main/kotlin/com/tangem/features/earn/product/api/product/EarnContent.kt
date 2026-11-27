@@ -1,18 +1,20 @@
 package com.tangem.features.earn.product.api.product
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.earn.api.overview.EarnProductRate
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 
 /**
- * [footnote] goes under the entries, for example who audited the contract; [learnMoreUrl] adds a "Learn more" button.
+ * [footnote] goes under the entries, for example who audited the contract; [learnMore] adds a "Learn more" button.
+ * The post, not its link, since the link carries the app instance id and is built only when the button is clicked.
  */
 data class EarnHowItWorks(
     val title: TextReference,
     val entries: List<EarnTextBlock>,
     val footnote: TextReference? = null,
-    val learnMoreUrl: String? = null,
+    val learnMore: TangemBlogUrlBuilder.Post? = null,
 )
 
 data class EarnLimits(

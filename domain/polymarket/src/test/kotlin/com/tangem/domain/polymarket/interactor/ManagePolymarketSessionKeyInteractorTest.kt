@@ -1,10 +1,12 @@
 package com.tangem.domain.polymarket.interactor
 
+import com.tangem.domain.polymarket.sessionkey.FakePolymarketPendingAuthorizationStore
 import arrow.core.NonEmptyList
 import arrow.core.left
 import arrow.core.nonEmptyListOf
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -30,6 +32,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketPendingAuthorization
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyDeviceState
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
@@ -45,10 +48,13 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -57,6 +63,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigInteger
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -74,7 +82,8 @@ internal class ManagePolymarketSessionKeyInteractorTest {
     private val tradingStore: PolymarketSessionKeyTradingStore = mockk(relaxed = true)
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase = mockk()
     private val deriveApiCredentials: DeriveApiCredentialsUseCase = mockk()
-    private val depositWalletLock = PolymarketDepositWalletLock()
+    private val pendingAuthorizations = FakePolymarketPendingAuthorizationStore()
+    private val depositWalletLock = PolymarketDepositWalletLock(pendingAuthorizations)
 
     @BeforeEach
     fun setup() {
@@ -133,7 +142,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN Polymarket lists the key with every scope and its own expiry WHEN enable THEN it is marked ready`() =
+        fun `GIVEN the key listed with every scope and its own expiry WHEN enable THEN it finishes not ready`() =
             runTest {
                 // Arrange
                 val authorization = authorization()
@@ -144,6 +153,46 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(
                     signer(KEY, validUntil = VALID_UNTIL.minusSeconds(60)).copy(scopes = listOf("all")),
                 ).right()
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the key listed with CLOB and another expiry WHEN enable THEN it finishes not ready`() =
+            runTest {
+                // Arrange
+                val authorization = authorization()
+                givenSigned(nonEmptyListOf(authorize()), signed(authorization))
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(listOf(key()))
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    listOf(signer(KEY, validUntil = VALID_UNTIL.plusSeconds(1))).right()
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the key listed in the recorded second WHEN enable THEN it is marked ready`() =
+            runTest {
+                // Arrange
+                val authorization = authorization()
+                givenSigned(nonEmptyListOf(authorize()), signed(authorization))
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(listOf(key()))
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    listOf(signer(KEY, validUntil = VALID_UNTIL.plusMillis(500))).right()
 
                 // Act
                 val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
@@ -252,6 +301,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 ),
             )
             coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            coVerify(exactly = 0) { tradingStore.markAuthorized(any(), any()) }
         }
 
         @Test
@@ -292,22 +342,43 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN Polymarket never lists the key WHEN enable THEN it is not marked ready`() = runTest {
+        fun `GIVEN Polymarket never lists the active key WHEN enable THEN it succeeds without being marked ready`() =
+            runTest {
+                // Arrange
+                givenSigned(nonEmptyListOf(authorize()), signed(authorization()))
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    listOf(signer(FOREIGN)).right()
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList()
+
+                // Assert
+                assertThat(actual).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Authorizing(key()),
+                    PolymarketSessionKeyProgress.CheckingReadiness(key()),
+                    PolymarketSessionKeyProgress.Finished(key().right()),
+                ).inOrder()
+                coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
+                assertThat(testScheduler.currentTime).isEqualTo(LISTING_WAIT_MILLIS)
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+            }
+
+        @Test
+        fun `GIVEN the active key has no expiry WHEN enable THEN it succeeds without asking Polymarket`() = runTest {
             // Arrange
             givenSigned(nonEmptyListOf(authorize()), signed(authorization()))
-            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
-            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
-                listOf(signer(FOREIGN)).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns
+                key(validUntil = null).right()
 
             // Act
             val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
 
             // Assert
-            assertThat(actual).isEqualTo(
-                PolymarketSessionKeyProgress.Finished(
-                    PolymarketSessionKeyLifecycleError.NotListedOnExchange(key()).left(),
-                ),
-            )
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key(validUntil = null).right()))
+            coVerify(exactly = 0) { sessionKeyRepository.getSessionSigners(any()) }
             coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
         }
 
@@ -368,7 +439,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN a signing in progress WHEN another deposit wallet operation starts THEN it waits for the send`() =
+        fun `GIVEN a signing in progress WHEN a deposit wallet batch starts THEN it is busy at once`() =
             runTest {
                 // Arrange
                 val signing = CompletableDeferred<Unit>()
@@ -377,21 +448,19 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     signed(authorization()).right()
                 }
                 coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
-                var isClaimStarted = false
+                var isBatchRun = false
                 val interactor = createInteractor()
 
                 // Act
                 val enabling = launch { interactor.enable(USER_WALLET_ID).toList() }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
-                runCurrent()
-                val isStartedWhileSigning = isClaimStarted
+                val batch = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) { isBatchRun = true }
                 signing.complete(Unit)
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(isStartedWhileSigning).isFalse()
-                assertThat(isClaimStarted).isTrue()
+                assertThat(batch).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(isBatchRun).isFalse()
                 enabling.join()
             }
 
@@ -412,7 +481,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     }
                 }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
+                launch { depositWalletLock.withBatchOrBusy(USER_WALLET_ID) { isClaimStarted = true } }
                 runCurrent()
                 val isStartedWhileCollecting = isClaimStarted
                 collecting.complete(Unit)
@@ -597,6 +666,36 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
+        fun `GIVEN Polymarket does not list the renewed key yet WHEN renew THEN it is authorized not ready`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(
+                    listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                    listOf(key()),
+                )
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
+                    emptyList<PolymarketSessionSigner>().right()
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+            }
+
+        @Test
         fun `GIVEN the revoking key is missing twice in a row WHEN renew THEN it is taken as revoked and authorized`() =
             runTest {
                 // Arrange
@@ -755,7 +854,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             }
 
         @Test
-        fun `GIVEN the revocation is settling WHEN another deposit wallet operation starts THEN it does not wait`() =
+        fun `GIVEN the revocation is settling WHEN a claim starts THEN it is busy and the authorization keeps its nonce`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -773,19 +872,23 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
                     listOf(key()),
                 )
-                var isClaimStarted = false
+                val claimInteractor = SubmitPredictionClaimInteractor(
+                    redeemRepository = mockk(),
+                    polymarketRepository = mockk(),
+                    positionsRepository = mockk(),
+                    signer = mockk(),
+                    depositWalletLock = depositWalletLock,
+                )
                 val interactor = createInteractor()
 
                 // Act
                 val renewing = launch { interactor.renew(USER_WALLET_ID).toList() }
                 runCurrent()
-                launch { depositWalletLock.withLock(USER_WALLET_ID) { isClaimStarted = true } }
-                runCurrent()
-                val isStartedWhileSettling = isClaimStarted
+                val claim = claimInteractor.claim(claimParams())
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(isStartedWhileSettling).isTrue()
+                assertThat(claim).isEqualTo(PredictionClaimFailure.WalletBusy.left())
                 coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
                 renewing.join()
             }
@@ -815,7 +918,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
-        fun `GIVEN the authorization expired while revoking WHEN renew THEN it ends stale without a second signing`() =
+        fun `GIVEN the authorization expired while revoking WHEN renew THEN it ends unsettled after one signing`() =
             runTest {
                 // Arrange
                 val revocation = revocation(nonce = "7")
@@ -835,10 +938,118 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                 // Assert
                 assertThat(actual).isEqualTo(
                     PolymarketSessionKeyProgress.Finished(
-                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKING),
+                        ).left(),
                     ),
                 )
                 coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the revocation outlasts the deadline WHEN renew THEN the wallet is released unsettled at the signed deadline`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                    walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKING))).right()
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                renewing.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(testScheduler.currentTime).isLessThan(FOLLOW_UP_DEADLINE_MILLIS + RELAY_POLL_MILLIS)
+                assertThat(progress).containsExactly(
+                    PolymarketSessionKeyProgress.Signing,
+                    PolymarketSessionKeyProgress.Revoking(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKING),
+                        ).left(),
+                    ),
+                ).inOrder()
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the authorization send outlasts the deadline WHEN renew THEN the wallet is released at the signed deadline`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                    walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKED))).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(any(), any()) } coAnswers {
+                    awaitCancellation()
+                }
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val renewing = launch { progress = interactor.renew(USER_WALLET_ID).toList() }
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                renewing.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(progress.last()).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKED),
+                        ).left(),
+                    ),
+                )
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN signing outlasts the authorization deadline WHEN renew THEN it ends stale and nothing is revoked`() =
+            runTest {
+                // Arrange
+                val signed = signed(revocation(nonce = "7"), authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE))
+                coEvery {
+                    signBatches(USER_WALLET_ID, nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()))
+                } coAnswers {
+                    delay(SENDABLE_FOLLOW_UP_MILLIS + RELAY_POLL_MILLIS)
+                    signed.right()
+                }
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
                 coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
             }
 
@@ -888,6 +1099,8 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     PolymarketSessionKeyProgress.Finished(key().right()),
                 ).inOrder()
                 coVerify(exactly = 1) { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) }
+                coVerify(exactly = 1) { tradingStore.markAuthorized(USER_WALLET_ID, KEY) }
+                coVerify(exactly = 0) { tradingStore.markAuthorized(USER_WALLET_ID, PREVIOUS) }
             }
 
         @Test
@@ -1106,7 +1319,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     ).left(),
                 ),
             )
-            coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
+            coVerify(exactly = UNLISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
         }
 
         @Test
@@ -1244,7 +1457,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
                     ).left(),
                 ),
             )
-            coVerify(exactly = LISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
+            coVerify(exactly = UNLISTING_ATTEMPTS) { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) }
         }
 
         @Test
@@ -1357,6 +1570,985 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PendingAuthorization {
+
+        @BeforeEach
+        fun resetPendingAuthorizations() = runTest {
+            pendingAuthorizations.clear(USER_WALLET_ID)
+            pendingAuthorizations.storeResult = Unit.right()
+            pendingAuthorizations.readFailure = null
+        }
+
+        @Test
+        fun `GIVEN the revocation is being sent WHEN renew THEN the pair is already stored and cleared once authorized`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(pending.revocation, pending.authorization),
+                )
+                var storedWhenRevoking: PolymarketPendingAuthorization? = null
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } coAnswers {
+                    storedWhenRevoking = pendingAuthorizations.stored(USER_WALLET_ID)
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                }
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)), listOf(key()))
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                assertThat(storedWhenRevoking).isEqualTo(pending)
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the revocation stays unsettled past the deadline WHEN renew THEN the pair is kept`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            givenSigned(
+                nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                signed(pending.revocation, pending.authorization),
+            )
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
+                walletState(listOf(key(status = PolymarketSessionKeyStatus.REVOKING))).right()
+
+            // Act
+            val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Unsettled(key(status = PolymarketSessionKeyStatus.REVOKING))
+                        .left(),
+                ),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the relayer refuses the revocation WHEN renew THEN it ends stale and keeps the pair`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            val error = PolymarketSessionKeyError.RelayerRejected(detail = "expired")
+            givenSigned(
+                nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                signed(pending.revocation, pending.authorization),
+            )
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                error.left()
+
+            // Act
+            val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.StaleSignature(cause = error).left(),
+                ),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the store refuses the pair WHEN renew THEN it fails and nothing is sent`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            val error = PolymarketSessionKeyError.KeyMissing
+            pendingAuthorizations.storeResult = error.left()
+            givenSigned(
+                nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                signed(pending.revocation, pending.authorization),
+            )
+
+            // Act
+            val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.Failed(error).left()),
+            )
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the revocation was executed WHEN resume THEN the stored authorization is sent and the pair cleared`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)), listOf(key()))
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) }
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+                coVerify(exactly = 0) { signBatches(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the resumed authorization send outlasts the deadline WHEN resume THEN the wallet is released unsettled`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } coAnswers {
+                    awaitCancellation()
+                }
+                givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+                val interactor = createInteractor()
+                var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+                // Act
+                val resuming = launch { progress = interactor.resume(USER_WALLET_ID).toList() }
+                advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
+                val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+                advanceTimeBy(2)
+                resuming.join()
+                val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+                // Assert
+                assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+                assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+                assertThat(progress.last()).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Unsettled(
+                            key(status = PolymarketSessionKeyStatus.REVOKED),
+                        ).left(),
+                    ),
+                )
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN the revocation was not executed WHEN resume THEN it is sent before the authorization`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                key(status = PolymarketSessionKeyStatus.PENDING).right()
+            givenWalletReads(
+                listOf(key(validUntil = NOW.plusSeconds(3_600))),
+                listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                listOf(key()),
+            )
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerifyOrder {
+                sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation)
+                sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization)
+            }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the key is already recorded WHEN resume THEN nothing is sent and the pair is cleared`(
+            model: RecordedModel,
+        ) = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pendingOf())
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(9).right()
+            givenWalletReads(listOf(key(status = model.status)), listOf(key()))
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @Test
+        fun `GIVEN the authorization expired WHEN resume THEN it ends stale, sends nothing and clears the pair`() =
+            runTest {
+                // Arrange
+                val expired = expiredPendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, expired)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                givenWalletReads(emptyList())
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the authorization is refused for good WHEN resume THEN the pair is cleared`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                PolymarketSessionKeyError.SessionKeyLimitReached.left()
+            givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.SessionKeyLimitReached).left(),
+                ),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @Test
+        fun `GIVEN the revoked key stays active WHEN resume THEN the revocation failed and the pair is cleared`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                givenWalletReads(listOf(key(validUntil = NOW.plusSeconds(3_600))), listOf(key()))
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.RevocationFailed(key()).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the wallet nonce cannot be read WHEN resume THEN it fails on the network and keeps the pair`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns
+                    DataError.UserWalletError.WrongUserWallet(message = "boom").left()
+                givenWalletReads(emptyList())
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network).left(),
+                    ),
+                )
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the wallet nonce moved past the authorization WHEN resume THEN it ends stale and clears the pair`() =
+            runTest {
+                // Arrange
+                pendingAuthorizations.store(USER_WALLET_ID, pendingOf())
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(9).right()
+                givenWalletReads(emptyList())
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideUnrevokedModels")
+        fun `GIVEN the nonce is past the revocation but the key shows none WHEN resume THEN it is unsettled and kept`(
+            model: UnrevokedModel,
+        ) = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            givenWalletReads(model.sessionKeys)
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.Unsettled(model.sessionKeys.single()).left(),
+                ),
+            )
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the wallet nonce read hangs WHEN resume THEN the wallet is released at the deadline`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, pendingOf())
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } coAnswers { awaitCancellation() }
+            val interactor = createInteractor()
+            var progress: List<PolymarketSessionKeyProgress> = emptyList()
+
+            // Act
+            val resuming = launch { progress = interactor.resume(USER_WALLET_ID).toList() }
+            advanceTimeBy(FOLLOW_UP_DEADLINE_MILLIS - 1)
+            val batchBeforeDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+            advanceTimeBy(2)
+            resuming.join()
+            val batchAfterDeadline = depositWalletLock.withBatchOrBusy(USER_WALLET_ID) {}
+
+            // Assert
+            assertThat(batchBeforeDeadline).isEqualTo(PolymarketDepositWalletLock.Busy.left())
+            assertThat(batchAfterDeadline).isEqualTo(Unit.right())
+            assertThat(progress.last()).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                ),
+            )
+            coVerify(exactly = 0) { polymarketRepository.getWalletStatusByWalletId(any()) }
+        }
+
+        @Test
+        fun `GIVEN the revocation nonce is already used WHEN renew THEN it ends stale and keeps the pair`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            val error = PolymarketSessionKeyError.NonceAlreadyUsed
+            givenSigned(
+                nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                signed(pending.revocation, pending.authorization),
+            )
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                error.left()
+
+            // Act
+            val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(
+                    PolymarketSessionKeyLifecycleError.StaleSignature(cause = error).left(),
+                ),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the wallet nonce reads behind the revocation WHEN resume THEN it fails on the network and keeps the pair`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(6).right()
+                givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKING)))
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN a replacement whose previous key was revoked WHEN resume THEN the new key is authorized`() = runTest {
+            // Arrange
+            val pending = replacementPendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                key(status = PolymarketSessionKeyStatus.PENDING).right()
+            givenWalletReads(
+                listOf(key(address = PREVIOUS, status = PolymarketSessionKeyStatus.REVOKED)),
+                listOf(key(address = PREVIOUS, status = PolymarketSessionKeyStatus.REVOKED), key()),
+            )
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) }
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @Test
+        fun `GIVEN a replacement already accepted WHEN resume THEN nothing is sent and the pair is cleared`() = runTest {
+            // Arrange
+            pendingAuthorizations.store(USER_WALLET_ID, replacementPendingOf())
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(9).right()
+            givenWalletReads(
+                listOf(
+                    key(address = PREVIOUS, status = PolymarketSessionKeyStatus.REVOKED),
+                    key(status = PolymarketSessionKeyStatus.PENDING),
+                ),
+                listOf(key(address = PREVIOUS, status = PolymarketSessionKeyStatus.REVOKED), key()),
+            )
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @Test
+        fun `GIVEN the relayer keeps rejecting the authorization WHEN resume THEN the pair is kept`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            val error = PolymarketSessionKeyError.RelayerRejected(detail = "wallet has in-flight action")
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                error.left()
+            givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.StaleSignature(error).left()),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the authorization ends with an unknown server error WHEN resume THEN the pair is kept`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            val error = PolymarketSessionKeyError.Unknown(httpCode = 500, reason = null, detail = null)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                error.left()
+            givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.Failed(error).left()),
+            )
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the revoked key record is dropped and unlisted WHEN resume THEN the authorization is sent`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returnsMany listOf(
+                    emptyList<PolymarketSessionSigner>().right(),
+                    listOf(signer(KEY)).right(),
+                )
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(emptyList(), listOf(key()))
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) }
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the revoked key record is dropped but still listed WHEN resume THEN the pair is kept unsettled`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(signer(KEY)).right()
+                givenWalletReads(emptyList())
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                val error = (actual as PolymarketSessionKeyProgress.Finished).result.leftOrNull()
+                assertThat(error).isInstanceOf(PolymarketSessionKeyLifecycleError.Unsettled::class.java)
+                val dropped = (error as PolymarketSessionKeyLifecycleError.Unsettled).sessionKey
+                assertThat(dropped.address).isEqualTo(KEY)
+                assertThat(dropped.status).isEqualTo(PolymarketSessionKeyStatus.REVOKING)
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN the revoked key record is dropped and signers unread WHEN resume twice THEN the pair is kept and sent`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returnsMany
+                    List(UNLISTING_ATTEMPTS) { PolymarketAuthError.Network.left() } + listOf(
+                        emptyList<PolymarketSessionSigner>().right(),
+                        listOf(signer(KEY)).right(),
+                    )
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(emptyList(), emptyList(), listOf(key()))
+                val interactor = createInteractor()
+
+                // Act
+                val first = interactor.resume(USER_WALLET_ID).toList().last()
+                val keptAfterFirst = pendingAuthorizations.stored(USER_WALLET_ID)
+                val second = interactor.resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(first).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.Network).left(),
+                    ),
+                )
+                assertThat(keptAfterFirst).isEqualTo(pending)
+                assertThat(second).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the revoked key record is dropped and listed for a while WHEN resume THEN the authorization is sent`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returnsMany listOf(
+                    listOf(signer(KEY)).right(),
+                    listOf(signer(KEY)).right(),
+                    emptyList<PolymarketSessionSigner>().right(),
+                    listOf(signer(KEY)).right(),
+                )
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                    key(status = PolymarketSessionKeyStatus.PENDING).right()
+                givenWalletReads(emptyList(), listOf(key()))
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN the revoked key record is dropped and unlisted WHEN the authorization fails THEN it follows a revocation`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                givenSignersWithoutKey()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                    PolymarketSessionKeyError.SessionKeyBusy.left()
+                givenWalletReads(emptyList())
+
+                // Act
+                val progress = createInteractor().resume(USER_WALLET_ID).toList()
+
+                // Assert
+                assertThat(progress.map { it::class }).containsExactly(
+                    PolymarketSessionKeyProgress.Revoking::class,
+                    PolymarketSessionKeyProgress.Revoked::class,
+                    PolymarketSessionKeyProgress.Finished::class,
+                ).inOrder()
+                val revoked = progress.filterIsInstance<PolymarketSessionKeyProgress.Revoked>().single().sessionKey
+                assertThat(revoked.address).isEqualTo(KEY)
+                assertThat(revoked.status).isEqualTo(PolymarketSessionKeyStatus.REVOKED)
+                assertThat(progress.last()).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.Failed(PolymarketSessionKeyError.SessionKeyBusy).left(),
+                    ),
+                )
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN the revoked key record is dropped and no owner credentials WHEN resume THEN the pair is kept`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                coEvery { getApiCredentials(USER_WALLET_ID) } returns null
+                givenWalletReads(emptyList())
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                val error = (actual as PolymarketSessionKeyProgress.Finished).result.leftOrNull()
+                assertThat(error).isInstanceOf(PolymarketSessionKeyLifecycleError.Unsettled::class.java)
+                val dropped = (error as PolymarketSessionKeyLifecycleError.Unsettled).sessionKey
+                assertThat(dropped.address).isEqualTo(KEY)
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.getSessionSigners(any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN the revocation is settling at its nonce WHEN resume THEN it is awaited, not resent`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                key(status = PolymarketSessionKeyStatus.PENDING).right()
+            givenWalletReads(
+                listOf(key(status = PolymarketSessionKeyStatus.REVOKING)),
+                listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                listOf(key()),
+            )
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            coVerify(exactly = 1) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @Test
+        fun `GIVEN the revocation has 45 s left WHEN resume THEN it is sent before the authorization`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+            coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation) } returns
+                key(status = PolymarketSessionKeyStatus.REVOKING).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                key(status = PolymarketSessionKeyStatus.PENDING).right()
+            givenWalletReads(
+                listOf(key(validUntil = NOW.plusSeconds(3_600))),
+                listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                listOf(key()),
+            )
+            delay(REVOCATION_45_SECONDS_LEFT_MILLIS)
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            coVerifyOrder {
+                sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, pending.revocation)
+                sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization)
+            }
+        }
+
+        @Test
+        fun `GIVEN the revocation is within its send margin WHEN resume THEN it ends stale and the pair is kept`() =
+            runTest {
+                // Arrange
+                val pending = pendingOf()
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+                givenWalletReads(listOf(key(validUntil = NOW.plusSeconds(3_600))))
+                delay(REVOCATION_EXPIRED_AFTER_MILLIS)
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN the revocation deadline passed while the authorization is alive WHEN resume THEN the pair is cleared`() =
+            runTest {
+                // Arrange
+                pendingAuthorizations.store(USER_WALLET_ID, pendingOf())
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(7).right()
+                givenWalletReads(listOf(key(validUntil = NOW.plusSeconds(3_600))))
+                delay(REVOCATION_DEADLINE_PASSED_AFTER_MILLIS)
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+            }
+
+        @Test
+        fun `GIVEN an executable pair WHEN enable THEN it is refused as in progress and the pair is kept`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+
+            // Act
+            val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.OperationInProgress.left()),
+            )
+            coVerify(exactly = 0) { signBatches(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN an executable pair WHEN renew THEN it is refused as in progress and the pair is kept`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+
+            // Act
+            val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.OperationInProgress.left()),
+            )
+            coVerify(exactly = 0) { signBatches(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN an expired pair WHEN enable THEN it proceeds and the pair is cleared`() = runTest {
+            // Arrange
+            val expired = expiredPendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, expired)
+            givenSigned(nonEmptyListOf(authorize()), signed(authorization()))
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, any()) } returns key().right()
+
+            // Act
+            val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isNull()
+        }
+
+        @Test
+        fun `GIVEN a pair 20 s before its deadline WHEN enable THEN it is refused as in progress and kept`() = runTest {
+            // Arrange
+            val pending = pendingDueIn(seconds = 20)
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+
+            // Act
+            val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.OperationInProgress.left()),
+            )
+            coVerify(exactly = 0) { signBatches(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN the pair cannot be read WHEN enable THEN it is refused as in progress and nothing is signed`() =
+            runTest {
+                // Arrange
+                pendingAuthorizations.readFailure = PolymarketSessionKeyError.Failure(IllegalStateException("locked"))
+
+                // Act
+                val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.OperationInProgress.left(),
+                    ),
+                )
+                coVerify(exactly = 0) { signBatches(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the pair cannot be read WHEN resume THEN it fails, sends nothing and keeps the pair`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            val error = PolymarketSessionKeyError.Failure(IllegalStateException("locked"))
+            pendingAuthorizations.readFailure = error
+
+            // Act
+            val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.Failed(error).left()),
+            )
+            coVerify(exactly = 0) { sessionKeyRepository.revokeSessionKey(any(), any()) }
+            coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        @Test
+        fun `GIVEN a pair 20 s before its deadline WHEN resume THEN it ends stale and keeps the pair until the deadline`() =
+            runTest {
+                // Arrange
+                val pending = pendingDueIn(seconds = 20)
+                pendingAuthorizations.store(USER_WALLET_ID, pending)
+                coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+                givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+                // Act
+                val actual = createInteractor().resume(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = null).left(),
+                    ),
+                )
+                coVerify(exactly = 0) { sessionKeyRepository.authorizeSessionKey(any(), any()) }
+                assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+            }
+
+        @Test
+        fun `GIVEN a stored pair WHEN resume THEN the wallet nonce is read before the session keys`() = runTest {
+            // Arrange
+            val pending = pendingOf()
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+            coEvery { polymarketRepository.getRelayerNonce(OWNER) } returns BigInteger.valueOf(8).right()
+            coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, pending.authorization) } returns
+                key(status = PolymarketSessionKeyStatus.PENDING).right()
+            givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)), listOf(key()))
+
+            // Act
+            createInteractor().resume(USER_WALLET_ID).toList()
+
+            // Assert
+            coVerifyOrder {
+                polymarketRepository.getRelayerNonce(OWNER)
+                polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue)
+            }
+        }
+
+        @Test
+        fun `GIVEN a pair 40 s before its deadline WHEN enable THEN it is refused as in progress and kept`() = runTest {
+            // Arrange
+            val pending = pendingDueIn(seconds = 40)
+            pendingAuthorizations.store(USER_WALLET_ID, pending)
+
+            // Act
+            val actual = createInteractor().enable(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketSessionKeyProgress.Finished(PolymarketSessionKeyLifecycleError.OperationInProgress.left()),
+            )
+            coVerify(exactly = 0) { signBatches(any(), any()) }
+            assertThat(pendingAuthorizations.stored(USER_WALLET_ID)).isEqualTo(pending)
+        }
+
+        private fun pendingDueIn(seconds: Long) =
+            pendingOf(authorization = authorization(nonce = "8", deadline = (NOW.epochSecond + seconds).toString()))
+
+        private fun provideTestModels() = listOf(
+            RecordedModel(status = PolymarketSessionKeyStatus.PENDING),
+            RecordedModel(status = PolymarketSessionKeyStatus.ACTIVE),
+        )
+
+        private fun provideUnrevokedModels() = listOf(
+            UnrevokedModel(sessionKeys = listOf(key(validUntil = NOW.plusSeconds(3_600)))),
+        )
+
+        private fun expiredPendingOf(): PolymarketPendingAuthorization {
+            val pastDeadline = (NOW.epochSecond - 1).toString()
+            return pendingOf(
+                revocation = revocation(nonce = "7").copy(deadline = pastDeadline),
+                authorization = authorization(nonce = "8", deadline = pastDeadline),
+            )
+        }
+
+        private fun replacementPendingOf() = pendingOf(
+            revocation = revocation(address = PREVIOUS, nonce = "7"),
+            authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE, replaces = PREVIOUS),
+        ).copy(purpose = PolymarketPendingAuthorization.Purpose.REPLACE)
+
+        private fun pendingOf(
+            revocation: PolymarketSessionKeyRevocation = revocation(nonce = "7"),
+            authorization: PolymarketSessionKeyAuthorization =
+                authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE),
+        ) = PolymarketPendingAuthorization(
+            revocation = revocation,
+            authorization = authorization,
+            purpose = PolymarketPendingAuthorization.Purpose.EXTEND,
+        )
+    }
+
+    data class RecordedModel(val status: PolymarketSessionKeyStatus)
+
+    data class UnrevokedModel(val sessionKeys: List<PolymarketSessionKey>)
+
     private fun TestScope.createInteractor() = ManagePolymarketSessionKeyInteractor(
         signBatches = signBatches,
         sessionKeyRepository = sessionKeyRepository,
@@ -1368,6 +2560,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         getApiCredentials = getApiCredentials,
         deriveApiCredentials = deriveApiCredentials,
         depositWalletLock = depositWalletLock,
+        pendingAuthorizations = pendingAuthorizations,
         clock = SchedulerClock(testScheduler),
     )
 
@@ -1420,6 +2613,17 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         override fun instant(): Instant = NOW.plusMillis(scheduler.currentTime)
     }
 
+    private fun claimParams() = SubmitPredictionClaimInteractor.Params(
+        userWalletId = USER_WALLET_ID,
+        walletId = USER_WALLET_ID.stringValue,
+        ownerAddress = OWNER,
+        depositWalletAddress = OWNER,
+        conditionId = "0xcondition",
+        assetId = "1",
+        isNegRisk = false,
+        version = null,
+    )
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val OWNER = "0x1111111111111111111111111111111111111111"
@@ -1429,9 +2633,17 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         const val FOREIGN = "0x5e55000000000000000000000000000000000003"
         const val DEVICE_ID = "device"
         const val DEVICE_NAME = "Pixel"
-        const val SETTLE_TIMEOUT_MILLIS = 35 * 60 * 1_000L
+        const val SETTLE_TIMEOUT_MILLIS = 30 * 60 * 1_000L
         const val BUSY_RETRY_DELAY_MILLIS = 1_500L
-        const val LISTING_ATTEMPTS = 20
+        const val LISTING_ATTEMPTS = 10
+        const val LISTING_WAIT_MILLIS = (LISTING_ATTEMPTS - 1) * 3_000L
+        const val UNLISTING_ATTEMPTS = 20
+        const val RELAY_POLL_MILLIS = 3_000L
+        const val SENDABLE_FOLLOW_UP_MILLIS = 1_200_000L - 30_000L
+        const val FOLLOW_UP_DEADLINE_MILLIS = 1_200_000L
+        const val REVOCATION_EXPIRED_AFTER_MILLIS = 600_000L - 30_000L
+        const val REVOCATION_45_SECONDS_LEFT_MILLIS = 600_000L - 45_000L
+        const val REVOCATION_DEADLINE_PASSED_AFTER_MILLIS = 601_000L
         val NOW: Instant = Instant.ofEpochSecond(1_789_430_000)
         val VALID_UNTIL: Instant = NOW.plusSeconds(180L * 24 * 60 * 60)
         val DEADLINE = (NOW.epochSecond + 600).toString()
@@ -1445,7 +2657,7 @@ internal class ManagePolymarketSessionKeyInteractorTest {
             address: String = KEY,
             status: PolymarketSessionKeyStatus = PolymarketSessionKeyStatus.ACTIVE,
             isEnabled: Boolean = true,
-            validUntil: Instant = VALID_UNTIL,
+            validUntil: Instant? = VALID_UNTIL,
         ) = PolymarketSessionKey(
             address = address,
             deviceId = DEVICE_ID,

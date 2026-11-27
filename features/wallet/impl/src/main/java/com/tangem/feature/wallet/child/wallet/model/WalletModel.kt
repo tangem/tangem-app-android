@@ -63,6 +63,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
@@ -81,7 +82,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.tangempay.Kyc
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
@@ -149,7 +149,6 @@ internal class WalletModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val mcpRequestService: McpRequestService,
-    private val mcpFeatureToggles: McpFeatureToggles,
     private val allServicesFeatureToggles: AllServicesFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
@@ -160,6 +159,7 @@ internal class WalletModel @Inject constructor(
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+    private val walletTangemPayAnalyticsEventSender: WalletTangemPayAnalyticsEventSender,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -201,6 +201,7 @@ internal class WalletModel @Inject constructor(
         restoreTrackingContextOnResume()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        walletTangemPayAnalyticsEventSender.observeSelectedWallet(modelScope)
         subscribeJointAccountPolling()
         subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
@@ -219,6 +220,7 @@ internal class WalletModel @Inject constructor(
     fun onResume() {
         suggestToEnableBiometrics()
         suggestToOpenMarketsOnResume()
+        walletTangemPayAnalyticsEventSender.onResume()
     }
 
     fun onDialogShown() {
@@ -343,7 +345,7 @@ internal class WalletModel @Inject constructor(
                     analyticsEventsHandler.send(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
-                            accountsCount = accountList?.accounts?.size,
+                            accountsCount = accountList?.accountsCountWithoutJoint(),
                             jointAccountsCounts = jointAccountsCounts,
                             isBackedUp = isWalletBackedUpUseCase(selectedWallet),
                             completedBackups = getCompletedBackupsUseCase(selectedWallet),
@@ -518,7 +520,8 @@ internal class WalletModel @Inject constructor(
      * a co-signature), so while the main screen is in the foreground, the selected wallet's joint account gets a
      * 5-second poll to keep it fresh — the current status can't tell us whether it's stale, so it isn't used to
      * gate this. Only the selected wallet is polled, since it's the only one actually visible in the pager. The
-     * coordinator paces itself — this only decides which wallet (if any) to collect for.
+     * coordinator paces itself — this only decides which wallet (if any) to collect for. A wallet selected for the
+     * first time is fetched at once: nothing else refreshes its joint accounts on a switch.
      */
     private fun subscribeJointAccountPolling() {
         combine(
@@ -531,7 +534,7 @@ internal class WalletModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { walletId ->
                 if (walletId != null) {
-                    jointAccountPollingCoordinator.poll(walletId)
+                    jointAccountPollingCoordinator.poll(walletId = walletId, isFirstFetchImmediate = true)
                 } else {
                     emptyFlow()
                 }
@@ -950,9 +953,7 @@ internal class WalletModel @Inject constructor(
                 )
             }
             is QrSendTarget.McpAuthorization -> {
-                if (mcpFeatureToggles.isMcpEnabled) {
-                    mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
-                }
+                mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
             }
             is QrSendTarget.DeepLink -> deeplinkLauncher.launch(target.uri, shouldReportFailure = false)
             is QrSendTarget.Single -> {
@@ -1080,6 +1081,9 @@ internal class WalletModel @Inject constructor(
 private fun AccountList.listedJointAccountIds(): Set<String> = accounts
     .filterIsInstance<Account.Joint>()
     .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
+
+// Joint accounts are reported by their own counters
+internal fun AccountList.accountsCountWithoutJoint(): Int = accounts.count { it !is Account.Joint }
 
 /** Archived joint accounts are not in [accountList], so only the statuses of the accounts it holds are counted */
 internal fun jointAccountsCounts(

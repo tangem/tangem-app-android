@@ -2,6 +2,7 @@ package com.tangem.tap.common.pushes
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
@@ -11,7 +12,11 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 internal class PayloadToDeeplinkConverterTest {
 
@@ -292,6 +297,24 @@ internal class PayloadToDeeplinkConverterTest {
     }
 
     @Test
+    fun `GIVEN tangem pay kyc_additional_info push payload WHEN convert THEN should return pay-app-main deeplink`() {
+        // Arrange
+        val payload = mapOf(
+            TYPE_KEY to "kyc_additional_info",
+            CUSTOMER_ID_KEY to "c1",
+            CUSTOMER_WALLET_ID_KEY to "wallet123",
+        )
+
+        // Act
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            "tangem://pay-app-main?type=kyc_additional_info&customer_id=c1&customer_wallet_id=wallet123",
+        )
+    }
+
+    @Test
     fun `GIVEN tangem pay push type in another case WHEN convert THEN should return pay-app-main deeplink`() {
         // Arrange
         val payload = mapOf(
@@ -488,5 +511,81 @@ internal class PayloadToDeeplinkConverterTest {
             "tangem://pay-app-main?type=card_ready&customer_wallet_id=wallet123" +
                 "&link=https%3A%2F%2Ftangem.com%2Fpricing%2F",
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsOpenReportedByTangemPayHandler {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN push payload WHEN checking whether tangem pay handler reports the open THEN it follows the routing`(
+            model: OpenReportModel,
+        ) {
+            // Act
+            val actual = PayloadToDeeplinkConverter.isOpenReportedByTangemPayHandler(model.payload)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            OpenReportModel(
+                case = "kyc push",
+                payload = mapOf(
+                    TYPE_KEY to "kyc_additional_info",
+                    CUSTOMER_ID_KEY to "c1",
+                    CUSTOMER_WALLET_ID_KEY to "wallet123",
+                ),
+                expected = true,
+            ),
+            OpenReportModel(
+                case = "kyc push with uppercase type",
+                payload = mapOf(TYPE_KEY to "KYC_ADDITIONAL_INFO", CUSTOMER_WALLET_ID_KEY to "wallet123"),
+                expected = true,
+            ),
+            OpenReportModel(
+                case = "kyc push with link key",
+                payload = mapOf(
+                    TYPE_KEY to "kyc_additional_info",
+                    CUSTOMER_WALLET_ID_KEY to "wallet123",
+                    WEBLINK_KEY to "https://tangem.com/pricing/",
+                ),
+                expected = true,
+            ),
+            OpenReportModel(
+                case = "card_ready push",
+                payload = mapOf(TYPE_KEY to "card_ready", CUSTOMER_WALLET_ID_KEY to "wallet123"),
+                expected = false,
+            ),
+            OpenReportModel(
+                case = "kyc push without customer_wallet_id",
+                payload = mapOf(TYPE_KEY to "kyc_additional_info", CUSTOMER_ID_KEY to "c1"),
+                expected = false,
+            ),
+            OpenReportModel(
+                case = "kyc push with empty customer_wallet_id",
+                payload = mapOf(TYPE_KEY to "kyc_additional_info", CUSTOMER_WALLET_ID_KEY to ""),
+                expected = false,
+            ),
+            OpenReportModel(
+                case = "kyc push with deeplink key",
+                payload = mapOf(
+                    DEEPLINK_KEY to "tangem://main",
+                    TYPE_KEY to "kyc_additional_info",
+                    CUSTOMER_WALLET_ID_KEY to "wallet123",
+                ),
+                expected = false,
+            ),
+            OpenReportModel(case = "empty payload", payload = emptyMap(), expected = false),
+        )
+    }
+
+    internal data class OpenReportModel(
+        val case: String,
+        val payload: Map<String, String>,
+        val expected: Boolean,
+    ) {
+        override fun toString(): String = "$case -> $expected"
     }
 }

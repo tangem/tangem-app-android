@@ -1,5 +1,7 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesFetcher
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -11,6 +13,7 @@ import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.YieldSupplyWrappedNativeFactory
 import com.tangem.domain.yield.supply.status.YieldModuleStatusFetcher
 import com.tangem.domain.yield.supply.promo.YieldPromoRepository
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
@@ -144,9 +147,13 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyIsAvailableUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
+        wrappedNativeFactory: YieldSupplyWrappedNativeFactory,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): YieldSupplyIsAvailableUseCase {
         return YieldSupplyIsAvailableUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
+            wrappedNativeFactory = wrappedNativeFactory,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
@@ -174,11 +181,13 @@ internal object YieldSupplyDomainModule {
         feeRepository: FeeRepository,
         quotesRepository: QuotesRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     ): YieldSupplyMinAmountUseCase {
         return YieldSupplyMinAmountUseCase(
             feeRepository = feeRepository,
             quotesRepository = quotesRepository,
             singleAccountListSupplier = singleAccountListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         )
     }
 
@@ -188,11 +197,13 @@ internal object YieldSupplyDomainModule {
         feeRepository: FeeRepository,
         quotesRepository: QuotesRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     ): YieldSupplyGetCurrentFeeUseCase {
         return YieldSupplyGetCurrentFeeUseCase(
             feeRepository = feeRepository,
             quotesRepository = quotesRepository,
             singleAccountListSupplier = singleAccountListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         )
     }
 
@@ -202,11 +213,13 @@ internal object YieldSupplyDomainModule {
         yieldSupplyRepository: YieldSupplyRepository,
         quotesRepository: QuotesRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     ): YieldSupplyGetMaxFeeUseCase {
         return YieldSupplyGetMaxFeeUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
             quotesRepository = quotesRepository,
             singleAccountListSupplier = singleAccountListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         )
     }
 
@@ -220,6 +233,12 @@ internal object YieldSupplyDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
             dispatcherProvider = dispatcherProvider,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAccruingBalanceUseCase(dispatcherProvider: CoroutineDispatcherProvider): GetAccruingBalanceUseCase {
+        return GetAccruingBalanceUseCase(dispatcherProvider = dispatcherProvider)
     }
 
     @Provides
@@ -282,6 +301,7 @@ internal object YieldSupplyDomainModule {
         yieldSupplyRepository: YieldSupplyRepository,
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        nonPortfolioCurrenciesFetcher: NonPortfolioCurrenciesFetcher,
         yieldModuleStatusFetcher: YieldModuleStatusFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
         appScope: AppCoroutineScope,
@@ -290,6 +310,7 @@ internal object YieldSupplyDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            nonPortfolioCurrenciesFetcher = nonPortfolioCurrenciesFetcher,
             yieldModuleStatusFetcher = yieldModuleStatusFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
             coroutineScope = appScope,

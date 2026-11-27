@@ -6,6 +6,13 @@ sealed class GetFeeError {
     data class DataError(val cause: Throwable?) : GetFeeError()
     data object UnknownError : GetFeeError()
 
+    /** The gas simulation of several transactions fails the estimate instead of a fallback to a static one */
+    sealed class SimulationError : GetFeeError() {
+        /** The transactions would revert on chain */
+        data object Reverted : SimulationError()
+        data object Unavailable : SimulationError()
+    }
+
     sealed class BlockchainErrors : GetFeeError() {
         data object TronActivationError : BlockchainErrors()
         data object KaspaZeroUtxo : BlockchainErrors()

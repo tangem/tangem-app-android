@@ -8,6 +8,7 @@ import com.tangem.common.constants.TangemPayBankRecipient
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.findWireMockRequestBodiesByPathPattern
 import com.tangem.common.utils.findWireMockRequestBodiesNewestFirst
@@ -22,11 +23,13 @@ import com.tangem.screens.onSwapSelectTokenScreen
 import com.tangem.screens.onSwapSuccessScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTxHistoryScreen
+import com.tangem.screens.tangempay.expandTangemPayGroupIfCollapsed
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawErrorScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawPreviewScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawSuccessScreen
 import com.tangem.screens.tangempay.onTangemPayWithdrawHubScreen
 import com.tangem.screens.onVirtualAccountRequisitesBottomSheet
+import com.tangem.screens.unlockDialogAccessCodeInputMatcher
 import io.qameta.allure.kotlin.Allure.step
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import java.math.BigDecimal
@@ -34,6 +37,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 
+@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainWithMoneyAccountWallet(dismissMarketsTooltip: Boolean = true, accessCode: String = "") {
     step("Import hot wallet from Tangem Pay seed phrase") {
         openMainScreenWithExistingHotWallet(
@@ -42,7 +46,12 @@ fun BaseTestCase.openMainWithMoneyAccountWallet(dismissMarketsTooltip: Boolean =
             dismissMarketsTooltip = dismissMarketsTooltip,
         )
     }
-    if (accessCode.isNotEmpty()) enterHotWalletUnlockAccessCode(accessCode)
+    if (accessCode.isNotEmpty()) {
+        enterHotWalletUnlockAccessCode(accessCode)
+        step("Assert access code dialog is not displayed") {
+            composeTestRule.waitUntilDoesNotExist(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
+        }
+    }
     step("Close 'Finalize wallet setup' sheet if shown") { closeFinishWalletActivationSheetIfShown() }
 }
 
@@ -290,13 +299,12 @@ fun BaseTestCase.returnToMainFromMoneyAccount() {
     }
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String, isMultiWallet: Boolean = false) {
     var rowWithBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithBalance = mainRowWithTextMatcher(balance) }
     step("Refresh 'Main' until the 'Money account' row shows '$balance'") {
         refreshMainUntil(isMultiWallet) {
-            composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
+            awaitMoneyAccountRowMatching(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
         }
     }
 }
@@ -433,11 +441,18 @@ private fun BaseTestCase.refreshMoneyAccountUntil(isChanged: () -> Boolean) {
     }
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.waitForMoneyAccountRowWithText(text: String, timeoutMillis: Long = WAIT_UNTIL_TIMEOUT_LONG) {
     var rowWithText: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithText = mainRowWithTextMatcher(text) }
-    composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithText), timeoutMillis)
+    awaitMoneyAccountRowMatching(checkNotNull(rowWithText), timeoutMillis)
+}
+
+// The row sits in the collapsed 'Pay' group until it is expanded, and the group may appear after the wait starts.
+private fun BaseTestCase.awaitMoneyAccountRowMatching(matcher: SemanticsMatcher, timeoutMillis: Long) {
+    composeTestRule.waitUntil(timeoutMillis = timeoutMillis) {
+        composeTestRule.expandTangemPayGroupIfCollapsed()
+        composeTestRule.onAllNodes(matcher).fetchSemanticsNodes(false).isNotEmpty()
+    }
 }
 
 fun BaseTestCase.waitForMoneyAccountRowWithTextNeverShowing(

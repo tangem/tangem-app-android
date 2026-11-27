@@ -112,6 +112,16 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         }
     }
 
+    /**
+     * Markets hides tokens under 100k USD market cap behind a "Show tokens" button; low-cap coins
+     * (e.g. ZENIQ) appear in the search results only after it is tapped.
+     */
+    val showTokensButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(CoreResR.string.markets_search_show_tokens))
+        useUnmergedTree = true
+    }
+
     @ExperimentalTestApi
     fun scrollToListedOnBlock() {
         tokenDetailsContent {

@@ -17,9 +17,11 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -116,6 +118,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     isBankOfframpAvailable = null,
                     tariffPlan = null,
                     isPaymentAccountIssuing = false,
+                    isKycAdditionalInfoRequired = false,
                 ),
                 expected = PaymentAccountStatusValueDM.ActiveAccount(
                     customerId = "customer-3",
@@ -130,18 +133,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
 
         private fun provideTransientStatuses() = listOf(
             PaymentAccountStatusValue.Loading,
-            PaymentAccountStatusValue.AwaitingPlanSelection(
-                source = StatusSource.ACTUAL,
-                tariffPlan = mockk(),
-            ),
-            PaymentAccountStatusValue.Inactive(
-                source = StatusSource.ACTUAL,
-                fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                    availableBalance = BigDecimal("100"),
-                    currency = "USD",
-                ),
-                tariffPlan = mockk(),
-            ),
             PaymentAccountStatusValue.Error.Unavailable,
         )
     }
@@ -170,6 +161,15 @@ internal class PaymentAccountStatusValueDMConverterTest {
 
             // Assert
             assertThat(restored).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN cached active account with flag WHEN convertBack THEN flag kept`() {
+            // Act
+            val result = converter.convertBack(userWalletId, activeAccountWithKycAdditionalInfoFlag())
+
+            // Assert
+            assertThat(result).isEqualTo(restoredActiveAccount(isKycAdditionalInfoRequired = true))
         }
 
         private fun provideTestModels() = listOf(
@@ -232,6 +232,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     isBankOfframpAvailable = null,
                     tariffPlan = null,
                     isPaymentAccountIssuing = false,
+                    isKycAdditionalInfoRequired = false,
                 ),
             ),
         )
@@ -271,6 +272,71 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 ),
             ),
         )
+
+        private fun activeAccountWithKycAdditionalInfoFlag() = PaymentAccountStatusValueDM.ActiveAccount(
+            customerId = "customer-6",
+            currencyCode = "USD",
+            paymentAccountAddress = "0xpay",
+            fiatBalance = PaymentAccountStatusValueDM.FiatBalanceDM(
+                availableBalance = BigDecimal("12.34"),
+                currency = "USD",
+            ),
+            fiatRate = BigDecimal("1.01"),
+            cards = emptyList(),
+            isKycAdditionalInfoRequired = true,
+        )
+
+        private fun restoredActiveAccount(isKycAdditionalInfoRequired: Boolean) = PaymentAccountStatusValue.Loaded(
+            source = StatusSource.CACHE,
+            customerId = "customer-6",
+            paymentAccountAddress = "0xpay",
+            balance = accountBalance(),
+            cryptoCurrency = cryptoCurrency,
+            networks = emptyList(),
+            cards = emptyList(),
+            fiatRate = BigDecimal("1.01"),
+            error = null,
+            virtualAccount = null,
+            isBankOfframpAvailable = null,
+            tariffPlan = null,
+            isPaymentAccountIssuing = false,
+            isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class KycAdditionalInfoRoundTrip {
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN Loaded with flag WHEN convert and convertBack THEN flag preserved`(isRequired: Boolean) {
+            // Arrange
+            val domain = PaymentAccountStatusValue.Loaded(
+                source = StatusSource.ACTUAL,
+                customerId = "customer-5",
+                paymentAccountAddress = "0xpay",
+                balance = accountBalance(),
+                cryptoCurrency = cryptoCurrency,
+                networks = emptyList(),
+                cards = emptyList(),
+                fiatRate = BigDecimal("1.01"),
+                error = null,
+                virtualAccount = null,
+                isBankOfframpAvailable = true,
+                tariffPlan = null,
+                isPaymentAccountIssuing = false,
+                isKycAdditionalInfoRequired = isRequired,
+            )
+
+            // Act
+            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+
+            // Assert
+            assertThat(restored).isEqualTo(
+                domain.copy(source = StatusSource.CACHE, isBankOfframpAvailable = null),
+            )
+        }
     }
 
     @Nested
@@ -369,6 +435,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         isBankOfframpAvailable = null,
         tariffPlan = null,
         isPaymentAccountIssuing = false,
+        isKycAdditionalInfoRequired = false,
         networks = emptyList(),
     )
 }

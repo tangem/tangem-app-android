@@ -17,6 +17,7 @@ import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.pagination.TangemPagination
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
@@ -28,6 +29,7 @@ import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.toast.TangemToast
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -123,9 +125,30 @@ internal data object DeviceIconStory : StoryBookPage
 
 internal data object DsComponentsListStory : StoryBookPage
 
+internal data class TangemScoreScaleStory(
+    val selectedScore: Int?,
+    val width: Width,
+    val textScale: Float,
+    val isEnabled: Boolean,
+    val onScoreClick: (Int) -> Unit,
+    val onWidthChange: (Width) -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    enum class Width { Full, Phone, Narrow, Compact }
+}
+
 internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,
     val onSizeChange: (TangemLoaderSize) -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemPaginationStory(
+    val background: TangemPagination.Background,
+    val pageCount: Int,
+    val onBackgroundChange: (TangemPagination.Background) -> Unit,
+    val onPageCountChange: (Int) -> Unit,
 ) : DsStoryBookPage
 
 internal data class TangemDraggableStory(
@@ -510,6 +533,21 @@ internal data class TangemActionMessageStory(
     val isLongText: Boolean,
     val onVariantChange: (TangemActionMessage.Variant) -> Unit,
     val onLongTextToggle: () -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemToastStory(
+    val appearance: TangemToast.Appearance,
+    val duration: TangemToast.Duration,
+    val isMultiLine: Boolean,
+    val hasIcon: Boolean,
+    val hasAction: Boolean,
+    val isClosable: Boolean,
+    val onAppearanceChange: (TangemToast.Appearance) -> Unit,
+    val onDurationChange: (TangemToast.Duration) -> Unit,
+    val onMultiLineToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onActionToggle: () -> Unit,
+    val onClosableToggle: () -> Unit,
 ) : DsStoryBookPage
 
 @Suppress("BooleanPropertyNaming")
@@ -911,6 +949,7 @@ internal data class TangemAccountRowStory(
     val hasActionMessage: Boolean,
     val hasUpdateWarning: Boolean,
     val hasSection: Boolean,
+    val hasTitleIcon: Boolean,
     val longTitle: Boolean,
     val isBalanceHidden: Boolean,
     val isBalanceFlickering: Boolean,
@@ -921,6 +960,7 @@ internal data class TangemAccountRowStory(
     val onActionMessageToggle: () -> Unit,
     val onUpdateWarningToggle: () -> Unit,
     val onSectionToggle: () -> Unit,
+    val onTitleIconToggle: () -> Unit,
     val onLongTitleToggle: () -> Unit,
     val onBalanceHiddenToggle: () -> Unit,
     val onBalanceFlickeringToggle: () -> Unit,

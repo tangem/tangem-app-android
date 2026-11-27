@@ -320,6 +320,10 @@ class NetworkFactoryTest {
                 expected = { Network.StandardType.TRC20 },
             ),
             GetNetworkStandardTypeModel(
+                blockchains = listOf(Blockchain.Chiliz, Blockchain.ChilizTestnet),
+                expected = { Network.StandardType.CAP20 },
+            ),
+            GetNetworkStandardTypeModel(
                 blockchains = Blockchain.entries - listOf(
                     Blockchain.Ethereum,
                     Blockchain.EthereumTestnet,
@@ -329,6 +333,8 @@ class NetworkFactoryTest {
                     Blockchain.BinanceTestnet,
                     Blockchain.Tron,
                     Blockchain.TronTestnet,
+                    Blockchain.Chiliz,
+                    Blockchain.ChilizTestnet,
                 ),
                 expected = { Network.StandardType.Unspecified(it.name) },
             ),
@@ -367,6 +373,7 @@ class NetworkFactoryTest {
                     Blockchain.Binance,
                     Blockchain.TON,
                     Blockchain.Cosmos,
+                    Blockchain.Gonka,
                     Blockchain.TerraV1,
                     Blockchain.TerraV2,
                     Blockchain.Stellar,
@@ -392,7 +399,6 @@ class NetworkFactoryTest {
                     Blockchain.CosmosTestnet,
                     Blockchain.Dogecoin,
                     Blockchain.Ducatus,
-                    Blockchain.Gonka,
                     Blockchain.Ethereum, Blockchain.EthereumTestnet,
                     Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet,
                     Blockchain.Fantom, Blockchain.FantomTestnet,

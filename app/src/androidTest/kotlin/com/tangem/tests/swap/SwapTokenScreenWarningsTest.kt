@@ -23,6 +23,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -390,6 +391,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         }
     }
 
+    @Ignore("[REDACTED_JIRA]")
     @AllureId("2831")
     @DisplayName("Swap: warning is not displayed, if remaining balance is equal to 0")
     @Test

@@ -8,6 +8,7 @@ import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -34,12 +35,14 @@ internal class BankWithdrawCompletionFactory @Inject constructor(
                     productInstanceId = productInstanceId,
                     onDestinationChanged = callbacks.onDestinationChanged,
                     onNetworkFeeChanged = callbacks.onNetworkFeeChanged,
+                    newRecipientListener = callbacks.newRecipientListener,
                 ),
                 spei = speiCompletionFactory.create(
                     userWalletId = sourceAccount.userWalletId,
                     productInstanceId = productInstanceId,
-                    onQuoteChanged = callbacks.onQuoteChanged,
                     onNetworkFeeChanged = callbacks.onNetworkFeeChanged,
+                    onQuoteExpired = callbacks.onQuoteExpired,
+                    newRecipientListener = callbacks.newRecipientListener,
                 ),
             )
         } ?: UnavailableBankWithdrawCompletion
@@ -49,7 +52,8 @@ internal class BankWithdrawCompletionFactory @Inject constructor(
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
         val onDestinationChanged: (OfframpDestination) -> Unit,
         val onNetworkFeeChanged: (BigDecimal) -> Unit,
-        val onQuoteChanged: (BankOfframpQuote) -> Unit,
+        val onQuoteExpired: () -> Unit,
+        val newRecipientListener: NewRecipientListener,
     )
 }
 
@@ -58,8 +62,10 @@ private class MoneyAccountBankWithdrawCompletion(
     private val spei: BankWithdrawCompletion,
 ) : BankWithdrawCompletion {
 
-    override suspend fun prepare(draft: BankWithdrawDraft) {
-        forRail(draft).prepare(draft)
+    override val quote: StateFlow<BankOfframpQuote?> = spei.quote
+
+    override suspend fun prepare(draft: BankWithdrawDraft, onState: (CompletionState) -> Unit) {
+        forRail(draft).prepare(draft, onState)
     }
 
     override suspend fun complete(draft: BankWithdrawDraft, onState: (CompletionState) -> Unit) {

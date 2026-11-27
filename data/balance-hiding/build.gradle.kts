@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     alias(deps.plugins.hilt.android)
     id("configuration")
 }
@@ -20,6 +21,7 @@ dependencies {
     api(deps.lifecycle.runtime.ktx)
     implementation(deps.androidx.datastore)
     implementation(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     // endregion
 
     // region DI
@@ -37,4 +39,6 @@ dependencies {
     api(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     // endregion
+
+    testImplementation(projects.test.core)
 }

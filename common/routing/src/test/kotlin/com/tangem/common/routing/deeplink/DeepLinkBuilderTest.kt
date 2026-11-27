@@ -109,17 +109,15 @@ internal class DeepLinkBuilderTest {
     }
 
     @Test
-    fun `earn host with filters produces expected uri`() {
+    fun `earn host with token and product produces expected uri`() {
         val result = deepLinkBuilder
             .setAction("earn")
-            .addQueryParam(DeeplinkConst.EARN_TYPE_KEY, "yield")
-            .addQueryParam(DeeplinkConst.NETWORK_ID_KEY, "base")
+            .addQueryParam(DeeplinkConst.TOKEN_ID_KEY, "ethereum")
+            .addQueryParam(DeeplinkConst.NETWORK_ID_KEY, "ethereum")
+            .addQueryParam(DeeplinkConst.EARN_PRODUCT_KEY, "lending")
             .build()
 
-        assertThat(result).isEqualTo(
-            "${DeeplinkConst.TANGEM_SCHEME}://earn?${DeeplinkConst.EARN_TYPE_KEY}=yield" +
-                "&${DeeplinkConst.NETWORK_ID_KEY}=base",
-        )
+        assertThat(result).isEqualTo("tangem://earn?token_id=ethereum&network_id=ethereum&product=lending")
     }
 
     @Test

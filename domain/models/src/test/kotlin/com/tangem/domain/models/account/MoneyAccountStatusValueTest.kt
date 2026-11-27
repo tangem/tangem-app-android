@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -31,6 +32,7 @@ internal class MoneyAccountStatusValueTest {
         customerId = "customer",
         productInstanceId = "instance",
         error = null,
+        isKycAdditionalInfoRequired = false,
     )
 
     @Test
@@ -130,9 +132,10 @@ internal class MoneyAccountStatusValueTest {
     }
 
     @Test
-    fun `GIVEN balance with yield status WHEN cryptoCurrencyStatus THEN token status carries it`() {
+    fun `GIVEN balance with contributions WHEN cryptoCurrencyStatus THEN token status carries them and their sources`() {
         // Arrange
-        val account = activeWith(balanceOf(fiatRate = null).copy(yieldSupplyStatus = YIELD_SUPPLY_STATUS))
+        val contribution = YieldSupplyContribution(status = YIELD_SUPPLY_STATUS, source = StatusSource.ONLY_CACHE)
+        val account = activeWith(balanceOf(fiatRate = null).copy(contributions = listOf(contribution)))
             .copy(source = StatusSource.CACHE)
 
         // Act
@@ -143,27 +146,30 @@ internal class MoneyAccountStatusValueTest {
             currency = cryptoCurrency,
             value = CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal("100"),
-                yieldSupplyStatus = YIELD_SUPPLY_STATUS,
+                yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = DEPOSIT_NETWORK_ADDRESS,
-                sources = CACHE_SOURCES,
+                sources = CACHE_SOURCES.copy(contributionSources = listOf(StatusSource.ONLY_CACHE)),
+                contributions = listOf(contribution),
             ),
         )
         Truth.assertThat(actual).isEqualTo(expected)
+        Truth.assertThat(actual?.value?.contributions).containsExactly(contribution)
     }
 
     @Test
-    fun `GIVEN balance with yield status WHEN statusOf another currency THEN yield status absent`() {
+    fun `GIVEN balance with contributions WHEN statusOf another currency THEN contributions absent`() {
         // Arrange
         val coin = mockk<CryptoCurrency.Coin>(relaxed = true)
-        val account = activeWith(balanceOf(fiatRate = null).copy(yieldSupplyStatus = YIELD_SUPPLY_STATUS))
+        val contribution = YieldSupplyContribution(status = YIELD_SUPPLY_STATUS, source = StatusSource.ACTUAL)
+        val account = activeWith(balanceOf(fiatRate = null).copy(contributions = listOf(contribution)))
 
         // Act
         val actual = account.statusOf(currency = coin, amount = BigDecimal.ONE, fiatRate = null)
 
         // Assert
-        Truth.assertThat(actual?.value?.yieldSupplyStatus).isNull()
+        Truth.assertThat(actual?.value?.contributions).isEmpty()
     }
 
     @Test

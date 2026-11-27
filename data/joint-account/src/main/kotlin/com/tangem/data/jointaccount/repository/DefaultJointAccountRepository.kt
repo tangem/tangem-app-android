@@ -7,6 +7,7 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.ApiResponseRaise
@@ -21,7 +22,9 @@ import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
+import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.store.datasource.jointaccount.JointWalletNotLinkedResolver
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
@@ -56,6 +59,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val safeTxConverter: SafeTxConverter,
     private val operationConverter: JointOperationConverter,
+    private val store: JointAccountsStore,
     private val dispatchers: CoroutineDispatcherProvider,
     @NetworkMoshi private val moshi: Moshi,
 ) : JointAccountRepository {
@@ -63,7 +67,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val logger = TangemLogger.withTag(tag = TAG)
     private val createErrorConverter = JointOperationCreateErrorConverter(moshi)
     private val signErrorConverter = JointOperationSignErrorConverter()
-    private val rejectErrorConverter = JointOperationRejectErrorConverter()
+    private val walletNotLinkedResolver = JointWalletNotLinkedResolver(moshi)
+    private val rejectErrorConverter = JointOperationRejectErrorConverter(walletNotLinkedResolver)
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
@@ -96,11 +101,12 @@ internal class DefaultJointAccountRepository @Inject constructor(
                     JointAccountCreationResult.Created(account = converter.convert(value = response))
                 },
                 onError = { error ->
-                    // The HTTP code stays in the data layer: the domain branches on the result, not on 409
-                    if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
-                        JointAccountCreationResult.CreatorAlreadyRegistered
-                    } else {
-                        throw error
+                    // The HTTP code stays in the data layer: the domain branches on the result, not on 409 or 400
+                    val code = (error as? ApiResponseError.HttpException)?.code
+                    when (code) {
+                        Code.CONFLICT -> JointAccountCreationResult.CreatorAlreadyRegistered
+                        Code.BAD_REQUEST -> JointAccountCreationResult.Rejected(cause = error)
+                        else -> throw error
                     }
                 },
             )
@@ -231,7 +237,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
             },
             onError = { error ->
                 val isSlotUnavailable = error is ApiResponseError.HttpException &&
-                    error.code in SLOT_UNAVAILABLE_CODES
+                    error.code in SLOT_UNAVAILABLE_CODES &&
+                    !walletNotLinkedResolver.isWalletNotLinked(error)
                 if (isSlotUnavailable) {
                     JointAccountInviteIssueError.SlotUnavailable(cause = error).left()
                 } else {
@@ -306,18 +313,33 @@ internal class DefaultJointAccountRepository @Inject constructor(
         )
     }
 
+    override suspend fun getStoredJointAccounts(userWalletId: UserWalletId): List<JointAccount> {
+        return store.getSyncOrNull(userWalletId = userWalletId).orEmpty()
+    }
+
     override suspend fun rejectOperation(
         userWalletId: UserWalletId,
         operationId: String,
     ): Either<JointOperationRejectError, Unit> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                jointAccountApi.rejectJointOperation(
+                val response = jointAccountApi.rejectJointOperation(
                     walletId = userWalletId.stringValue,
                     operationId = operationId,
-                ).bind()
+                )
+                response.bind()
 
-                Unit.right()
+                val mediaType = response.headers[CONTENT_TYPE_HEADER]?.firstOrNull()?.substringBefore(';')?.trim()
+                val isRecorded = when (mediaType) {
+                    null -> (response as? ApiResponse.Success)?.code == Code.NO_CONTENT
+                    else -> mediaType.endsWith(JSON_SUBTYPE, ignoreCase = true)
+                }
+                if (isRecorded) {
+                    Unit.right()
+                } else {
+                    val cause = IllegalStateException("Unexpected answer to the refusal: $mediaType")
+                    JointOperationRejectError.Failed(cause = cause).left()
+                }
             },
             onError = { error -> rejectErrorConverter.convert(error).left() },
         )
@@ -326,6 +348,8 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private companion object {
         const val TAG = "JointAccountRepository"
         const val NO_JOINT_ACCOUNTS = 0
+        const val CONTENT_TYPE_HEADER = "content-type"
+        const val JSON_SUBTYPE = "json"
         val DEAD_INVITE_CODES = setOf(Code.CONFLICT, Code.NOT_FOUND)
         val SLOT_UNAVAILABLE_CODES = setOf(Code.FORBIDDEN, Code.NOT_FOUND, Code.CONFLICT)
     }

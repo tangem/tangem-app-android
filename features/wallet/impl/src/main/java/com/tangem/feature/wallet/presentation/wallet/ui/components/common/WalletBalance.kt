@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -25,27 +26,33 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_unlock_16_filled
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.model.PermanentUpgradeBannerUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.utils.StringsSigns
@@ -54,6 +61,8 @@ import kotlinx.collections.immutable.toImmutableList
 
 private const val MIN_SCALE = 0.75f
 private const val MAX_SCALE = 1f
+private val PERMANENT_UPGRADE_BANNER_MARGIN = 16.dp
+private val PERMANENT_UPGRADE_BANNER_BOTTOM_SPACING = 8.dp
 
 @Composable
 internal fun WalletBalance(
@@ -62,6 +71,7 @@ internal fun WalletBalance(
     buttons: ImmutableList<TangemButtonUM>,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
+    permanentUpgradeBannerUM: PermanentUpgradeBannerUM? = null,
     onSubtitleBottomChange: (Dp) -> Unit = {},
 ) {
     val collapsedFraction = behavior.state.collapsedFraction
@@ -98,6 +108,9 @@ internal fun WalletBalance(
                 .fillMaxWidth()
                 .padding(vertical = 58.dp),
         ) {
+            if (permanentUpgradeBannerUM != null) {
+                PermanentUpgradeBanner(permanentUpgradeBannerUM)
+            }
             Balance(
                 walletBalanceUM = walletBalanceUM,
                 isBalanceHidden = isBalanceHidden,
@@ -116,6 +129,42 @@ internal fun WalletBalance(
         SpacerH(8.dp)
         ActionButtons(buttons = hapticButtons, modifier = Modifier.fillMaxWidth())
         SpacerH(24.dp)
+    }
+}
+
+/**
+ * Drawn in the top padding of the balance block rather than in its layout, so the balance and the action buttons stay
+ * where they are whether the banner is shown or not.
+ */
+@Composable
+private fun PermanentUpgradeBanner(permanentUpgradeBannerUM: PermanentUpgradeBannerUM) {
+    val bannerMarginPx = with(LocalDensity.current) { PERMANENT_UPGRADE_BANNER_MARGIN.roundToPx() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .layout { measurable, constraints ->
+                val maxBannerWidth = (constraints.maxWidth - 2 * bannerMarginPx).coerceAtLeast(0)
+                val placeable = measurable.measure(Constraints(maxWidth = maxBannerWidth))
+
+                layout(width = constraints.maxWidth, height = 0) {
+                    placeable.place(
+                        x = (constraints.maxWidth - placeable.width) / 2,
+                        y = -placeable.height - PERMANENT_UPGRADE_BANNER_BOTTOM_SPACING.roundToPx(),
+                    )
+                }
+            },
+    ) {
+        TangemBadge(
+            text = resourceReference(R.string.hw_upgrade_to_cold_badge),
+            variant = TangemBadge.Variant.Outline,
+            status = TangemBadge.Status.Neutral,
+            size = TangemBadge.Size.X6,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_unlock_16_filled),
+            iconTint = TangemTheme.colors3.icon.accent.blue,
+            onClick = permanentUpgradeBannerUM.onClick,
+            modifier = Modifier.testTag(MainScreenTestTags.PERMANENT_UPGRADE_BANNER),
+        )
     }
 }
 
@@ -245,6 +294,7 @@ private fun WalletBalance_Preview(
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
             buttons = params.actionsList,
             isBalanceHidden = false,
+            permanentUpgradeBannerUM = params.permanentUpgradeBannerUM,
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
@@ -253,12 +303,18 @@ private fun WalletBalance_Preview(
 private data class WalletBalancePreviewData(
     val walletBalanceUM: WalletBalanceUM,
     val actionsList: ImmutableList<TangemButtonUM>,
+    val permanentUpgradeBannerUM: PermanentUpgradeBannerUM? = null,
 )
 
 private class WalletBalancePreviewProvider : PreviewParameterProvider<WalletBalancePreviewData> {
     override val values: Sequence<WalletBalancePreviewData>
         get() = sequenceOf(
             WalletBalancePreviewData(WalletBalancePreview.content, WalletPreviewData.actionButtons),
+            WalletBalancePreviewData(
+                walletBalanceUM = WalletBalancePreview.content,
+                actionsList = WalletPreviewData.actionButtons,
+                permanentUpgradeBannerUM = PermanentUpgradeBannerUM(onClick = {}),
+            ),
             WalletBalancePreviewData(WalletBalancePreview.syncProgress, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.hiddenBalanceContent, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.loading, WalletPreviewData.disabledActionButtons),

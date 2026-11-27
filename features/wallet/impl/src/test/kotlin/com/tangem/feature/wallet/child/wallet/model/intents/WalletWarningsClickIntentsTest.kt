@@ -185,8 +185,21 @@ internal class WalletWarningsClickIntentsTest {
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(any<WalletScreenAnalyticsEvent.MainScreen.ButtonUpgrade>()) }
         coVerify(exactly = 1) {
-            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.HardwareUpgradeStories.Source.MAIN)
+            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER)
         }
+    }
+
+    @Test
+    fun `GIVEN permanent upgrade banner WHEN clicked THEN the launcher opens the upgrade from the banner`() = runTest {
+        // Act
+        createImplementor(scope = this).onPermanentUpgradeBannerClick(userWalletId)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER)
+        }
+        verify(exactly = 0) { analyticsEventHandler.send(any<WalletScreenAnalyticsEvent.MainScreen.ButtonUpgrade>()) }
     }
 
     @Test

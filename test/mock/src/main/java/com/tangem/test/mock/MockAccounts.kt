@@ -103,6 +103,8 @@ object MockAccounts {
         fiatRate: BigDecimal? = BigDecimal.ONE,
         balance: PaymentAccountStatusValue.Balance = createPaymentAccountBalance(),
         networks: List<PaymentNetworkStatus> = listOf(createPaymentNetworkStatus(cryptoCurrency)),
+        isPaymentAccountIssuing: Boolean = false,
+        isKycAdditionalInfoRequired: Boolean = false,
     ): AccountStatus.Payment {
         return AccountStatus.Payment(
             account = Account.Payment(userWalletId),
@@ -119,7 +121,8 @@ object MockAccounts {
                 virtualAccount = null,
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
-                isPaymentAccountIssuing = false,
+                isPaymentAccountIssuing = isPaymentAccountIssuing,
+                isKycAdditionalInfoRequired = isKycAdditionalInfoRequired,
             ),
         )
     }

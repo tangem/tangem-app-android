@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.sessionkey.operation.PolymarketSessionKeyOpe
 import com.tangem.test.core.getEmittedValues
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.Test
 
 internal class ObservePolymarketSessionKeyOutcomeUseCaseTest {
 
-    private val runner: PolymarketSessionKeyOperationRunner = mockk()
+    private val runner: PolymarketSessionKeyOperationRunner = mockk(relaxUnitFun = true)
     private val useCase = ObservePolymarketSessionKeyOutcomeUseCase(runner)
 
     @Test
@@ -41,6 +42,19 @@ internal class ObservePolymarketSessionKeyOutcomeUseCaseTest {
 
         // Assert
         assertThat(emitted).containsExactly(null, OUTCOME).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a wallet WHEN observed THEN the runner resumes a pending authorization once`() = runTest {
+        // Arrange
+        every { runner.observe(USER_WALLET_ID) } returns MutableStateFlow(PolymarketSessionKeyOperationState.IDLE)
+        getEmittedValues(useCase(USER_WALLET_ID))
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { runner.resume(USER_WALLET_ID) }
     }
 
     private companion object {

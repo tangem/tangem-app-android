@@ -1,7 +1,9 @@
 package com.tangem.features.jointaccount.analytics
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidResult
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.BlockaidSource
@@ -53,6 +55,28 @@ internal class JointAccountAnalyticsEventTest {
         )
     }
 
+    @ParameterizedTest
+    @EnumSource(ErrorSource::class)
+    fun `GIVEN an error source WHEN error event built THEN Source matches the spec`(source: ErrorSource) {
+        // Arrange
+        val expected = when (source) {
+            ErrorSource.Create -> "Create"
+            ErrorSource.Join -> "Join"
+            ErrorSource.CreateOperation -> "Create Operation"
+            ErrorSource.Sign -> "Sign"
+            ErrorSource.Decline -> "Decline"
+            ErrorSource.Cancel -> "Cancel"
+            ErrorSource.Confirm -> "Confirm"
+            ErrorSource.Invite -> "Invite"
+        }
+
+        // Act
+        val event = JointAccountError(source = source, errorMessage = "message")
+
+        // Assert
+        assertThat(event.params).isEqualTo(mapOf("Source" to expected, "Error Message" to "message"))
+    }
+
     data class ErrorModel(val cause: Throwable, val expectedParams: Map<String, String>)
 
     private fun provideTestModels() = listOf(
@@ -93,6 +117,66 @@ internal class JointAccountAnalyticsEventTest {
     private companion object {
         const val HTTP_MESSAGE = "Bad request"
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConfirmAddress {
+
+        @Test
+        fun `GIVEN account size WHEN Confirm Address Screen Opened built THEN id and params match the spec`() {
+            // Act
+            val event = JointAccountAnalyticsEvent.ConfirmAddressScreenOpened(membersCount = 3, threshold = 2)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Confirm Address Screen Opened")
+            assertThat(event.params).isEqualTo(mapOf("Members Count" to "3", "Threshold" to "2"))
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN activation flag WHEN Account Confirmed built THEN id and params match the spec`(
+            model: ConfirmedModel,
+        ) {
+            // Act
+            val event = JointAccountAnalyticsEvent.AccountConfirmed(
+                membersCount = 3,
+                threshold = 2,
+                isAccountActivated = model.isAccountActivated,
+            )
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Account Confirmed")
+            assertThat(event.params).isEqualTo(
+                mapOf("Members Count" to "3", "Threshold" to "2", "Account Activated" to model.expected),
+            )
+        }
+
+        @Test
+        fun `GIVEN account size WHEN Button Address Doesn't Match built THEN id and params match the spec`() {
+            // Act
+            val event = JointAccountAnalyticsEvent.ButtonAddressDoesntMatch(membersCount = 3, threshold = 2)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Button - Address Doesn't Match")
+            assertThat(event.params).isEqualTo(mapOf("Members Count" to "3", "Threshold" to "2"))
+        }
+
+        @Test
+        fun `GIVEN Button Address Doesn't Match WHEN mirrored to monitoring THEN it is a counter without attributes`() {
+            // Act
+            val event = JointAccountAnalyticsEvent.ButtonAddressDoesntMatch(membersCount = 3, threshold = 2)
+
+            // Assert
+            assertThat(event.otelMetric).isEqualTo(OtelMetric.Counter(allowedParams = emptySet()))
+        }
+
+        private fun provideTestModels() = listOf(
+            ConfirmedModel(isAccountActivated = true, expected = "Yes"),
+            ConfirmedModel(isAccountActivated = false, expected = "No"),
+        )
+    }
+
+    data class ConfirmedModel(val isAccountActivated: Boolean, val expected: String)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -170,6 +254,43 @@ internal class JointAccountAnalyticsEventTest {
                 expectedResult = "Unsupported Network",
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreationSource {
+
+        @ParameterizedTest
+        @EnumSource(AppRoute.JointAccountCreation.Source::class)
+        fun `GIVEN a source WHEN Intro Screen Opened built THEN id and params match the spec`(
+            source: AppRoute.JointAccountCreation.Source,
+        ) {
+            // Act
+            val event = JointAccountAnalyticsEvent.IntroScreenOpened(source = source)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Intro Screen Opened")
+            assertThat(event.params).isEqualTo(mapOf("Source" to source.specValue()))
+        }
+
+        @ParameterizedTest
+        @EnumSource(AppRoute.JointAccountCreation.Source::class)
+        fun `GIVEN a source WHEN Button Create Joint Account built THEN id and params match the spec`(
+            source: AppRoute.JointAccountCreation.Source,
+        ) {
+            // Act
+            val event = JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source)
+
+            // Assert
+            assertThat(event.id).isEqualTo("[Joint Account] Button - Create Joint Account")
+            assertThat(event.params).isEqualTo(mapOf("Source" to source.specValue()))
+        }
+
+        private fun AppRoute.JointAccountCreation.Source.specValue(): String = when (this) {
+            AppRoute.JointAccountCreation.Source.AddAccount -> "Settings"
+            AppRoute.JointAccountCreation.Source.MainScreen -> "Markets"
+            AppRoute.JointAccountCreation.Source.AllServices -> "All Services"
+        }
     }
 
     data class CheckModel(

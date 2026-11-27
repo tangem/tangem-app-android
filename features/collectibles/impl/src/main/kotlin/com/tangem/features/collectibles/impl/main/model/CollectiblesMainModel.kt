@@ -10,11 +10,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -23,14 +21,15 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
-import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.domain.collectibles.models.CollectiblesRegionStatus
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
+import com.tangem.features.collectibles.impl.common.ui.handleRegionStatus
 import com.tangem.features.collectibles.impl.main.CollectiblesMainBottomSheetConfig
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.addfunds.CollectiblesReceiveConfigFactory
@@ -63,7 +62,7 @@ import javax.inject.Inject
  * Model of the screen's own chrome — balance, actions, the collection widget and the menu. The packs catalogue
  * itself lives in the embedded discovery component, and the collection is a stand-in until its service exists.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class CollectiblesMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -76,10 +75,9 @@ internal class CollectiblesMainModel @Inject constructor(
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val sessionKey: CollectiblesSessionKey,
-    private val clipboardManager: ClipboardManager,
     private val getCollectiblePendingPacksUseCase: GetCollectiblePendingPacksUseCase,
     private val dismissCollectiblePendingPackUseCase: DismissCollectiblePendingPackUseCase,
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -111,16 +109,14 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var vaultStatus: CollectiblesVaultBalance? = null
 
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    private var sessionKeyAddress: String? = null
-
     private var pendingPacks: List<CollectiblePendingPack> = emptyList()
     private val pendingPacksJobHolder = JobHolder()
+    private val addFundsJobHolder = JobHolder()
 
     init {
         observeBalance()
         observeCollectiblesStatus()
-        loadSessionKey()
+        refreshRegion()
     }
 
     fun onScreenResumed() {
@@ -178,19 +174,6 @@ internal class CollectiblesMainModel @Inject constructor(
         modelScope.launch { dismissCollectiblePendingPackUseCase(txId) }
     }
 
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    private fun loadSessionKey() {
-        modelScope.launch {
-            val key = sessionKey.getPublicKeyOrNull(AccountId.forCollectiblesAccount(params.userWalletId))
-                ?: return@launch
-
-            sessionKeyAddress = key.base58
-            uiState.update { state ->
-                state.copy(menu = menuConverter.convert(key.base58).copy(isShown = state.menu.isShown))
-            }
-        }
-    }
-
     private fun observeBalance() {
         combine(
             flow = collectiblesAccountStatusSupplier(params.userWalletId),
@@ -226,6 +209,17 @@ internal class CollectiblesMainModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun refreshRegion() {
+        modelScope.launch {
+            val isRestricted = when (getRegionStatusUseCase(params.userWalletId, skipCache = true)) {
+                CollectiblesRegionStatus.ALLOWED -> false
+                CollectiblesRegionStatus.RESTRICTED -> true
+                CollectiblesRegionStatus.UNKNOWN -> return@launch
+            }
+            uiState.update { state -> state.copy(isRegionRestricted = isRestricted) }
+        }
+    }
+
     private fun buildInitialState(): CollectiblesMainUM {
         return CollectiblesMainUM(
             title = TextReference.Res(R.string.collectibles_main_title),
@@ -239,17 +233,13 @@ internal class CollectiblesMainModel @Inject constructor(
             actions = actionsConverter.convert(CollectiblesAccountStatusValue.Loading),
             collection = CollectiblesMainUM.CollectionUM(
                 subtitle = TextReference.Res(R.string.collectibles_account_collection_row_subtitle),
-                // TODO for 0 card collectibles_account_collection_empty
-                title = TextReference.PluralRes(
-                    R.plurals.collectibles_account_collection_cards_count,
-                    STUB_CARDS_COUNT,
-                    wrappedList(STUB_CARDS_COUNT),
-                ),
+                title = TextReference.Res(R.string.collectibles_account_collection_row_title),
                 onClick = ::onCollectionClick,
             ),
+            isRegionRestricted = false,
             relink = CollectiblesMainUM.RelinkUM.Hidden,
             pendingPacks = persistentListOf(),
-            menu = menuConverter.convert(null),
+            menu = menuConverter.convert(Unit),
             isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
         )
@@ -257,6 +247,7 @@ internal class CollectiblesMainModel @Inject constructor(
 
     fun onRefresh() {
         observePendingPacks()
+        refreshRegion()
         modelScope.launch {
             uiState.update { state -> state.copy(isBalanceRefreshing = true) }
 
@@ -281,7 +272,6 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.DELIVERIES -> onDeliveriesClick()
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
-            CollectiblesMenuItem.SESSION_KEY -> onSessionKeyClick()
         }
     }
 
@@ -295,7 +285,17 @@ internal class CollectiblesMainModel @Inject constructor(
     }
 
     private fun onAddFundsClick() {
-        bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.TopUp)
+        if (addFundsJobHolder.isActive) return
+
+        modelScope.launch {
+            val status = getRegionStatusUseCase(params.userWalletId)
+            val isAllowed = handleRegionStatus(status, messageSender) {
+                bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.RegionRestricted)
+            }
+            if (!isAllowed) return@launch
+
+            bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.TopUp)
+        }.saveIn(addFundsJobHolder)
     }
 
     fun onDismissBottomSheet() {
@@ -348,9 +348,8 @@ internal class CollectiblesMainModel @Inject constructor(
         )
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onCollectionClick() {
-        // TODO([REDACTED_TASK_KEY]): the collection screen is not built yet.
+        router.push(CollectiblesRoute.Inventory)
     }
 
     @Suppress("EmptyFunctionBlock")
@@ -368,12 +367,6 @@ internal class CollectiblesMainModel @Inject constructor(
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
     }
 
-    // TODO Collectibles devnet: delete everything marked so once the prod CC is set up for QA
-    private fun onSessionKeyClick() {
-        onMenuDismiss()
-        sessionKeyAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }
-    }
-
     private fun isRelinkLoading(): Boolean {
         return (uiState.value.relink as? CollectiblesMainUM.RelinkUM.Shown)?.isLoading == true
     }
@@ -389,10 +382,7 @@ internal class CollectiblesMainModel @Inject constructor(
             if (userWallet == null) {
                 sendUnknownErrorMessage()
             } else {
-                createOrReactivateCollectiblesAccountUseCase(userWallet).fold(
-                    ifLeft = ::onVaultActionFailed,
-                    ifRight = { loadSessionKey() },
-                )
+                createOrReactivateCollectiblesAccountUseCase(userWallet).onLeft(::onVaultActionFailed)
             }
 
             setRelinkLoading(false)
@@ -411,10 +401,5 @@ internal class CollectiblesMainModel @Inject constructor(
         if (failure is CollectiblesAccountError.CardError || failure is CollectiblesAccountError.Cancelled) return
 
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
-    }
-
-    private companion object {
-
-        const val STUB_CARDS_COUNT = 25
     }
 }

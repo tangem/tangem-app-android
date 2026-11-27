@@ -45,24 +45,26 @@ internal class DefaultCollectiblesAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no collectibles record WHEN registerAccount THEN it is pushed first and stored`() =
-        runTest {
-            // Arrange
-            val synced = accountsResponse(COLLECTIBLES_RECORD, PORTFOLIO_RECORD)
-            coEvery { walletAccountsFetcher.fetch(WALLET) } returns accountsResponse(PORTFOLIO_RECORD)
-            coEvery { walletAccountsSaver.push(userWalletId = WALLET, accounts = any()) } returns synced
-            val repository = createRepository(testScope = this)
+    fun `GIVEN no collectibles record WHEN registerAccount THEN it is pushed first and stored`() = runTest {
+        // Arrange
+        val synced = accountsResponse(COLLECTIBLES_RECORD, PORTFOLIO_RECORD)
+        coEvery { walletAccountsFetcher.fetch(WALLET) } returns accountsResponse(PORTFOLIO_RECORD)
+        coEvery { walletAccountsSaver.push(userWalletId = WALLET, accounts = any()) } returns synced
+        val repository = createRepository(testScope = this)
 
-            // Act
-            val actual = repository.registerAccount(WALLET)
+        // Act
+        val actual = repository.registerAccount(WALLET)
 
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) {
-                walletAccountsSaver.push(userWalletId = WALLET, accounts = listOf(COLLECTIBLES_RECORD, PORTFOLIO_RECORD))
-                walletAccountsSaver.store(userWalletId = WALLET, response = synced)
-            }
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) {
+            walletAccountsSaver.push(
+                userWalletId = WALLET,
+                accounts = listOf(COLLECTIBLES_RECORD, PORTFOLIO_RECORD),
+            )
+            walletAccountsSaver.store(userWalletId = WALLET, response = synced)
         }
+    }
 
     @Test
     fun `GIVEN the record is listed already WHEN registerAccount THEN nothing is pushed`() = runTest {

@@ -101,7 +101,7 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onBackClick = {},
     )
 
-    val feeUnreachable = TangemPayBankWithdrawAmountUM.FeeUnreachable(
+    val feeUnreachable = TangemPayBankWithdrawAmountUM.Unreachable(
         header = header,
         onRetryClick = {},
         onBackClick = {},

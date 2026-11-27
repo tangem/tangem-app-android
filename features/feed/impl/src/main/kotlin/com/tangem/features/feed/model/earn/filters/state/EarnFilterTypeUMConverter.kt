@@ -11,6 +11,7 @@ internal class EarnFilterTypeUMConverter : Converter<EarnFilterTypeUM, EarnFilte
             EarnFilterTypeUM.All -> EarnFilterType.ALL
             EarnFilterTypeUM.Staking -> EarnFilterType.STAKING
             EarnFilterTypeUM.YieldMode -> EarnFilterType.YIELD
+            EarnFilterTypeUM.Vaults -> EarnFilterType.VAULT
         }
     }
 }

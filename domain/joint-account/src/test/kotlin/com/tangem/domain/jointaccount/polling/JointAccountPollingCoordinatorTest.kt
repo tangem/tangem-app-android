@@ -4,6 +4,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import io.mockk.every
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
@@ -11,10 +14,13 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -24,6 +30,13 @@ import org.junit.jupiter.api.Test
 internal class JointAccountPollingCoordinatorTest {
 
     private val fetcher: SingleJointAccountListFetcher = mockk()
+    private val isLinked = MutableStateFlow(true)
+    private val userWallets = MutableStateFlow<List<UserWallet>?>(
+        listOf(WALLET_ID, OTHER_WALLET_ID).map { id -> mockk<UserWallet> { every { walletId } returns id } },
+    )
+    private val userWalletsListRepository: UserWalletsListRepository = mockk {
+        every { userWallets } returns this@JointAccountPollingCoordinatorTest.userWallets
+    }
 
     @BeforeEach
     fun resetMocks() {
@@ -219,27 +232,111 @@ internal class JointAccountPollingCoordinatorTest {
         }
 
     @Test
-    fun `GIVEN a fetch returns Left WHEN the next interval elapses THEN the ticker keeps polling`() = runTest {
+    fun `GIVEN a wallet never polled WHEN polled with an immediate first fetch THEN it fetches at once and then paces itself`() =
+        runTest {
+            // Arrange
+            val coordinator = createCoordinator(testScope = this)
+
+            // Act
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID, isFirstFetchImmediate = true).collect { } }
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+
+            advanceTimeBy(POLL_INTERVAL_MILLIS - 1)
+            runCurrent()
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+
+            advanceTimeBy(1)
+            runCurrent()
+            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN a wallet fetched a moment ago WHEN polled with an immediate first fetch THEN it waits out the interval`() =
+        runTest {
+            // Arrange
+            val coordinator = createCoordinator(testScope = this)
+            val firstJob = backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { } }
+            runCurrent()
+            advanceTimeBy(POLL_INTERVAL_MILLIS)
+            runCurrent()
+            firstJob.cancel()
+            runCurrent()
+
+            // Act
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID, isFirstFetchImmediate = true).collect { } }
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN every fetch fails WHEN time advances THEN the wait doubles up to a minute`() = runTest {
         // Arrange
-        coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returns RuntimeException("network error").left()
+        coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returns RuntimeException("503").left()
         val coordinator = createCoordinator(testScope = this)
-        val received = mutableListOf<Unit>()
+        val fetchTimes = mutableListOf<Long>()
 
         // Act
-        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { received += it } }
-        runCurrent()
-        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { fetchTimes += currentTime } }
+        advanceTimeBy(delayTimeMillis = 300_000L)
         runCurrent()
 
-        // Assert — a failed fetch still emits and still paces the next one an interval out
-        coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
-        assertThat(received).hasSize(1)
-
-        advanceTimeBy(POLL_INTERVAL_MILLIS)
-        runCurrent()
-        coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
-        assertThat(received).hasSize(2)
+        // Assert
+        val waits = (listOf(0L) + fetchTimes).zipWithNext { previous, next -> next - previous }
+        assertThat(waits.take(n = 7))
+            .containsExactly(5_000L, 10_000L, 20_000L, 40_000L, 60_000L, 60_000L, 60_000L)
+            .inOrder()
     }
+
+    @Test
+    fun `GIVEN fetches failed in a row WHEN one succeeds THEN the next one is back at the poll interval`() = runTest {
+        // Arrange
+        coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returnsMany listOf(
+            RuntimeException("503").left(),
+            RuntimeException("503").left(),
+            Unit.right(),
+        )
+        val coordinator = createCoordinator(testScope = this)
+        val fetchTimes = mutableListOf<Long>()
+
+        // Act
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { fetchTimes += currentTime } }
+        advanceTimeBy(delayTimeMillis = 45_000L)
+        runCurrent()
+
+        // Assert
+        val waits = (listOf(0L) + fetchTimes).zipWithNext { previous, next -> next - previous }
+        assertThat(waits).containsExactly(5_000L, 10_000L, 20_000L, 5_000L, 5_000L).inOrder()
+    }
+
+    @Test
+    fun `GIVEN fetches failed in a row WHEN every subscriber leaves and one returns THEN the pace starts over`() =
+        runTest {
+            // Arrange
+            coEvery { fetcher.invoke(userWalletId = WALLET_ID) } returns RuntimeException("503").left()
+            val coordinator = createCoordinator(testScope = this)
+            val firstJob = backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { } }
+            advanceTimeBy(delayTimeMillis = 35_000L)
+            runCurrent()
+            firstJob.cancel()
+            advanceTimeBy(GRACE_PERIOD_MILLIS + 1)
+            runCurrent()
+            clearMocks(fetcher, answers = false)
+            val returnedAt = currentTime
+            val fetchTimes = mutableListOf<Long>()
+
+            // Act
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { fetchTimes += currentTime } }
+            advanceTimeBy(delayTimeMillis = 16_000L)
+            runCurrent()
+
+            // Assert — asked at once, and the failure doubles the wait from the base interval, not from 40 seconds
+            assertThat(fetchTimes.map { it - returnedAt }).containsExactly(0L, 10_000L).inOrder()
+        }
 
     /**
      * `fetch` itself never throws — a failed request surfaces as [arrow.core.Either.Left] — but the ticker must
@@ -311,9 +408,95 @@ internal class JointAccountPollingCoordinatorTest {
             assertThat(secondReceived).hasSize(1)
         }
 
+    @Test
+    fun `GIVEN a wallet not linked to the device WHEN intervals elapse THEN nothing is fetched`() = runTest {
+        // Arrange
+        isLinked.value = false
+        val coordinator = createCoordinator(testScope = this)
+        val received = mutableListOf<Unit>()
+
+        // Act
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { received += it } }
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 0) { fetcher.invoke(userWalletId = any()) }
+        assertThat(received).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a wallet not linked WHEN it gets linked THEN polling starts`() = runTest {
+        // Arrange
+        isLinked.value = false
+        val coordinator = createCoordinator(testScope = this)
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect() }
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 2)
+
+        // Act
+        isLinked.value = true
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN a polled wallet WHEN its link is lost THEN polling stops`() = runTest {
+        // Arrange
+        val coordinator = createCoordinator(testScope = this)
+        backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect() }
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Act
+        isLinked.value = false
+        runCurrent()
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN a polled wallet WHEN it is forgotten THEN polling stops and the request in flight is cancelled`() =
+        runTest {
+            // Arrange
+            var isRequestCancelled = false
+            coEvery { fetcher.invoke(userWalletId = WALLET_ID) } coAnswers {
+                try {
+                    awaitCancellation()
+                } finally {
+                    isRequestCancelled = true
+                }
+            }
+            val coordinator = createCoordinator(testScope = this)
+            backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { } }
+            advanceTimeBy(POLL_INTERVAL_MILLIS)
+            runCurrent()
+
+            // Act
+            userWallets.value = userWallets.value.orEmpty().filterNot { it.walletId == WALLET_ID }
+            runCurrent()
+            advanceTimeBy(delayTimeMillis = 60_000L)
+            runCurrent()
+
+            // Assert
+            assertThat(isRequestCancelled).isTrue()
+            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+        }
+
     private fun createCoordinator(testScope: TestScope): JointAccountPollingCoordinator {
         return JointAccountPollingCoordinator(
             fetcher = fetcher,
+            isWalletLinked = { isLinked },
+            userWalletsListRepository = userWalletsListRepository,
             appScope = TestAppCoroutineScope(testScope.backgroundScope.coroutineContext),
             now = { testScope.testScheduler.currentTime },
         )

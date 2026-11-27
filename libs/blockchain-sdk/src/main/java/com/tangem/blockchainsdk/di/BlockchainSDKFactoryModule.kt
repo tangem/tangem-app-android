@@ -183,8 +183,8 @@ internal object BlockchainSDKFactoryModule {
                 isYieldModuleV3Enabled = true,
                 isSolanaCoreNftEnabled = true,
                 isYieldBalanceSeparated = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED,
-                ) && featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED),
+                    FeatureToggles.TWI_1948_YIELD_CONTRIBUTION_ENABLED,
+                ),
             ),
         )
     }

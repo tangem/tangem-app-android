@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
@@ -52,12 +53,12 @@ internal fun EarnAmountContent(
                 )
             }
             item(key = "fee") { feeBlock?.Content(Modifier.fillMaxWidth()) }
-            state.notice?.let { notice -> item(key = "notice") { EarnNotice(notice) } }
             if (state.notifications.isNotEmpty()) {
                 item(key = "notifications") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { EarnNotifications(state.notifications) }
                 }
             }
+            state.notice?.let { notice -> item(key = "notice") { EarnNotice(notice) } }
         }
     }
 }
@@ -65,13 +66,17 @@ internal fun EarnAmountContent(
 /** A deposit has "How it works" on the start; a withdrawal leads with back and moves it next to close. */
 @Composable
 private fun TopBar(state: EarnAmountUM, onBack: () -> Unit, onClose: () -> Unit) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     val infoButton: (@Composable () -> Unit)? = state.onHowItWorksClick?.let { onClick ->
         {
             TangemButton(
                 variant = TangemButton.Variant.Material,
                 size = TangemButton.Size.X11,
                 iconStart = TangemIconUM.Icon(Icons.ic_info_20),
-                onClick = onClick,
+                onClick = {
+                    keyboardController?.hide()
+                    onClick()
+                },
             )
         }
     }

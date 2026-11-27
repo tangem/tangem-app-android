@@ -19,6 +19,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.addfunds.va.bank.DefaultTangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardComponent
+import com.tangem.features.tangempay.card.closure.TangemPayCloseCardConfirmComponent
+import com.tangem.features.tangempay.card.closure.TangemPayClosingCard
 import com.tangem.features.tangempay.card.pin.TangemPayViewPinComponent
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueCardComponent
 import com.tangem.features.tangempay.common.userWalletId
@@ -117,6 +119,20 @@ internal class TangemPayCardPageScreenComponent(
                     cardId = navigation.cardId,
                 ),
             )
+            is TangemPayCardNavigation.CloseCardConfirm -> TangemPayCloseCardConfirmComponent(
+                appComponentContext = context,
+                params = TangemPayCloseCardConfirmComponent.Params(
+                    listener = model,
+                    card = TangemPayClosingCard(
+                        userWalletId = navigation.userWalletId,
+                        cardId = navigation.cardId,
+                        customerId = navigation.customerId,
+                        name = navigation.cardName,
+                        lastDigits = navigation.lastDigits,
+                    ),
+                    canFreeze = navigation.canFreeze,
+                ),
+            )
             is TangemPayCardNavigation.AddFunds -> TangemPayAddFundsComponent(
                 appComponentContext = context,
                 params = TangemPayAddFundsComponent.Params(
@@ -142,6 +158,7 @@ internal class TangemPayCardPageScreenComponent(
                 params = TokenReceiveComponent.Params(
                     config = navigation.config,
                     onDismiss = model.bottomSheetNavigation::dismiss,
+                    isNewScreenAllowed = false,
                 ),
             )
             is TangemPayCardNavigation.ChooseNetwork -> PaymentChooseNetworkComponent(

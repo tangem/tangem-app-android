@@ -1,5 +1,6 @@
 package com.tangem.features.commonfeatures.impl.portfolioselector
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -29,6 +30,8 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
     override val selectedAccountsSync: Set<AccountId> get() = _selectedAccount.replayCache.firstOrNull().orEmpty()
 
     override val isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean> = MutableStateFlow { _, _ -> true }
+
+    override val walletBadge: MutableStateFlow<(UserWallet) -> TextReference?> = MutableStateFlow { null }
 
     override suspend fun isAccountModeSync(): Boolean = isAccountsModeEnabledUseCase.invokeSync()
 

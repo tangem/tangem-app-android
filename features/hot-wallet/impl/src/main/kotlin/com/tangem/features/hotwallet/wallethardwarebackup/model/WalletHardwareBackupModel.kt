@@ -95,7 +95,9 @@ internal class WalletHardwareBackupModel @Inject constructor(
 
     init {
         trackingContextProxy.addHotWalletContext()
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened())
+        analyticsEventHandler.send(
+            WalletSettingsAnalyticEvents.HardwareBackupScreenOpened(source = params.source.toAnalyticsSource()),
+        )
     }
 
     override fun onDestroy() {
@@ -206,4 +208,11 @@ internal class WalletHardwareBackupModel @Inject constructor(
                 .invoke(GenerateBuyTangemCardLinkUseCase.Source.Backup).let { urlOpener.openUrl(it) }
         }
     }
+}
+
+private fun AppRoute.WalletHardwareBackup.Source.toAnalyticsSource(): AnalyticsParam.ScreensSources = when (this) {
+    AppRoute.WalletHardwareBackup.Source.UPGRADE_BANNER -> AnalyticsParam.ScreensSources.UpgradeBanner
+    AppRoute.WalletHardwareBackup.Source.PERMANENT_BANNER -> AnalyticsParam.ScreensSources.PermanentBanner
+    AppRoute.WalletHardwareBackup.Source.WALLET_SETTINGS -> AnalyticsParam.ScreensSources.WalletSettings
+    AppRoute.WalletHardwareBackup.Source.BACKUP -> AnalyticsParam.ScreensSources.Backup
 }

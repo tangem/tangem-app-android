@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -30,6 +30,8 @@ internal sealed interface WalletUM {
 
     val moneyAccountMainUM: MoneyAccountMainUM
 
+    val tangemPayGroupUM: TangemPayGroupUM
+
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
 
     val jointOperationBanners: ImmutableList<JointOperationBannerUM>
@@ -50,6 +52,7 @@ internal sealed interface WalletUM {
         override val moneyAccountMainUM: MoneyAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
+        override val tangemPayGroupUM: TangemPayGroupUM = TangemPayGroupUM.Hidden,
         val areActionsAvailable: Boolean = false,
         override val isMarketingBlockVisible: Boolean = false,
         /**
@@ -58,6 +61,7 @@ internal sealed interface WalletUM {
          */
         val isTangemPayPromoVisible: Boolean = false,
         val promoCardsCheck: PromoCardsCheck = PromoCardsCheck.OnOpen,
+        val permanentUpgradeBannerUM: PermanentUpgradeBannerUM? = null,
     ) : WalletUM
 
     data class Locked(
@@ -72,6 +76,7 @@ internal sealed interface WalletUM {
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
         override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty
+        override val tangemPayGroupUM: TangemPayGroupUM = TangemPayGroupUM.Hidden
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
         override val isMarketingBlockVisible: Boolean = false

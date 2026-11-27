@@ -9,8 +9,10 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitNativeCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyWithdrawNativeCallData
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -22,6 +24,8 @@ import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -35,7 +39,7 @@ import java.math.BigInteger
  *      - `spenderAddress != null`
  *      - the resolved transaction sender is an [EthereumWalletManager]
  *  - The Yield Mode gas-limit logic: uncompiled Ethereum transactions whose call data is
- *    [EthereumYieldSupplySendCallData] get their gas limit increased by 40%.
+ *    [EthereumYieldSupplySendCallData] or a Lending withdrawal get their gas limit increased by 40%.
  *
  * Plus error mapping, null/exception handling, demo card routing, and crypto-currency-to-amount conversion in the
  * second overload.
@@ -262,6 +266,30 @@ internal class GetFeeUseCaseTest {
     fun `GIVEN upgrade-wrapped yield send WHEN invoke THEN gas limit is increased by 40 percent`() = runTest {
         // Arrange
         val txData = yieldSupplyTransactionData(isWrappedInUpgrade = true)
+        val original = TransactionFee.Single(
+            normal = eip1559Fee(gasLimit = BigInteger("21000"), value = BigDecimal("0.0021")),
+        )
+        coEvery { walletManager.getFee(txData) } returns Result.Success(original)
+
+        // Act
+        val result = useCase(userWallet, network, txData)
+
+        // Assert
+        val fee = result.getOrNull().requireAs<TransactionFee.Single>()
+        assertGasLimitIncreased(
+            patched = fee.normal,
+            expectedGasLimit = BigInteger("29400"),
+            expectedValue = BigDecimal("0.00294"),
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideLendingWithdrawals")
+    fun `GIVEN Lending withdrawal WHEN invoke THEN gas limit is increased by 40 percent`(
+        callData: SmartContractCallData,
+    ) = runTest {
+        // Arrange
+        val txData = uncompiledTransactionData(EthereumTransactionExtras(callData = callData))
         val original = TransactionFee.Single(
             normal = eip1559Fee(gasLimit = BigInteger("21000"), value = BigDecimal("0.0021")),
         )
@@ -647,5 +675,11 @@ internal class GetFeeUseCaseTest {
 
     private companion object {
         const val SPENDER = "0xSpender"
+
+        @JvmStatic
+        fun provideLendingWithdrawals(): List<SmartContractCallData> = listOf(
+            EthereumYieldSupplyWithdrawNativeCallData(Amount(value = BigDecimal.ONE, blockchain = Blockchain.Ethereum)),
+            EthereumYieldSupplyExitNativeCallData,
+        )
     }
 }

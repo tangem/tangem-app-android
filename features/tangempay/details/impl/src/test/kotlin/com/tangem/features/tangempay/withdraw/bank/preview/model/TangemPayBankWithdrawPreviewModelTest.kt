@@ -7,20 +7,24 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.tangempay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.model.bankofframp.BankOfframpQuote
+import com.tangem.domain.tangempay.model.bankofframp.BankRail
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.bankOfframpQuote
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
@@ -32,22 +36,36 @@ import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdraw
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.BankWithdrawCompletion
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.BankWithdrawCompletionFactory
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
+import com.tangem.features.tangempay.withdraw.bank.preview.completion.NewRecipientListener
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RateLockUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RecipientCardUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Summary
 import com.tangem.features.tangempay.withdraw.bank.savedRecipientDraft
+import com.tangem.features.tangempay.withdraw.bank.speiDestination
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.time.CurrentTimeProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestScope
+import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -59,6 +77,9 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() {
 
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk {
+        every { isMxnEnabled } returns true
+    }
     private val userWalletId = UserWalletId("011")
     private val sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId)
     private val completion: BankWithdrawCompletion = mockk()
@@ -68,7 +89,9 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
     private val onDestinationChanged: (OfframpDestination) -> Unit = {}
     private val onNetworkFeeChanged: (BigDecimal) -> Unit = {}
-    private val onQuoteChanged: (BankOfframpQuote) -> Unit = {}
+    private val newRecipientListener: NewRecipientListener = mockk()
+    private val shownQuotes = mutableListOf<BankOfframpQuote>()
+    private val quote = MutableStateFlow<BankOfframpQuote?>(null)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private var completedCount = 0
     private var outcomeUnknownCount = 0
@@ -78,9 +101,12 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
         clearMocks(router, uiMessageSender, completion, completionFactory, getUserWalletUseCase, analytics, onCloseFlow)
         completedCount = 0
         outcomeUnknownCount = 0
+        shownQuotes.clear()
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         every { completionFactory.create(any(), any(), any()) } returns completion
-        coEvery { completion.prepare(any()) } returns Unit
+        coEvery { completion.prepare(any(), any()) } returns Unit
+        quote.value = null
+        every { completion.quote } returns quote
         completionInFlight()
     }
 
@@ -115,22 +141,20 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
 
         @Test
         fun `GIVEN source account WHEN model created THEN completion created for it with the draft callbacks`() {
+            // Arrange
+            val callbacks = slot<BankWithdrawCompletionFactory.Callbacks>()
+
             // Act
             val model = createModel()
 
             // Assert
             verify(exactly = 1) {
-                completionFactory.create(
-                    sourceAccount = sourceAccount,
-                    scope = any(),
-                    callbacks = BankWithdrawCompletionFactory.Callbacks(
-                        onOrderCreated = onOrderCreated,
-                        onDestinationChanged = onDestinationChanged,
-                        onNetworkFeeChanged = onNetworkFeeChanged,
-                        onQuoteChanged = onQuoteChanged,
-                    ),
-                )
+                completionFactory.create(sourceAccount = sourceAccount, scope = any(), callbacks = capture(callbacks))
             }
+            assertThat(callbacks.captured.onOrderCreated).isSameInstanceAs(onOrderCreated)
+            assertThat(callbacks.captured.onDestinationChanged).isSameInstanceAs(onDestinationChanged)
+            assertThat(callbacks.captured.onNetworkFeeChanged).isSameInstanceAs(onNetworkFeeChanged)
+            assertThat(callbacks.captured.newRecipientListener).isSameInstanceAs(newRecipientListener)
             model.onDestroy()
         }
 
@@ -143,7 +167,7 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
             val model = createModel(draft = draft)
 
             // Assert
-            coVerify(exactly = 1) { completion.prepare(draft) }
+            coVerify(exactly = 1) { completion.prepare(draft, any()) }
             model.onDestroy()
         }
 
@@ -624,7 +648,12 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
 
             // Assert
             verify(exactly = 1) {
-                analytics.send(MoneyAccountAnalyticsEvents.SendFailed(errorCode = FORBIDDEN_ERROR_CODE))
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.SendFailed(
+                        errorCode = FORBIDDEN_ERROR_CODE,
+                        method = MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_ACH,
+                    ),
+                )
             }
             verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents>()) }
             model.onDestroy()
@@ -671,6 +700,22 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN money account WHEN preview opened and Pay tapped THEN both events carry the rail`() {
+            // Arrange
+            val model = createModel(sourceAccount = MONEY_ACCOUNT)
+
+            // Act
+            summary(model).onSendClick()
+
+            // Assert
+            verifyOrder {
+                analytics.send(MoneyAccountAnalyticsEvents.OfframpConfirmationScreenOpened(rail = BankRail.ACH))
+                analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientTransferConfirmed(rail = BankRail.ACH))
+            }
+            model.onDestroy()
+        }
+
         private fun provideMoneyAccountSendModels() = listOf(
             MoneyAccountSendModel(
                 name = "network fee requoted, then sent",
@@ -701,6 +746,495 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
             ),
         )
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SpeiQuote {
+
+        @Test
+        fun `GIVEN quote held WHEN time passes THEN rate lock counts down to the send deadline`() = runTest {
+            // Arrange
+            val model = createSpeiModel()
+            quote.value = bankOfframpQuote(expiresAt = NOW.plusMinutes(15))
+            runCurrent()
+
+            // Act
+            advanceTimeBy(2_000)
+            runCurrent()
+
+            // Assert
+            assertThat(summary(model).transfer?.conversion?.rateLock).isEqualTo(
+                RateLockUM.Countdown(
+                    text = resourceReference(R.string.money_account_send_rate_lock, wrappedList("14:28")),
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quote with exactly a minute to its send deadline WHEN it arrives THEN the lock counts down`() =
+            runTest {
+                // Arrange
+                val model = createSpeiModel()
+
+                // Act
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(90))
+                runCurrent()
+
+                // Assert
+                assertThat(summary(model).transfer?.conversion?.rateLock).isEqualTo(
+                    RateLockUM.Countdown(
+                        text = resourceReference(R.string.money_account_send_rate_lock, wrappedList("01:00")),
+                    ),
+                )
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN quote counting down WHEN a newer quote arrives THEN the lock follows only the newer one`() =
+            runTest {
+                // Arrange
+                val model = createSpeiModel()
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusMinutes(15))
+                runCurrent()
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusMinutes(5).plusMillis(500))
+                runCurrent()
+
+                // Act
+                advanceTimeBy(2_000)
+                runCurrent()
+
+                // Assert
+                assertThat(summary(model).transfer?.conversion?.rateLock).isEqualTo(
+                    RateLockUM.Countdown(
+                        text = resourceReference(R.string.money_account_send_rate_lock, wrappedList("04:29")),
+                    ),
+                )
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN quote request pending WHEN the order changes THEN the pending request is cancelled`() = runTest {
+            // Arrange
+            val draftFlow = MutableStateFlow(speiDraft())
+            var isFirstRequestCancelled = false
+            coEvery { completion.prepare(speiDraft(), any()) } coAnswers {
+                try {
+                    awaitCancellation()
+                } finally {
+                    isFirstRequestCancelled = true
+                }
+            }
+            val model = createModel(
+                sourceAccount = MONEY_ACCOUNT,
+                draftFlow = draftFlow,
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            runCurrent()
+
+            // Act
+            draftFlow.value = speiDraft().copy(amount = BigDecimal("600"))
+            runCurrent()
+
+            // Assert
+            assertThat(isFirstRequestCancelled).isTrue()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quote held WHEN its send deadline passes THEN a new quote is requested`() = runTest {
+            // Arrange
+            val model = createSpeiModel()
+            quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+            runCurrent()
+
+            // Act
+            advanceTimeBy(62_000)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 2) { completion.prepare(speiDraft(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account quote held WHEN its send deadline passes THEN quote expired sent once`() = runTest {
+            // Arrange
+            val model = createSpeiModel()
+            quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+            runCurrent()
+
+            // Act
+            advanceTimeBy(62_000)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(quoteExpired()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN money account SPEI preview WHEN the transfer is refused on an expired quote THEN quote expired sent`() {
+            // Arrange
+            val callbacks = slot<BankWithdrawCompletionFactory.Callbacks>()
+            every { completionFactory.create(any(), any(), capture(callbacks)) } returns completion
+            val model = createModel(draft = speiDraft(), sourceAccount = MONEY_ACCOUNT)
+
+            // Act
+            callbacks.captured.onQuoteExpired()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(quoteExpired()) }
+            model.onDestroy()
+        }
+
+        private fun quoteExpired() = MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+            rail = BankRail.SPEI,
+            reason = MoneyAccountAnalyticsEvents.AmountErrorReason.QUOTE_EXPIRED,
+        )
+
+        @ParameterizedTest
+        @MethodSource("provideLateQuoteExpiries")
+        fun `GIVEN quote late on arrival WHEN time passes THEN no countdown and no new quote`(expiresAt: DateTime) =
+            runTest {
+                // Arrange
+                val model = createSpeiModel()
+
+                // Act
+                quote.value = bankOfframpQuote(expiresAt = expiresAt)
+                runCurrent()
+                advanceTimeBy(10_000)
+                runCurrent()
+
+                // Assert
+                assertThat(summary(model).transfer?.conversion?.rateLock).isEqualTo(RateLockUM.Hidden)
+                assertThat(summary(model).isSendEnabled).isTrue()
+                coVerify(exactly = 1) { completion.prepare(speiDraft(), any()) }
+                model.onDestroy()
+            }
+
+        private fun provideLateQuoteExpiries() = listOf(NOW.minusMinutes(5), NOW.plusSeconds(60))
+
+        @Test
+        fun `GIVEN lock runs out during a send WHEN the send ends without sending THEN a new quote is requested`() =
+            runTest {
+                // Arrange
+                val tapCancelled = CompletableDeferred<Unit>()
+                coEvery { completion.complete(any(), any()) } coAnswers {
+                    val onState = secondArg<(CompletionState) -> Unit>()
+                    onState(CompletionState.Sending)
+                    tapCancelled.await()
+                    onState(CompletionState.Idle)
+                }
+                val model = createSpeiModel()
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+                runCurrent()
+                summary(model).onSendClick()
+                advanceTimeBy(62_000)
+                runCurrent()
+
+                // Act
+                tapCancelled.complete(Unit)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 2) { completion.prepare(speiDraft(), any()) }
+                verify(exactly = 1) { analytics.send(quoteExpired()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN failure on screen WHEN the send deadline passes THEN no new quote is requested`() = runTest {
+            // Arrange
+            completionReports(CompletionState.Sending, CompletionState.Failed(PreviewFailure.General))
+            val model = createSpeiModel()
+            quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+            runCurrent()
+            summary(model).onSendClick()
+            runCurrent()
+
+            // Act
+            advanceTimeBy(62_000)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(Failed::class.java)
+            coVerify(exactly = 1) { completion.prepare(any(), any()) }
+            verify(exactly = 0) { analytics.send(quoteExpired()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN preview hidden under an edit step WHEN the send deadline passes THEN re-quoted with no quote expired`() =
+            runTest {
+                // Arrange
+                val model = createSpeiModel()
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+                runCurrent()
+                model.onScreenVisibilityChanged(isVisible = false)
+
+                // Act
+                advanceTimeBy(62_000)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 2) { completion.prepare(speiDraft(), any()) }
+                verify(exactly = 0) { analytics.send(quoteExpired()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN quote expiry reported by the countdown WHEN the backend also refuses it as expired THEN sent once`() =
+            runTest {
+                // Arrange
+                val callbacks = slot<BankWithdrawCompletionFactory.Callbacks>()
+                every { completionFactory.create(any(), any(), capture(callbacks)) } returns completion
+                val model = createSpeiModel()
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+                runCurrent()
+                advanceTimeBy(62_000)
+                runCurrent()
+
+                // Act
+                callbacks.captured.onQuoteExpired()
+
+                // Assert
+                verify(exactly = 1) { analytics.send(quoteExpired()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN countdown re-quote fails WHEN the send deadline passes THEN quote expired then quote unavailable`() =
+            runTest {
+                // Arrange
+                val model = createSpeiModel()
+                quote.value = bankOfframpQuote(expiresAt = NOW.plusSeconds(92))
+                runCurrent()
+                coEvery { completion.prepare(any(), any()) } coAnswers {
+                    secondArg<(CompletionState) -> Unit>().invoke(CompletionState.Failed(PreviewFailure.General))
+                }
+
+                // Act
+                advanceTimeBy(62_000)
+                runCurrent()
+
+                // Assert
+                verifyOrder {
+                    analytics.send(quoteExpired())
+                    analytics.send(
+                        MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+                            rail = BankRail.SPEI,
+                            reason = MoneyAccountAnalyticsEvents.AmountErrorReason.QUOTE_UNAVAILABLE,
+                        ),
+                    )
+                }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN quote refused on open WHEN model created THEN error screen without send analytics`() {
+            // Arrange
+            coEvery { completion.prepare(any(), any()) } coAnswers {
+                secondArg<(CompletionState) -> Unit>().invoke(CompletionState.Failed(PreviewFailure.General))
+            }
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            every { analytics.send(capture(sentEvents)) } returns Unit
+
+            // Act
+            val model = createModel(draft = speiDraft(), sourceAccount = MONEY_ACCOUNT)
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(Failed::class.java)
+            assertThat(sentEvents.map { it.event }).containsNoneIn(MONEY_ACCOUNT_SEND_EVENTS)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quotes arrive WHEN preview open THEN every quote is handed to the wizard`() = runTest {
+            // Arrange
+            val model = createSpeiModel()
+            runCurrent()
+
+            // Act
+            quote.value = bankOfframpQuote(quoteId = "quote-1")
+            runCurrent()
+            quote.value = bankOfframpQuote(quoteId = "quote-2")
+            runCurrent()
+
+            // Assert
+            assertThat(shownQuotes.map { it.quoteId }).containsExactly("quote-1", "quote-2").inOrder()
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideSpeiSendModels")
+        fun `GIVEN SPEI draft WHEN Pay ends THEN send confirmed and the outcome carry the SPEI method`(
+            testModel: SpeiSendModel,
+        ) {
+            // Arrange
+            completionReports(CompletionState.Sending, testModel.endState)
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            every { analytics.send(capture(sentEvents)) } returns Unit
+            val model = createModel(draft = speiDraft(), sourceAccount = MONEY_ACCOUNT)
+
+            // Act
+            summary(model).onSendClick()
+
+            // Assert
+            assertThat(sentEvents.filter { it.event in MONEY_ACCOUNT_SEND_EVENTS }).containsExactlyElementsIn(
+                testModel.expectedEvents,
+            ).inOrder()
+            model.onDestroy()
+        }
+
+        private fun provideSpeiSendModels() = listOf(
+            SpeiSendModel(
+                endState = CompletionState.Completed,
+                expectedEvents = listOf(
+                    MoneyAccountAnalyticsEvents.OfframpRecipientTransferConfirmed(rail = BankRail.SPEI),
+                    MoneyAccountAnalyticsEvents.SendConfirmed(
+                        amountUsdc = BigDecimal("500"),
+                        method = MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_SPEI,
+                    ),
+                ),
+            ),
+            SpeiSendModel(
+                endState = CompletionState.Failed(failure = PreviewFailure.General, errorCode = FORBIDDEN_ERROR_CODE),
+                expectedEvents = listOf(
+                    MoneyAccountAnalyticsEvents.OfframpRecipientTransferConfirmed(rail = BankRail.SPEI),
+                    MoneyAccountAnalyticsEvents.SendConfirmed(
+                        amountUsdc = BigDecimal("500"),
+                        method = MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_SPEI,
+                    ),
+                    MoneyAccountAnalyticsEvents.SendFailed(
+                        errorCode = FORBIDDEN_ERROR_CODE,
+                        method = MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_SPEI,
+                    ),
+                ),
+            ),
+        )
+
+        @Test
+        fun `GIVEN SPEI draft WHEN the quote fails after Pay THEN quote unavailable sent and no send events`() {
+            // Arrange
+            completionReports(
+                CompletionState.Sending,
+                CompletionState.Failed(failure = PreviewFailure.General, errorCode = 104140168, isQuoteFailure = true),
+            )
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            every { analytics.send(capture(sentEvents)) } returns Unit
+            val model = createModel(draft = speiDraft(), sourceAccount = MONEY_ACCOUNT)
+
+            // Act
+            summary(model).onSendClick()
+
+            // Assert
+            assertThat(sentEvents.map { it.event }).containsNoneOf(SEND_CONFIRMED, SEND_FAILED)
+            assertThat(sentEvents).contains(
+                MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+                    rail = BankRail.SPEI,
+                    reason = MoneyAccountAnalyticsEvents.AmountErrorReason.QUOTE_UNAVAILABLE,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quote refused on open WHEN Retry fails again THEN each failure sent as quote unavailable`() {
+            // Arrange
+            coEvery { completion.prepare(any(), any()) } coAnswers {
+                secondArg<(CompletionState) -> Unit>().invoke(CompletionState.Failed(PreviewFailure.General))
+            }
+            val model = createModel(draft = speiDraft(), sourceAccount = MONEY_ACCOUNT)
+
+            // Act
+            requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
+
+            // Assert
+            verify(exactly = 2) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.OfframpAmountErrorShown(
+                        rail = BankRail.SPEI,
+                        reason = MoneyAccountAnalyticsEvents.AmountErrorReason.QUOTE_UNAVAILABLE,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quote refused on open WHEN Retry fails again THEN it re-quotes without send analytics`() {
+            // Arrange
+            coEvery { completion.prepare(any(), any()) } coAnswers {
+                secondArg<(CompletionState) -> Unit>().invoke(CompletionState.Failed(PreviewFailure.General))
+            }
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            every { analytics.send(capture(sentEvents)) } returns Unit
+            val model = createModel(draft = speiDraft(), sourceAccount = MONEY_ACCOUNT)
+
+            // Act
+            requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(Failed::class.java)
+            assertThat(sentEvents.map { it.event }).containsNoneIn(MONEY_ACCOUNT_SEND_EVENTS)
+            coVerify(exactly = 2) { completion.prepare(speiDraft(), any()) }
+            coVerify(exactly = 0) { completion.complete(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN preview open WHEN the draft changes THEN only a change of the order requests a new quote`() {
+            // Arrange
+            val draftFlow = MutableStateFlow(speiDraft())
+            val model = createModel(sourceAccount = MONEY_ACCOUNT, draftFlow = draftFlow)
+            val repricedDraft = speiDraft().copy(amount = BigDecimal("600"))
+
+            // Act
+            draftFlow.value = speiDraft().copy(networkFee = BigDecimal("0.07"))
+            draftFlow.value = repricedDraft
+
+            // Assert
+            coVerifyOrder {
+                completion.prepare(speiDraft(), any())
+                completion.prepare(repricedDraft, any())
+            }
+            coVerify(exactly = 2) { completion.prepare(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no quote yet WHEN it arrives THEN Pay turns on`() = runTest {
+            // Arrange
+            val model = createSpeiModel()
+            runCurrent()
+            val isEnabledBefore = summary(model).isSendEnabled
+
+            // Act
+            quote.value = bankOfframpQuote(expiresAt = NOW.plusMinutes(15))
+            runCurrent()
+
+            // Assert
+            assertThat(isEnabledBefore).isFalse()
+            assertThat(summary(model).isSendEnabled).isTrue()
+            model.onDestroy()
+        }
+
+        private fun TestScope.createSpeiModel() = createModel(
+            draft = speiDraft(),
+            sourceAccount = MONEY_ACCOUNT,
+            dispatchers = createTestingCoroutineDispatcherProvider(),
+            currentTimeProvider = CurrentTimeProvider { NOW.millis + testScheduler.currentTime },
+        )
+
+        private fun speiDraft() = savedRecipientDraft().copy(
+            destination = speiDestination(),
+            networkFee = BigDecimal("0.03"),
+        )
+
+    }
+
+    internal data class SpeiSendModel(val endState: CompletionState, val expectedEvents: List<AnalyticsEvent>)
 
     internal data class OutcomeUnknownModel(val failure: PreviewFailure, val expectedRefreshRequests: Int)
 
@@ -775,20 +1309,25 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
         destination = offrampDestination(),
     )
 
+    @Suppress("LongParameterList")
     private fun createModel(
         draft: BankWithdrawDraft = savedRecipientDraft(),
         isBalanceHidden: Boolean = false,
         sourceAccount: BankWithdrawSourceAccount = this.sourceAccount,
+        draftFlow: MutableStateFlow<BankWithdrawDraft> = MutableStateFlow(draft),
+        dispatchers: TestingCoroutineDispatcherProvider = this.dispatchers,
+        currentTimeProvider: CurrentTimeProvider = CurrentTimeProvider { NOW.millis },
     ): TangemPayBankWithdrawPreviewModel =
         TangemPayBankWithdrawPreviewModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawPreviewComponent.Params(
                     sourceAccount = sourceAccount,
-                    draft = MutableStateFlow(draft),
+                    draft = draftFlow,
                     onOrderCreated = onOrderCreated,
                     onDestinationChanged = onDestinationChanged,
                     onNetworkFeeChanged = onNetworkFeeChanged,
-                    onQuoteChanged = onQuoteChanged,
+                    newRecipientListener = newRecipientListener,
+                    onQuoteShown = shownQuotes::add,
                     onCompleted = { completedCount++ },
                     onTransferOutcomeUnknown = { outcomeUnknownCount++ },
                     onCloseFlow = onCloseFlow,
@@ -799,12 +1338,14 @@ internal class TangemPayBankWithdrawPreviewModelTest : TangemPayModelTestBase() 
             uiMessageSender = uiMessageSender,
             completionFactory = completionFactory,
             getUserWalletUseCase = getUserWalletUseCase,
-            analytics = analytics,
+            withdrawAnalyticsFactory = withdrawAnalyticsFactory(moneyAccountFeatureToggles),
             getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
-        ).destroyAfterTest()
+            currentTimeProvider = currentTimeProvider,
+        ).destroyAfterTest().also { it.onScreenVisibilityChanged(isVisible = true) }
 
     private companion object {
         const val FORBIDDEN_ERROR_CODE = 104_120_100
+        val NOW: DateTime = DateTime.parse("2026-11-10T10:00:00Z")
         const val TRANSFER_CONFIRMED = "VA Offramp Recipient Transfer Confirmed"
         const val SEND_CONFIRMED = "VA Send Confirmed"
         const val SEND_FAILED = "VA Send failed"

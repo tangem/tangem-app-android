@@ -6,9 +6,11 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -18,6 +20,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
@@ -27,6 +30,8 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
+import com.tangem.features.yield.supply.impl.common.YieldSupplyCurrencyStatusResolver
+import com.tangem.features.yield.supply.impl.common.portfolioCurrencyStatusResolver
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -52,6 +57,7 @@ internal class YieldSupplyEntryModelTest {
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val isPromoEnabledUseCase: IsYieldBoostPromoEnabledForTokenUseCase = mockk()
     private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     private val accountStatusList: AccountStatusList = mockk()
 
@@ -59,8 +65,9 @@ internal class YieldSupplyEntryModelTest {
     fun setUp() {
         clearMocks(
             router, enterStatusUseCase, accountStatusListSupplier,
-            isPromoEnabledUseCase, getTokenStatusUseCase,
+            isPromoEnabledUseCase, getTokenStatusUseCase, moneyAccountFeatureToggles,
         )
+        every { moneyAccountFeatureToggles.isYieldModeEnabled } returns true
         mockkObject(CryptoCurrencyStatusOperations)
         coEvery { accountStatusListSupplier.getSyncOrNull(USER_WALLET_ID) } returns accountStatusList
     }
@@ -81,6 +88,40 @@ internal class YieldSupplyEntryModelTest {
         // Assert
         verify(exactly = 1) { router.pop(any()) }
         verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a Money flow and Money yield off WHEN created THEN closes without reading the currency`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
+        val currencyStatusResolver: YieldSupplyCurrencyStatusResolver = mockk()
+
+        // Act
+        createModel(
+            currency = token(),
+            currencyStatusResolver = currencyStatusResolver,
+            account = AccountKind.Money,
+        )
+
+        // Assert
+        verify(exactly = 1) { router.pop(any()) }
+        verify(exactly = 0) { router.replaceCurrent(any(), any()) }
+        coVerify(exactly = 0) { currencyStatusResolver.getSync(any(), any<CryptoCurrency>(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a portfolio flow and Money yield off WHEN created THEN opens as usual`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isYieldModeEnabled } returns false
+        stubStatusLookup(status(isActive = true).some())
+        coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns null.right()
+
+        // Act
+        createModel(currency = token())
+
+        // Assert
+        verify(exactly = 0) { router.pop(any()) }
+        assertThat(captureReplacedRoute()).isEqualTo(YieldSupplyEntryRoute.Active(cryptoCurrency = token()))
     }
 
     @Test
@@ -113,6 +154,28 @@ internal class YieldSupplyEntryModelTest {
                 .isEqualTo(NavigationAction.YieldSupply(isActive = true))
             assertThat(route.userWalletId).isEqualTo(USER_WALLET_ID)
             assertThat(route.currency).isEqualTo(token())
+        }
+
+    @Test
+    fun `GIVEN pending enter status of a currency outside the portfolio WHEN created THEN pops back to the account`() =
+        runTest {
+            // Arrange
+            stubStatusLookup(arrow.core.none())
+            coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns pendingEnter().right()
+            val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk {
+                coEvery { getStatuses(USER_WALLET_ID, any()) } returns listOf(status(isActive = false))
+            }
+            val resolver = YieldSupplyCurrencyStatusResolver(
+                singleAccountStatusListSupplier = accountStatusListSupplier,
+                nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+            )
+
+            // Act
+            createModel(currency = token(), currencyStatusResolver = resolver, account = AccountKind.Money)
+
+            // Assert
+            verify(exactly = 1) { router.pop(any()) }
+            verify(exactly = 0) { router.replaceCurrent(any(), any()) }
         }
 
     @Test
@@ -265,16 +328,28 @@ internal class YieldSupplyEntryModelTest {
         } returns result
     }
 
-    private fun createModel(currency: CryptoCurrency): YieldSupplyEntryModel = YieldSupplyEntryModel(
+    private fun createModel(
+        currency: CryptoCurrency,
+        currencyStatusResolver: YieldSupplyCurrencyStatusResolver = portfolioCurrencyStatusResolver(
+            supplier = accountStatusListSupplier,
+        ),
+        account: AccountKind = AccountKind.Portfolio,
+    ): YieldSupplyEntryModel = YieldSupplyEntryModel(
         paramsContainer = MutableParamsContainer(
-            YieldSupplyEntryComponent.Params(userWalletId = USER_WALLET_ID, cryptoCurrency = currency, apy = "5.0"),
+            YieldSupplyEntryComponent.Params(
+                userWalletId = USER_WALLET_ID,
+                cryptoCurrency = currency,
+                apy = "5.0",
+                account = account,
+            ),
         ),
         dispatchers = TestingCoroutineDispatcherProvider(),
         router = router,
         yieldSupplyEnterStatusUseCase = enterStatusUseCase,
-        singleAccountStatusListSupplier = accountStatusListSupplier,
+        currencyStatusResolver = currencyStatusResolver,
         isYieldBoostPromoEnabledForTokenUseCase = isPromoEnabledUseCase,
         yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     private fun pendingEnter(): YieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txIds = listOf("0xTx"))

@@ -19,4 +19,7 @@ dependencies {
 
     /** Common */
     api(projects.common.routing)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

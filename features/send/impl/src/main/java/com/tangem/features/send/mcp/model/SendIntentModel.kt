@@ -36,7 +36,7 @@ import javax.inject.Inject
 private const val AGENT_LOOKUP_TIMEOUT_MILLIS = 3_000L
 
 /**
- * Reads the send intent for the selected wallet, offers it to the owner and hands it over to the Send screen that
+ * Reads the send intent for the requested wallet, offers it to the owner and hands it over to the Send screen that
  * carries it out. An intent the wallet cannot act on is said so by the sheet.
  */
 @Suppress("LongParameterList")
@@ -90,7 +90,7 @@ internal class SendIntentModel @Inject constructor(
     }
 
     private suspend fun loadIntent() {
-        val walletId = userWalletsListRepository.selectedUserWalletSync()?.walletId
+        val walletId = params.walletId ?: userWalletsListRepository.selectedUserWalletSync()?.walletId
             ?: return closeWithoutSheet(reason = "no wallet is selected")
 
         val intent = getSendIntentUseCase(intentId = params.intentId)

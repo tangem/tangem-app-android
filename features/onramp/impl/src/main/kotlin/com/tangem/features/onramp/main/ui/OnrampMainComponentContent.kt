@@ -1,10 +1,8 @@
 package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
@@ -12,34 +10,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.ds.message.TangemMessage
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.marketing.api.MarketingBannerComponent
-import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
 import com.tangem.features.onramp.main.entity.OnrampCountryButtonUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampMainTopBarUM
-import com.tangem.core.ui.R as CoreUiR
+import com.tangem.features.onramp.main.entity.takesSlots
 
 @Composable
 internal fun OnrampMainScreen(
@@ -66,16 +57,34 @@ internal fun OnrampMainScreen(
 }
 
 @Composable
+private fun OnrampTopNavigationDs(
+    config: OnrampMainTopBarUM,
+    countryButton: OnrampCountryButtonUM,
+    modifier: Modifier = Modifier,
+) {
+    TangemTopNavigation(
+        modifier = modifier,
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        blurBackground = false,
+        startButton = { CountryButtonDs(state = countryButton) },
+        endButton = { CloseButtonDs(state = config.startButtonUM) },
+        contentColumn = {
+            TangemNavigationText(
+                text = config.title,
+                role = TangemNavigationText.Role.Title,
+                modifier = Modifier.testTag(TopAppBarTestTags.TITLE),
+            )
+            SpacerH(4.dp)
+            TangemNavigationText(text = config.subtitle, role = TangemNavigationText.Role.Subtitle)
+        },
+    )
+}
+
+@Composable
 private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifier) {
     val countryButton = config.countryButtonUM
     if (countryButton != null) {
-        TangemTopBar(
-            modifier = modifier,
-            title = config.title,
-            subtitle = config.subtitle,
-            startContent = { CountryButton(state = countryButton) },
-            endContent = { CloseButton(state = config.startButtonUM) },
-        )
+        OnrampTopNavigationDs(config = config, countryButton = countryButton, modifier = modifier)
     } else {
         TangemTopAppBar(
             modifier = modifier,
@@ -85,50 +94,6 @@ private fun OnrampTopBar(config: OnrampMainTopBarUM, modifier: Modifier = Modifi
             subtitle = config.subtitle.resolveReference(),
         )
     }
-}
-
-@Composable
-private fun CountryButton(state: OnrampCountryButtonUM, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .clickable(
-                enabled = state.isEnabled,
-                role = Role.Button,
-                onClickLabel = stringResourceSafe(R.string.onramp_settings_residence),
-                onClick = state.onClick,
-            )
-            .semantics { state.countryName?.let { contentDescription = it } }
-            .testTag(TopAppBarTestTags.MORE_BUTTON),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (state.flagUrl != null) {
-            SubcomposeAsyncImage(
-                modifier = Modifier.fillMaxSize(),
-                model = state.flagUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                loading = { CircleShimmer(modifier = Modifier.fillMaxSize()) },
-                error = {
-                    Box(Modifier.fillMaxSize().background(TangemTheme.colors.stroke.primary, CircleShape))
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun CloseButton(state: TopAppBarButtonUM, modifier: Modifier = Modifier) {
-    TangemTopBarActionContent(
-        actionUM = TangemTopBarActionUM(
-            iconRes = CoreUiR.drawable.ic_close_24,
-            isActionable = state.isEnabled,
-            onClick = state.onClicked,
-            ghostModeProgress = 1f,
-        ),
-        modifier = modifier.testTag(TopAppBarTestTags.CLOSE_BUTTON),
-    )
 }
 
 @Composable
@@ -177,6 +142,7 @@ private fun InitialLoading(state: OnrampMainComponentUM.InitialLoading, modifier
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         OnrampAmountContentLoading()
+        RegionRestrictionBanner(state)
         OnrampNotifications(state = state)
     }
 }
@@ -236,17 +202,28 @@ private fun Content(
                 start = 16.dp,
                 end = 16.dp,
             ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(if (LocalOnrampDesignSystemEnabled.current) 8.dp else 12.dp),
     ) {
-        OnrampAmountContent(state = state)
+        if (LocalOnrampDesignSystemEnabled.current) {
+            OnrampAmountContentDs(state = state)
+        } else {
+            OnrampAmountContent(state = state)
+        }
+        RegionRestrictionBanner(state)
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
-            ctaMarketingBannerComponent.Content(Modifier.fillMaxWidth())
+            ctaMarketingBannerComponent.CtaContent(slot = null, modifier = Modifier.fillMaxWidth())
+            if (!state.offersBlockState.takesSlots()) {
+                ctaMarketingBannerComponent.replacedSlots().forEach { slot ->
+                    ctaMarketingBannerComponent.CtaContent(slot = slot, modifier = Modifier.fillMaxWidth())
+                }
+            }
         }
 
         OnrampOffersContent(
             state = state.offersBlockState,
+            ctaMarketingBannerComponent = ctaMarketingBannerComponent,
             linkedMarketingBannerComponent = linkedMarketingBannerComponent,
         )
 
@@ -258,8 +235,24 @@ private fun Content(
 private fun OnrampNotifications(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
     val buyNotSupportedMessage = state.buyNotSupportedMessage
     val errorNotification = state.errorNotification
-    when {
-        buyNotSupportedMessage != null -> TangemMessage(messageUM = buyNotSupportedMessage, modifier = modifier)
-        errorNotification != null -> Notification(config = errorNotification.config, modifier = modifier)
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (buyNotSupportedMessage != null) {
+            if (LocalOnrampDesignSystemEnabled.current) {
+                BuyNotSupportedBannerDs(messageUM = buyNotSupportedMessage)
+            } else {
+                TangemMessage(messageUM = buyNotSupportedMessage)
+            }
+        }
+        if (errorNotification != null) {
+            Notification(config = errorNotification.config)
+        }
+    }
+}
+
+@Composable
+private fun RegionRestrictionBanner(state: OnrampMainComponentUM) {
+    val banner = state.regionRestrictionMessage ?: return
+    TangemThemeRedesign {
+        TangemMessageBanner(state = banner, modifier = Modifier.fillMaxWidth())
     }
 }

@@ -20,6 +20,7 @@ dependencies {
     /** Core */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)

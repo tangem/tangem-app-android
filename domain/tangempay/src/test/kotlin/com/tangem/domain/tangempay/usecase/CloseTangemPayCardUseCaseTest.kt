@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CloseTangemPayCardUseCaseTest {
@@ -80,6 +81,44 @@ internal class CloseTangemPayCardUseCaseTest {
         coVerify(exactly = 1) { closeCardRepository.storeCloseOrderId(CARD_ID, ORDER_ID) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
         coVerify(exactly = 1) { startPollingUseCase(order, USER_WALLET_ID, any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN polling ends with completion flag WHEN invoke THEN onOrderEnded receives that flag`(
+        isCompleted: Boolean,
+    ) = runTest {
+        // Arrange
+        val useCase = createUseCase()
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+        val orderEndedFlags = mutableListOf<Boolean>()
+        coEvery { closeCardRepository.closeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
+        coEvery { closeCardRepository.storeCloseOrderId(CARD_ID, ORDER_ID) } returns Unit.right()
+        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+        coEvery { startPollingUseCase(order, USER_WALLET_ID, any()) } returns isCompleted
+
+        // Act
+        useCase(USER_WALLET_ID, CARD_ID, onOrderEnded = { orderEndedFlags += it })
+
+        // Assert
+        assertThat(orderEndedFlags).containsExactly(isCompleted)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN closeCard fails or returns CANCELED order WHEN invoke THEN onOrderEnded is not invoked`(
+        closeCardResult: Either<TangemPayApiError, TangemPayOrderInfo>,
+    ) = runTest {
+        // Arrange
+        val useCase = createUseCase()
+        val orderEndedFlags = mutableListOf<Boolean>()
+        coEvery { closeCardRepository.closeCard(USER_WALLET_ID, CARD_ID) } returns closeCardResult
+
+        // Act
+        useCase(USER_WALLET_ID, CARD_ID, onOrderEnded = { orderEndedFlags += it })
+
+        // Assert
+        assertThat(orderEndedFlags).isEmpty()
     }
 
     private fun provideTestModels(): List<Either<TangemPayApiError, TangemPayOrderInfo>> = listOf(

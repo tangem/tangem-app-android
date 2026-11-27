@@ -17,6 +17,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesRegionRestrictionsSheetComponent
 import com.tangem.features.collectibles.impl.addfunds.CollectiblesAddFundsComponent
 import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
@@ -94,6 +95,10 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
             ),
         )
         CollectiblesMainBottomSheetConfig.PaymentInProgress -> CollectiblesPaymentInProgressSheetComponent(
+            appComponentContext = childByContext(componentContext),
+            onDismiss = { dismissBottomSheet(config) },
+        )
+        CollectiblesMainBottomSheetConfig.RegionRestricted -> CollectiblesRegionRestrictionsSheetComponent(
             appComponentContext = childByContext(componentContext),
             onDismiss = { dismissBottomSheet(config) },
         )

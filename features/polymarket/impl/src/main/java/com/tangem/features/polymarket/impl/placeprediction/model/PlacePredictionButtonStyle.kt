@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.polymarket.model.PredictionOrderSigningPreference
-import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionOrderSessionKeyWindowUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
@@ -15,10 +15,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.toKotlinDuration
 
 @Suppress("LongParameterList")
 internal class PlacePredictionButtonStyle @AssistedInject constructor(
@@ -27,7 +29,7 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
     getUserWalletUseCase: GetUserWalletUseCase,
     private val featureToggles: PolymarketFeatureToggles,
-    private val canSignPredictionOrderWithSessionKeyUseCase: CanSignPredictionOrderWithSessionKeyUseCase,
+    private val getPredictionOrderSessionKeyWindowUseCase: GetPredictionOrderSessionKeyWindowUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -35,7 +37,9 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
     private var sessionKeyStyle: PlaceButtonStyleUM? = null
 
-    private var sessionKeyCheck: Job? = null
+    private var sessionKeyLookup: Job? = null
+
+    private var signingWindowExpiry: Job? = null
 
     init {
         getUserWalletUseCase(userWalletId).onRight { userWallet ->
@@ -47,25 +51,38 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
     fun checkSessionKey() {
         val ownerStyle = ownerStyle ?: return
-        sessionKeyCheck?.cancel()
+        sessionKeyLookup?.cancel()
 
         if (!featureToggles.isPolymarketFastOrdersEnabled) {
+            signingWindowExpiry?.cancel()
             sessionKeyStyle = ownerStyle
             applyIfIdle()
             return
         }
 
-        sessionKeyCheck = scope.launch {
-            val canSign = withContext(dispatchers.io) {
-                canSignPredictionOrderWithSessionKeyUseCase(userWalletId = userWalletId)
+        sessionKeyLookup = scope.launch {
+            val signingWindow = withContext(dispatchers.io) {
+                getPredictionOrderSessionKeyWindowUseCase(userWalletId = userWalletId)
             }
-            sessionKeyStyle = if (canSign) PlaceButtonStyleUM.PLAIN else ownerStyle
+            signingWindowExpiry?.cancel()
+            if (signingWindow == null) {
+                sessionKeyStyle = ownerStyle
+                applyIfIdle()
+                return@launch
+            }
+            sessionKeyStyle = PlaceButtonStyleUM.PLAIN
             applyIfIdle()
+            signingWindowExpiry = scope.launch {
+                delay(signingWindow.toKotlinDuration())
+                sessionKeyStyle = ownerStyle
+                applyIfIdle()
+            }
         }
     }
 
     fun onSessionKeyLost() {
-        sessionKeyCheck?.cancel()
+        sessionKeyLookup?.cancel()
+        signingWindowExpiry?.cancel()
         sessionKeyStyle = ownerStyle
     }
 
@@ -77,10 +94,9 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
     }
 
     fun signingPreference(confirmedWith: PlaceButtonStyleUM): PredictionOrderSigningPreference? = when {
-        !featureToggles.isPolymarketFastOrdersEnabled && confirmedWith == PlaceButtonStyleUM.PLAIN -> null
-        !featureToggles.isPolymarketFastOrdersEnabled -> PredictionOrderSigningPreference.OWNER_ONLY
-        confirmedWith != PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.AUTOMATIC
-        else -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
+        confirmedWith != PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.OWNER_ONLY
+        featureToggles.isPolymarketFastOrdersEnabled -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
+        else -> null
     }
 
     fun applyIfIdle() {

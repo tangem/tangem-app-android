@@ -35,7 +35,7 @@ sealed class TokenReceiveNewAnalyticsEvent(
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchainName,
-            SOURCE to tokenReceiveSource.name,
+            SOURCE to tokenReceiveSource.value,
         ),
     ), AppsFlyerIncludedEvent
 
@@ -47,6 +47,19 @@ sealed class TokenReceiveNewAnalyticsEvent(
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchainName,
+        ),
+    )
+
+    class ButtonShareAddress(
+        token: String,
+        blockchainName: String,
+        source: TokenReceiveCopyActionSource,
+    ) : TokenReceiveNewAnalyticsEvent(
+        event = "Button - Share Address",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchainName,
+            SOURCE to source.value,
         ),
     )
 
@@ -62,6 +75,11 @@ sealed class TokenReceiveNewAnalyticsEvent(
     )
 }
 
-enum class TokenReceiveCopyActionSource {
-    Main, Token, Receive, QR
+enum class TokenReceiveCopyActionSource(val value: String) {
+    Main("Main"),
+    Token("Token"),
+    Receive("Receive"),
+    QR("QR"),
+    CopyButton("Copy button"),
+    QrCode("QR code"),
 }

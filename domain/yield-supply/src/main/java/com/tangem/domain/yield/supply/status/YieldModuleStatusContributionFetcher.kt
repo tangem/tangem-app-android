@@ -3,9 +3,9 @@ package com.tangem.domain.yield.supply.status
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyBalanceFetcher
 import com.tangem.domain.tokens.TokensFeatureToggles
 
 /**
@@ -15,7 +15,7 @@ import com.tangem.domain.tokens.TokensFeatureToggles
 class YieldModuleStatusContributionFetcher(
     private val yieldModuleStatusFetcher: YieldModuleStatusFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
-) : BalanceContributionFetcher {
+) : YieldSupplyBalanceFetcher {
 
     override suspend fun fetch(
         userWalletId: UserWalletId,

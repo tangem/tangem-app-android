@@ -1,5 +1,6 @@
 package com.tangem.domain.mcp.models
 
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,9 +15,9 @@ sealed interface McpRequest {
     @Serializable
     data class Pair(val userCode: String) : McpRequest
 
-    /** A request to act on the intent [id] raised by [source]. */
+    /** A request to act on the intent [id] raised by [source]; a missing [walletId] uses the selected wallet. */
     @Serializable
-    data class Intent(val id: String, val source: Source) : McpRequest {
+    data class Intent(val id: String, val source: Source, val walletId: UserWalletId? = null) : McpRequest {
 
         /** The service that raised the intent, together with the operation it asks for. */
         @Serializable

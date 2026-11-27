@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.main
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,6 +20,8 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
+import com.tangem.features.onramp.featuretoggles.LocalOnrampDesignSystemEnabled
+import com.tangem.features.onramp.featuretoggles.OnrampFeatureToggles
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.features.onramp.main.model.OnrampMainComponentModel
 import com.tangem.features.onramp.main.ui.OnrampMainScreen
@@ -38,6 +41,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
     private val allOffersComponentFactory: AllOffersComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
     private val conciergeDemandSurveyComponentFactory: ConciergeDemandSurveyComponent.Factory,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : OnrampMainComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampMainComponentModel = getOrCreateModel(params)
@@ -96,13 +100,17 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val demandSurvey by demandSurveySlot.subscribeAsState()
 
-        OnrampMainScreen(
-            modifier = modifier,
-            state = state,
-            marketingBannerComponent = marketingBannerComponent,
-            linkedMarketingBannerComponent = linkedMarketingBannerComponent,
-            ctaMarketingBannerComponent = ctaMarketingBannerComponent,
-        )
+        CompositionLocalProvider(
+            LocalOnrampDesignSystemEnabled provides onrampFeatureToggles.isNewDesignSystemEnabled,
+        ) {
+            OnrampMainScreen(
+                modifier = modifier,
+                state = state,
+                marketingBannerComponent = marketingBannerComponent,
+                linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                ctaMarketingBannerComponent = ctaMarketingBannerComponent,
+            )
+        }
         bottomSheet.child?.instance?.BottomSheet()
         demandSurvey.child?.instance?.Content(modifier = Modifier)
     }
@@ -145,8 +153,9 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 userWallet = model.userWallet,
                 cryptoCurrency = params.cryptoCurrency,
                 onDismiss = model.bottomSheetNavigation::dismiss,
-                openRedirectPage = params.openRedirectPage,
+                openRedirectPage = model::openRedirectPage,
                 amountCurrencyCode = config.amountCurrencyCode,
+                isBuyEnabled = model.isBuyEnabled,
                 marketingBannerComponent = marketingBannerComponent,
                 linkedMarketingBannerComponent = linkedMarketingBannerComponent,
             ),

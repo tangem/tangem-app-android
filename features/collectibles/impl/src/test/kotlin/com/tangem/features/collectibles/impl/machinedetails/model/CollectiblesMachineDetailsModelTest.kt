@@ -6,10 +6,12 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -21,8 +23,11 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNftsListConfig
 import com.tangem.domain.collectibles.models.CollectiblesError
+import com.tangem.domain.collectibles.models.CollectiblesRegionStatus
+import com.tangem.domain.collectibles.usecase.GetCollectiblesRegionStatusUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineNftsBatchFlowUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.features.collectibles.impl.createNft
@@ -58,6 +63,8 @@ internal class CollectiblesMachineDetailsModelTest {
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
     private val getPrizePoolBatchFlowUseCase: GetCollectibleGachaMachineNftsBatchFlowUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
+    private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val getRegionStatusUseCase: GetCollectiblesRegionStatusUseCase = mockk()
 
     private val batchListState = MutableStateFlow(
         createNftsBatchListState(batches = emptyList(), status = PaginationStatus.None),
@@ -77,7 +84,8 @@ internal class CollectiblesMachineDetailsModelTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(getMachineUseCase, getPrizePoolBatchFlowUseCase, router)
+        clearMocks(getMachineUseCase, getPrizePoolBatchFlowUseCase, router, messageSender, getRegionStatusUseCase)
+        coEvery { getRegionStatusUseCase(any(), any()) } returns CollectiblesRegionStatus.ALLOWED
         batchListState.value = createNftsBatchListState(batches = emptyList(), status = PaginationStatus.None)
         dispatchedActions.clear()
         coEvery { getMachineUseCase(any(), any()) } returns createMachine().right()
@@ -271,12 +279,56 @@ internal class CollectiblesMachineDetailsModelTest {
 
         // Act
         content.footer.onBuyClick()
+        runCurrent()
 
         // Assert
         verify(exactly = 1) {
             router.push(CollectiblesRoute.ConfirmOrder(machineId = EXTERNAL_ID, isTurboEnabled = isTurboEnabled))
         }
     }
+
+    @Test
+    fun `GIVEN a restricted region WHEN buy tapped THEN the restriction is shown instead of the order`() =
+        runModelTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(USER_WALLET_ID, any()) } returns CollectiblesRegionStatus.RESTRICTED
+            val model = startModel()
+            val content = model.uiState.value as CollectiblesMachineDetailsUM.Content
+            var shownSheet: CollectiblesMachineDetailsBottomSheetConfig? = null
+            model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+            // Act
+            content.footer.onBuyClick()
+            runCurrent()
+
+            // Assert
+            assertThat(shownSheet).isEqualTo(CollectiblesMachineDetailsBottomSheetConfig.RegionRestricted)
+            coVerify(exactly = 1) { getRegionStatusUseCase(USER_WALLET_ID, skipCache = false) }
+            verify(inverse = true) { router.push(any<CollectiblesRoute.ConfirmOrder>()) }
+            assertThat((model.uiState.value as CollectiblesMachineDetailsUM.Content).footer.isBuyLoading).isFalse()
+        }
+
+    @Test
+    fun `GIVEN the region check fails WHEN buy tapped THEN a generic error is shown and the next tap asks again`() =
+        runModelTest {
+            // Arrange
+            coEvery { getRegionStatusUseCase(USER_WALLET_ID, any()) } returns CollectiblesRegionStatus.UNKNOWN
+            val model = startModel()
+            val content = model.uiState.value as CollectiblesMachineDetailsUM.Content
+
+            // Act
+            content.footer.onBuyClick()
+            runCurrent()
+            content.footer.onBuyClick()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 2) {
+                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+            }
+            coVerify(exactly = 2) { getRegionStatusUseCase(USER_WALLET_ID, any()) }
+            verify(inverse = true) { router.push(any<CollectiblesRoute.ConfirmOrder>()) }
+        }
 
     @Test
     fun `GIVEN the machine is shown WHEN turbo info tapped THEN the turbo explainer opens`() = runModelTest {
@@ -504,8 +556,10 @@ internal class CollectiblesMachineDetailsModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             router = router,
+            messageSender = messageSender,
+            getRegionStatusUseCase = getRegionStatusUseCase,
             paramsContainer = MutableParamsContainer(
-                CollectiblesMachineDetailsComponent.Params(externalId = EXTERNAL_ID),
+                CollectiblesMachineDetailsComponent.Params(userWalletId = USER_WALLET_ID, externalId = EXTERNAL_ID),
             ),
             getPrizePoolBatchFlowUseCase = getPrizePoolBatchFlowUseCase,
         ).also { this@CollectiblesMachineDetailsModelTest.model = it }
@@ -524,6 +578,7 @@ internal class CollectiblesMachineDetailsModelTest {
     private companion object {
 
         const val EXTERNAL_ID = "pokemon_50"
+        val USER_WALLET_ID = UserWalletId("aa")
         const val POLLING_DELAY_MS = 10_000L
     }
 }

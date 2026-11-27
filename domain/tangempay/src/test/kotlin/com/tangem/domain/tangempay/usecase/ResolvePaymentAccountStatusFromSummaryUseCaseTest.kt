@@ -103,6 +103,34 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
             expected = null,
         ),
         ResolveModel(
+            name = "active customer with kyc in progress and completed account requires full fetch",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                payment = PaymentAccount.Activation.Status.COMPLETED,
+            ),
+            expected = null,
+        ),
+        ResolveModel(
+            name = "cdd: money only customer has no payment tile",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                payment = PaymentAccount.Activation.Status.NOT_STARTED,
+                banking = MoneyAccount.Activation.Status.COMPLETED,
+            ),
+            expected = PaymentAccountStatusValue.Empty,
+        ),
+        ResolveModel(
+            name = "cdd: payment issuing requires full fetch",
+            summary = summary(
+                customerStatus = CustomerStatus.ACTIVE,
+                kycStatus = SummaryKycStatus.IN_PROGRESS,
+                payment = PaymentAccount.Activation.Status.PROCESSING,
+            ),
+            expected = null,
+        ),
+        ResolveModel(
             name = "kyc required",
             summary = summary(kycStatus = SummaryKycStatus.REQUIRED),
             expected = kycRequired(),
@@ -171,6 +199,37 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
                 payment = PaymentAccount.Activation.Status.FAILED,
                 paymentStep = PaymentAccount.Activation.Step.ISSUING,
                 paymentFailureReason = PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
+            ),
+            expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
+        ),
+        ResolveModel(
+            name = "deposit timeout returns to verified",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
+            ),
+            expected = verified(),
+        ),
+        ResolveModel(
+            name = "deposit timeout with completed money account returns to verified",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
+                banking = MoneyAccount.Activation.Status.COMPLETED,
+            ),
+            expected = verified(),
+        ),
+        ResolveModel(
+            name = "technical failure shows card issue failure",
+            summary = summary(
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
+                paymentStep = PaymentAccount.Activation.Step.ISSUING,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.TECHNICAL,
             ),
             expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
         ),

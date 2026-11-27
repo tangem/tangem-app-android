@@ -64,10 +64,7 @@ private fun PaymentAccountStatusValue.toPromoEligibility(): PromoEligibility = w
     is PaymentAccountStatusValue.UnderReview -> PromoEligibility.IN_KYC
     is PaymentAccountStatusValue.Empty -> PromoEligibility.NOT_AVAILABLE
     is PaymentAccountStatusValue.Loading,
-    is PaymentAccountStatusValue.IssuingCard,
     is PaymentAccountStatusValue.Verified,
-    is PaymentAccountStatusValue.AwaitingPlanSelection,
-    is PaymentAccountStatusValue.Inactive,
     is PaymentAccountStatusValue.Loaded,
     is PaymentAccountStatusValue.Deactivated,
     is PaymentAccountStatusValue.Error,

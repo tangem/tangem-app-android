@@ -6,6 +6,7 @@ import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
@@ -451,6 +452,23 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         }
 
     @Test
+    fun `GIVEN currency held outside the portfolio WHEN sheet opens THEN fee status read from its holder`() = runTest {
+        // Arrange
+        coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
+            cryptoCurrencyStatus.right()
+
+        // Act
+        val model = createModel(account = AccountKind.Money)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify { getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+        assertThat(model.uiState.value.isClaimEnabled).isTrue()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the transaction cannot be built on a reload WHEN reloaded THEN the fee offers a reload`() =
         runTest {
             // Arrange
@@ -725,11 +743,12 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         model.onDestroy()
     }
 
-    private fun TestScope.createModel() = YieldSupplyClaimModel(
+    private fun TestScope.createModel(account: AccountKind = AccountKind.Portfolio) = YieldSupplyClaimModel(
         paramsContainer = MutableParamsContainer(
             YieldSupplyClaimComponent.Params(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
+                account = account,
                 chainId = CHAIN_ID,
                 userAddress = SOURCE_ADDRESS,
                 onSubmitted = { submittedResults += it },

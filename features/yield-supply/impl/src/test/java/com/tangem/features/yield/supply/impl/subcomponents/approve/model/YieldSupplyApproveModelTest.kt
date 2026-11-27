@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.routing.AppRoute.YieldSupplyEntry.AccountKind
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -123,6 +124,26 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
+    fun `GIVEN currency held outside the portfolio WHEN onClick THEN fee status and pending tracked for its holder`() =
+        runTest {
+            // Arrange
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any(), true) } returns
+                cryptoCurrencyStatus.right()
+            val model = createModel(account = AccountKind.Money)
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify { getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, any(), isHeldOutsidePortfolio = true) }
+            coVerify(exactly = 1) {
+                pendingTracker.addPending(userWalletId, token, any(), any(), isHeldOutsidePortfolio = true)
+            }
+        }
+
+    @Test
     fun `GIVEN coin fee currency WHEN onClick succeeds THEN transaction sent analytics carries coin fee asset`() = runTest {
         // Arrange — network fee paid in the native coin, not the token
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns statusOf(coin).right()
@@ -211,6 +232,7 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
 
     private fun TestScope.createModel(
         statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
+        account: AccountKind = AccountKind.Portfolio,
     ): YieldSupplyApproveModel = YieldSupplyApproveModel(
         tangemBlogUrlBuilder = tangemBlogUrlBuilder,
         dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -218,6 +240,7 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
             YieldSupplyApproveComponent.Params(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = statusFlow,
+                account = account,
                 callback = callback,
             ),
         ),

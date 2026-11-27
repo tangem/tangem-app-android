@@ -4,9 +4,9 @@ import android.net.Uri
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.deeplink.DeepLinkRequest
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
@@ -30,12 +30,11 @@ import java.math.BigDecimal
 
 internal class MarketsTokenExchangesDeepLinkHandlerTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase = mockk()
 
     private val handler = MarketsTokenExchangesDeepLinkHandler(
-        appRouter = appRouter,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getTokenMarketInfoUseCase = getTokenMarketInfoUseCase,
     )
@@ -69,7 +68,7 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, getSelectedAppCurrencyUseCase, getTokenMarketInfoUseCase)
+        clearMocks(router, getSelectedAppCurrencyUseCase, getTokenMarketInfoUseCase)
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns appCurrency.right()
         coEvery { getTokenMarketInfoUseCase(appCurrency, tokenId, any()) } returns tokenInfo.right()
     }
@@ -80,7 +79,7 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
         handle(queryParams = mapOf(TOKEN_ID_KEY to tokenId.value))
 
         // Assert
-        verify(exactly = 1) { appRouter.push(createExpectedRoute(appCurrency), any()) }
+        verify(exactly = 1) { router.push(createExpectedRoute(appCurrency), any()) }
     }
 
     @Test
@@ -94,7 +93,7 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
         handle(queryParams = mapOf(TOKEN_ID_KEY to tokenId.value))
 
         // Assert
-        verify(exactly = 1) { appRouter.push(createExpectedRoute(AppCurrency.Default), any()) }
+        verify(exactly = 1) { router.push(createExpectedRoute(AppCurrency.Default), any()) }
     }
 
     @Test
@@ -106,7 +105,7 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
         handle(queryParams = mapOf(TOKEN_ID_KEY to tokenId.value))
 
         // Assert
-        verify(exactly = 1) { appRouter.push(AppRoute.Markets(), any()) }
+        verify(exactly = 1) { router.push(AppRoute.Markets(), any()) }
     }
 
     @Test
@@ -115,7 +114,7 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
         handle(queryParams = emptyMap())
 
         // Assert
-        verify(exactly = 1) { appRouter.push(AppRoute.Markets(), any()) }
+        verify(exactly = 1) { router.push(AppRoute.Markets(), any()) }
         coVerify(exactly = 0) { getTokenMarketInfoUseCase(any(), any(), any()) }
     }
 
@@ -125,13 +124,19 @@ internal class MarketsTokenExchangesDeepLinkHandlerTest {
         handle(queryParams = mapOf(TOKEN_ID_KEY to ""))
 
         // Assert
-        verify(exactly = 1) { appRouter.push(AppRoute.Markets(), any()) }
+        verify(exactly = 1) { router.push(AppRoute.Markets(), any()) }
         coVerify(exactly = 0) { getTokenMarketInfoUseCase(any(), any(), any()) }
     }
 
     private fun TestScope.handle(queryParams: Map<String, String>) {
         handler.handle(
-            DeepLinkRequest(uri = mockk<Uri>(), queryParams = queryParams, scope = this, isFromOnNewIntent = false),
+            DeepLinkRequest(
+                uri = mockk<Uri>(),
+                queryParams = queryParams,
+                scope = this,
+                isFromOnNewIntent = false,
+                router = router,
+            ),
         )
         advanceUntilIdle()
     }

@@ -13,6 +13,7 @@ import com.tangem.data.earn.datastore.EarnTopTokensStore
 import com.tangem.data.earn.repository.batch.EarnTokensBatchFetcher
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.EarnListResponse
 import com.tangem.datasource.api.tangemTech.models.EarnResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.EarnErrorResolver
@@ -147,21 +148,27 @@ internal class DefaultEarnRepository(
     }
 
     override suspend fun getYieldOffers(): Either<Throwable, EarnYieldOffers> = Either.catch {
-        withContext(dispatchers.io) {
-            // The same request as the Earn screen's first page with the Yield Mode filter and all networks
-            val response = tangemTechApi.getEarnTokens(
-                isForEarn = false,
-                page = FIRST_PAGE.toString(),
-                limit = YIELD_OFFERS_LIMIT,
-                type = YIELD_TYPE,
-                apyType = GROSS_APY_TYPE,
-            ).getOrThrow()
+        // The same request as the Earn screen's first page with the Yield Mode filter and all networks
+        val response = getFirstEarnPage(type = EarnType.YIELD, limit = YIELD_OFFERS_LIMIT)
+        EarnYieldOffers(
+            total = checkNotNull(response.meta.total) { "Earn list response has no total" },
+            best = response.items.firstNotNullOfOrNull(EarnTokenConverter::convert),
+        )
+    }
 
-            EarnYieldOffers(
-                total = checkNotNull(response.meta.total) { "Earn list response has no total" },
-                best = response.items.firstOrNull()?.let(EarnTokenConverter::convert),
-            )
-        }
+    override suspend fun getBestOffer(type: EarnType): Either<Throwable, EarnToken?> = Either.catch {
+        getFirstEarnPage(type = type, limit = 1).items.firstNotNullOfOrNull(EarnTokenConverter::convert)
+    }
+
+    /** The backend sorts the Earn list by gross APY, descending, so the first row of this page is the best offer. */
+    private suspend fun getFirstEarnPage(type: EarnType, limit: Int): EarnListResponse = withContext(dispatchers.io) {
+        tangemTechApi.getEarnTokens(
+            isForEarn = false,
+            page = FIRST_PAGE.toString(),
+            limit = limit,
+            type = type.name.lowercase(),
+            apyType = GROSS_APY_TYPE,
+        ).getOrThrow()
     }
 
     override fun observeEarnFilter(): Flow<EarnFilter> {
@@ -179,13 +186,14 @@ internal class DefaultEarnRepository(
 
     private fun List<EarnResponse>.toEarnTokens(userWallet: UserWallet): List<EarnTokenWithCurrency> {
         return mapNotNull { dto ->
+            val earnToken = EarnTokenConverter.convert(dto) ?: return@mapNotNull null
             createCryptoCurrencyForEarnToken(
                 cryptoCurrencyFactory = cryptoCurrencyFactory,
                 userWallet = userWallet,
                 earnToken = dto,
             )?.let { cryptoCurrency ->
                 EarnTokenWithCurrency(
-                    earnToken = EarnTokenConverter.convert(dto),
+                    earnToken = earnToken,
                     cryptoCurrency = cryptoCurrency,
                     networkName = Blockchain.fromNetworkId(dto.networkId)?.fullName.orEmpty(),
                 )
@@ -198,7 +206,6 @@ internal class DefaultEarnRepository(
         private const val INITIAL_BATCH_KEY = 0
         private const val CATALOG_PAGE_SIZE = 50
         private const val YIELD_OFFERS_LIMIT = 20
-        private const val YIELD_TYPE = "yield"
         private const val GROSS_APY_TYPE = "gross"
     }
 }

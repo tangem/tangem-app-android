@@ -35,9 +35,11 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.domain.wallets.usecase.EnsureWalletLinkedUseCase
 import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
 import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
@@ -58,6 +60,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -84,6 +88,7 @@ internal class JointOperationDelegateTest {
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val displayGate: JointOperationDisplayGate = mockk()
+    private val ensureWalletLinkedUseCase: EnsureWalletLinkedUseCase = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -108,6 +113,7 @@ internal class JointOperationDelegateTest {
             singleAccountStatusListSupplier,
             getSelectedAppCurrencyUseCase,
             displayGate,
+            ensureWalletLinkedUseCase,
         )
 
         every { accountListSupplier(USER_WALLET_ID) } returns flowOf(accountListWithJointAccount)
@@ -458,6 +464,37 @@ internal class JointOperationDelegateTest {
         assertThat(actual).isEqualTo(signed.right())
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN a stored wallet WHEN ensureWalletLinked THEN the answer of the link request is returned`(
+        isLinked: Boolean,
+    ) = runTest {
+        // Arrange
+        val userWallet: UserWallet = mockk { every { walletId } returns USER_WALLET_ID }
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        coEvery { ensureWalletLinkedUseCase(userWallet) } returns isLinked
+
+        // Act
+        val actual = createDelegate().ensureWalletLinked(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(isLinked)
+    }
+
+    @Test
+    fun `GIVEN the wallet is not stored WHEN ensureWalletLinked THEN the action goes on without the link check`() =
+        runTest {
+            // Arrange
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
+
+            // Act
+            val actual = createDelegate().ensureWalletLinked(userWalletId = USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isTrue()
+            coVerify(exactly = 0) { ensureWalletLinkedUseCase(any()) }
+        }
+
     private fun signState(): JointOperationState {
         val account: Account.Joint = mockk()
         return mockk {
@@ -491,6 +528,7 @@ internal class JointOperationDelegateTest {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         displayGate = displayGate,
+        ensureWalletLinkedUseCase = ensureWalletLinkedUseCase,
     )
 
     private fun createJointAccount(

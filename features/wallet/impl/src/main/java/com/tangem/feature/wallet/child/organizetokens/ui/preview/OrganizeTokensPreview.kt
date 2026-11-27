@@ -2,12 +2,12 @@ package com.tangem.feature.wallet.child.organizetokens.ui.preview
 
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonUM
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.event.consumedEvent
@@ -144,12 +144,12 @@ internal object OrganizeTokensPreview {
             cancelButton = TangemButtonUM(
                 text = resourceReference(R.string.common_cancel),
                 onClick = {},
-                type = TangemButtonType.Secondary,
+                variant = TangemButton.Variant.Secondary,
             ),
             applyButton = TangemButtonUM(
                 text = resourceReference(R.string.common_apply),
                 onClick = {},
-                type = TangemButtonType.Primary,
+                variant = TangemButton.Variant.Primary,
             ),
             scrollListToTop = consumedEvent(),
             isAccountsMode = true,

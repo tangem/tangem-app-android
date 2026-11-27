@@ -15,25 +15,13 @@ class TangemPayHotWalletOnboardingPageObject(semanticsProvider: SemanticsNodeInt
     ComposeScreen<TangemPayHotWalletOnboardingPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        addSemanticsMatcher(
-            withText(getResourceString(CoreResR.string.tangempay_newonboard_title))
-                .or(withText(getResourceString(CoreResR.string.tangempay_unified_onboarding_description))),
-        )
-        useUnmergedTree = true
-    }
-
-    // The Tangem Pay onboarding screen carries the same title and CTA — only this block is unique here.
-    val legalCaption: KNode = child {
-        hasText(getResourceString(CoreResR.string.common_privacy_policy), substring = true)
+        hasText(getResourceString(CoreResR.string.tangempay_unified_onboarding_description))
         useUnmergedTree = true
     }
 
     val getCardButton: KNode = child {
         addSemanticsMatcher(
-            withTestTag(BaseButtonTestTags.TEXT).and(
-                withText(getResourceString(CoreResR.string.tangempay_onboarding_get_card_button_text))
-                    .or(withText(getResourceString(CoreResR.string.common_get_started))),
-            ),
+            withTestTag(BaseButtonTestTags.TEXT).and(withText(getResourceString(CoreResR.string.common_get_started))),
         )
         useUnmergedTree = true
     }

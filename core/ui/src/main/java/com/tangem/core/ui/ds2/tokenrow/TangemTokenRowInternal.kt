@@ -38,6 +38,7 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +59,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cloud_exclamation_20
 import com.tangem.core.ui.res.generated.icons.ic_warning_20_filled
+import com.tangem.core.ui.test.TokenElementsTestTags
 import kotlin.math.max
 
 /** Content dimming applied to the leading texts of unavailable rows (Figma `opacity/disabled`). */
@@ -390,7 +392,9 @@ internal fun TokenRowTitleContent(
     isDimmed: Boolean = false,
 ) {
     Row(
-        modifier = modifier.alpha(if (isDimmed) TOKEN_ROW_DISABLED_ALPHA else 1f),
+        modifier = modifier
+            .alpha(if (isDimmed) TOKEN_ROW_DISABLED_ALPHA else 1f)
+            .testTag(TokenElementsTestTags.TOKEN_TITLE),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -422,6 +426,7 @@ internal fun TokenRowTitleContent(
                 variant = TangemBadge.Variant.Tinted,
                 status = badge.status,
                 size = TangemBadge.Size.X4,
+                modifier = Modifier.testTag(TokenElementsTestTags.TOKEN_EARN_APY_BADGE),
             )
         }
     }
@@ -451,6 +456,7 @@ internal fun TokenRowSubtitleContent(
                 color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(TokenElementsTestTags.TOKEN_PRICE),
             )
         }
         if (priceChange != null) {
@@ -470,7 +476,7 @@ internal fun TokenRowBalanceContent(
     isBalanceHidden: Boolean = false,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.testTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

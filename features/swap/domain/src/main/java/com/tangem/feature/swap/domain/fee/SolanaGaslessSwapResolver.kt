@@ -19,7 +19,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.transaction.models.GaslessProtocolData
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
@@ -43,7 +42,6 @@ import javax.inject.Inject
 internal class SolanaGaslessSwapResolver @Inject constructor(
     private val swapFeatureToggles: SwapFeatureToggles,
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository,
-    private val walletManagersFacade: WalletManagersFacade,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
 ) {
 
@@ -155,7 +153,7 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
         transaction: TransactionData,
         sponsorship: GaslessProtocolData.Solana,
     ): Boolean {
-        val simulation = walletManagersFacade.simulateSolanaGaslessTransaction(
+        val simulation = solanaGaslessTransactionRepository.simulate(
             userWalletId = fromSwapCurrencyStatus.userWalletId,
             network = fromSwapCurrencyStatus.currency.network,
             transactionData = transaction,

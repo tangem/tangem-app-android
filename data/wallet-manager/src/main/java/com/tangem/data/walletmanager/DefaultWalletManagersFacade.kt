@@ -7,11 +7,6 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessInstructionRule
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSignedTransaction
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
-import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessTransactionSigner
-import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
@@ -48,7 +43,6 @@ import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.isJoint
@@ -90,6 +84,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
     private val yieldSendUpgradeDecisions: YieldSendUpgradeDecisions,
+    private val internalTransfersPolicy: InternalTransfersPolicy,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig }
@@ -259,7 +254,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val transactionHistoryState = source.provider.getTransactionHistoryState(
             address = source.address,
             filterType = currency.toTransactionHistoryFilterType(),
-            shouldIncludeInternalTransfers = currency.isSafeCoin(),
+            shouldIncludeInternalTransfers = internalTransfersPolicy.shouldInclude(currency),
         )
 
         return txHistoryStateConverter.convert(transactionHistoryState)
@@ -291,7 +286,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 page = page,
                 pageSize = pageSize,
                 filterType = currency.toTransactionHistoryFilterType(),
-                shouldIncludeInternalTransfers = currency.isSafeCoin(),
+                shouldIncludeInternalTransfers = internalTransfersPolicy.shouldInclude(currency),
                 gaslessFeeAddresses = gaslessFeeAddresses,
             ),
         )
@@ -353,9 +348,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
     }
-
-    /** A joint account's coin moves only in the Safe's internal calls: the relayer sends the transaction */
-    private fun CryptoCurrency.isSafeCoin(): Boolean = this is CryptoCurrency.Coin && isJoint
 
     private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
         return when (this) {
@@ -547,58 +539,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 is Result.Failure -> null
             }
         }
-
-    override suspend fun signTronGaslessTransactions(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionDataList: List<TransactionData>,
-        signer: TransactionSigner,
-    ): List<String>? = withContext(dispatchers.io) {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-            ?: return@withContext null
-
-        if (walletManager !is TronGaslessTransactionSigner) return@withContext null
-
-        when (val result = walletManager.signGaslessTransactions(transactionDataList, signer)) {
-            is Result.Success -> result.data
-            is Result.Failure -> null
-        }
-    }
-
-    override suspend fun signSolanaGaslessTransaction(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionData: TransactionData,
-        feePayer: String,
-        signer: TransactionSigner,
-        sponsorsRent: Boolean,
-    ): Result<SolanaGaslessSignedTransaction>? = withContext(dispatchers.io) {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.signGaslessTransaction(
-            transactionData = transactionData,
-            feePayer = feePayer,
-            signer = signer,
-            instructionRules = gaslessInstructionRules(sponsorsRent),
-        )
-    }
-
-    override suspend fun simulateSolanaGaslessTransaction(
-        userWalletId: UserWalletId,
-        network: Network,
-        transactionData: TransactionData,
-        feePayer: String,
-        sponsorsRent: Boolean,
-    ): Result<SolanaGaslessSimulation>? = withContext(dispatchers.io) {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        (walletManager as? SolanaGaslessTransactionSigner)?.simulateGaslessTransaction(
-            transactionData = transactionData,
-            feePayer = feePayer,
-            instructionRules = gaslessInstructionRules(sponsorsRent),
-        )
-    }
-
-    private fun gaslessInstructionRules(sponsorsRent: Boolean): List<SolanaGaslessInstructionRule> =
-        if (sponsorsRent) SolanaGaslessInstructionRule.ASSOCIATED_TOKEN_ACCOUNT else emptyList()
 
     override suspend fun getScaledUiAmountMultiplier(
         userWalletId: UserWalletId,
